@@ -1,0 +1,62 @@
+# This file is part of MUMPS VERSION 4.3.2
+# This Version was built on Wed Nov 12 16:57:09 2003
+# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+#
+#
+#Begin orderings
+
+# NOTE that PORD is distributed within MUMPS by default. If you would like to
+# use other orderings, you need to obtain the corresponding package and modify
+# the variables below accordingly.
+
+#LSCOTCHDIR = $(HOME)/JY/emilio/bin/generic
+#LSCOTCH   = -L$(LSCOTCHDIR) -lesmumps  -lfax -lorder -lscotch -lsymbol -ldof -lgraph -lcommon -lm
+
+LPORDDIR = ../PORD/lib/
+IPORD    = -I../PORD/include/
+LPORD    = -L$(LPORDDIR) -lpord
+
+#LMETISDIR = /local/metis/
+#IMETIS    = # Metis doesn't need include files (Fortran interface avail.)
+#LMETIS    = -L$(LMETISDIR) -lmetis
+
+# Corresponding variables reused later
+#ORDERINGSF = -Dscotch -Dmetis -Dpord
+#ORDERINGSC = -Dscotch -Dmetis -Dpord
+ORDERINGSF  = -WF,-Dpord
+ORDERINGSC  = -Dpord
+LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
+IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
+
+#End orderings
+########################################################################
+########################################################################
+
+RM      = /bin/rm -f
+CC      = mpcc_r
+FC      = mpxlf90_r
+FL      = mpxlf90_r
+AR      = ar -X64 vr
+RANLIB  = ranlib
+
+
+SCALAP  = ~jak/SCALAPACK/libscalapack_pwr4.a  ~jak/BLACS/LIB/blacsF77init_MPI-POWER3-0.a  ~jak/BLACS/LIB/blacs_MPI-POWER3-0.a  ~jak/BLACS/LIB/blacsF77init_MPI-POWER3-0.a
+
+INCPAR  = # -I/usr/lpp/ppe.poe/include
+LIBPAR  = $(SCALAP)  # -L/usr/lpp/ppe.poe/lib -lmpi
+INCSEQ  = -I../libseq
+LIBSEQ  =  -L../libseq -lmpiseq
+LIBBLAS = -lessl
+#Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
+CDEFS = 
+
+#Begin Optimization options
+OPTF    = -WF,-DPESSL -WF,-DSP_ -WF,-DALLOW_NON_INIT -O3 -qstrict -qmaxmem=-1 -Q -qfixed -qalign=4k -qarch=auto -qtune=auto -qcache=auto -q64 -B/usr/lib/ -tF 
+OPTC    = -O3 -qstrict -qarch=auto -qtune=auto -qcache=auto -Q=150 -s -qmaxmem=-1 -qcpluscmt -I. -q64
+OPTL    = -O3 -qstrict -Q -qfixed -qalign=4k -q64
+#End Optimization options
+ 
+
+INC = $(INCPAR)
+LIB = $(LIBPAR)
+LIBSEQNEEDED =

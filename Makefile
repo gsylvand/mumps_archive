@@ -1,0 +1,57 @@
+# This file is part of MUMPS VERSION 4.3.2
+# This Version was built on Wed Nov 12 16:57:09 2003
+# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+#
+#
+default: double
+
+all: double simple cmplx cmplx16
+
+# Is Makefile.inc available ?
+Makefile.inc:
+	@echo "##################################################################"
+	@echo BEFORE COMPILING MUMPS, YOU SHOULD HAVE AN APPROPRIATE FILE
+	@echo Makefile.inc AVALAIBLE. PLEASE LOOK IN THE DIRECTORY ./Make.inc FOR
+	@echo EXAMPLES OF Makefile.inc FILES, AT Make.inc/Makefile.inc.generic
+	@echo IN CASE YOU NEED TO BUILD A NEW ONE AND READ THE MAIN README FILE
+	@echo "##################################################################"
+	@exit 1
+
+.PHONY: default requiredobj all double simple cmplx cmplx16 libseqneeded
+
+include Makefile.inc
+
+requiredobj: Makefile.inc $(LIBSEQNEEDED) ../lib/libpord.a
+
+# dummy MPI library (sequential version)
+
+libseqneeded:
+	(cd libseq; make)
+
+# Build the libpord.a library and copy it into ./lib
+../lib/libpord.a:
+	if [ $(LPORDDIR) != "" ] ; then \
+	cd src; cd $(LPORDDIR); make CC="$(CC)" CFLAGS="$(OPTC)" AR="$(AR)" ARFUNCT= RANLIB="$(RANLIB)"; fi;
+	if [ $(LPORDDIR) != "" ] ; then \
+	cd src; cp $(LPORDDIR)/libpord.a ../lib/libpord.a; fi;
+
+double: requiredobj
+	(cd src ; make double)
+	(cd test ; make double)
+simple: requiredobj
+	(cd src ; make simple)
+	(cd test ; make simple)
+cmplx: requiredobj
+	(cd src ; make cmplx)
+	(cd test ; make cmplx)
+cmplx16: requiredobj
+	(cd src ; make cmplx16)
+	(cd test ; make cmplx16)
+clean:
+	(cd src; make clean)
+	(cd test; make clean)
+	(cd lib; $(RM) *.a)
+	(cd libseq; make clean)
+	if [ $(LPORDDIR) != "" ] ; then \
+	cd src; cd $(LPORDDIR); make realclean; fi;
+

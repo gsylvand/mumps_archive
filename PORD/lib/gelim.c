@@ -639,8 +639,7 @@ void
 findIndNodes(gelim_t *Gelim, int *reachset, int nreach, int *bin, int *next,
              int *tmp, int *pflag)
 { int *xadj, *adjncy, *vwght, *len, *elen, *parent, *score;
-  int nvtx, chk, keepon, u, v, w, wlast, i, j, jstart, jstop, jj;
-
+  int nvtx, chk, keepon, u, v, w, wlast, i, j, jstart, jstop, jstep, jj, jjstop;
   nvtx = Gelim->G->nvtx;
   xadj = Gelim->G->xadj;
   adjncy = Gelim->G->adjncy;
@@ -663,10 +662,26 @@ findIndNodes(gelim_t *Gelim, int *reachset, int nreach, int *bin, int *next,
      chk = 0;
      jstart = xadj[u];
      jstop = jstart + len[u];
+     /* Modified by JYL: 16 march 2005:
+      * This code was failing in case of
+      * overflow.
      for (j = jstart; j < jstop; j++)
-       chk += adjncy[j];
+         chk += adjncy[j];
      chk = chk % nvtx;
+     */
+     jstep=max(1000000000/nvtx,1);
+     for (j = jstart; j < jstop; j+=jstep)
+     {
+       jjstop = min(jstop, j+jstep);
+       for (jj = j; jj < jjstop; jj++)
+         chk += adjncy[jj];
+       chk = chk % nvtx;
+     }
+
      parent[u] = chk;
+     /* JYL: temporary:
+        if (parent[u] < - 10)
+        printf("Probleme %d \n",chk);*/
      next[u] = bin[chk];
      bin[chk] = u;
    }
@@ -702,7 +717,10 @@ findIndNodes(gelim_t *Gelim, int *reachset, int nreach, int *bin, int *next,
                }
               if (keepon)                /* found it! mark w as nonprincipal */
                { parent[w] = v;          /* representative of w is v */
-
+                 /* Temporary JY
+		    if (parent[w] < - 10)
+	               printf("Probleme\n");
+                  */
 #ifdef DEBUG
                  printf(" non-principal variable %d (score %d) mapped onto "
                         "%d (score %d)\n", w, score[w], v, score[v]); 
@@ -872,7 +890,14 @@ updateDegree(gelim_t *Gelim, int *reachset, int nreach, int *bin)
 void
 updateScore(gelim_t *Gelim, int *reachset, int nreach, int scoretype, int *bin)
 { int *xadj, *adjncy, *vwght, *len, *elen, *degree, *score;
-  int vwghtv, deg, degme, scr, u, v, me, r, i, istart, istop;
+  int vwghtv, deg, degme, u, v, me, r, i, istart, istop;
+  /* Modified by JYL, 16 march 2005.
+   * scr could overflow for quasi dense rows.
+   * Use a double instead for large degrees
+   * aset it near to MAX_INT in case of problem.
+   */
+  double scr_dbl;
+  int scr;
 
   xadj = Gelim->G->xadj;
   adjncy = Gelim->G->adjncy;
@@ -914,6 +939,33 @@ updateScore(gelim_t *Gelim, int *reachset, int nreach, int scoretype, int *bin)
             { vwghtv = vwght[v];           /* been updated yet */
               deg = degree[v];
               degme = degree[me] - vwghtv;
+	      if (deg > 40000 || degme > 40000)
+	      {
+              switch(scoretype)
+               { case AMD:
+                   scr_dbl = (double)deg;
+                   break;
+                 case AMF:
+                   scr_dbl = (double)deg*(double)(deg-1)/2 - (double)degme*(double)(degme-1)/2;
+                   break;
+                 case AMMF:
+                   scr_dbl = ((double)deg*(double)(deg-1)/2 - (double)degme*(double)(degme-1)/2) / (double)vwghtv;
+                   break;
+                 case AMIND:
+                   scr_dbl = max(0, ((double)deg*(double)(deg-1)/2 - (double)degme*(double)(degme-1)/2)
+                             - (double)deg*(double)vwghtv);
+                   break;
+                 default:
+                   fprintf(stderr, "\nError in function updateScore\n"
+                        "  unrecognized selection strategy %d\n", scoretype);
+                   quit();
+               }
+              /* Some buckets have offset nvtx / 2.
+	       * Using MAX_INT - nvtx should then be safe */
+              score[v] = (int) (min(scr_dbl,MAX_INT-Gelim->G->nvtx));
+	      }
+	      else
+	      {
               switch(scoretype)
                { case AMD:
                    scr = deg;
@@ -932,8 +984,9 @@ updateScore(gelim_t *Gelim, int *reachset, int nreach, int scoretype, int *bin)
                    fprintf(stderr, "\nError in function updateScore\n"
                         "  unrecognized selection strategy %d\n", scoretype);
                    quit();
-               }
-              score[v] = scr;
+                 }
+               score[v] = scr;
+	      }
               bin[v] = -1;
 
 #ifdef DEBUG
@@ -942,9 +995,9 @@ updateScore(gelim_t *Gelim, int *reachset, int nreach, int scoretype, int *bin)
                      score[v]);
 #endif
          
-              if (scr < 0)
+              if (score[v] < 0)
                { fprintf(stderr, "\nError in function updateScore\n"
-                      " score[%d] = %d is negative\n", v, scr);
+                      " score[%d] = %d is negative\n", v, score[v]);
                  quit();
                }
             }

@@ -1,6 +1,5 @@
-# This file is part of MUMPS VERSION 4.3.2
-# This Version was built on Wed Nov 12 16:57:09 2003
-# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+# This file is part of MUMPS VERSION 4.4.2
+# This Version was built on Mon May 23 09:41:55 2005
 #
 #
 #Begin orderings
@@ -58,19 +57,10 @@ CDEFS   = -DAdd_
 #Begin Optimization options
 OPTF   = -Dsgi -O -OPT:Olimit=0 -mips4 -64 -align64 -DALLOW_NON_INIT
 OPTL    = -O -OPT:Olimit=0 -mips4 -64 -align64
-OPTC    = -O -OPT:Olimit=0 -mips4 -64 -align64 -I.
+OPTC    = -O -OPT:Olimit=0 -mips4 -64 -align64
 NOOPT   = -Dsgi -mips4 -64 -align64
 #End Optimization options
  
-
-
-# usedbytesthb.F has to be compiled without optimization
-# because of a compiler bug. Problem occurs for example
-# when reading an RSE matrix. This rule will appear first
-# and thus should be used.
-
-usedbytesthb.o:usedbytesthb.F
-	$(FC) $(NOOPT) -c $*.F
 
 INC = $(INCSEQ)
 LIB = $(LIBSEQ)

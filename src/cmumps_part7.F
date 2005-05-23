@@ -1,65 +1,44 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
 #if defined(try_null_space)
       SUBROUTINE CMUMPS_295
@@ -1125,7 +1104,7 @@ C
      *  id%NA, id%LNA, id%NE_STEPS(1),
      *  WK_SOLVE(IW2), MTYPE, id%ICNTL,
      *  id%STEP(1), id%FRERE_STEPS(1),id%FILS(1),
-     *  id%PTLUST_S,IWK_SOLVE, LIWK_SOLVE,
+     *  id%PTLUST_S(1),id%PTRFAC(1), IWK_SOLVE, LIWK_SOLVE,
      *  id%PROCNODE_STEPS, id%NSLAVES,
      *  id%INFO, id%KEEP,
      *  id%COMM,
@@ -1155,7 +1134,8 @@ C
       IF (id%MYID .eq. MASTER) THEN
         IF  ( ((id%KEEP(52) .GT. 0)
      *   .AND. (id%KEEP(52) .LE. 6)) .OR.
-     *        ( id%KEEP(52) .EQ. -1)) THEN
+     *        ( id%KEEP(52) .EQ. -1) .OR.
+     *        ( id%KEEP(52) .EQ. -2) ) THEN
           DO K = 1, id%N
           id%NULL_SPACE(K,i) = id%NULL_SPACE(K,i) *
      *                                id%COLSCA( K )
@@ -3700,7 +3680,7 @@ C
         IOLDPS = PTRIST(STEP( KEEP(38) ))
         LOCAL_M = IW( IOLDPS + 2 )
         LOCAL_N = IW( IOLDPS + 1 )
-        IAPOS   = IW( IOLDPS + 4 )
+        IAPOS   = PTRFAC(IW( IOLDPS + 4 ))
         CALL CCOPY(root%TOT_ROOT_SIZE,NULL,1,W(IPT_NULL_ROOT),1)
       END IF
 #endif
@@ -3767,7 +3747,7 @@ C
      *              IW1(PTRICB),IW1(PTRACB),IWCB,LIWW,
      *              IW1(POOLSS),W2,
      *              NE_STEPS, NA, LNA, STEP, FRERE,FILS,
-     *              IW1(IPOOL),LPOOL,PTRIST,MYLEAF,INFO,
+     *              IW1(IPOOL),LPOOL,PTRIST,PTRFAC,MYLEAF,INFO,
      *              PROCNODE_STEPS, SLAVEF, COMM_NODES, MYID_NODES,
      *              BUFR, LBUFR, LBUFR_BYTES, KEEP, W( IPT_NULL_ROOT ),
      *              MTYPE, 
@@ -3918,7 +3898,8 @@ C
 #if defined(try_null_space_not_tested)
       SUBROUTINE CMUMPS_147( MYID, root, N, IROOT,
      *           COMM, IW, LIW, IFREE,
-     *           A, LA, PTRAST, PTLUST_S, STEP, INFO, LDLT, QR,
+     *           A, LA, PTRAST, PTLUST_S, PTRFAC,
+     *           STEP, INFO, LDLT, QR,
      *           WK, LWK, KEEP, WK1,LWK1,RV,VAUX_SEQ )
       IMPLICIT NONE
       INCLUDE 'cmumps_root.h'
@@ -3928,7 +3909,8 @@ C
       COMPLEX WK( LWK ),WK1(LWK1,1)
       COMPLEX RV(LWK1,1),VAUX_SEQ(LWK1)
       INTEGER KEEP(150)
-      INTEGER PTRAST(KEEP(28)), PTLUST_S( KEEP(28) ), STEP(N), IW( LIW )
+      INTEGER PTRAST(KEEP(28)), PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
+     *STEP(N), IW( LIW )
       INTEGER INFO( 2 ), LDLT, QR
       COMPLEX A( LA )
       INTEGER IOLDPS, IAPOS
@@ -4000,7 +3982,7 @@ C
         IAPOS   = PTRAST(STEP(IROOT))
         LOCAL_M = IW( IOLDPS + 2 )
         LOCAL_N = IW( IOLDPS + 1 )
-        IAPOS = IW ( IOLDPS + 4 )
+        IAPOS = PTRFAC(IW ( IOLDPS + 4 ))
         IF ( LDLT.EQ.0 .OR. LDLT.EQ.2 .OR. QR.ne.0 ) THEN
          LPIV = LOCAL_M + root%MBLOCK
         ELSE
@@ -5222,7 +5204,8 @@ C
 #endif
       SUBROUTINE CMUMPS_146( MYID, root, N, IROOT,
      *           COMM, IW, LIW, IFREE,
-     *           A, LA, PTRAST, PTLUST_S, STEP, INFO, LDLT, QR,
+     *           A, LA, PTRAST, PTLUST_S, PTRFAC,
+     *           STEP, INFO, LDLT, QR,
      *           WK, LWK, KEEP )
       IMPLICIT NONE
       INCLUDE 'cmumps_root.h'
@@ -5231,17 +5214,28 @@ C
       INTEGER N, IROOT, COMM, LIW, LA, MYID, LWK, LIWK, IFREE
       COMPLEX WK( LWK )
       INTEGER KEEP(150)
-      INTEGER PTRAST(KEEP(28)), PTLUST_S( KEEP(28) ), STEP(N), IW( LIW )
+      INTEGER PTRAST(KEEP(28)), PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
+     *STEP(N), IW( LIW )
       INTEGER INFO( 2 ), LDLT, QR
       COMPLEX A( LA )
       INTEGER IOLDPS, IAPOS
       INTEGER LOCAL_M, LOCAL_N, LPIV, IERR, allocok,i
         IF ( .NOT. root%yes ) RETURN
+        IF ( KEEP(60) .NE. 0 ) THEN
+          IF ((LDLT == 1 .OR. LDLT == 2) .AND. KEEP(60) == 3 ) THEN
+            CALL CMUMPS_320( WK, root%MBLOCK,
+     *      root%MYROW, root%MYCOL, root%NPROW, root%NPCOL,
+     *      root%SCHUR_POINTER(1),
+     *      root%SCHUR_LLD, root%SCHUR_NLOC,
+     *      root%TOT_ROOT_SIZE, MYID, COMM )
+          ENDIF
+        RETURN
+        ENDIF
         IOLDPS  = PTLUST_S(STEP(IROOT))
         IAPOS   = PTRAST(STEP(IROOT))
         LOCAL_M = IW( IOLDPS + 2 )
         LOCAL_N = IW( IOLDPS + 1 )
-        IAPOS = IW ( IOLDPS + 4 )
+        IAPOS = PTRFAC(IW ( IOLDPS + 4 ))
         IF ( LDLT.EQ.0 .OR. LDLT.EQ.2 .OR. QR.ne.0 ) THEN
          LPIV = LOCAL_M + root%MBLOCK
         ELSE
@@ -5259,13 +5253,6 @@ C
         CALL DESCINIT( root%DESCRIPTOR, root%TOT_ROOT_SIZE,
      *      root%TOT_ROOT_SIZE, root%MBLOCK, root%NBLOCK,
      *      0, 0, root%CNTXT_BLACS, LOCAL_M, IERR )
-        CALL DESCINIT( root%DESCB, root%TOT_ROOT_SIZE,
-     *      1, root%MBLOCK, root%NBLOCK, 0, 0,
-     *      root%CNTXT_BLACS, LOCAL_M, IERR )
-        IF (IERR.NE.0) THEN
-          WRITE(*,*) 'After DESCINIT, IERR = ', IERR
-          CALL CMUMPS_ABORT()
-        END IF
         IF ( LDLT.EQ.2 ) THEN
             IF(root%MBLOCK.NE.root%NBLOCK) THEN
               WRITE(*,*) ' Error: symmetrization only works for'
@@ -5302,401 +5289,901 @@ C
         END IF
         RETURN
       END SUBROUTINE CMUMPS_146
-#ifdef try_null_space_not_tested
-      SUBROUTINE CMUMPS_352( DESCA_PAR, DESCB_PAR,
-     *  CNTXT_PAR,LOCAL_M,LOCAL_N,MBLOCK,NBLOCK,
-     *  IPIV,LPIV,MASTER_ROOT,MYID,COMM,
-     *  RHS_SEQ,SIZE_ROOT,A,INFO,MTYPE,LDLT,QR,
-     *  QR_TAU,WK,LWK,DEFICIENCY,MAXG,GIND,GROW,GCOS,GSIN )
+      SUBROUTINE CMUMPS_556(
+     *     N,PIV,FRERE,FILS,NFSIZ,IKEEP,
+     *     NCST,KEEP,id)
       IMPLICIT NONE
-      INTEGER MTYPE
-      INTEGER DESCA_PAR( 9 ), DESCB_PAR( 9 )
-      INTEGER LOCAL_M, LOCAL_N, MBLOCK, NBLOCK
-      INTEGER CNTXT_PAR, MASTER_ROOT, SIZE_ROOT
-      INTEGER MYID, COMM, DEFICIENCY
-      INTEGER LPIV, IPIV( LPIV )
-      INTEGER INFO(40), LDLT, QR, LWK
-      COMPLEX WK( LWK )
-      COMPLEX RHS_SEQ( * )
-      COMPLEX QR_TAU( * )
-      COMPLEX A( LOCAL_M, LOCAL_N )
-      INTEGER MAXG,GIND
-      COMPLEX GROW(*),GCOS(*),GSIN(*)
-      INCLUDE 'mpif.h'
-      INTEGER STATUS( MPI_STATUS_SIZE )
-      INTEGER IERR, NPROW, NPCOL, MYROW, MYCOL
-      INTEGER allocok
-      INTEGER J, K, PRO, LOC, PRO2, LOC2, ISOUR,II
-      INTEGER SEQ,NN,LDA
-      COMPLEX C, S, TEMP(2)
-      COMPLEX RHS_PAR( LOCAL_M, 1 )
-      INTEGER, DIMENSION(:), ALLOCATABLE :: IPIV_SEQ
-      NN=SIZE_ROOT
-      LDA=DESCA_PAR(9)
-      CALL BLACS_GRIDINFO( CNTXT_PAR, NPROW, NPCOL, MYROW, MYCOL )
-      IF(MBLOCK.GE.NN) THEN
-        SEQ=1
-      ELSE
-        SEQ=0
-      END IF
-      IF ( MYID .eq. MASTER_ROOT ) THEN
-        ALLOCATE( IPIV_SEQ( SIZE_ROOT), stat=allocok )
-        IF ( allocok.GT.0 ) THEN
-          INFO(1) = -13
-          INFO(2) = SIZE_ROOT
-          CALL CMUMPS_ABORT()
-        ENDIF
-      ELSE
-        ALLOCATE( IPIV_SEQ( 1 ), stat=allocok )
-        IF ( allocok.GT.0 ) THEN
-          INFO(1)  = -13
-          INFO(2)  = 1
-          CALL CMUMPS_ABORT()
-        ENDIF
-      END IF
-      IF(SEQ.EQ.1) THEN
-        IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-          CALL CCOPY(NN,RHS_SEQ,1,RHS_PAR,1)
-        END IF
-      ELSE
-        IF(.not.(QR.EQ.1.AND.MTYPE.EQ.0)) THEN
-          CALL CMUMPS_290( MYID, SIZE_ROOT, 1, RHS_SEQ,
-     *      LOCAL_M, 1,
-     *      MBLOCK, NBLOCK, RHS_PAR, MASTER_ROOT,
-     *      NPROW, NPCOL, COMM )
-         END IF
-      END IF
-      IF(SEQ.EQ.1) THEN
-        IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-        IF(QR.EQ.1.OR.QR.EQ.2.OR.QR.EQ.3.OR.QR.EQ.4) THEN
-          IF(MTYPE.EQ.1 ) then
-            CALL CUNMQR( 'L','T',NN,1,NN,
-     *        A,LDA,QR_TAU,
-     *        RHS_PAR,LDA,WK(1),LWK,IERR)
-            IF ( IERR .LT. 0 ) THEN
-              WRITE(*,*) 'Error return from CUNMQR: IERR=', IERR
-              CALL CMUMPS_ABORT()
-            END IF
-            DO J=1,GIND
-              K=GROW(J)
-              C=GCOS(J)
-              S=GSIN(J)
-              CALL CMUMPS_31(1,C,S,RHS_PAR(K,1),LDA,
-     *             RHS_PAR(K+1,1),LDA)
-            END DO
-          END IF
-          IF(MTYPE.eq.1) THEN
-            CALL CTRTRS('U','N','N',NN-DEFICIENCY,1,
-     *        A,LDA,RHS_PAR,LDA,IERR)
-          ELSEIF(mtype.eq.0) then
-            IF(myid.eq.master_root) then
-              CALL CMUMPS_334(NN,IPIV,RHS_SEQ,WK)
-            END IF
-            CALL CCOPY(NN,RHS_SEQ,1,RHS_PAR,1)
-            CALL CTRTRS('U','T','N',NN-DEFICIENCY,1,
-     *        A,LDA,RHS_PAR,LDA,IERR)
-            DO J=1,GIND
-              K=GROW(J)
-                C=GCOS(J)
-                S=GSIN(J)
-               ii=1
-         CALL CMUMPS_31(1,C,S,RHS_PAR(K,1),ii,RHS_PAR(K+1,1),ii)
-            END DO
-            CALL CUNMQR( 'L','N',NN,1,NN,A,LDA,QR_TAU,
-     *        RHS_PAR,LDA,WK,LWK,IERR)
-            IF ( IERR .LT. 0 ) THEN
-              WRITE(*,*) 'Error return from CUNMQR: IERR=', IERR
-              CALL CMUMPS_ABORT()
-            END IF
-          ENDIF
-        ELSEIF(QR.EQ.5.OR.QR.EQ.6) THEN
-         IF ( MTYPE .eq. 1 ) THEN
-         CALL CGETRS('N',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *     RHS_PAR,LDA,IERR)
+      INCLUDE 'cmumps_struc.h'
+      TYPE (CMUMPS_STRUC) :: id
+      INTEGER N,NCST
+      INTEGER PIV(N),FRERE(N),FILS(N),NFSIZ(N),IKEEP(N,3)
+      INTEGER KEEP(150)
+      INTEGER I,P11,P1,P2,K1,K2,NLOCKED
+      LOGICAL V1,V2
+      NCST = 0
+      NLOCKED = 0
+      P11 = KEEP(93)
+      DO I=KEEP(93)-1,1,-2
+         P1 = PIV(I)
+         P2 = PIV(I+1)
+         K1 = IKEEP(P1,1)
+         IF(K1 .GT. 0) THEN
+            V1 = (ABS(id%A(K1)*(id%ROWSCA(P1)**2)).GE.1.0E-1)
          ELSE
-          CALL CGETRS('T',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *      RHS_PAR,LDA,IERR)
-         END IF
-        ELSEIF(QR.EQ.7.OR.QR.EQ.8) THEN
-         IF ( MTYPE .eq. 1 ) THEN
-           CALL CGETRS('N',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *       RHS_PAR,LDA,IERR)
+            V1 = .FALSE.
+         ENDIF
+         K2 = IKEEP(P2,1)
+         IF(K2 .GT. 0) THEN
+            V2 = (ABS(id%A(K2)*(id%ROWSCA(P2)**2)).GE.1.0E-1)
          ELSE
-           CALL CGETRS('T',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *       RHS_PAR,LDA,IERR)
-         END IF
-        ELSE IF ( LDLT .eq. 0 .OR. LDLT .eq. 2 ) THEN
-          IF ( MTYPE .eq. 1 ) THEN
-           CALL CGETRS('N',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *       RHS_PAR,LDA,IERR)
-          ELSE
-           CALL CGETRS('T',NN-DEFICIENCY,1,A,LDA,IPIV,
-     *       RHS_PAR,LDA,IERR)
-          END IF
-        ELSE
-        END IF
-        IF ( IERR .LT. 0 ) THEN
-          WRITE(*,*) ' Problem during solve of the root'
-          CALL CMUMPS_ABORT()
-        END IF
-        END IF
-        ELSE
-        IF(QR.EQ.1.OR.QR.EQ.2.OR.QR.EQ.3.OR.QR.EQ.4) THEN
-          IF(MTYPE.EQ.1 ) then
-            CALL CMUMPS_262( 'L','T', SIZE_ROOT, 1, SIZE_ROOT,
-     *        A, 1, 1, DESCA_PAR, QR_TAU,
-     *        RHS_PAR, 1, 1, DESCB_PAR,
-     *        WK(1), LWK, INFO(1) )
-            IF ( INFO(1) .LT. 0 ) THEN
-              WRITE(*,*) 'Error return from PCUNMQR: INFO(1)=', INFO(1)
-              CALL CMUMPS_ABORT()
-            END IF
-            DO J=1,GIND
-              K=GROW(J)
-              IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-                C=GCOS(J)
-                S=GSIN(J)
-              END IF
-              CALL CMUMPS_161(MYROW,MBLOCK,NPCOL,K,PRO)
-              CALL CMUMPS_160(MYROW,MBLOCK,NPCOL,K,LOC)
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO) THEN
-                CALL MPI_SEND(RHS_PAR(LOC,1),1,
-     *            MPI_COMPLEX,
-     *            0,163,COMM,IERR)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-                ISOUR=PRO*NPCOL+0
-                CALL MPI_RECV(TEMP(1),1,MPI_COMPLEX,
-     *            ISOUR,163,COMM,STATUS,IERR)
-              END IF
-              CALL CMUMPS_161(MYROW,MBLOCK,NPCOL,K+1,PRO2)
-              CALL CMUMPS_160(MYROW,MBLOCK,NPCOL,K+1,LOC2)
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO2) THEN
-                CALL MPI_SEND(RHS_PAR(LOC2,1),1,
-     *            MPI_COMPLEX,
-     *            0,164,COMM,IERR)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-                ISOUR=PRO2*NPCOL+0
-                CALL MPI_RECV(TEMP(2),1,MPI_COMPLEX,
-     *            ISOUR,164,COMM,STATUS,IERR)
-              END IF
-              IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-                CALL CMUMPS_31(1,C,S,TEMP(1),1,TEMP(2),1)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-                ISOUR=PRO*NPCOL+0
-                CALL MPI_SEND(TEMP(1),1,
-     *            MPI_COMPLEX,
-     *            ISOUR,163,COMM,IERR)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO) THEN
-                ISOUR=0
-                CALL MPI_RECV(RHS_PAR(LOC,1),1,
-     *            MPI_COMPLEX,
-     *            ISOUR,163,COMM,STATUS,IERR)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-                ISOUR=PRO2*NPCOL+0
-                CALL MPI_SEND(TEMP(2),1,MPI_COMPLEX,
-     *            ISOUR,164,COMM,IERR)
-              END IF
-              IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO2) THEN
-                ISOUR=0
-                CALL MPI_RECV(RHS_PAR(LOC2,1),1,
-     *            MPI_COMPLEX,
-     *            ISOUR,164,COMM,STATUS,IERR)
-              END IF
-            END DO
-          END IF
-        IF(MTYPE.eq.1) THEN
-          CALL PCTRTRS('U','N','N',SIZE_ROOT-DEFICIENCY,1,
-     *      A,1,1,DESCA_PAR,RHS_PAR,1,1,DESCB_PAR,IERR)
-          CALL CMUMPS_173(SIZE_ROOT,1,
-     *      LOCAL_M,1,MBLOCK,NBLOCK,IPIV,IPIV_SEQ,
-     *      MYID,MASTER_ROOT,NPROW,NPCOL,COMM)
-        ELSEIF(mtype.eq.0) then
-          CALL CMUMPS_173(SIZE_ROOT,1,
-     *      LOCAL_M,1,MBLOCK,NBLOCK,IPIV,IPIV_SEQ,
-     *      MYID,MASTER_ROOT,NPROW,NPCOL,COMM)
-          IF(myid.eq.master_root) then
-            CALL CMUMPS_334(SIZE_ROOT,IPIV_SEQ,RHS_SEQ,WK)
-          END IF
-          CALL CMUMPS_290( MYID, SIZE_ROOT, 1, RHS_SEQ,
-     *      LOCAL_M,1,MBLOCK,NBLOCK,RHS_PAR,MASTER_ROOT,
-     *      NPROW,NPCOL,COMM)
-          CALL PCTRTRS('U','T','N',SIZE_ROOT-DEFICIENCY,1,
-     *      A,1,1,DESCA_PAR,RHS_PAR,1,1,DESCB_PAR,IERR)
-          DO J=1,GIND
-            K=GROW(J)
-            IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-              C=GCOS(J)
-              S=GSIN(J)
-            END IF
-            CALL CMUMPS_161(MYROW,MBLOCK,NPCOL,K,PRO)
-            CALL CMUMPS_160(MYROW,MBLOCK,NPCOL,K,LOC)
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO) THEN
-              CALL MPI_SEND(RHS_PAR(LOC,1),1,
-     *          MPI_COMPLEX,0,163,COMM,IERR)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-              ISOUR=PRO*NPCOL+0
-              CALL MPI_RECV(TEMP(1),1,MPI_COMPLEX,
-     *          ISOUR,163,COMM,STATUS,IERR)
-            END IF
-            CALL CMUMPS_161(MYROW,MBLOCK,NPCOL,K+1,PRO2)
-            CALL CMUMPS_160(MYROW,MBLOCK,NPCOL,K+1,LOC2)
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO2) THEN
-              CALL MPI_SEND(RHS_PAR(LOC2,1),1,
-     *          MPI_COMPLEX,0,164,COMM,IERR)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-              ISOUR=PRO2*NPCOL+0
-              CALL MPI_RECV(TEMP(2),1,MPI_COMPLEX,
-     *          ISOUR,164,COMM,STATUS,IERR)
-            END IF
-            IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-              CALL CMUMPS_31(1,C,S,TEMP(1),1,TEMP(2),1)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-              ISOUR=PRO*NPCOL+0
-              CALL MPI_SEND(TEMP(1),1,
-     *          MPI_COMPLEX,
-     *          ISOUR,163,COMM,IERR)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO) THEN
-              ISOUR=0
-              CALL MPI_RECV(RHS_PAR(LOC,1),1,
-     *          MPI_COMPLEX,
-     *          ISOUR,163,COMM,STATUS,IERR)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.0) THEN
-              ISOUR=PRO2*NPCOL+0
-              CALL MPI_SEND(TEMP(2),1,
-     *          MPI_COMPLEX,ISOUR,164,COMM,IERR)
-            END IF
-            IF(MYCOL.EQ.0.AND.MYROW.EQ.PRO2) THEN
-              ISOUR=0
-              CALL MPI_RECV(RHS_PAR(LOC2,1),1,
-     *          MPI_COMPLEX,
-     *          ISOUR,164,COMM,STATUS,IERR)
-            END IF
-          END DO
-          CALL CMUMPS_262( 'L','N', SIZE_ROOT, 1, SIZE_ROOT,
-     *      A, 1, 1, DESCA_PAR, QR_TAU,
-     *      RHS_PAR, 1, 1, DESCB_PAR,
-     *      WK, LWK, INFO(1))
-          IF ( INFO(1) .LT. 0 ) THEN
-            WRITE(*,*) 'Error return from PCUNMQR: INFO(1)=', INFO(1)
-            CALL CMUMPS_ABORT()
-          END IF
-        ENDIF
-      ELSEIF(QR.EQ.5.OR.QR.EQ.6) THEN
-       IF ( MTYPE .eq. 1 ) THEN
-        CALL PCGETRS('N',SIZE_ROOT-DEFICIENCY,1,A,1,1,DESCA_PAR,IPIV,
-     *                RHS_PAR, 1, 1, DESCB_PAR, IERR )
-       ELSE
-        CALL PCGETRS('T',SIZE_ROOT-DEFICIENCY,1,A,1,1,DESCA_PAR,IPIV,
-     *                RHS_PAR, 1, 1, DESCB_PAR, IERR )
-       END IF
-      ELSEIF(QR.EQ.7.OR.QR.EQ.8) THEN
-       IF ( MTYPE .eq. 1 ) THEN
-        CALL PCGETRS('N',SIZE_ROOT-DEFICIENCY,1,A,1,1,DESCA_PAR,IPIV,
-     *                RHS_PAR, 1, 1, DESCB_PAR, IERR )
-       ELSE
-        CALL PCGETRS('T',SIZE_ROOT-DEFICIENCY,1,A,1,1,DESCA_PAR,IPIV,
-     *                RHS_PAR, 1, 1, DESCB_PAR, IERR )
-       END IF
-      ELSE IF ( LDLT .eq. 0 .OR. LDLT .eq. 2 ) THEN
-        IF ( MTYPE .eq. 1 ) THEN
-          CALL PCGETRS('N',SIZE_ROOT,1,A,1,1,DESCA_PAR,IPIV,
-     *      RHS_PAR,1,1,DESCB_PAR,IERR)
-        ELSE
-          CALL PCGETRS('T',SIZE_ROOT,1,A,1,1,DESCA_PAR,IPIV,
-     *      RHS_PAR, 1, 1, DESCB_PAR,IERR)
-        END IF
-      ELSE
-        CALL PCPOTRS( 'L', SIZE_ROOT, 1, A, 1, 1, DESCA_PAR,
-     *    RHS_PAR, 1, 1, DESCB_PAR, IERR )
-      END IF
-      END IF
-      IF ( IERR .LT. 0 ) THEN
-        WRITE(*,*) ' Problem during solve of the root'
-        CALL CMUMPS_ABORT()
-      END IF
-      IF(SEQ.EQ.1) THEN
-        IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-          CALL CCOPY(NN,RHS_PAR,1,RHS_SEQ,1)
-        ELSE
-        END IF
-      ELSE
-        CALL CMUMPS_156( MYID, SIZE_ROOT, 1,
-     *    RHS_SEQ, LOCAL_M, 1,
-     *    MBLOCK, NBLOCK, RHS_PAR, MASTER_ROOT,
-     *    NPROW, NPCOL, COMM )
-      END IF
-      IF(SEQ.EQ.1) THEN
-        IF(MYROW.EQ.0.AND.MYCOL.EQ.0) THEN
-          IF (MYID.eq.MASTER_ROOT.AND.
-     *      (QR.EQ.1.OR.QR.EQ.2.OR.QR.EQ.3.OR.QR.EQ.4).and.
-     *      mtype.eq.1) THEN
-            CALL CMUMPS_333(NN,IPIV,RHS_SEQ,WK)
-          END IF
-        ELSE
-        END IF
-      ELSE
-        IF (MYID.eq.MASTER_ROOT.AND.
-     *    (QR.EQ.1.OR.QR.EQ.2.OR.QR.EQ.3.OR.QR.EQ.4).and.
-     *    mtype.eq.1) THEN
-          CALL CMUMPS_333( SIZE_ROOT, IPIV_SEQ, RHS_SEQ, WK )
-        END IF
-      END IF
-      DEALLOCATE(IPIV_SEQ)
-      RETURN
-      END SUBROUTINE CMUMPS_352
+            V2 = .FALSE.
+         ENDIF
+         IF(V1 .AND. V2) THEN
+            PIV(P11) = P1
+            P11 = P11 - 1
+            PIV(P11) = P2
+            P11 = P11 - 1
+         ELSE IF(V1) THEN
+            NCST = NCST+1
+            FRERE(NCST) = P1
+            NCST = NCST+1
+            FRERE(NCST) = P2
+         ELSE IF(V2) THEN
+            NCST = NCST+1
+            FRERE(NCST) = P2                
+            NCST = NCST+1
+            FRERE(NCST) = P1
+         ELSE
+            NLOCKED = NLOCKED + 1
+            FILS(NLOCKED) = P1
+            NLOCKED = NLOCKED + 1
+            FILS(NLOCKED) = P2                   
+         ENDIF
+      ENDDO
+      DO I=1,NLOCKED
+         PIV(I) = FILS(I)
+      ENDDO
+      KEEP(94) = KEEP(94) + KEEP(93) - NLOCKED
+      KEEP(93) = NLOCKED
+      DO I=1,NCST
+         NLOCKED = NLOCKED + 1
+         PIV(NLOCKED) = FRERE(I)
+      ENDDO
+      DO I=1,KEEP(93)/2
+         NFSIZ(I) = 0
+      ENDDO
+      DO I=(KEEP(93)/2)+1,(KEEP(93)/2)+NCST,2
+         NFSIZ(I) = I+1
+         NFSIZ(I+1) = -1
+      ENDDO
+      DO I=(KEEP(93)/2)+NCST+1,(KEEP(93)/2)+KEEP(94)
+         NFSIZ(I) = 0
+      ENDDO
+      END SUBROUTINE CMUMPS_556
+      SUBROUTINE CMUMPS_548(N,PE,NV,WORK)
+      IMPLICIT NONE
+      INTEGER N
+      INTEGER PE(N),NV(N),WORK(N)
+      INTEGER I,FATHER,LEN,K,NEWSON,NEWFATHER
+      DO I=1,N
+         IF(NV(I) .GT. 0) CYCLE
+         LEN = 1
+         WORK(LEN) = I
+         FATHER = -PE(I)
+         DO
+            IF(NV(FATHER) .GT. 0) THEN
+               NEWSON = FATHER
+               EXIT
+            ENDIF
+            LEN = LEN + 1
+            WORK(LEN) = FATHER
+            NV(FATHER) = 1
+            FATHER = -PE(FATHER)
+         ENDDO
+         NEWFATHER = -PE(FATHER)
+         PE(WORK(LEN)) = -NEWFATHER
+         PE(NEWSON) = -WORK(1)
+      ENDDO      
+      END SUBROUTINE CMUMPS_548
+      SUBROUTINE CMUMPS_549(N,PE,PERM,NFILS,WORK)
+      IMPLICIT NONE
+      INTEGER N
+      INTEGER PE(N),PERM(N),NFILS(N),WORK(N)
+      INTEGER I,FATHER,STKLEN,STKPOS,PERMPOS,CURVAR
+      NFILS = 0
+      DO I=1,N
+         FATHER = -PE(I)
+         IF(FATHER .NE. 0) NFILS(FATHER) = NFILS(FATHER) + 1
+      ENDDO
+      STKLEN = 0
+      PERMPOS = 1
+      DO I=1,N
+         IF(NFILS(I) .EQ. 0) THEN
+            STKLEN = STKLEN + 1
+            WORK(STKLEN) = I
+            PERM(I) = PERMPOS
+            PERMPOS = PERMPOS + 1
+         ENDIF
+      ENDDO
+      DO STKPOS = 1,STKLEN
+         CURVAR = WORK(STKPOS)
+         FATHER = -PE(CURVAR)
+         DO
+            IF(FATHER .EQ. 0) EXIT
+            IF(NFILS(FATHER) .EQ. 1) THEN
+               PERM(FATHER) = PERMPOS
+               FATHER = -PE(FATHER)
+               PERMPOS = PERMPOS + 1
+            ELSE
+               NFILS(FATHER) = NFILS(FATHER) - 1
+               EXIT
+            ENDIF
+         ENDDO
+      ENDDO
+      END SUBROUTINE CMUMPS_549
+      SUBROUTINE CMUMPS_EXPAND_PE(N,NCMP,N11,N22,PIV,
+     *     PE,PE_EXP)
+      IMPLICIT NONE
+      INTEGER N11,N22,N,NCMP
+      INTEGER PIV(N),PE(NCMP),PE_EXP(N)
+      INTEGER I,J,N2,K,THEROOT,FATHER,K1,K2
+      N2 = N22/2
+#if (SP_DEBUG >= 5)
+      WRITE(*,*) 'PIV',PIV
+      WRITE(*,*) 'PE',PE
 #endif
-      SUBROUTINE CMUMPS_286( DESCA_PAR, DESCB_PAR,
-     *  CNTXT_PAR,LOCAL_M,LOCAL_N,MBLOCK,NBLOCK,
-     *  IPIV,LPIV,MASTER_ROOT,MYID,COMM,
-     *  RHS_SEQ,SIZE_ROOT,A,INFO,MTYPE,LDLT )
-      IMPLICIT NONE
-      INTEGER MTYPE
-      INTEGER DESCA_PAR( 9 ), DESCB_PAR( 9 )
-      INTEGER LOCAL_M, LOCAL_N, MBLOCK, NBLOCK
-      INTEGER CNTXT_PAR, MASTER_ROOT, SIZE_ROOT
-      INTEGER MYID, COMM
-      INTEGER LPIV, IPIV( LPIV )
-      INTEGER INFO(40), LDLT
-      COMPLEX RHS_SEQ( SIZE_ROOT )
-      COMPLEX A( LOCAL_M, LOCAL_N )
-      INCLUDE 'mpif.h'
-      INTEGER STATUS( MPI_STATUS_SIZE )
-      INTEGER IERR, NPROW, NPCOL, MYROW, MYCOL
-      COMPLEX RHS_PAR( LOCAL_M, 1 )
-      CALL BLACS_GRIDINFO( CNTXT_PAR, NPROW, NPCOL, MYROW, MYCOL )
-      CALL CMUMPS_290( MYID, SIZE_ROOT, 1, RHS_SEQ,
-     *      LOCAL_M, 1,
-     *      MBLOCK, NBLOCK, RHS_PAR, MASTER_ROOT,
-     *      NPROW, NPCOL, COMM )
-      IF ( LDLT .eq. 0 .OR. LDLT .eq. 2 ) THEN
-        IF ( MTYPE .eq. 1 ) THEN
-          CALL PCGETRS('N',SIZE_ROOT,1,A,1,1,DESCA_PAR,IPIV,
-     *      RHS_PAR,1,1,DESCB_PAR,IERR)
-        ELSE
-          CALL PCGETRS('T',SIZE_ROOT,1,A,1,1,DESCA_PAR,IPIV,
-     *      RHS_PAR, 1, 1, DESCB_PAR,IERR)
-        END IF
+      IF(N22+N11 .EQ. N) THEN
+         THEROOT = 0
       ELSE
-        CALL PCPOTRS( 'L', SIZE_ROOT, 1, A, 1, 1, DESCA_PAR,
-     *    RHS_PAR, 1, 1, DESCB_PAR, IERR )
-      END IF
-      IF ( IERR .LT. 0 ) THEN
-        WRITE(*,*) ' Problem during solve of the root'
-        CALL CMUMPS_ABORT()
-      END IF
-      CALL CMUMPS_156( MYID, SIZE_ROOT, 1,
-     *    RHS_SEQ, LOCAL_M, 1,
-     *    MBLOCK, NBLOCK, RHS_PAR, MASTER_ROOT,
-     *    NPROW, NPCOL, COMM )
+         THEROOT = PIV(N)
+         PE_EXP(THEROOT) = 0
+      ENDIF
+      K = 1
+      DO I=1,N2
+         K1 = PIV(K)
+         K = K+1
+         K2 = PIV(K)
+         K = K+1
+         FATHER = -PE(I)
+         IF(FATHER .EQ. 0) THEN
+            FATHER = THEROOT
+         ELSE IF(FATHER .LE. N2) THEN
+            FATHER = PIV(2*FATHER)
+         ELSE
+            FATHER = PIV(N2+FATHER)
+         ENDIF
+         PE_EXP(K1) = -K2
+         PE_EXP(K2) = -FATHER
+      ENDDO
+#if(SP_DEBUG >=1)
+      IF(K .NE. N22+1) THEN
+         WRITE(*,*) 'K NE N22+1',K,N22+1
+         CALL ABORT()
+      ENDIF
+#endif
+      DO I=N2+1,NCMP
+         K1 = PIV(K)
+         K = K+1
+         FATHER = -PE(I)
+         IF(FATHER .EQ. 0) THEN
+            FATHER = THEROOT
+         ELSE IF(FATHER .LE. N2) THEN
+            FATHER = PIV(2*FATHER)
+         ELSE
+            FATHER = PIV(N2+FATHER)
+         ENDIF
+         PE_EXP(K1) = -FATHER
+      ENDDO
+      DO I=N11+N22+1,N-1
+         K1 = PIV(I)
+         PE(K1) = -THEROOT
+      ENDDO
+#if (SP_DEBUG >= 5)
+      WRITE(*,*) 'PE_EXP',PE_EXP
+#endif
+      END SUBROUTINE CMUMPS_EXPAND_PE
+      SUBROUTINE CMUMPS_UPDATE_NV(N,LIW,COLPTR,IW,N11,N22,PIV,
+     *     PE,NV,WORK)
+      IMPLICIT NONE
+      INTEGER N11,N22,N,LIW
+      INTEGER PIV(N),NV(N),PE(N),COLPTR(N+1),IW(LIW),WORK(N)
+      INTEGER I,J,K,COL,FLAG,THEROOT
+      FLAG = 1
+      WORK = 0
+      THEROOT = PIV(N)
+      DO I = N11+N22+1,N
+         J = PIV(I)
+         WORK(THEROOT) = FLAG
+         DO K=COLPTR(J),COLPTR(J+1)-1
+            COL = IW(K)
+            DO
+               IF(NV(COL) .GT. 0) EXIT
+               COL = -PE(COL)
+            ENDDO
+            DO
+               IF(WORK(COL) .EQ. FLAG) EXIT
+               NV(COL) = NV(COL) + 1
+               WORK(COL) = FLAG
+               COL = -PE(COL)
+            ENDDO
+         ENDDO
+         IF(FLAG+1 .GT. FLAG) THEN
+            FLAG = FLAG+1
+         ELSE
+            WORK = 0
+            FLAG = 1
+         ENDIF
+      ENDDO
+#if (SP_DEBUG >= 2)
+      WRITE(*,*) 'PIV',PIV
+      WRITE(*,*) 'PE',PE
+      WRITE(*,*) 'NV',NV
+#endif
+      END SUBROUTINE CMUMPS_UPDATE_NV
+      SUBROUTINE CMUMPS_EXPAND_NV_PE(N,NCMP,N11,N22,PIV,
+     *     PE,NV,PE_EXP,NV_EXP)
+      IMPLICIT NONE
+      INTEGER N11,N22,N,NCMP
+      INTEGER PIV(N),NV(NCMP),PE(NCMP),NV_EXP(N),PE_EXP(N)
+      INTEGER I,J,N2,K,THEROOT,FATHER,K1,K2
+      N2 = N22/2
+#if (SP_DEBUG >= 5)
+      WRITE(*,*) 'PIV',PIV
+      WRITE(*,*) 'PE',PE
+      WRITE(*,*) 'NV',NV
+#endif
+      IF(N22+N11 .EQ. N) THEN
+         THEROOT = 0
+      ELSE
+         THEROOT = PIV(N)
+         PE_EXP(THEROOT) = 0
+         NV_EXP(THEROOT) = N-N22-N11
+      ENDIF
+      K = 1
+      DO I=1,N2
+         K1 = PIV(K)
+         K = K+1
+         K2 = PIV(K)
+         K = K+1
+         NV_EXP(K1) = 0
+         NV_EXP(K2) = NV(I)
+         FATHER = -PE(I)
+         IF(FATHER .EQ. 0) THEN
+            FATHER = THEROOT
+         ELSE IF(FATHER .LE. N2) THEN
+            FATHER = PIV(2*FATHER)
+         ELSE
+            FATHER = PIV(N2+FATHER)
+         ENDIF
+         PE_EXP(K1) = -K2
+         PE_EXP(K2) = -FATHER
+      ENDDO
+#if(SP_DEBUG >=1)
+      IF(K .NE. N22+1) THEN
+         WRITE(*,*) 'K NE N22+1',K,N22+1
+         CALL ABORT()
+      ENDIF
+#endif
+      DO I=N2+1,NCMP
+         K1 = PIV(K)
+         K = K+1
+         NV_EXP(K1) = NV(I)
+         FATHER = -PE(I)
+         IF(FATHER .EQ. 0) THEN
+            FATHER = THEROOT
+         ELSE IF(FATHER .LE. N2) THEN
+            FATHER = PIV(2*FATHER)
+         ELSE
+            FATHER = PIV(N2+FATHER)
+         ENDIF
+         PE_EXP(K1) = -FATHER
+      ENDDO
+      DO I=N11+N22+1,N-1
+         K1 = PIV(I)
+         NV(K1) = 0
+         PE(K1) = -THEROOT
+      ENDDO
+#if (SP_DEBUG >= 5)
+      WRITE(*,*) 'PE_EXP',PE_EXP
+      WRITE(*,*) 'NV_EXP',NV_EXP
+#endif
+      END SUBROUTINE CMUMPS_EXPAND_NV_PE
+      SUBROUTINE CMUMPS_550(N,NCMP,N11,N22,PIV,
+     *     PERM,IPERM)
+      IMPLICIT NONE
+      INTEGER N11,N22,N,NCMP
+      INTEGER PIV(N),PERM(N),IPERM(N)
+      INTEGER CMP_POS,EXP_POS,I,J,N2,K
+      N2 = N22/2
+#if(SP_DEBUG >= 5)
+      WRITE(*,*) 'PIV',PIV
+      WRITE(*,*) 'PERM',PERM(1:NCMP)
+      WRITE(*,*) 'IPERM',IPERM(1:NCMP)
+#endif
+      EXP_POS = 1
+      DO CMP_POS=1,NCMP
+         J = IPERM(CMP_POS)
+         IF(J .LE. N2) THEN
+            K = 2*J-1
+            I = PIV(K)
+            PERM(I) = EXP_POS
+            EXP_POS = EXP_POS+1
+            K = K+1
+            I = PIV(K)
+            PERM(I) = EXP_POS
+            EXP_POS = EXP_POS+1
+         ELSE
+            K = N2 + J
+            I = PIV(K)
+            PERM(I) = EXP_POS
+            EXP_POS = EXP_POS+1
+         ENDIF
+      ENDDO
+      DO K=N22+N11+1,N
+         I = PIV(K)
+         PERM(I) = EXP_POS
+         EXP_POS = EXP_POS+1
+      ENDDO
+#if(SP_DEBUG >= 5)
+      WRITE(*,*) 'PERM',PERM
+#endif
+      END SUBROUTINE CMUMPS_550
+      SUBROUTINE CMUMPS_547(
+     *     N,NZ, IRN, ICN, PIV,
+     *     NCMP, IW, LW, IPE, LEN, IQ, 
+     *     FLAG, ICMP, IWFR,
+     *     IERROR, KEEP, ICNTL)
+      IMPLICIT NONE
+      INTEGER N,NZ,NCMP,LW,IWFR,IERROR
+      INTEGER ICNTL(40),KEEP(150)
+      INTEGER IRN(NZ),ICN(NZ),IW(LW),PIV(N),IPE(N+1)
+      INTEGER LEN(N),IQ(N),FLAG(N),ICMP(N) 
+      INTEGER MP,N11,N22,NDUP
+      INTEGER I,K,J,N1,LAST,K1,K2,L
+      MP = ICNTL(2)
+      IERROR = 0
+      N22 = KEEP(93)
+      N11 = KEEP(94)
+      NCMP = N22/2 + N11
+      DO I=1,NCMP
+         IPE(I) = 0
+      ENDDO
+      K = 1
+      DO I=1,N22/2
+         J = PIV(K)
+         ICMP(J) = I
+         K = K + 1
+         J = PIV(K)
+         ICMP(J) = I
+         K = K + 1
+      ENDDO
+      K = N22/2 + 1
+      DO I=N22+1,N22+N11
+         J = PIV(I)
+         ICMP(J) = K
+         K = K + 1
+      ENDDO
+      DO I=N11+N22+1,N
+         J = PIV(I)
+         ICMP(J) = 0
+      ENDDO
+      DO K=1,NZ
+         I = IRN(K)
+         J = ICN(K)
+         I = ICMP(I)
+         J = ICMP(J)
+         IF ((I.GT.N).OR.(J.GT.N).OR.(I.LT.1)
+     *        .OR.(J.LT.1)) THEN
+            IERROR = IERROR + 1
+         ELSE
+            IF (I.NE.J) THEN
+               IPE(I) = IPE(I) + 1
+               IPE(J) = IPE(J) + 1
+            ENDIF
+         ENDIF
+      ENDDO
+      IQ(1) = 1
+      N1 = NCMP - 1
+      IF (N1.GT.0) THEN
+         DO I=1,N1
+            IQ(I+1) = IPE(I) + IQ(I)
+         ENDDO 
+      ENDIF
+      LAST = MAX(IPE(NCMP)+IQ(NCMP)-1,IQ(NCMP))
+      DO I = 1,NCMP
+         FLAG(I) = 0
+         IPE(I)  = IQ(I)
+      ENDDO
+      DO K=1,LAST
+        IW(K) = 0
+      ENDDO
+      IWFR = LAST + 1
+      DO K=1,NZ
+         I = IRN(K)
+         J = ICN(K)
+         I = ICMP(I)
+         J = ICMP(J)
+         IF (I.NE.J) THEN
+          IF (I.LT.J) THEN
+            IF ((I.GE.1).AND.(J.LE.N)) THEN
+             IW(IQ(I)) = -J
+             IQ(I)     = IQ(I) + 1 
+            ENDIF
+          ELSE
+            IF ((J.GE.1).AND.(I.LE.N)) THEN
+             IW(IQ(J)) = -I
+             IQ(J)     = IQ(J) + 1
+            ENDIF
+          ENDIF
+         ENDIF
+      ENDDO
+      NDUP = 0
+      DO I=1,NCMP
+         K1 = IPE(I) 
+         K2 = IQ(I) -1
+         IF (K1.GT.K2) THEN
+            LEN(I) = 0
+            IQ(I)  = 0
+         ELSE
+            DO K=K1,K2
+               J     = -IW(K)
+               IF (J.LE.0) GO TO 250
+               L     = IQ(J) 
+               IQ(J) = L + 1
+               IF (FLAG(J).EQ.I) THEN
+                  NDUP = NDUP + 1
+                  IW(L) = 0
+                  IW(K) = 0
+               ELSE
+                  IW(L)   = I
+                  IW(K)   = J
+                  FLAG(J) = I
+               ENDIF
+            ENDDO
+ 250        IQ(I) = IQ(I) - IPE(I)
+            IF (NDUP.EQ.0) LEN(I) = IQ(I)
+         ENDIF
+      ENDDO
+#if (SP_DEBUG >= 2)
+      WRITE(*,*) 'NDUP =',NDUP
+#endif
+      IF (NDUP.NE.0) THEN
+         IWFR = 1
+         DO I=1,NCMP
+            K1 = IPE(I) 
+            IF (IQ(I).EQ.0) THEN
+               LEN(I) = 0
+               IPE(I) = IWFR
+               CYCLE
+            ENDIF
+            K2 = K1 + IQ(I) - 1
+            L = IWFR
+            IPE(I) = IWFR
+            DO K=K1,K2
+               IF (IW(K).NE.0) THEN
+                  IW(IWFR) = IW(K)
+                  IWFR     = IWFR + 1
+               ENDIF
+            ENDDO
+            LEN(I) = IWFR - L 
+         ENDDO
+      ENDIF
+      IPE(NCMP+1) = IPE(NCMP) + LEN(NCMP)
+      IWFR = IPE(NCMP+1)
+#if(SP_DEBUG >= 5)
+      WRITE(*,*) 'PIV',PIV
+      WRITE(*,*) 'ICMP',ICMP
+      WRITE(*,*) 'IPE',IPE(1:NCMP+1)
+      WRITE(*,*) 'LEN',LEN(1:NCMP)
+      WRITE(*,*) 'IW',IW(1:IWFR-1)
+#endif
       RETURN
-      END SUBROUTINE CMUMPS_286
+      END SUBROUTINE CMUMPS_547
+      SUBROUTINE CMUMPS_551(
+     *     N, NE, IP, IRN, SCALING, CPERM, DIAG,
+     *     ICNTL, WEIGHT, MARKED,FLAG,
+     *     PIV_OUT, INFO)
+      IMPLICIT NONE
+      INTEGER N, NE, ICNTL(10), INFO(10)
+      INTEGER CPERM(N),PIV_OUT(N),IP(N+1),IRN(NE), DIAG(N)
+      REAL SCALING(2*N),WEIGHT(N+2)
+      INTEGER MARKED(N),FLAG(N)
+      INTEGER NUM1,NUM2,NUMTOT,PATH_LENGTH,NLAST
+      INTEGER I,J,K,L,CUR_EL,CUR_EL_PATH,CUR_EL_PATH_NEXT,BEST_BEG
+      INTEGER L1,L2,PTR_SET1,PTR_SET2,TUP,T22,INTER,MERGE
+      REAL BEST_SCORE,CUR_VAL,TMP,VAL
+      REAL INITSCORE, CMUMPS_UPDATESCORE, 
+     *     CMUMPS_UPDATE_INVERSE, CMUMPS_METRIC2x2
+#if(SP_DEBUG >= 1)
+      INTERFACE
+         FUNCTION CMUMPS_UPDATESCORE(A,B,T)
+         REAL A,B
+         INTEGER T
+         END FUNCTION
+         FUNCTION CMUMPS_UPDATE_INVERSE(A,B,T)
+         REAL A,B
+         INTEGER T
+         END FUNCTION CMUMPS_UPDATE_INVERSE
+         FUNCTION CMUMPS_METRIC2x2(CUR_EL,CUR_EL_PATH,
+     *        SET1,SET2,L1,L2,VAL,DIAG,N,FLAG,FLAGON,T)
+         INTEGER CUR_EL,CUR_EL_PATH,L1,L2,N
+         INTEGER SET1(L1),SET2(L2),DIAG(N),FLAG(N)
+         REAL VAL
+         LOGICAL FLAGON
+         INTEGER T
+         END FUNCTION CMUMPS_METRIC2x2
+      END INTERFACE
+#endif
+#if defined(PATH_STATS)
+      INTEGER PATH_STATS(N)
+#endif
+      LOGICAL VRAI,FAUX,MAX_CARD_DIAG
+      INTEGER JOB_DEF,DONE
+      INTEGER SUM,PROD,STRUCT,MA47,MAGNITUDE
+      PARAMETER (JOB_DEF = 5, DONE = -1,
+     *     SUM = 1, PROD = 2, STRUCT=1, MA47=2, MAGNITUDE=3,
+     *     VRAI = .TRUE., FAUX = .FALSE.)
+      MAX_CARD_DIAG = .FALSE.
+      NUM1 = 0
+      NUM2 = 0
+      NUMTOT = 0
+      NLAST = N
+      INFO = 0      
+      MARKED = 1
+      FLAG = 0
+      TUP = ICNTL(2)
+      IF(ICNTL(2) .GT. 2 .OR. ICNTL(2) .LE. 0) THEN
+         WRITE(*,*)
+     *        'ERROR: WRONG VALUE FOR ICNTL(2) = ',ICNTL(2)
+         INFO(1) = -1
+         RETURN
+      ENDIF
+      T22 = ICNTL(1)
+      IF(ICNTL(1) .LT. 0 .OR. ICNTL(1) .GT. 2) THEN
+         WRITE(*,*)
+     *        'ERROR: WRONG VALUE FOR ICNTL(1) = ',ICNTL(1)
+         INFO(1) = -1
+         RETURN
+      ENDIF
+#if(SP_DEBUG >= 1 || check_LDLT_preprocess)
+      PIV_OUT = -1
+#endif
+      DO CUR_EL=1,N
+         IF(MARKED(CUR_EL) .LE. 0) THEN
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) CUR_EL,' already visited, MARKED(CUR_EL) =',
+     *           MARKED(CUR_EL)
+#endif
+            CYCLE
+         ENDIF
+#if defined(check_LDLT_preprocess)
+#endif
+         IF(CPERM(CUR_EL) .LT. 0) THEN
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) CUR_EL,'in structural kernel'
+            IF(CPERM(CUR_EL) .NE. -CUR_EL) THEN
+               WRITE(*,*) 'pb ker cur_el cperm',CUR_EL,CPERM(CUR_EL)
+               CALL ABORT()
+            ENDIF
+#endif
+            MARKED(CUR_EL) = -1
+            CYCLE
+         ENDIF
+         PATH_LENGTH = 2
+         CUR_EL_PATH = CPERM(CUR_EL)
+         IF(CUR_EL_PATH .EQ. CUR_EL) THEN
+#if(SP_DEBUG >= 6 || check_LDLT_preprocess)
+            WRITE(*,*) CUR_EL,'diagonal matched entry'
+#endif
+            MARKED(CUR_EL) = -1
+            CYCLE
+         ENDIF
+         MARKED(CUR_EL) = 0
+         WEIGHT(1) = INITSCORE
+         WEIGHT(2) = INITSCORE
+         L1 = IP(CUR_EL+1)-IP(CUR_EL)
+         L2 = IP(CUR_EL_PATH+1)-IP(CUR_EL_PATH)
+         PTR_SET1 = IP(CUR_EL)
+         PTR_SET2 = IP(CUR_EL_PATH)
+         VAL = -SCALING(CUR_EL_PATH) - SCALING(CUR_EL+N)
+         CUR_VAL = CMUMPS_METRIC2x2(
+     *        CUR_EL,CUR_EL_PATH,
+     *        IRN(PTR_SET1),IRN(PTR_SET2),
+     *        L1,L2,
+     *        VAL,DIAG,N,FLAG,FAUX,T22)
+         WEIGHT(PATH_LENGTH+1) = 
+     *        CMUMPS_UPDATESCORE(WEIGHT(1),CUR_VAL,TUP)
+#if defined(check_LDLT_preprocess)
+         WRITE(*,*) 'CUR_EL,CUR_EL_PATH,WEIGHT(3) =',
+     *        CUR_EL,CUR_EL_PATH,WEIGHT(3)
+#endif
+         DO
+            IF(CUR_EL_PATH .EQ. CUR_EL) EXIT
+            PATH_LENGTH = PATH_LENGTH+1
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) 'increment PATH_LENGTH = ',PATH_LENGTH
+#endif
+            MARKED(CUR_EL_PATH) = 0
+            CUR_EL_PATH_NEXT = CPERM(CUR_EL_PATH)
+            L1 = IP(CUR_EL_PATH+1)-IP(CUR_EL_PATH)
+            L2 = IP(CUR_EL_PATH_NEXT+1)-IP(CUR_EL_PATH_NEXT)
+            PTR_SET1 = IP(CUR_EL_PATH)
+            PTR_SET2 = IP(CUR_EL_PATH_NEXT)
+            VAL = -SCALING(CUR_EL_PATH_NEXT) 
+     *           - SCALING(CUR_EL_PATH+N)
+            CUR_VAL = CMUMPS_METRIC2x2(
+     *           CUR_EL_PATH,CUR_EL_PATH_NEXT,
+     *           IRN(PTR_SET1),IRN(PTR_SET2),
+     *           L1,L2,
+     *           VAL,DIAG,N,FLAG,VRAI,T22)
+            WEIGHT(PATH_LENGTH+1) = 
+     *           CMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH-1),CUR_VAL,TUP)
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) 'WEIGHT(',PATH_LENGTH+1,') = ',
+     *           WEIGHT(PATH_LENGTH+1)
+#endif	  
+            CUR_EL_PATH = CUR_EL_PATH_NEXT
+         ENDDO
+#if defined(path_stats)
+         PATH_STATS(PATH_LENGTH-2) = PATH_STATS(PATH_LENGTH-2)+1
+#endif
+         IF(MOD(PATH_LENGTH,2) .EQ. 1) THEN
+#if(SP_DEBUG >= 6 || check_LDLT_preprocess)
+            WRITE(*,*) 'WE HAVE FOUND AN EVEN PATH OF LENGTH',
+     *           PATH_LENGTH-1
+#endif
+            IF(WEIGHT(PATH_LENGTH+1) .GE. WEIGHT(PATH_LENGTH)) THEN
+#if defined(check_LDLT_preprocess)
+               WRITE(*,*) 
+     *              'WE CHOOSE THE 2X2 PIVOTS IN EVEN/ODD POSITION'
+#endif      
+               CUR_EL_PATH = CPERM(CUR_EL)
+            ELSE
+#if defined(check_LDLT_preprocess)
+               WRITE(*,*) 
+     *              'WE CHOOSE THE 2X2 PIVOTS IN ODD/EVEN POSITION'
+#endif
+               CUR_EL_PATH = CUR_EL
+            ENDIF
+            DO I=1,(PATH_LENGTH-1)/2
+#if defined(check_LDLT_preprocess)
+               DO K=1,NUM2
+                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
+                     WRITE(*,*) 
+     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
+     *                   CUR_EL_PATH,K,PIV_OUT(K)
+                     CALL ABORT()
+                  ENDIF
+               ENDDO
+               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
+                  WRITE(*,*) 'PB : NUM2,PIV_OUT',NUM2,'/',PIV_OUT
+                  CALL ABORT()
+               ENDIF
+#endif
+               NUM2 = NUM2+1
+               PIV_OUT(NUM2) = CUR_EL_PATH
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+#if defined(check_LDLT_preprocess)
+               DO K=1,NUM2
+                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
+                     WRITE(*,*) 
+     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
+     *                   CUR_EL_PATH,K,PIV_OUT(K)
+                     CALL ABORT()
+                  ENDIF
+               ENDDO
+               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
+                  WRITE(*,*) 'PB : NUM2'
+                  CALL ABORT()
+               ENDIF
+#endif
+               NUM2 = NUM2+1
+               PIV_OUT(NUM2) = CUR_EL_PATH
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+            ENDDO
+            NUMTOT = NUMTOT + PATH_LENGTH - 1
+         ELSE
+#if(SP_DEBUG >= 6 || check_LDLT_preprocess)	
+            WRITE(*,*) 'WE HAVE FOUND AN ODD PATH OF LENGTH',
+     *           PATH_LENGTH-1 
+#endif
+            IF(MAX_CARD_DIAG) THEN
+               CUR_EL_PATH = CPERM(CUR_EL)
+               IF(DIAG(CUR_EL) .NE. 0) THEN 
+                  BEST_BEG = CUR_EL_PATH
+                  GOTO 1000
+               ENDIF
+               DO I=1,(PATH_LENGTH/2)
+                  CUR_EL_PATH_NEXT = CPERM(CUR_EL_PATH)
+                  IF(DIAG(CUR_EL_PATH) .NE. 0) THEN 
+                     BEST_BEG = CUR_EL_PATH_NEXT
+                     GOTO 1000
+                  ENDIF
+               ENDDO
+            ENDIF
+            BEST_BEG = CUR_EL
+            BEST_SCORE = WEIGHT(PATH_LENGTH-1)
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',BEST_SCORE,CUR_EL
+#endif
+            CUR_EL_PATH = CPERM(CUR_EL)
+            DO I=1,(PATH_LENGTH/2)-1
+               TMP = CMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH),
+     *              WEIGHT(2*I-1),TUP)
+               TMP = CMUMPS_UPDATE_INVERSE(TMP,WEIGHT(2*I),TUP)
+#if defined(check_LDLT_preprocess)
+               WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',TMP,CUR_EL_PATH
+#endif
+               IF(TMP .GT. BEST_SCORE) THEN
+                  BEST_SCORE = TMP
+                  BEST_BEG = CUR_EL_PATH
+               ENDIF
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+               TMP = CMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH+1),
+     *              WEIGHT(2*I),TUP)
+               TMP = CMUMPS_UPDATE_INVERSE(TMP,WEIGHT(2*I+1),TUP)
+#if defined(check_LDLT_preprocess)
+               WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',TMP,CUR_EL_PATH
+#endif
+               IF(TMP .GT. BEST_SCORE) THEN
+                  BEST_SCORE = TMP
+                  BEST_BEG = CUR_EL_PATH
+               ENDIF
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+            ENDDO
+#if defined(check_LDLT_preprocess)
+            WRITE(*,*) 'BEST EL FOUND',BEST_BEG
+#endif
+ 1000       CUR_EL_PATH = BEST_BEG
+            DO I=1,(PATH_LENGTH/2)-1
+#if defined(check_LDLT_preprocess)
+               DO K=1,NUM2
+                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
+                     WRITE(*,*) 
+     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
+     *                    CUR_EL_PATH,K,PIV_OUT(K)
+                     CALL ABORT()
+                  ENDIF
+               ENDDO
+               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
+                  WRITE(*,*) 'PB : NUM2'
+                  CALL ABORT()
+               ENDIF
+#endif
+               NUM2 = NUM2+1
+               PIV_OUT(NUM2) = CUR_EL_PATH
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+#if defined(check_LDLT_preprocess)
+               DO K=1,NUM2
+                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
+                     WRITE(*,*) 
+     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
+     *                    CUR_EL_PATH,K,PIV_OUT(K)
+                     CALL ABORT()
+                  ENDIF
+               ENDDO
+               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
+                  WRITE(*,*) 'PB : NUM2'
+                  CALL ABORT()
+               ENDIF
+#endif
+               NUM2 = NUM2+1
+               PIV_OUT(NUM2) = CUR_EL_PATH
+               CUR_EL_PATH = CPERM(CUR_EL_PATH)
+            ENDDO
+            NUMTOT = NUMTOT + PATH_LENGTH - 2
+            MARKED(CUR_EL_PATH) = -1
+         ENDIF	
+      ENDDO
+      DO I=1,N
+         IF(MARKED(I) .LT. 0) THEN
+            IF(DIAG(I) .EQ. 0) THEN
+               PIV_OUT(NLAST) = I
+               NLAST = NLAST - 1
+            ELSE
+               NUM1 = NUM1 + 1
+               PIV_OUT(NUM2+NUM1) = I
+               NUMTOT = NUMTOT + 1
+            ENDIF
+         ENDIF
+      ENDDO
+#if defined(check_LDLT_preprocess)
+      IF(NUM2+NUM1 .NE. NLAST) THEN
+         WRITE(*,*) 'PB NUM2,NUM1,NUM2+NUM1,NLAST',
+     *        NUM2,NUM1,NUM2+NUM1,NLAST
+      ENDIF  
+      WRITE(*,*) 'PIV_OUT',PIV_OUT
+#endif
+      INFO(2) = NUMTOT
+      INFO(3) = NUM1
+      INFO(4) = NUM2
+#if defined(path_stats)
+      DO I=1,N
+         WRITE(*,*) PATH_STATS(I)
+      ENDDO
+#endif
+      RETURN
+      END SUBROUTINE CMUMPS_551
+      FUNCTION CMUMPS_UPDATESCORE(A,B,T)
+      IMPLICIT NONE
+      REAL CMUMPS_UPDATESCORE
+      REAL A,B
+      INTEGER T
+      INTEGER SUM,PROD
+      PARAMETER(SUM = 1,PROD = 2)
+      IF(T .EQ. SUM) THEN
+         CMUMPS_UPDATESCORE = A+B
+      ELSE
+         CMUMPS_UPDATESCORE = A*B
+      ENDIF
+      END FUNCTION CMUMPS_UPDATESCORE
+      FUNCTION CMUMPS_UPDATE_INVERSE(A,B,T)
+      IMPLICIT NONE
+      REAL CMUMPS_UPDATE_INVERSE
+      REAL A,B
+      INTEGER T
+      INTEGER SUM,PROD
+      PARAMETER(SUM = 1,PROD = 2)
+      IF(T .EQ. SUM) THEN
+         CMUMPS_UPDATE_INVERSE = A-B
+      ELSE
+#if defined(check_LDLT_preprocess)
+         IF(B .EQ. 0.0E0) THEN
+            WRITE(*,*) 'ERROR in CMUMPS_UPDATE_INVERSE'
+            CALL ABORT()
+         ENDIF
+#endif
+         CMUMPS_UPDATE_INVERSE = A/B
+      ENDIF
+      END FUNCTION CMUMPS_UPDATE_INVERSE
+      FUNCTION CMUMPS_METRIC2x2(CUR_EL,CUR_EL_PATH,
+     *     SET1,SET2,L1,L2,VAL,DIAG,N,FLAG,FLAGON,T)
+      IMPLICIT NONE
+      REAL CMUMPS_METRIC2x2
+      INTEGER CUR_EL,CUR_EL_PATH,L1,L2,N
+      INTEGER SET1(L1),SET2(L2),DIAG(N),FLAG(N)
+      REAL VAL
+      LOGICAL FLAGON
+      INTEGER T
+      INTEGER I,INTER,MERGE
+      INTEGER STRUCT,MA47,MAGNITUDE
+      PARAMETER(STRUCT=0,MA47=1,MAGNITUDE=2)
+#if 0
+      WRITE(*,*) 'CUR_EL,CUR_EL_PATH,L1,L2,N',
+     *     CUR_EL,CUR_EL_PATH,L1,L2,N
+      WRITE(*,*) 'SET1',SET1(1:L1)
+      WRITE(*,*) 'SET2',SET2(1:L2)
+#endif
+      IF(T .EQ. STRUCT) THEN
+         IF(.NOT. FLAGON) THEN
+            DO I=1,L1
+               FLAG(SET1(I)) = CUR_EL
+            ENDDO            
+         ENDIF
+         INTER = 0
+         DO I=1,L2
+            IF(FLAG(SET2(I)) .EQ. CUR_EL) THEN
+               INTER = INTER + 1
+               FLAG(SET2(I)) = CUR_EL_PATH
+            ENDIF
+         ENDDO
+         MERGE = L1 + L2 - INTER
+         CMUMPS_METRIC2x2 = REAL(INTER) / REAL(MERGE)
+      ELSE IF (T .EQ. MA47) THEN
+         MERGE = 3
+         IF(DIAG(CUR_EL) .NE. 0) MERGE = 2
+         IF(DIAG(CUR_EL_PATH) .NE. 0) MERGE = MERGE - 2
+         IF(MERGE .EQ. 0) THEN
+            CMUMPS_METRIC2x2 = L1+L2-2
+            CMUMPS_METRIC2x2 = -(CMUMPS_METRIC2x2**2)/2
+         ELSE IF(MERGE .EQ. 1) THEN
+            CMUMPS_METRIC2x2 = - REAL(L1+L2-4) * REAL(L1-2)
+         ELSE IF(MERGE .EQ. 2) THEN
+            CMUMPS_METRIC2x2 = - REAL(L1+L2-4) * REAL(L2-2)
+         ELSE
+            CMUMPS_METRIC2x2 = - REAL(L1-2) * REAL(L2-2)
+         ENDIF
+      ELSE
+         CMUMPS_METRIC2x2 = VAL
+      ENDIF
+      END FUNCTION 

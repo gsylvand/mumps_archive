@@ -1,65 +1,44 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
       SUBROUTINE ZMUMPS_448(ICNTL,CNTL)
       IMPLICIT NONE
@@ -1787,3 +1766,13 @@ C
       K35 = 16
 #endif
       END SUBROUTINE ZMUMPS_464
+      SUBROUTINE ZMUMPS_546( K34, K35 )
+      INTEGER K34, K35
+#if defined(t3e)
+      K34 = 8
+      K35 = 16
+#else
+      K34 = 4
+      K35 = 8
+#endif
+      END SUBROUTINE ZMUMPS_546

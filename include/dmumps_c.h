@@ -1,69 +1,48 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-   This Version was built on Wed Nov 12 16:57:09 2003
+   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+   This Version was built on Mon May 23 09:41:55 2005
 
- COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-                       J.-Y. L'Excellent
+  This version of MUMPS is provided to you free of charge. It is public
+  domain, based on public domain software developed during the Esprit IV
+  european project PARASOL (1996-1999). It has been partially supported
+  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+  Rhone-Alpes, and LBNL.
 
-  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-  INRIA                      (France)  (http://www.inria.fr)
-  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
- All rights reserved.
+  Up-to-date copies of the MUMPS package can be obtained
+  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+  or http://graal.ens-lyon.fr/MUMPS
 
-  Your use or distribution of the package implies that you agree
-  with this License. Up-to-date copies of the MUMPS package can be
-  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 
-  This package is provided to you free of charge. It was
-  initially based on public domain software developed during
-  the European Esprit IV project PARASOL (1996-1999).
+   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 
-  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 
-  Permission is hereby granted to use or copy this
-  package provided that the Copyright and this License is
-  retained on all copies and that the package is used
-  under the same terms and conditions. User documentation
-  of any code that uses this software should include this
-  complete Copyright notice and this License.
-
-  You can modify this code but, at no time shall the right
-  or title to all or any part of this package pass to you.
-  All information relating to any alteration or addition
-  made to this package for the purposes of extending the
-  capabilities or enhancing the performance of this package
-  shall be made available free of charge to the authors for
-  any purpose.
-
-  You shall acknowledge (using references [1] and [2])
-  the contribution of this package in any publication
-  of material dependent upon the use of the package.
-  You shall use reasonable endeavours to notify
+  User documentation of any code that uses this software can
+  include this complete notice. You can acknowledge (using
+  references [1], [2], and [3] the contribution of this package
+  in any scientific publication dependent upon the use of the
+  package. You shall use reasonable endeavours to notify
   the authors of the package of this publication.
 
+   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 
-  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+   A fully asynchronous multifrontal solver using distributed dynamic
+   scheduling, SIAM Journal of Matrix Analysis and Applications,
+   Vol 23, No 1, pp 15-41 (2001).
 
-  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-  A fully asynchronous multifrontal solver using distributed dynamic
-  scheduling, SIAM Journal of Matrix Analysis and Applications,
-  Vol 23, No 1, pp 15-41 (2001).
-  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-
-  None of the text from the Copyright notice up to and
-  including this line shall be removed or altered in any way.
+   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+   S. Pralet (2005), Hybrid scheduling for the parallel solution
+   of linear systems. Submitted to Parallel Computing.
 
 */
-/* $Id: dmumps_c.h,v 1.14 2003/04/25 12:25:46 jylexcel Exp $ */
+/* $Id: dmumps_c.h,v 1.21 2005/04/18 10:58:44 jylexcel Exp $ */
 /* Mostly written in march 2002 (JYL) */
 
 #if ( ! defined DMUMPS_C_H )
@@ -104,9 +83,12 @@ typedef struct
 
     /* Scaling (input only in this version) */
     F_DOUBLE *colsca; F_DOUBLE *rowsca;
-
-    /* Ouptput data and statistics */
-    F_DOUBLE *rhs;
+    /* RHS, solution, ouptput data and statistics */
+    F_DOUBLE *rhs, *rhs_sparse, *sol_loc;
+    F_INT *irhs_sparse, *irhs_ptr, *isol_loc;
+    F_INT nrhs, lrhs, nz_rhs, lsol_loc;
+  F_INT schur_mloc, schur_nloc, schur_lld;
+  F_INT mblock, nblock, nprow, npcol;
     F_INT info[40],infog[40];
     F_DOUBLE2 rinfo[20], rinfog[20];
     /* Null space */
@@ -195,5 +177,14 @@ F_INT *jcn, F_INT *jcn_avail, F_DOUBLE *a, F_INT *a_avail,
   F_INT * deficiency, F_INT * size_schur, F_INT * listvar_schur,
   F_INT * listvar_schur_avail, F_DOUBLE * schur,
   F_INT * schur_avail, F_DOUBLE * colsca, F_INT * colsca_avail,
-  F_DOUBLE * rowsca, F_INT * rowsca_avail, F_INT * instance_number);
+  F_DOUBLE * rowsca, F_INT * rowsca_avail, F_INT * instance_number,
+  F_INT * nrhs, F_INT * lrhs, F_DOUBLE * rhs_sparse, F_INT * rhs_sparse_avail,
+  F_DOUBLE * sol_loc, F_INT * sol_loc_avail, F_INT * irhs_sparse,
+  F_INT * irhs_sparse_avail, F_INT * irhs_ptr, F_INT * irhs_ptr_avail,
+  F_INT * isol_loc, F_INT * isol_loc_avail, F_INT * nz_rhs, F_INT * lsol_loc
+  ,F_INT * schur_mloc, F_INT *schur_nloc, F_INT * schur_lld,
+  F_INT * schur_mblock, F_INT * schur_nblock, F_INT * schur_nprow,
+  F_INT * schur_npcol
+  );
 #endif
+

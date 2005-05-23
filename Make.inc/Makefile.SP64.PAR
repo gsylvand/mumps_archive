@@ -1,6 +1,5 @@
-# This file is part of MUMPS VERSION 4.3.2
-# This Version was built on Wed Nov 12 16:57:09 2003
-# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+# This file is part of MUMPS VERSION 4.4.2
+# This Version was built on Mon May 23 09:41:55 2005
 #
 #
 #Begin orderings
@@ -40,7 +39,7 @@ AR      = ar -X64 vr
 RANLIB  = ranlib
 
 
-SCALAP  = ~jak/SCALAPACK/libscalapack_pwr4.a  ~jak/BLACS/LIB/blacsF77init_MPI-POWER3-0.a  ~jak/BLACS/LIB/blacs_MPI-POWER3-0.a  ~jak/BLACS/LIB/blacsF77init_MPI-POWER3-0.a
+SCALAP  = -lpesslsmp -lblacssmp
 
 INCPAR  = # -I/usr/lpp/ppe.poe/include
 LIBPAR  = $(SCALAP)  # -L/usr/lpp/ppe.poe/lib -lmpi
@@ -52,7 +51,7 @@ CDEFS =
 
 #Begin Optimization options
 OPTF    = -WF,-DPESSL -WF,-DSP_ -WF,-DALLOW_NON_INIT -O3 -qstrict -qmaxmem=-1 -Q -qfixed -qalign=4k -qarch=auto -qtune=auto -qcache=auto -q64 -B/usr/lib/ -tF 
-OPTC    = -O3 -qstrict -qarch=auto -qtune=auto -qcache=auto -Q=150 -s -qmaxmem=-1 -qcpluscmt -I. -q64
+OPTC    = -O3 -qstrict -qarch=auto -qtune=auto -qcache=auto -Q=150 -s -qmaxmem=-1 -qcpluscmt -q64
 OPTL    = -O3 -qstrict -Q -qfixed -qalign=4k -q64
 #End Optimization options
  

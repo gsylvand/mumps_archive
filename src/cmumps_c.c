@@ -1,69 +1,48 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-   This Version was built on Wed Nov 12 16:57:09 2003
+   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+   This Version was built on Mon May 23 09:41:55 2005
 
- COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-                       J.-Y. L'Excellent
+  This version of MUMPS is provided to you free of charge. It is public
+  domain, based on public domain software developed during the Esprit IV
+  european project PARASOL (1996-1999). It has been partially supported
+  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+  Rhone-Alpes, and LBNL.
 
-  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-  INRIA                      (France)  (http://www.inria.fr)
-  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
- All rights reserved.
+  Up-to-date copies of the MUMPS package can be obtained
+  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+  or http://graal.ens-lyon.fr/MUMPS
 
-  Your use or distribution of the package implies that you agree
-  with this License. Up-to-date copies of the MUMPS package can be
-  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 
-  This package is provided to you free of charge. It was
-  initially based on public domain software developed during
-  the European Esprit IV project PARASOL (1996-1999).
+   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 
-  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 
-  Permission is hereby granted to use or copy this
-  package provided that the Copyright and this License is
-  retained on all copies and that the package is used
-  under the same terms and conditions. User documentation
-  of any code that uses this software should include this
-  complete Copyright notice and this License.
-
-  You can modify this code but, at no time shall the right
-  or title to all or any part of this package pass to you.
-  All information relating to any alteration or addition
-  made to this package for the purposes of extending the
-  capabilities or enhancing the performance of this package
-  shall be made available free of charge to the authors for
-  any purpose.
-
-  You shall acknowledge (using references [1] and [2])
-  the contribution of this package in any publication
-  of material dependent upon the use of the package.
-  You shall use reasonable endeavours to notify
+  User documentation of any code that uses this software can
+  include this complete notice. You can acknowledge (using
+  references [1], [2], and [3] the contribution of this package
+  in any scientific publication dependent upon the use of the
+  package. You shall use reasonable endeavours to notify
   the authors of the package of this publication.
 
+   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 
-  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+   A fully asynchronous multifrontal solver using distributed dynamic
+   scheduling, SIAM Journal of Matrix Analysis and Applications,
+   Vol 23, No 1, pp 15-41 (2001).
 
-  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-  A fully asynchronous multifrontal solver using distributed dynamic
-  scheduling, SIAM Journal of Matrix Analysis and Applications,
-  Vol 23, No 1, pp 15-41 (2001).
-  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-
-  None of the text from the Copyright notice up to and
-  including this line shall be removed or altered in any way.
+   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+   S. Pralet (2005), Hybrid scheduling for the parallel solution
+   of linear systems. Submitted to Parallel Computing.
 
 */
-/* $Id: cmumps_c.c,v 1.16 2003/06/30 16:31:49 jylexcel Exp $ */
+/* $Id: cmumps_c.c,v 1.21 2005/04/18 10:58:44 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
 #include "cmumps_c.h"
 #include <stdio.h>
@@ -99,6 +78,9 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     F_INT *listvar_schur; F_INT listvar_schur_avail;
     F_DOUBLE *schur; F_INT schur_avail;
     F_DOUBLE *rhs; F_DOUBLE *colsca; F_DOUBLE *rowsca;
+    F_DOUBLE *rhs_sparse, *sol_loc;
+    F_INT *irhs_sparse, *irhs_ptr, *isol_loc;
+
     F_INT irn_avail, jcn_avail, a_avail, rhs_avail; /* These are actually used
 						   * as booleans, but we stick
 						   * to simple types for the
@@ -106,6 +88,9 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     F_INT irn_loc_avail, jcn_loc_avail, a_loc_avail;
     F_INT eltptr_avail, eltvar_avail, a_elt_avail;
     F_INT colsca_avail, rowsca_avail;
+
+    F_INT irhs_ptr_avail, rhs_sparse_avail, sol_loc_avail;
+    F_INT irhs_sparse_avail, isol_loc_avail;
 
     F_INT *info; F_INT *infog;
     F_DOUBLE2 *rinfo; F_DOUBLE2 *rinfog;
@@ -134,10 +119,13 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     if ( cmumps_par->job == -1 )
       { /* job = -1: we just reset all pointers to 0 */
         cmumps_par->irn=0; cmumps_par->jcn=0; cmumps_par->a=0; cmumps_par->rhs=0;
-	cmumps_par->eltptr=0; cmumps_par->eltvar=0; cmumps_par->a_elt=0; cmumps_par->perm_in=0; cmumps_par->sym_perm=0; cmumps_par->uns_perm=0; cmumps_par->irn_loc=0;cmumps_par->jcn_loc=0;cmumps_par->a_loc=0; cmumps_par->listvar_schur=0;cmumps_par->schur=0;cmumps_par->mapping=0;cmumps_par->nullspace=0;cmumps_par->colsca=0;cmumps_par->rowsca=0;
+	cmumps_par->eltptr=0; cmumps_par->eltvar=0; cmumps_par->a_elt=0; cmumps_par->perm_in=0; cmumps_par->sym_perm=0; cmumps_par->uns_perm=0; cmumps_par->irn_loc=0;cmumps_par->jcn_loc=0;cmumps_par->a_loc=0; cmumps_par->listvar_schur=0;cmumps_par->schur=0;cmumps_par->mapping=0;cmumps_par->nullspace=0;cmumps_par->colsca=0;cmumps_par->rowsca=0; cmumps_par->rhs_sparse=0; cmumps_par->irhs_sparse=0; cmumps_par->sol_loc=0; cmumps_par->irhs_ptr=0; cmumps_par->isol_loc=0;
 
-	/* Next line initializes scalars to arbitrary values.*/
-	cmumps_par->n=0; cmumps_par->nz=0; cmumps_par->nz_loc=0; cmumps_par->nelt=0;cmumps_par->instance_number=0;cmumps_par->deficiency=0;cmumps_par->size_schur=0;
+	/* Next line initializes scalars to arbitrary values.
+	 * Some of those will anyway be overwritten during the
+	 * call to Fortran routine CMUMPS_163 */
+	cmumps_par->n=0; cmumps_par->nz=0; cmumps_par->nz_loc=0; cmumps_par->nelt=0;cmumps_par->instance_number=0;cmumps_par->deficiency=0;cmumps_par->size_schur=0;cmumps_par->lrhs=0; cmumps_par->nrhs=0; cmumps_par->nz_rhs=0; cmumps_par->lsol_loc=0;
+ cmumps_par->schur_mloc=0; cmumps_par->schur_nloc=0; cmumps_par->schur_lld=0; cmumps_par->mblock=0; cmumps_par->nblock=0; cmumps_par->nprow=0; cmumps_par->npcol=0;
       }
 
     /*
@@ -179,6 +167,12 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     EXTRACT_POINTERS(colsca,rdummyp);
     EXTRACT_POINTERS(rowsca,rdummyp);
 
+    EXTRACT_POINTERS(rhs_sparse,rdummyp);
+    EXTRACT_POINTERS(sol_loc,rdummyp);
+    EXTRACT_POINTERS(irhs_sparse,idummyp);
+    EXTRACT_POINTERS(isol_loc,idummyp);
+    EXTRACT_POINTERS(irhs_ptr,idummyp);
+
     /* printf("irn_avail,jcn_avail, rhs_avail, a_avail, eltptr_avail, eltvar_avail,a_elt_avail,perm_in_avail= %d %d %d %d %d %d %d \n", irn_avail,jcn_avail, rhs_avail, a_avail, eltptr_avail, eltvar_avail, a_elt_avail, perm_in_avail);*/
 
     /*
@@ -205,7 +199,18 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
 	  rhs, &rhs_avail, info, rinfo, infog, rinfog,
 	  &(cmumps_par->deficiency), &(cmumps_par->size_schur), listvar_schur, &listvar_schur_avail, schur,
 	  &schur_avail, colsca, &colsca_avail, rowsca, &rowsca_avail,
-	  &(cmumps_par->instance_number));
+	  &(cmumps_par->instance_number), &(cmumps_par->nrhs), &(cmumps_par->lrhs),
+	  rhs_sparse, &rhs_sparse_avail, sol_loc, &sol_loc_avail, irhs_sparse,
+	  &irhs_sparse_avail, irhs_ptr, &irhs_ptr_avail, isol_loc,
+	  &isol_loc_avail, &(cmumps_par->nz_rhs), &(cmumps_par->lsol_loc)
+	  , &(cmumps_par->schur_mloc)
+	  , &(cmumps_par->schur_nloc)
+	  , &(cmumps_par->schur_lld)
+	  , &(cmumps_par->mblock)
+	  , &(cmumps_par->nblock)
+	  , &(cmumps_par->nprow)
+	  , &(cmumps_par->npcol)
+	  );
 
     /*
      * mapping and nullspace are usually 0 except if
@@ -281,6 +286,5 @@ void cmumps_nullify_c_rowsca_()
 {
   rowsca_static = 0;
 }
-
 
 #endif

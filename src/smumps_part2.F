@@ -1,65 +1,44 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
       SUBROUTINE SMUMPS_267( BUFR, LBUFR, LBUFR_BYTES,
      *                           N, ID, MYID, STEP,
@@ -129,7 +108,7 @@ C
      *                 COMM, IERR )
       RETURN
       END SUBROUTINE SMUMPS_267
-      SUBROUTINE SMUMPS_152( MYID,N, IPOSBLOCK,
+      SUBROUTINE SMUMPS_152(SSARBR, MYID, N, IPOSBLOCK,
      *       RPOSBLOCK,
      *       IW, LIW, NIRBDU,
      *       LRLU, LRLUS, IPTRLU,
@@ -142,6 +121,7 @@ C
      *        IPTRLU, IWPOSCB, N, LA
       INTEGER IW( LIW ), KEEP(150)
       INTEGER MYID
+      LOGICAL SSARBR
       INTEGER SIZFI_BLOCK, SIZFR_BLOCK, SIZFI, SIZFR
       IF ( IW( IPOSBLOCK ) .LT. 0 ) THEN
         SIZFI_BLOCK = 2
@@ -162,7 +142,8 @@ C
          IWPOSCB = IWPOSCB + SIZFI_BLOCK
          LRLU    = LRLU  + SIZFR_BLOCK
          LRLUS   = LRLUS + SIZFR_BLOCK
-      CALL SMUMPS_471(.FALSE.,LA-LRLUS,0,-SIZFR_BLOCK,KEEP)
+      CALL SMUMPS_471(SSARBR,.FALSE.,
+     *                          LA-LRLUS,0,-SIZFR_BLOCK,KEEP,LRLU)
  90      IF ( IWPOSCB .eq. NIRBDU ) GO TO 100
          IF ( IW( IWPOSCB + 1 ) .LT. 0 ) THEN
            IF( IW( IWPOSCB + 1 ) .LT. -N ) THEN
@@ -199,7 +180,8 @@ C
            IW( IPOSBLOCK + 4 ) = 0
          END IF
          LRLUS = LRLUS + SIZFR_BLOCK
-      CALL SMUMPS_471(.FALSE.,LA-LRLUS,0,-SIZFR_BLOCK,KEEP)
+      CALL SMUMPS_471(SSARBR,.FALSE.,
+     *                          LA-LRLUS,0,-SIZFR_BLOCK,KEEP,LRLU)
       END IF
  100  CONTINUE
       RETURN
@@ -212,12 +194,13 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP, PIMASTER, PAMASTER,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC, STEP, PIMASTER,
+     *             PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
      *             INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
      *             LPTRAR, NELT, FRTPTR, FRTELT, SEUIL,
-     *             ISTEP_TO_INIV2, TAB_POS_IN_PERE )
+     *             ISTEP_TO_INIV2, TAB_POS_IN_PERE, AVOID_DELAYED )
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
       INTEGER COMM_LOAD, ASS_IRECV
@@ -239,7 +222,8 @@ C
      *        PTRARW(LPTRAR), PTRAIW(LPTRAR),
      *        ND( KEEP(28) ), FRERE( KEEP(28) )
       INTEGER  INTARR(MAX(1,KEEP(14)))
-      INTEGER PTRIST(KEEP(28)), PTRAST(KEEP(28)), PTLUST_S(KEEP(28)),
+      INTEGER PTRIST(KEEP(28)), PTRAST(KEEP(28)),
+     *        PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
      *        STEP(N),
      *        
      * PIMASTER(KEEP(28)),
@@ -248,16 +232,35 @@ C
      *        PROCNODE_STEPS(KEEP(28))
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
       REAL DBLARR(MAX(1,KEEP(13)))
-      INTEGER INOPV, IFINB, NFRONT, NPIV, IBEGKJI, NBTLKJ
+      LOGICAL AVOID_DELAYED
+      INTEGER INOPV, IFINB, NFRONT, NPIV, IBEGKJI, NBTLKJ,IBEG_BLOCK
       INTEGER NASS, NEL1, IEND, IOLDPS, POSELT, dummy, allocok
       LOGICAL LASTBL 
+      REAL UUTEMP
       INTEGER , ALLOCATABLE, DIMENSION ( : ) :: IPIV
       EXTERNAL SMUMPS_224, SMUMPS_233, 
      *         SMUMPS_225, SMUMPS_232,
      *         SMUMPS_294,
      *         SMUMPS_44
+      LOGICAL STATICMODE
+      REAL SEUIL_LOC
+      INOPV = 0
+      SEUIL_LOC = SEUIL
+      IF(KEEP(97) .EQ. 0) THEN
+         STATICMODE = .FALSE.
+      ELSE
+         STATICMODE = .TRUE.
+      ENDIF
+      IF (AVOID_DELAYED) THEN
+         STATICMODE = .TRUE.
+         UUTEMP=UU
+         SEUIL_LOC = MAX(SEUIL,EPSILON(SEUIL))
+      ELSE
+         UUTEMP=UU
+      ENDIF
+      IBEG_BLOCK=1
       dummy  = 0
       IOLDPS = PTLUST_S(STEP( INODE ))
       POSELT = PTRAST(STEP( INODE ))
@@ -277,11 +280,17 @@ C
         GO TO 490
       END IF
  50   CONTINUE
-      IBEGKJI = IW(IOLDPS+4)
+      IBEGKJI = IBEG_BLOCK
       CALL SMUMPS_224(NFRONT,NASS,IBEGKJI, NASS, IPIV,
      *                N,INODE,IW,LIW,A,LA,INOPV,NOFFW,
-     *                IFLAG,IOLDPS,POSELT,UU,SEUIL)
+     *                IFLAG,IOLDPS,POSELT,UU,SEUIL_LOC,KEEP)
       IF (IFLAG.LT.0) GOTO 490
+      IF (INOPV.EQ.1) THEN
+         IF(STATICMODE) THEN
+            INOPV = -1
+            GOTO 50
+         ENDIF
+      ENDIF
       IF (INOPV.GE.1) THEN
           LASTBL = (INOPV.EQ.1)
           IEND = IW(IOLDPS+1)
@@ -294,7 +303,8 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP, PIMASTER, PAMASTER,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC, STEP,
+     *             PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
      *             INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
@@ -304,7 +314,7 @@ C
       ENDIF
       IF (INOPV.EQ.1) GO TO 500
       IF (INOPV.EQ.2) THEN
-         CALL SMUMPS_233(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
+         CALL SMUMPS_233(IBEG_BLOCK,NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *            IOLDPS,POSELT,NBTLKJ,KEEP(4))
          GOTO 50
       ENDIF
@@ -312,7 +322,8 @@ C
       IF (NASS.LE.1) THEN
         IFINB = -1
       ELSE
-         CALL SMUMPS_225(NFRONT, NASS, N,INODE,IW,LIW,A,LA,
+         CALL SMUMPS_225(IBEG_BLOCK,
+     *             NFRONT, NASS, N,INODE,IW,LIW,A,LA,
      *             IOLDPS,POSELT,IFINB,
      *             NBTLKJ,KEEP(4))
       ENDIF
@@ -330,7 +341,8 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP, PIMASTER, PAMASTER,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC,
+     *             STEP, PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
      *             INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
@@ -354,7 +366,8 @@ C
      *    ROOT, FRERE, IROOT, 
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -378,7 +391,8 @@ C
       INTEGER N, LIW, LA
       INTEGER IW( LIW )
       REAL A( LA )
-      INTEGER PTRIST(KEEP(28)), PTLUST_S( KEEP(28) ), PTRAST(KEEP(28))
+      INTEGER PTRIST(KEEP(28)), PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
+     * PTRAST(KEEP(28))
       INTEGER STEP(N), 
      * PIMASTER(KEEP(28)),
      *  PAMASTER(KEEP(28))
@@ -393,7 +407,7 @@ C
       INTEGER MYID, SLAVEF, NBFIN
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
       INTEGER ITLOC( N ), FILS( N )
       INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
       INTEGER ND(KEEP(28)), FRERE(KEEP(28))
@@ -430,7 +444,8 @@ C
      *    NB_CONTRI_GLOBAL, ROOT,
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM, COMM_LOAD,
      *    NBPROCFILS,
@@ -439,6 +454,7 @@ C
      *
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
      *    INTARR, DBLARR, ICNTL, KEEP, ND )
+       IF (IFLAG < 0 ) RETURN
       HF = 6
       IOLDPS = PTLUST_S(STEP(IROOT))
       IN = IROOT
@@ -493,7 +509,8 @@ C
      *       BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *       IWPOS, IWPOSCB, IPTRLU,
      *       LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, 
-     *       PTLUST_S, PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
+     *       PTLUST_S, PTRFAC,
+     *       PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *       IFLAG, IERROR, COMM,
      *       NBPROCFILS,
      *       IPOOL, LPOOL, LEAF,
@@ -506,7 +523,7 @@ C
              IPOS_SON  = PIMASTER(STEP(IN))
             ENDIF
           END DO
-          CALL  SMUMPS_152( MYID,N, IPOS_SON, 
+          CALL  SMUMPS_152( .FALSE.,MYID,N, IPOS_SON, 
      *       PTRAST(STEP(IN)),
      *       IW, LIW, NIRBDU,
      *       LRLU, LRLUS, IPTRLU,
@@ -549,7 +566,8 @@ C
      *
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, IW, LIW, A, LA,
-     *    NIRBDU, PTRIST, PTLUST_S, PTRAST, STEP, PIMASTER, PAMASTER,
+     *    NIRBDU, PTRIST, PTLUST_S, PTRFAC,
+     *    PTRAST, STEP, PIMASTER, PAMASTER,
      *    NSTK, COMP, IFLAG, IERROR, NBPROCFILS,
      *    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
@@ -580,7 +598,8 @@ C
       INTEGER NIRBDU
       INTEGER LPTRAR, NELT
       INTEGER FRTPTR( N+1 ), FRTELT( NELT )
-      INTEGER PTRIST( KEEP(28) ), PTRAST(KEEP(28)), PTLUST_S(KEEP(28))
+      INTEGER PTRIST( KEEP(28) ), PTRAST(KEEP(28)), PTRFAC(KEEP(28)),
+     *        PTLUST_S(KEEP(28))
       INTEGER STEP(N), 
      * PIMASTER(KEEP(28)),
      *  PAMASTER(KEEP(28)), NSTK( N )
@@ -589,7 +608,7 @@ C
       INTEGER LPOOL, LEAF
       INTEGER IPOOL( LPOOL )
       INTEGER NBFIN, SLAVEF
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
       INTEGER PROCNODE_STEPS( KEEP(28) )
       INTEGER ITLOC( N ), FILS( N ), ND( KEEP(28) ), FRERE( KEEP(28) )
       INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
@@ -719,7 +738,8 @@ C
         IF ( PTRIST(STEP(IROOT)).EQ.0.AND.
      *       PTLUST_S(STEP(IROOT)).EQ.0) THEN
            NBPROCFILS( STEP(IROOT) ) = -1
-           CALL SMUMPS_284(root, IROOT, N, IW, LIW,
+           IF (KEEP(60) .EQ. 0) THEN
+             CALL SMUMPS_284(root, IROOT, N, IW, LIW,
      *                     A, LA,
      *                     NIRBDU,
      *                     FILS, MYID, PTRAIW, PTRARW, INTARR, DBLARR,
@@ -727,15 +747,19 @@ C
      *                     IWPOS, IWPOSCB, PTRIST, PTRAST,
      *                     STEP, PIMASTER, PAMASTER, ITLOC,
      *                     COMP, LRLUS, IFLAG, KEEP, IERROR )
-          IF (IFLAG.LT.0) THEN
-            CALL SMUMPS_44( MYID, SLAVEF, COMM )
-            RETURN
-          ENDIF
+              IF (IFLAG.LT.0) THEN
+                CALL SMUMPS_44( MYID, SLAVEF, COMM )
+                RETURN
+              ENDIF
+           ELSE
+              PTRIST(STEP(IROOT))=-66666
+           ENDIF
         ELSE
            NBPROCFILS(STEP(IROOT)) = NBPROCFILS(STEP(IROOT)) - 1
            IF ( NBPROCFILS( STEP(IROOT) ) .eq. 0 ) THEN
               CALL SMUMPS_507(N, IPOOL, LPOOL, PROCNODE_STEPS,
-     *        SLAVEF, KEEP(28), KEEP(76), STEP, IROOT+N )
+     *        SLAVEF, KEEP(28), KEEP(76), KEEP(80), KEEP(47),
+     *        STEP, IROOT+N )
               IF (KEEP(47) .GE. 3) THEN
                  CALL SMUMPS_500(
      $                IPOOL, LPOOL, 
@@ -744,11 +768,48 @@ C
               ENDIF
           END IF
         END IF
+       IF (KEEP(60) .NE. 0 ) THEN
+         LOCAL_M = root%SCHUR_LLD
+         LOCAL_N = root%SCHUR_NLOC
+          IF ( .NOT. INVERT ) THEN
+            NRLOCAL = PTRROW( IROW + 2 ) - PTRROW( IROW + 1 )
+            NCLOCAL = PTRCOL( JCOL + 2 ) - PTRCOL( JCOL + 1 )
+            CALL SMUMPS_285( N,
+     *        root%SCHUR_POINTER(1),
+     *        LOCAL_M, LOCAL_N,
+     *        root%NPCOL, root%NPROW, root%MBLOCK, root%NBLOCK,
+     *        NBCOL, NBROW,
+     *        IW( PTRI(STEP(ISON)) + SHIFT_LIST_COL_SON ),
+     *        IW( PTRI(STEP(ISON)) + SHIFT_LIST_ROW_SON ),
+     *        LDA, A( PTRR( STEP(ISON)) + SHIFT_VAL_SON ),
+     *        ROW_INDEX_LIST( PTRROW( IROW + 1 ) ),
+     *        COL_INDEX_LIST( PTRCOL( JCOL + 1 ) ),
+     *        NRLOCAL,
+     *        NCLOCAL,
+     *        root%RG2L_ROW, root%RG2L_COL, INVERT )
+          ELSE
+            NCLOCAL = PTRCOL( JCOL + 2 ) - PTRCOL( JCOL + 1 )
+            NRLOCAL = PTRROW( IROW + 2 ) - PTRROW( IROW + 1 )
+            CALL SMUMPS_285( N,
+     *        root%SCHUR_POINTER(1),
+     *        LOCAL_M, LOCAL_N,
+     *        root%NPCOL, root%NPROW, root%MBLOCK, root%NBLOCK,
+     *        NBCOL, NBROW,
+     *        IW( PTRI(STEP(ISON)) + SHIFT_LIST_COL_SON ),
+     *        IW( PTRI(STEP(ISON)) + SHIFT_LIST_ROW_SON ),
+     *        LDA, A(PTRR(STEP(ISON)) + SHIFT_VAL_SON ),
+     *        ROW_INDEX_LIST( PTRCOL( JCOL + 1 ) ),
+     *        COL_INDEX_LIST( PTRROW( IROW + 1 ) ),
+     *        NCLOCAL,
+     *        NRLOCAL,
+     *        root%RG2L_ROW, root%RG2L_COL, INVERT )
+          END IF
+       ELSE
         IF ( PTRIST(STEP( IROOT )) .GE. 0 ) THEN
           IF ( PTRIST(STEP( IROOT )) .EQ. 0 ) THEN
             LOCAL_N = IW( PTLUST_S(STEP(IROOT)) + 1 )
             LOCAL_M = IW( PTLUST_S(STEP(IROOT)) + 2 )
-            POSROOT = IW( PTLUST_S(STEP(IROOT)) + 4 )
+            POSROOT = PTRFAC(IW( PTLUST_S(STEP(IROOT)) + 4 ))
           ELSE
             LOCAL_N = - IW( PTRIST(STEP(IROOT)) )
             LOCAL_M = IW( PTRIST(STEP(IROOT)) + 1 )
@@ -786,6 +847,7 @@ C
      *        root%RG2L_ROW, root%RG2L_COL, INVERT )
           END IF
         END IF
+       ENDIF
       END IF
       DO IROW = 0, root%NPROW - 1
         DO JCOL = 0, root%NPCOL - 1
@@ -861,7 +923,7 @@ C
      *            STATUS, BUFR, LBUFR,
      *            LBUFR_BYTES, PROCNODE_STEPS, POSFAC, IWPOS, IWPOSCB,
      *            IPTRLU, LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU,
-     *            PTRIST, PTLUST_S, PTRAST, STEP,
+     *            PTRIST, PTLUST_S, PTRFAC, PTRAST, STEP,
      *            PIMASTER, PAMASTER, NSTK,
      *            COMP, IFLAG, IERROR, COMM, NBPROCFILS, IPOOL, LPOOL,
      *            LEAF, NBFIN, MYID, SLAVEF, root,
@@ -950,22 +1012,23 @@ C
       END SUBROUTINE SMUMPS_285
       SUBROUTINE SMUMPS_164
      *( MYID, NPROCS, N, root, COMM_ROOT, IROOT, FILS,
-     *  K50, K46, K51 )
+     *  K50, K46, K51
+     *     , K60, IDNPROW, IDNPCOL, IDMBLOCK, IDNBLOCK
+     * )
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
-      INTEGER MYID
+      INTEGER MYID, MYID_ROOT
       TYPE (SMUMPS_ROOT_STRUC)::root
       INTEGER COMM_ROOT
       INTEGER N, IROOT, NPROCS, K50, K46, K51
       INTEGER FILS( N )
+      INTEGER K60, IDNPROW, IDNPCOL, IDMBLOCK, IDNBLOCK
       INTEGER INODE, NPROWtemp, NPCOLtemp
       LOGICAL SLAVE
       root%ROOT_SIZE     = 0
       root%TOT_ROOT_SIZE = 0
       NULLIFY( root%RG2L_ROW )
       NULLIFY( root%RG2L_COL )
-      root%MBLOCK = K51
-      root%NBLOCK = K51
       SLAVE = ( MYID .ne. 0 .or.
      *        ( MYID .eq. 0 .and. K46 .eq. 1 ) )
       IF ( SLAVE ) THEN
@@ -975,8 +1038,47 @@ C
           root%ROOT_SIZE = root%ROOT_SIZE + 1
         END DO
       END IF
+      IF ( ( K60 .NE. 2 .AND. K60 .NE. 3 ) .OR.
+     *       IDNPROW .LE. 0 .OR. IDNPCOL .LE. 0
+     *      .OR. IDMBLOCK .LE.0 .OR. IDNBLOCK.LE.0
+     *      .OR. IDNPROW * IDNPCOL .GT. NPROCS ) THEN
+      root%MBLOCK = K51
+      root%NBLOCK = K51
       CALL SMUMPS_99( NPROCS, root%NPROW, root%NPCOL,
      *                         root%ROOT_SIZE, K50 )
+      IF  ( K60 .EQ. 2 .OR. K60 .EQ. 3 ) THEN
+        IDNPROW = root%NPROW
+        IDNPCOL = root%NPCOL
+        IDMBLOCK = root%MBLOCK
+        IDNBLOCK = root%NBLOCK
+      ENDIF
+      ELSE IF  ( K60 .EQ. 2 .OR. K60 .EQ. 3 ) THEN
+        root%NPROW = IDNPROW
+        root%NPCOL = IDNPCOL
+        root%MBLOCK = IDMBLOCK
+        root%NBLOCK = IDNBLOCK
+      ENDIF
+      IF  ( K60 .EQ. 2 .OR. K60 .EQ. 3 ) THEN
+        IF (SLAVE) THEN
+          root%LPIV = 0
+          IF (K46.EQ.0) THEN
+            MYID_ROOT=MYID-1
+          ELSE
+            MYID_ROOT=MYID
+          ENDIF
+          IF (MYID_ROOT < root%NPROW*root%NPCOL) THEN
+            root%MYROW = MYID_ROOT / root%NPCOL
+            root%MYCOL = MOD(MYID_ROOT, root%NPCOL)
+            root%yes  = .true.
+          ELSE
+            root%MYROW = -1
+            root%MYCOL = -1
+            root%yes  = .FALSE.
+          ENDIF
+        ELSE
+          root%yes  = .FALSE.
+        ENDIF
+      ELSE
       IF ( SLAVE ) THEN
         IF ( root%gridinit_done) THEN
            CALL BLACS_GRIDEXIT( root%CNTXT_BLACS )
@@ -998,6 +1100,7 @@ C
       ELSE
         root%yes = .FALSE.
       END IF
+      ENDIF
       RETURN
       END SUBROUTINE SMUMPS_164
       SUBROUTINE SMUMPS_165( N, root, FILS, IROOT, INFO )
@@ -1270,7 +1373,7 @@ C
               PTRIST(STEP(IROOT)) = -9999999
               RETURN
             ENDIF
-            CALL SMUMPS_22(.FALSE.,
+            CALL SMUMPS_22(.FALSE.,.FALSE.,
      *                     MYID,N,KEEP,IW,LIW,A,LA, NIRBDU,
      *                     LRLU, IPTRLU,
      *                     IWPOS, IWPOSCB, PTRIST, PTRAST,
@@ -1415,7 +1518,7 @@ C
       INTEGER POSITION, IFATH, ISON, NROW, NCOL, NELIM, 
      *        NSLAVES
       INTEGER NOREAL, NOINT, INIV2
-      REAL FLOP1
+      DOUBLE PRECISION FLOP1
       LOGICAL PERETYPE2
       INTEGER  SMUMPS_330
       EXTERNAL SMUMPS_330
@@ -1441,7 +1544,7 @@ C
       ELSE
         NOREAL = NROW * NCOL
       ENDIF
-      CALL SMUMPS_22(.FALSE.,
+      CALL SMUMPS_22(.FALSE.,.FALSE.,
      *   MYID,N,KEEP,IW,LIW,A,LA,NIRBDU,
      *   LRLU, IPTRLU,IWPOS,IWPOSCB,
      *   PTRIST,PTRAST,STEP, PIMASTER, PAMASTER, ITLOC,
@@ -1494,7 +1597,8 @@ C
       NSTK_S( STEP(IFATH ))       = NSTK_S( STEP(IFATH) ) - 1
       IF ( NSTK_S( STEP(IFATH)) .EQ. 0 ) THEN
           CALL SMUMPS_507(N, IPOOL, LPOOL, PROCNODE_STEPS,
-     *         SLAVEF, KEEP(28), KEEP(76), STEP, IFATH )
+     *         SLAVEF, KEEP(28), KEEP(76), KEEP(80), KEEP(47),
+     *         STEP, IFATH )
           IF (KEEP(47) .GE. 3) THEN
              CALL SMUMPS_500(
      $            IPOOL, LPOOL, 
@@ -1506,7 +1610,8 @@ C
      *                            FILS,FRERE, STEP, PIMASTER,
      *                            KEEP(28), KEEP(50),
      *                            FLOP1,IW, LIW )
-          CALL SMUMPS_190( .FALSE., FLOP1, KEEP )
+          IF (IFATH.NE.KEEP(20))
+     *    CALL SMUMPS_190(1, .FALSE., FLOP1, KEEP )
       END IF
       RETURN
       END SUBROUTINE SMUMPS_268
@@ -1557,6 +1662,11 @@ C
       END IF
       CNTL(2) = SQRT(EPSILON(0.0E0))
       CNTL(3) = -1.0E0
+      IF(KEEP(50).NE. 2) THEN
+         CNTL(4) = -1.0E0
+      ELSE
+         CNTL(4) = 0.0E0
+      ENDIF
       KEEP(46) = PAR
       IF ( KEEP(46) .NE. 0 .AND.
      *     KEEP(46) .NE. 1 ) THEN
@@ -1567,13 +1677,13 @@ C
       ICNTL(3)  = 6
       ICNTL(4)  = 2
       ICNTL(5)  = 0
-      IF (SYM.EQ.0) THEN
+      IF (SYM.NE.1) THEN
        ICNTL(6)  = 7
       ELSE
        ICNTL(6)  = 0
       ENDIF
       ICNTL(7) = 7
-      IF (SYM.EQ.0) THEN
+      IF (SYM.NE.1) THEN
         ICNTL(8)  = 7
       ELSE
         ICNTL(8)  = 0
@@ -1581,7 +1691,11 @@ C
       ICNTL(9)  = 1
       ICNTL(10)  = 0
       ICNTL(11)  = 0
-      ICNTL(12)  = 0
+      IF(SYM .EQ. 2) THEN
+         ICNTL(12)  = 0
+      ELSE
+         ICNTL(12)  = 1
+      ENDIF
       ICNTL(13) = 0
       IF ( SYM .eq. 1 ) THEN
         ICNTL(14) = 15
@@ -1593,10 +1707,13 @@ C
       ICNTL(17) = 0
       ICNTL(18) = 0
       ICNTL(19) = 0
+      ICNTL(20) = 0
+      ICNTL(21) = 0
+      ICNTL(40)  = 0 ! Second level parallelism on
       KEEP(12) = 0
       KEEP(11) = 2147483646
       KEEP(24) = 18
-      KEEP(68) = 10
+      KEEP(68) = 0
       KEEP(36) = 1
       KEEP(1) = 8
 #if defined(valuesV416sgi)
@@ -1606,14 +1723,14 @@ C
         KEEP(5)  = 16
         KEEP(6)  = 32
         KEEP(9)  = 500
-        KEEP(10) = 250
+        KEEP(85) = 250
       ELSE
         KEEP(4)  = 24
         KEEP(3) =  96
         KEEP(5) =  16
         KEEP(6) =  48
         KEEP(9)  = 800
-        KEEP(10) = 100
+        KEEP(85) = 100
       END IF
       KEEP(7) = 40
       KEEP(8) = 40
@@ -1629,7 +1746,7 @@ C
         KEEP(3)  = 96
         KEEP(5)  = 16
         KEEP(6)  = 32
-        KEEP(10) =  160
+        KEEP(85) =  160
         KEEP(62) =  50
         IF (NPROCS.GE.128) KEEP(62)=200
         IF (NPROCS.GE.128) KEEP(9)=500
@@ -1639,7 +1756,7 @@ C
         KEEP(3) =  96
         KEEP(5) =  16
         KEEP(6) =  48
-        KEEP(10) =  80
+        KEEP(85) =  80
         KEEP(62) = 100
         IF (NPROCS.GE.128) KEEP(62)=150
         IF (NPROCS.GE.64) KEEP(9)=500
@@ -1659,14 +1776,14 @@ C
         KEEP(5)  = 16
         KEEP(6)  = 32
         KEEP(9)  = 800
-        KEEP(10) = 400
+        KEEP(85) = 400
       ELSE
         KEEP(4)  = 24
         KEEP(3) =  96
         KEEP(5) =  16
         KEEP(6) =  48
         KEEP(9)  = 400
-        KEEP(10) = 100
+        KEEP(85) = 100
       END IF
       KEEP(7) = 40
       KEEP(8) = 40
@@ -1682,7 +1799,7 @@ C
         KEEP(5)  = 16
         KEEP(6)  = 32
         KEEP(9)  = 700
-        KEEP(10) =  300
+        KEEP(85) =  300
         KEEP(62) =  50
         IF (NPROCS.GE.128) KEEP(62)=200
         IF (NPROCS.GE.128) KEEP(9)=800
@@ -1693,7 +1810,7 @@ C
         KEEP(5) =  16
         KEEP(6) =  48
         KEEP(9)  = 400
-        KEEP(10) = 100
+        KEEP(85) = 100
         KEEP(62) = 100
         IF (NPROCS.GE.128) KEEP(62)=150
         IF (NPROCS.GE.64) KEEP(9)=800
@@ -1706,28 +1823,24 @@ C
       KEEP(59) = 120
       KEEP(63) = 30
 #endif
-      IF ( SYM .eq. 0 ) THEN
-        KEEP(48) = 0
-      ELSE
-        KEEP(48) = 3
-      END IF
+      KEEP(48) = 5
       KEEP(17) = 0
       CALL SMUMPS_464( KEEP(34), KEEP(35))
       KEEP(37) = MAX(800, 2*NPROCS)
       IF ( NPROCS > 256 ) THEN
-        KEEP(39) = 500
+        KEEP(39) = 10000
       ELSEIF ( NPROCS > 128 ) THEN
-        KEEP(39) = 1000
+        KEEP(39) = 20000
       ELSEIF ( NPROCS > 64 ) THEN
-        KEEP(39) = 2000
+        KEEP(39) = 40000
       ELSEIF ( NPROCS > 16 ) THEN
-        KEEP(39) = 4000
+        KEEP(39) = 80000
       ELSE
-        KEEP(39) = 8000
+        KEEP(39) = 160000
       END IF
       KEEP(40) = -1
       KEEP(45) = 0
-      KEEP(47) = 1
+      KEEP(47) = 2
 #if defined(SP_)
       KEEP( 51 )  = 70
 #elif defined(valuesV416sgi)
@@ -1739,26 +1852,41 @@ C
 #endif
       KEEP(64) = 10
       KEEP(69) = 4
-      KEEP(75) = 0
+      KEEP(75) = 1
       KEEP(76) = 2
-      KEEP(77) = MAX(20, 2*KEEP(68))
+      KEEP(77) = 30
       IF (NPROCS.GT.4) THEN
           KEEP(78)=MAX(
      &       int(log(REAL(NPROCS))/log(REAL(2))) - 2 
      &       , 0         )
       ENDIF
       KEEP(79) = 2000000000
+      KEEP(80) = 1
+      KEEP(81) = 0
+      KEEP(82) = 5
+      KEEP(83) = MIN(8,NPROCS/4)
+      KEEP(83) = MAX(MIN(4,NPROCS),MAX(KEEP(83),1))
+      KEEP(84) = 16
+      KEEP(86)=1
+      KEEP(87)=0
+      KEEP(88)=0
+      KEEP(90)=1
+      KEEP(91)=MIN(8, NPROCS)
+      KEEP(91) = MAX(MIN(4,NPROCS),MIN(KEEP(83),KEEP(91)))
       RETURN
       END SUBROUTINE SMUMPS_20
       SUBROUTINE SMUMPS_195(N, NZ, IRN, ICN, LIW, IKEEP, PTRAR,
      *            IORD, NFSIZ, FILS, FRERE, LISTVAR_SCHUR, SIZE_SCHUR,
-     *            ICNTL, INFO, KEEP, NSLAVES, SYM)
+     *            ICNTL, INFO, KEEP, NSLAVES, SYM, PIV, id)
       IMPLICIT NONE
+      INCLUDE 'smumps_struc.h'
       INTEGER N,NZ,LIW,IORD,SIZE_SCHUR, NSLAVES, SYM
       INTEGER PTRAR(N,4), NFSIZ(N), FILS(N), FRERE(N)
       INTEGER IKEEP(N,3)
       INTEGER  LISTVAR_SCHUR(SIZE_SCHUR)
       INTEGER INFO(40), ICNTL(40), KEEP(150)
+      INTEGER CPERM(N)
+      TYPE (SMUMPS_STRUC) :: id      
       INTEGER IRN(NZ), ICN(NZ)  
       INTEGER, DIMENSION(:), ALLOCATABLE :: IW
       INTEGER IERR
@@ -1774,15 +1902,68 @@ C
       LOGICAL AGG6
       INTEGER MINSYM
       PARAMETER (MINSYM=50)
-      EXTERNAL SMUMPS_197, SMUMPS_196, SMUMPS_198, 
+      INTEGER PIV(N)
+      INTEGER MTRANS, COMPRESS,NCMP,IERROR,J,JPERM,NCST,NLOCKED,P11,
+     *     K1,K2,P1,P2
+      LOGICAL IDENT,V1,V2
+      EXTERNAL SMUMPS_197, SMUMPS_198, 
      *         SMUMPS_199, SMUMPS_351,
-     *         SMUMPS_200, SMUMPS_201
-        ALLOCATE( IW ( LIW ), stat = IERR )
-        IF ( IERR .GT. 0 ) THEN
-          INFO( 1 ) = -13
-          INFO( 2 ) = LIW
-          RETURN
-        ENDIF
+     *         SMUMPS_557, SMUMPS_201
+#if defined(OLDDFS)
+      EXTERNAL SMUMPS_200
+#endif
+      EXTERNAL SMUMPS_547, SMUMPS_550,
+     *     SMUMPS_EXPAND_NV_PE, SMUMPS_UPDATE_NV,
+     *     SMUMPS_549,SMUMPS_556
+#if(SP_DEBUG >= 1)
+      INTERFACE
+         SUBROUTINE SMUMPS_547(
+     *        N,NZ, IRN, ICN, PERM,
+     *        NCMP, IW, LW, IPE, LEN, IQ, 
+     *        FLAG, ICMP, IWFR,
+     *        IERROR, KEEP, ICNTL)
+         INTEGER N,NZ,NCMP,LW,IWFR,IERROR
+         INTEGER ICNTL(40),KEEP(150)
+         INTEGER IRN(NZ),ICN(NZ),IW(LW),PERM(N),IPE(N+1)
+         INTEGER LEN(N),IQ(N),FLAG(N),ICMP(N) 
+         END SUBROUTINE SMUMPS_547
+         SUBROUTINE SMUMPS_550(N,NCMP,N11,N22,PIV,
+     *        PERM,IPERM)
+         IMPLICIT NONE
+         INTEGER N11,N22,N,NCMP
+         INTEGER PIV(N),PERM(N),IPERM(N)
+         END SUBROUTINE SMUMPS_550
+         SUBROUTINE SMUMPS_EXPAND_NV_PE(N,NCMP,N11,N22,PIV,
+     *        PE,NV,PE_EXP,NV_EXP)
+         INTEGER N11,N22,N,NCMP
+         INTEGER PIV(N),NV(N),PE(N),NV_EXP(N),PE_EXP(N)
+         END SUBROUTINE SMUMPS_EXPAND_NV_PE
+         SUBROUTINE SMUMPS_UPDATE_NV(N,LIW,IPE,IW,N11,N22,PIV,
+     *        PE,NV,WORK)
+         INTEGER N11,N22,N,LIW
+         INTEGER PIV(N),NV(N),PE(N),IPE(N+1),IW(LIW),WORK(N)
+         END SUBROUTINE SMUMPS_UPDATE_NV
+         SUBROUTINE SMUMPS_549(N,PE,PERM,NFILS,WORK)
+         INTEGER N
+         INTEGER PE(N),PERM(N),NFILS(N),WORK(N)
+         END SUBROUTINE SMUMPS_549
+         SUBROUTINE SMUMPS_556(
+     *        N,PIV,FRERE,FILS,NFSIZ,IKEEP,
+     *        NCST,KEEP,id)
+         INCLUDE 'smumps_struc.h'      
+         TYPE (SMUMPS_STRUC) :: id
+         INTEGER N,NCST
+         INTEGER PIV(N),FRERE(N),FILS(N),NFSIZ(N),IKEEP(N,3)
+         INTEGER KEEP(150)
+         END SUBROUTINE SMUMPS_556
+      END INTERFACE
+#endif
+      ALLOCATE( IW ( LIW ), stat = IERR )
+      IF ( IERR .GT. 0 ) THEN
+         INFO( 1 ) = -7
+         INFO( 2 ) = LIW
+         RETURN
+      ENDIF
       MPRINT= ICNTL(3)
       PROK  = (MPRINT.GT.0)
       LP    = ICNTL(1)
@@ -1827,76 +2008,163 @@ C
         CALL SMUMPS_423( N, SYM, NSLAVES, IORD)
       END IF
 #endif
-      INFO(7) = IORD
-      IF ( (IORD .EQ. 4) .OR. (IORD .EQ. 3) .OR. 
-     &      (IORD .EQ. 5 ) ) THEN 
-        LLIW = LIW - 2*N - 1
+      IF(SYM .EQ. 2) THEN
+         IF(KEEP(95) .EQ. 3 .AND. IORD .NE. 2) THEN
+            IF (PROK) WRITE(MP,*)
+     *       'WARNING: ANAL_F constrained ordering not available ', 
+     *       'with selected ordering'
+            KEEP(95) = 2
+         ENDIF
+         IF(KEEP(95) .EQ. 2 .AND. IORD .EQ. 0) THEN 
+            IF (PROK) WRITE(MP,*)
+     *           'WARNING: ANAL_F AMD not available with ', 
+     *           'compressed ordering -> move to QAMD'
+            IORD = 6
+         ENDIF
       ELSE
-        LLIW = LIW - 2*N
+         KEEP(95) = 1
       ENDIF
+      MTRANS = KEEP(23)
+      COMPRESS = KEEP(95) - 1
+      IF(COMPRESS .GT. 0 .AND. KEEP(52) .EQ. -2) THEN
+         IF(id%CNTL(4) .GT. 0.0E0) THEN
+            KEEP(97) = 1
+            KEEP(1) = 16
+            WRITE(*,*) 'Setting static pivoting ON, COMPRESS =',
+     *           COMPRESS
+         ENDIF
+      ENDIF
+      IF(MTRANS .GT. 0 .AND. KEEP(50) .EQ. 2) THEN
+         KEEP(23) = 0
+      ENDIF
+#if(SP_DEBUG >= 2)
+      WRITE(*,*) 'ICNTL(12),MTRANS,COMPRESS',KEEP(95),MTRANS,COMPRESS
+#endif
+        LLIW = LIW - 2*N - 1
       L1 = LLIW + 1
       L2 = L1 + N
       IF ((IORD.NE.1) .AND. (IORD.NE.5)) THEN
-       IF ( (IORD .EQ. 4) .OR. (IORD .EQ. 3) ) THEN
-          CALL SMUMPS_351
-     *         (N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2), 
-     *              PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114), 
-     *              INFO(1), INFO(2), ICNTL, symmetry, SYM)
-       ELSE
-        CALL SMUMPS_196(N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2), 
+          IF(COMPRESS .EQ. 2) THEN
+#if(SP_DEBUG >= 2)
+             WRITE(*,*) 'before 2x2 splitting,KEEP(93),KEEP(94)',
+     *            KEEP(93),KEEP(94)
+#endif
+             CALL  SMUMPS_556(
+     *            N,PIV,FRERE,FILS,NFSIZ,IKEEP,
+     *            NCST,KEEP,id)
+#if(SP_DEBUG >= 2)
+             WRITE(*,*) 'after 2x2 splitting,KEEP(93),NCST,KEEP(94)',
+     *            KEEP(93),NCST,KEEP(94)
+#endif
+          ENDIF
+ 100      CONTINUE
+          IF(COMPRESS .GE. 1) THEN
+             CALL SMUMPS_547(
+     *            N,NZ, IRN, ICN, PIV,
+     *            NCMP, IW, LLIW, IW(L2),PTRAR(1,2),PTRAR, 
+     *            IW(L1), FILS, IWFR,
+     *            IERROR, KEEP, ICNTL)
+             symmetry = 1.0E0
+          ELSE
+             CALL SMUMPS_351
+     *            (N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2), 
      *            PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114), 
      *            INFO(1), INFO(2), ICNTL, symmetry, SYM)
-       ENDIF
-      INFO(8) = symmetry
-       IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
-     *     (KEEP(23) .EQ. 7 ) ) THEN
-            KEEP(23) = -5
-            DEALLOCATE (IW)
-            RETURN
-       ELSE IF (KEEP(23) .EQ. 7) THEN
+             INFO(8) = symmetry
+             NCMP = N
+          ENDIF
+          IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0) ) THEN
+             IF(KEEP(23) .EQ. 7 ) THEN
+                KEEP(23) = -5
+                DEALLOCATE (IW)
+                IF (PROK) WRITE(MPRINT,'(A)')
+     *               ' ... Go back to Max Trans'
+                RETURN
+             ELSE IF(KEEP(23) .EQ. -9876543) THEN
+                IDENT = .TRUE.
+                KEEP(23) = 5
+                IF (PROK) WRITE(MPRINT,'(A)')
+     *               ' ... Apply column permutation (already computed)'
+                DO J=1,N
+                   JPERM = PIV(J)
+                   FILS(JPERM) = J
+                   IF (JPERM.NE.J) IDENT = .FALSE.
+                ENDDO
+                IF (.NOT.IDENT) THEN
+                   DO K=1,NZ
+                      J = ICN(K)
+                      IF ((J.LE.0).OR.(J.GT.N)) CYCLE
+                      ICN(K) = FILS(J)
+                   ENDDO
+                   IF (MP.GT.0 .AND. ICNTL(4).GE.2)
+     *                  WRITE(MP,'(/A)')
+     *                  ' WARNING input matrix data modified'
+                   GOTO 100
+                ELSE
+                   KEEP(23) = 0
+                ENDIF
+             ENDIF
+          ELSE IF (KEEP(23) .EQ. 7 .OR. KEEP(23) .EQ. -9876543 ) THEN
+             IF (PROK) WRITE(MPRINT,'(A)')
+     *               ' ... No column permutation'
              KEEP(23) = 0
-       ENDIF
-       IF (PROK) THEN
-         IF (IORD.EQ.2) THEN
-       WRITE(MPRINT,'(A)') ' Ordering based on AMF '
+          ENDIF
+          IF (PROK) THEN
+             IF (IORD.EQ.2) THEN
+                WRITE(MPRINT,'(A)') ' Ordering based on AMF '
 #if defined(scotch)
-         ELSE IF (IORD.EQ.3) THEN
-       WRITE(MPRINT,'(A)') ' Ordering based on SCOTCH '
+             ELSE IF (IORD.EQ.3) THEN
+                WRITE(MPRINT,'(A)') ' Ordering based on SCOTCH '
 #endif
 #if defined(pord)
-         ELSE IF (IORD.EQ.4) THEN
-       WRITE(MPRINT,'(A)') ' Ordering based on PORD '
+             ELSE IF (IORD.EQ.4) THEN
+                WRITE(MPRINT,'(A)') ' Ordering based on PORD '
 #endif
-         ELSE IF (IORD.EQ.6) THEN
-       WRITE(MPRINT,'(A)') ' Ordering based on QAMD '
-         ELSE
-       WRITE(MPRINT,'(A)') ' Ordering based on AMD '
-         ENDIF
-       ENDIF
+             ELSE IF (IORD.EQ.6) THEN
+                WRITE(MPRINT,'(A)') ' Ordering based on QAMD '
+             ELSE
+                WRITE(MPRINT,'(A)') ' Ordering based on AMD '
+             ENDIF
+          ENDIF
        IF ( KEEP(60) .NE. 0 ) THEN
          CALL SMUMPS_162(N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW, 
      *   IW(L1), IKEEP, 
      *   IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3),
      *   LISTVAR_SCHUR, SIZE_SCHUR)
-         KEEP(20) = LISTVAR_SCHUR(1)
+         IF (KEEP(60)==1) THEN
+           KEEP(20) = LISTVAR_SCHUR(1)
+         ELSE
+           KEEP(38) = LISTVAR_SCHUR(1)
+         ENDIF
        ELSE
       IF ( .FALSE. ) THEN
 #if defined(pord)
       ELSEIF (IORD .EQ. 4) THEN
-        CALL SMUMPS_PORDF(N, IWFR-1, IW(L2), IW, 
-     *   IW(L1), NCMPA)
-        IF ( NCMPA .NE. 0 ) THEN
-          write(6,*) ' Out PORD, NCMPA=', NCMPA
-          INFO( 1 ) = -9999
-          INFO( 2 ) = 4
-          RETURN
-        ENDIF
+         IF(COMPRESS .EQ. 1) THEN
+            DO I=L1,L1-1+KEEP(93)/2
+               IW(I) = 2
+            ENDDO
+            DO I=L1+KEEP(93)/2,L1+NCMP-1
+               IW(I) = 1
+            ENDDO
+            CALL SMUMPS_PORDF_WND(NCMP, IWFR-1, IW(L2), IW, 
+     *           IW(L1), NCMPA, N)
+         ELSE
+            CALL SMUMPS_PORDF(NCMP, IWFR-1, IW(L2), IW, 
+     *           IW(L1), NCMPA)
+         ENDIF
+         IF ( NCMPA .NE. 0 ) THEN
+            write(6,*) ' Out PORD, NCMPA=', NCMPA
+            INFO( 1 ) = -9999
+            INFO( 2 ) = 4
+            RETURN
+         ENDIF
 #endif    
 #if defined(scotch)
       ELSEIF (IORD .EQ. 3) THEN
-         CALL SMUMPS_395(N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW, 
-     *   IW(L1), IKEEP, 
-     *   IKEEP(1,2), NCMPA)
+         CALL SMUMPS_SCOTCH(NCMP, LLIW, IW(L2), IWFR, PTRAR(1,2), IW, 
+     *        IW(L1), IKEEP, 
+     *        IKEEP(1,2), NCMPA)
         IF ( NCMPA .NE. 0 ) THEN
           write(6,*) ' Out SCTOCH, NCMPA=', NCMPA
           INFO( 1 ) = -9999
@@ -1905,155 +2173,296 @@ C
         ENDIF
 #endif
       ELSEIF (IORD .EQ. 2) THEN
-       NBBUCK = 2*N
-        ALLOCATE( HEAD ( 0: NBBUCK + 1), stat = IERR )
-        IF ( IERR .GT. 0 ) THEN
-          INFO( 1 ) = -13
-          INFO( 2 ) = NBBUCK+2
-          RETURN
-        ENDIF
-      CALL SMUMPS_337(N, NBBUCK, LLIW, IW(L2), IWFR, PTRAR(1,2),
-     *                 IW, IW(L1), IKEEP, IKEEP(1,2), NCMPA, FILS,
-     *                 IKEEP(1,3), PTRAR, PTRAR(1,3), HEAD)
-        DEALLOCATE(HEAD)
+         NBBUCK = 2*N
+         ALLOCATE( HEAD ( 0: NBBUCK + 1), stat = IERR )
+         IF ( IERR .GT. 0 ) THEN
+            INFO( 1 ) = -7
+            INFO( 2 ) = NBBUCK+2
+            RETURN
+         ENDIF
+         IF(COMPRESS .GE. 1) THEN
+            DO I=L1,L1-1+KEEP(93)/2
+               IW(I) = 2
+            ENDDO
+            DO I=L1+KEEP(93)/2,L1+NCMP-1
+               IW(I) = 1
+            ENDDO
+         ELSE
+            IW(L1) = -1
+         ENDIF
+         IF(COMPRESS .LE. 1) THEN
+            CALL SMUMPS_337(NCMP, NBBUCK, LLIW, IW(L2),
+     *           IWFR, PTRAR(1,2),
+     *           IW, IW(L1), IKEEP, IKEEP(1,2), NCMPA, FILS,
+     *           IKEEP(1,3), PTRAR, PTRAR(1,3), HEAD)
+         ELSE
+            IF(PROK) WRITE(MPRINT,'(A)') 
+     *           ' Constrained Ordering based on AMF'
+            CALL CST_AMF(NCMP, NBBUCK, LLIW, IW(L2), IWFR, PTRAR(1,2), 
+     *           IW, IW(L1), IKEEP, IKEEP(1,2), NCMPA, FILS, 
+     *           IKEEP(1,3), PTRAR, PTRAR(1,3), HEAD,
+     *           NFSIZ, FRERE)
+         ENDIF
+         DEALLOCATE(HEAD)
       ELSEIF (IORD .EQ. 6) THEN
         ALLOCATE( HEAD ( N ), stat = IERR )
         IF ( IERR .GT. 0 ) THEN
-          INFO( 1 ) = -13
+          INFO( 1 ) = -7
           INFO( 2 ) = N
           RETURN
         ENDIF
          THRESH = 1
          IVersion = 2
-         CALL SMUMPS_421(IVersion, THRESH, HEAD,
-     *   N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW,
-     *   IW(L1), IKEEP,
-     *   IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3))
+         IF(COMPRESS .EQ. 1) THEN
+            DO I=L1,L1-1+KEEP(93)/2
+               IW(I) = 2
+            ENDDO
+            DO I=L1+KEEP(93)/2,L1+NCMP-1
+               IW(I) = 1
+            ENDDO
+         ELSE
+            IW(L1) = -1
+         ENDIF
+         CALL SMUMPS_421(N,IVersion, THRESH, HEAD,
+     *        NCMP, LLIW, IW(L2), IWFR, PTRAR(1,2), IW,
+     *        IW(L1), IKEEP,
+     *        IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3))
         DEALLOCATE(HEAD)
       ELSE
-         CALL SMUMPS_197(N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW, 
-     *   IW(L1), IKEEP, 
-     *   IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3))
+         CALL SMUMPS_197(NCMP, LLIW, IW(L2), IWFR, PTRAR(1,2), IW, 
+     *        IW(L1), IKEEP, 
+     *        IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3))
       ENDIF
       ENDIF
-      ELSE
+      IF(COMPRESS .GE. 1) THEN
+         CALL SMUMPS_548(NCMP,IW(L2),IW(L1),FILS)
+#if(SP_DEBUG >= 2)
+         WRITE(*,*) 'BEFORE SMUMPS_549'
+#endif
+         CALL SMUMPS_549(NCMP,IW(L2),IKEEP(1,1),
+     *        FRERE,PTRAR(1,1))
+#if(SP_DEBUG >= 2)
+         WRITE(*,*) 'AFTER SMUMPS_549'
+#endif
+         DO I=1,NCMP
+            IKEEP(IKEEP(I,1),2)=I
+         ENDDO
+#if(SP_DEBUG >= 2)
+#endif
+         CALL SMUMPS_550(N,NCMP,KEEP(94),KEEP(93),
+     *        PIV,IKEEP(1,1),IKEEP(1,2))
+#if(SP_DEBUG >= 2)
+#endif
+         COMPRESS = -1
+      ENDIF
+      ENDIF
+      IF ((IORD.EQ.1) .OR. (IORD.EQ.5)) THEN
 #if defined(metis)
-       IF (IORD.EQ.5) THEN
-        IF (PROK) THEN
-         IF (IORD.EQ.0) THEN
-       WRITE(MPRINT,'(A)') ' Ordering based on METIS '
-         ENDIF
-        ENDIF
-        CALL SMUMPS_351
-     *         (N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2), 
+         IF (IORD.EQ.5) THEN
+            IF (PROK) THEN
+               WRITE(MPRINT,'(A)') ' Ordering based on METIS '
+            ENDIF
+ 200        CONTINUE
+            IF(COMPRESS .EQ. 1) THEN
+               CALL SMUMPS_547(
+     *              N,NZ, IRN, ICN, PIV,
+     *              NCMP, IW, LLIW, IW(L2),PTRAR(1,2),PTRAR, 
+     *              IW(L1), FILS, IWFR,
+     *              IERROR, KEEP, ICNTL)
+               symmetry = 1.0E0
+            ELSE
+               CALL SMUMPS_351
+     *              (N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2), 
      *              PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114), 
      *              INFO(1), INFO(2), ICNTL, symmetry, SYM)
-        INFO(8) = symmetry
-        IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
-     *     (KEEP(23) .EQ. 7 ) ) THEN
-            KEEP(23) = -5
-            DEALLOCATE (IW)
-            RETURN
-        ELSE IF (KEEP(23) .EQ. 7) THEN
-             KEEP(23) = 0
-        ENDIF     
-        NUMFLAG = 1
-        OPT_METIS_SIZE = 8
-        ALLOCATE( OPTIONS_METIS (OPT_METIS_SIZE ), stat = IERR )
-        IF ( IERR .GT. 0 ) THEN
-          INFO( 1 ) = -13
-          INFO( 2 ) = 8
-          RETURN
-        ENDIF
-        OPTIONS_METIS(1) = 0
-          CALL METIS_NODEND(N, IW(L2), IW, NUMFLAG, OPTIONS_METIS,
-     *       IKEEP(1,2), IKEEP(1,1) )
-           DEALLOCATE (OPTIONS_METIS)
-       ELSE IF (IORD.NE.1) THEN
-         WRITE(*,*) IORD
-         WRITE(*,*)  'bad option for ordering'
-         GO TO 40
-       ENDIF
+               INFO(8) = symmetry
+               NCMP = N
+            ENDIF
+            IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0) ) THEN
+               IF(KEEP(23) .EQ. 7 ) THEN
+                  KEEP(23) = -5
+                  DEALLOCATE (IW)
+                  IF (PROK) WRITE(MPRINT,'(A)')
+     *                 ' ... Go back to Max Trans'
+                  RETURN
+               ELSE IF(KEEP(23) .EQ. -9876543) THEN
+                  IDENT = .TRUE.
+                  KEEP(23) = 5
+                  IF (PROK) WRITE(MPRINT,'(A)')
+     *        ' ... Apply column permutation (already computed)'
+                  DO J=1,N
+                     JPERM = PIV(J)
+                     FILS(JPERM) = J
+                     IF (JPERM.NE.J) IDENT = .FALSE.
+                  ENDDO
+                  IF (.NOT.IDENT) THEN
+                     DO K=1,NZ
+                        J = ICN(K)
+                        IF ((J.LE.0).OR.(J.GT.N)) CYCLE
+                        ICN(K) = FILS(J)
+                     ENDDO
+                     IF (MP.GT.0 .AND. ICNTL(4).GE.2)
+     *                    WRITE(MP,'(/A)')
+     *                    ' WARNING input matrix data modified'
+                     GOTO 200
+                  ELSE
+                     KEEP(23) = 0
+                  ENDIF
+               ENDIF
+            ELSE IF (KEEP(23) .EQ. 7 .OR. KEEP(23) .EQ. -9876543 ) THEN
+               IF (PROK) WRITE(MPRINT,'(A)')
+     *              ' ... No column permutation'
+               KEEP(23) = 0
+            ENDIF
+            NUMFLAG = 1
+            OPT_METIS_SIZE = 8
+            ALLOCATE( OPTIONS_METIS (OPT_METIS_SIZE ), stat = IERR )
+            IF ( IERR .GT. 0 ) THEN
+               INFO( 1 ) = -7
+               INFO( 2 ) = OPT_METIS_SIZE
+               RETURN
+            ENDIF
+            OPTIONS_METIS(1) = 0
+            IF (COMPRESS .EQ. 1) THEN
+               DO I=1,KEEP(93)/2
+                  FILS(I) = 2
+               ENDDO
+               DO I=KEEP(93)/2+1,NCMP
+                  FILS(I) = 1
+               ENDDO
+               CALL METIS_NODEWND(NCMP, IW(L2), IW,FILS, 
+     *              NUMFLAG, OPTIONS_METIS,
+     *              IKEEP(1,2), IKEEP(1,1) )
+            ELSE
+               CALL METIS_NODEND(NCMP, IW(L2), IW, NUMFLAG, 
+     *              OPTIONS_METIS,
+     *              IKEEP(1,2), IKEEP(1,1) )
+            ENDIF
+            DEALLOCATE (OPTIONS_METIS)
+            IF(COMPRESS .EQ. 1) THEN
+#if(SP_DEBUG >= 5)
+               WRITE(*,*) 'IKEEP = ',IKEEP(1:NCMP,1)
+               WRITE(*,*) 'PIV',PIV
 #endif
-        IF (PROK) THEN
-         IF (IORD.EQ.1) THEN
-       WRITE(MPRINT,'(A)') ' Ordering given is used'
+               CALL SMUMPS_550(N,NCMP,KEEP(94),KEEP(93),
+     *              PIV,IKEEP(1,1),IKEEP(1,2))
+#if(SP_DEBUG >= 5)
+               WRITE(*,*) 'IKEEP = ',IKEEP(1:N,1)
+#endif
+            ENDIF
+         ELSE IF (IORD.NE.1) THEN
+            WRITE(*,*) IORD
+            WRITE(*,*)  'bad option for ordering'
+            GO TO 40
          ENDIF
-        ENDIF
-       DO K=1,N
-         IW(K) = 0
-       ENDDO
-       DO K=1,N
-         IF ((IKEEP(K,1).LE.0).OR.(IKEEP(K,1).GT.N)) 
-     *    GO TO 40
-         IF (IW(IKEEP(K,1)).EQ.1) THEN
-          GOTO 40
-         ELSE
-          IW(IKEEP(K,1)) = 1
+#endif
+         IF (PROK) THEN
+            IF (IORD.EQ.1) THEN
+               WRITE(MPRINT,'(A)') ' Ordering given is used'
+            ENDIF
          ENDIF
-       ENDDO
-#if !defined(OLDSymbolic)
-        CALL SMUMPS_196(N,NZ,IRN, ICN, IW, LLIW, IW(L2), PTRAR(1,2),
-     *       PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
-     *       INFO(1), INFO(2), ICNTL, symmetry, SYM)
-        INFO(8) = symmetry
-#if defined(GRIDTLSE)
-        IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
-     *     (KEEP(23) .EQ. 7 ) ) THEN
-            KEEP(23) = -5
-            DEALLOCATE (IW)
-            RETURN
-        ELSE IF (KEEP(23) .EQ. 7) THEN
-             KEEP(23) = 0
-        ENDIF
-#endif
-        ALLOCATE( HEAD ( 2*N ), stat = IERR )
-        IF ( IERR .GT. 0 ) THEN
-          INFO( 1 ) = -13
-          INFO( 2 ) = 2*N
-          RETURN
-        ENDIF
-         THRESH = -1
-        IF (KEEP(60) == 0) THEN
-          ITEMP = 0 
-        ELSE
-          ITEMP = SIZE_SCHUR
-          KEEP(20) = LISTVAR_SCHUR(1)
-        ENDIF
-        AGG6 = ( NSLAVES == 1 )
-        CALL SMUMPS_422(THRESH, HEAD,
-     *   N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW,
-     *   IW(L1), HEAD(N+1),
-     *   IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3), 
-     *   IKEEP(1,1), LISTVAR_SCHUR, ITEMP, AGG6)
-        DEALLOCATE(HEAD)
-#else
-       CALL SMUMPS_198(N, NZ, IRN, ICN, IKEEP, IW, LLIW, IW(L2), 
-     *             PTRAR(1,2), IW(L1), IWFR, 
-     *             INFO(1),INFO(2), KEEP(11), MP)
-       IF (KEEP(60) == 0) THEN
-         ITEMP = 0 
-         CALL SMUMPS_199(N, IW(L2), IW, LLIW, IWFR, IKEEP,
-     *      IKEEP(1,2), IW(L1),
-     *      PTRAR, NCMPA, ITEMP)
-       ELSE
-         CALL SMUMPS_199(N, IW(L2), IW, LLIW, IWFR, IKEEP,
-     *      IKEEP(1,2), IW(L1),
-     *      PTRAR, NCMPA, SIZE_SCHUR)
-         KEEP(20) = LISTVAR_SCHUR(1)
-       ENDIF
-#endif
+         DO K=1,N
+            IW(K) = 0
+         ENDDO
+         DO K=1,N
+            IF ((IKEEP(K,1).LE.0).OR.(IKEEP(K,1).GT.N)) 
+     *           GO TO 40
+            IF (IW(IKEEP(K,1)).EQ.1) THEN
+               GOTO 40
+            ELSE
+               IW(IKEEP(K,1)) = 1
+            ENDIF
+         ENDDO
       ENDIF
+       IF (IORD.EQ.1 .OR. IORD.EQ.5 .OR. COMPRESS.EQ.-1) THEN
+          COMPRESS = 0
+#if !defined(OLDSymbolic)
+          CALL SMUMPS_351(N,NZ,IRN, ICN, IW, LLIW, 
+     *         IW(L2), PTRAR(1,2),
+     *         PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
+     *         INFO(1), INFO(2), ICNTL, symmetry, SYM)
+          INFO(8) = symmetry
+#if defined(GRIDTLSE)
+          IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
+     *         (KEEP(23) .EQ. 7 ) ) THEN
+             KEEP(23) = -5
+             DEALLOCATE (IW)
+             RETURN
+          ELSE IF (KEEP(23) .EQ. 7) THEN
+             KEEP(23) = 0
+          ENDIF
+#endif
+          ALLOCATE( HEAD ( 2*N ), stat = IERR )
+          IF ( IERR .GT. 0 ) THEN
+             INFO( 1 ) = -7
+             INFO( 2 ) = 2*N
+             RETURN
+          ENDIF
+          THRESH = -1
+          IF (KEEP(60) == 0) THEN
+             ITEMP = 0 
+          ELSE
+             ITEMP = SIZE_SCHUR
+             IF (KEEP(60)==1) THEN
+                KEEP(20) = LISTVAR_SCHUR(1)
+             ELSE
+                KEEP(38) = LISTVAR_SCHUR(1)
+             ENDIF
+          ENDIF
+          AGG6 = ( NSLAVES == 1 )
+          CALL SMUMPS_422(THRESH, HEAD,
+     *         N, LLIW, IW(L2), IWFR, PTRAR(1,2), IW,
+     *         IW(L1), HEAD(N+1),
+     *         IKEEP(1,2), NCMPA, FILS, IKEEP(1,3), PTRAR, PTRAR(1,3), 
+     *         IKEEP(1,1), LISTVAR_SCHUR, ITEMP, AGG6)
+          DEALLOCATE(HEAD)
+#else
+          CALL SMUMPS_198(N, NZ, IRN, ICN, IKEEP, IW, LLIW, IW(L2), 
+     *         PTRAR(1,2), IW(L1), IWFR, 
+     *         INFO(1),INFO(2), KEEP(11), MP)
+          IF (KEEP(60) .EQ. 0) THEN
+             ITEMP = 0 
+             CALL SMUMPS_199(N, IW(L2), IW, LLIW, IWFR, IKEEP,
+     *            IKEEP(1,2), IW(L1),
+     *            PTRAR, NCMPA, ITEMP)
+          ELSE
+             CALL SMUMPS_199(N, IW(L2), IW, LLIW, IWFR, IKEEP,
+     *            IKEEP(1,2), IW(L1),
+     *            PTRAR, NCMPA, SIZE_SCHUR)
+             IF (KEEP(60) .EQ. 1) THEN
+                KEEP(20) = LISTVAR_SCHUR(1)
+             ELSE
+                KEEP(38) = LISTVAR_SCHUR(1)
+             ENDIF
+          ENDIF
+#endif
+       ENDIF
+#if defined(OLDDFS)
       CALL SMUMPS_200
      *    (N, IW(L2), IW(L1), IKEEP(1,1), IKEEP(1,2), IKEEP(1,3),
      *     NFSIZ, INFO(6), FILS, FRERE, PTRAR(1,3), NEMIN, KEEP(60))
+#else
+      CALL SMUMPS_557
+     *    (N, IW(L2), IW(L1), IKEEP(1,1), IKEEP(1,2), IKEEP(1,3),
+     *     NFSIZ, PTRAR, INFO(6), FILS, FRERE, 
+     *     PTRAR(1,3), NEMIN, PTRAR(1,4), KEEP(60),
+     *     KEEP(20),KEEP(38))
+#endif
       IF (KEEP(60).NE.0)  THEN
-         IN = KEEP(20)
+         IF (KEEP(60)==1) THEN
+           IN = KEEP(20)
+         ELSE
+           IN = KEEP(38)
+         ENDIF
          DO WHILE (IN.GT.0) 
           IN = FILS (IN)
          END DO
          IFSON = -IN
-         IN = KEEP(20)
+         IF (KEEP(60)==1) THEN
+           IN = KEEP(20)
+         ELSE
+           IN = KEEP(38)
+         ENDIF
          DO I=2,SIZE_SCHUR
           FILS(IN) = LISTVAR_SCHUR (I)
           IN       = FILS(IN)
@@ -2063,19 +2472,22 @@ C
       ENDIF
       CALL SMUMPS_201(IKEEP(1,2),
      *  PTRAR(1,3), INFO(6),
-     *  INFO(5), KEEP(2), KEEP(50), INFO(20))
+     *  INFO(5), KEEP(2), KEEP(50), INFO(20), KEEP(101))
       IF ( KEEP(53) .NE. 0 ) THEN
         CALL SMUMPS_209( N, FRERE, FILS, NFSIZ )
       END IF
-      IF ( KEEP(48) == 4 .OR.
-     *   ( (KEEP(24).NE.0).AND.(KEEP(10).GT.0) ) ) THEN 
+      IF (  (KEEP(48) == 4 .AND. KEEP(10).GT.0)
+     *     .OR.
+     *      (KEEP (48)==5 .AND. KEEP(10) .GT. 0 )
+     *     .OR.
+     *      (KEEP(24).NE.0.AND.KEEP(10).GT.0) ) THEN 
           CALL SMUMPS_510(KEEP(10), KEEP(2),
-     *    KEEP(50), NSLAVES)
+     *    KEEP(48), KEEP(50), NSLAVES)
       END IF
-      IF (.TRUE.) THEN
-        IF ( KEEP(62) .GE. 1 )
+      IF ( KEEP(62) .GE. 1 .and. KEEP(82) .EQ. 0 )
      *   CALL SMUMPS_97(N, FRERE, FILS, NFSIZ,INFO(6),
      *                        NSLAVES, KEEP)
+      IF ( KEEP(24) == 0 ) THEN
          CALL SMUMPS_202(N, NZ, IKEEP(1,1), FILS, FRERE,
      *      NFSIZ, IKEEP(1,3), IKEEP(1,2),
      *      IRN, ICN, PTRAR(1,3), PTRAR(1,4), PTRAR,
@@ -2094,7 +2506,6 @@ C
        IF (K.GT.0) WRITE (MP,99986) (PTRAR(I,1),I=1,K)
        IF (K.GT.0) WRITE (MP,99985) (PTRAR(I,2),I=1,K)
        IF (K.GT.0) WRITE (MP,99984) (PTRAR(I,3),I=1,K)
-       IF (K.GT.0) WRITE (MP,99983) (PTRAR(I,4),I=1,K)
        IF (K.GT.0) WRITE (MP,99987) (NFSIZ(I),I=1,K)
        IF (K.GT.0) WRITE (MP,99989) (FILS(I),I=1,K)
        IF (K.GT.0) WRITE (MP,99988) (FRERE(I),I=1,K)
@@ -2122,9 +2533,9 @@ C
 99986 FORMAT ('PTRAR(.,1)=', 10I6/(12X, 10I6))
 99985 FORMAT ('PTRAR(.,2)=', 10I6/(12X, 10I6))
 99984 FORMAT ('PTRAR(.,3)=', 10I6/(12X, 10I6))
-99983 FORMAT ('PTRAR(.,4)=', 10I6/(12X, 10I6))
 99982 FORMAT ('Error in permutation array KEEP   INFO(2)=', I3)
       END SUBROUTINE SMUMPS_195
+#if defined(NOT_USED)
       SUBROUTINE SMUMPS_196(N,NZ, IRN, ICN, IW, LW, IPE, LEN,
      *  IQ, FLAG, IWFR,
      * NRORM, NIORM, IFLAG,IERROR, ICNTL, 
@@ -2287,6 +2698,7 @@ C
       RETURN
 99999 FORMAT (/'*** Warning message from analysis routine ***')
       END SUBROUTINE SMUMPS_196
+#endif
       SUBROUTINE SMUMPS_197(N, IWLEN, PE, PFREE, LEN, IW, NV, ELEN,
      $                   LAST, NCMPA, DEGREE, HEAD, NEXT, W)
       INTEGER N, IWLEN, PFREE, NCMPA
@@ -2294,10 +2706,11 @@ C
      $        ELEN(N), LAST(N), DEGREE(N), HEAD(N), 
      $        W(N)
       INTEGER IW(IWLEN), NV(N), PE(N)
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X
+      INTEGER*8 HASH, HMOD
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
       WFLG = 2
@@ -2911,7 +3324,9 @@ C
    60 CONTINUE
    70 RETURN
       END SUBROUTINE SMUMPS_194
-      SUBROUTINE SMUMPS_200(N, IPE, NV, IPS, NE, NA, NFSIZ, NSTEPS,
+#if defined(OLDDFS)
+      SUBROUTINE SMUMPS_200(N, IPE, NV, IPS, NE, NA, NFSIZ, 
+     *                  NSTEPS,
      *                  FILS, FRERE,NDD,NEMIN, KEEP60)
       INTEGER N,NSTEPS
       INTEGER NDD(N)
@@ -3060,10 +3475,11 @@ C
         IF (   (KEEP60.NE.0).AND.
      &         (NE(IS).EQ.NDD(IS)) ) GOTO 110
         IF (NDD(IS-1)-NE(IS-1).EQ.NDD(IS)) GO TO 100
-        IF (NE(IS-1).GE.NEMIN) GO TO 110
-        IF (((2*NE(IS-1)*(NDD(IS)-NDD(IS-1)+NE(IS-1)).GE.
-     &    NDD(IS)*NDD(IS)*NEMIN/100)) .AND. 
-     &   (NE(IS).GE.NEMIN)) GO TO 110
+        IF ((NE(IS-1).GE.NEMIN).AND.
+     &         (NE(IS).GE.NEMIN) ) GO TO 110
+        IF (2*NE(IS-1)*(NDD(IS)-NDD(IS-1)+NE(IS-1)).GE.
+     &    ((NDD(IS)+NE(IS-1))*
+     &    (NDD(IS)+NE(IS-1))*NEMIN/100)) GO TO 110
   100   NA(IS-1) = NA(IS-1) + NA(IS) - 1
         NDD(IS-1) = NDD(IS) + NE(IS-1)
         NE(IS-1) = NE(IS) + NE(IS-1)
@@ -3121,14 +3537,289 @@ C
  170  CONTINUE
       RETURN
       END SUBROUTINE SMUMPS_200
+#else
+      SUBROUTINE SMUMPS_557(N, IPE, NV, IPS, NE, NA, NFSIZ,
+     *                  NODE, NSTEPS,
+     *                  FILS, FRERE, ND, NEMIN, SUBORD, KEEP60, 
+     *                  KEEP20, KEEP38)
+      INTEGER N, NSTEPS, KEEP60
+      INTEGER ND(N), NFSIZ(N)
+      INTEGER IPE(N), FILS(N), FRERE(N), SUBORD(N)
+      INTEGER NV(N), IPS(N), NE(N), NA(N), NODE(N)
+      INTEGER NEMIN
+      INTEGER I,IF,IS,NR,NR1,INS,INL,INB,INF,INFS,INSW
+      INTEGER K,L,ISON,IN,IFSON,INO
+      INTEGER INOS,IB,IL,INT
+      INTEGER IPERM
+#if defined(AMALGTOFATHER)
+      INTEGER DADI
+      LOGICAL AMALG_TO_father_OK
+#endif
+      DO 10 I=1,N
+        IPS(I) = 0
+        NE(I) = 0
+        NODE(I) = 0
+        SUBORD(I) = 0
+   10 CONTINUE
+      FRERE(1:N) = IPE(1:N)
+      NR = N + 1
+      DO 50 I=1,N
+        IF = -FRERE(I)
+        IF (NV(I).EQ.0) THEN
+          IF (SUBORD(IF).NE.0) SUBORD(I) = SUBORD(IF)
+          SUBORD(IF) = I
+          NODE(IF) = NODE(IF)+1
+        ELSE
+          IF (IF.NE.0) THEN
+            IS = -IPS(IF)
+            IF (IS.GT.0) FRERE(I) = IS
+            IPS(IF) = -I
+          ELSE
+            NR = NR - 1
+            NE(NR) = I
+          ENDIF
+        ENDIF
+   50 CONTINUE
+      DO 999 I=1,N
+       FILS(I) = IPS(I)
+ 999  CONTINUE
+      NR1 = NR
+      INS = 0
+ 1000 IF (NR1.GT.N) GO TO 1151
+      INS = NE(NR1)
+      NR1 = NR1 + 1
+ 1070 INL = FILS(INS)
+      IF (INL.LT.0) THEN
+       INS = -INL
+       GO TO 1070
+      ENDIF
+ 1080 IF (FRERE(INS).LT.0) THEN
+       INS       = -FRERE(INS)
+       FILS(INS) = 0
+       GO TO 1080
+      ENDIF
+      IF (FRERE(INS).EQ.0) THEN
+       INS = 0
+       GO TO 1000
+      ENDIF
+      INB = FRERE(INS)
+#if defined(AMALGTOFATHER)
+      IF (NODE(INB).GE.NODE(INS)) THEN
+#else
+      IF (NV(INB).GE.NV(INS)) THEN
+#endif
+       INS = INB
+       GO TO 1070
+      ENDIF
+      INF = INB
+ 1090 INF = FRERE(INF)
+      IF (INF.GT.0) GO TO 1090
+      INF  = -INF
+      INFS = -FILS(INF)
+      IF (INFS.EQ.INS) THEN
+        FILS(INF) = -INB
+        IPS(INF)  = -INB
+        FRERE(INS)  = FRERE(INB)
+        FRERE(INB)  = INS
+      ELSE
+        INSW = INFS
+ 1100   INFS = FRERE(INSW)
+        IF (INFS.NE.INS) THEN
+          INSW = INFS
+          GO TO 1100
+        ENDIF
+        FRERE(INS) = FRERE(INB)
+        FRERE(INB) = INS
+        FRERE(INSW)= INB
+      ENDIF
+        INS      = INB
+        GO TO 1070
+ 1151 DO 51 I=1,N
+       FILS(I) = IPS(I)
+ 51   CONTINUE
+      IS = 1
+      I = 0
+      IPERM = 1
+      DO 160 K=1,N
+        IF (I.LE.0) THEN
+         IF (NR.GT.N) EXIT
+         I = NE(NR)
+         NE(NR) = 0
+         NR = NR + 1
+         IL = N
+         NA(N) = 0
+        ENDIF
+        DO 70 L=1,N
+          IF (IPS(I).GE.0) EXIT
+          ISON = -IPS(I)
+          IPS(I) = 0
+          I = ISON
+          IL = IL - 1
+          NA(IL) = 0
+   70   CONTINUE
+#if defined(AMALGTOFATHER)
+        DADI = -IPE(I)  ! IPE was saved
+        IF ((DADI.NE.0).AND.
+     *      (
+     *       (KEEP60.NE.0).AND.
+     *       ( (KEEP20.EQ.DADI).OR.(KEEP38.EQ.DADI) )
+     *      ) 
+     *     ) THEN
+           AMALG_TO_father_OK = ( (NODE(I)+1.LE.NEMIN).OR.
+     &         (NODE(DADI)+1.LE.NEMIN) )
+           AMALG_TO_father_OK = ( AMALG_TO_father_OK .AND.
+     &       ( 2*(NODE(I)+1)*(NV(DADI)-NV(I)+NODE(I)+1).LT.
+     &    ((NV(DADI)+NODE(I)+1)*
+     &    (NV(DADI)+NODE(I)+1)*NEMIN/100)) )
+           IF (AMALG_TO_father_OK) THEN
+             IN = DADI
+ 75          IF (SUBORD(IN).EQ.0) GOTO 76
+               IN = SUBORD(IN)
+               GOTO 75
+ 76          CONTINUE
+             SUBORD(IN) = I
+             NV(I)      = 0
+             IFSON = -FILS(DADI)
+             IF (IFSON.EQ.I) THEN
+              IF (FILS(I).LT.0) THEN
+                FILS(DADI) =  FILS(I)
+                GOTO 78
+              ELSE
+                IF (FRERE(I).GT.0) THEN
+                  FILS(DADI) = -FRERE(I)  
+                ELSE
+                  FILS(DADI) = 0
+                ENDIF
+                GOTO 90
+              ENDIF
+             ENDIF
+             IN = IFSON
+  77         INS = IN
+             IN = FRERE(IN)
+             IF (IN.NE.I) GOTO 77
+             IF (FILS(I) .LT.0) THEN
+               FRERE(INS) = -FILS(I)
+             ELSE
+               FRERE(INS) = FRERE(I)  ! skip I which is a leave
+               GOTO 90
+             ENDIF
+  78         CONTINUE
+             IN = -FILS(I)
+  79         INO = IN
+             IN = FRERE(IN)
+             IF (IN.GT.0) GOTO 79
+             FRERE(INO) = FRERE(I)
+  90         CONTINUE
+             NODE(DADI) = NODE(DADI)+ NODE(I) + 1
+             NV(DADI)   = NV(DADI) +  NODE(I) + 1
+             NA(IL+1)   = NA(IL+1) + NA(IL)
+             GOTO 120
+           ENDIF
+        ENDIF
+#endif
+        NE(IS) = NE(IS) + NODE(I) + 1
+        IF (IL.LT.N) NA(IL+1) = NA(IL+1) + 1
+        NA(IS) = NA(IL)
+        ND(IS) = NV(I)
+        NODE(I) = IS
+        IPS(I) = IPERM
+        IPERM = IPERM + 1
+        IN = I
+  777   IF (SUBORD(IN).EQ.0) GO TO 778
+          IN = SUBORD(IN)
+          NODE(IN) = IS
+          IPS(IN) = IPERM
+          IPERM = IPERM + 1
+          GO TO 777
+  778   IF (NA(IS).LE.0) GO TO 110
+#if ! defined(AMALGTOFATHER)
+        IF (   (KEEP60.NE.0).AND.
+     &         (NE(IS).EQ.ND(IS)) ) GOTO 110
+        IF (ND(IS-1)-NE(IS-1).EQ.ND(IS)) GO TO 100
+        IF ((NE(IS-1).GE.NEMIN).AND.
+     &         (NE(IS).GE.NEMIN) ) GO TO 110
+        IF (2*NE(IS-1)*(ND(IS)-ND(IS-1)+NE(IS-1)).GE.
+     &    ((ND(IS)+NE(IS-1))*
+     &    (ND(IS)+NE(IS-1))*NEMIN/100)) GO TO 110
+  100   NA(IS-1) = NA(IS-1) + NA(IS) - 1
+        ND(IS-1) = ND(IS) + NE(IS-1)
+        NE(IS-1) = NE(IS) + NE(IS-1)
+        NE(IS) = 0
+        NODE(I) = IS-1
+        IFSON = -FILS(I)
+        IN = IFSON
+ 102    INO = IN
+        IN =  FRERE(IN)
+        IF (IN.GT.0) GO TO 102
+        NV(INO) = 0
+        IN = I
+  888   IF (SUBORD(IN).EQ.0) GO TO 889
+        IN = SUBORD(IN)
+        GO TO 888
+  889   SUBORD(IN) = INO
+      INOS = -FILS(INO)
+      IF (IFSON.EQ.INO) THEN 
+         FILS(I) = -INOS
+         GO TO 107
+      ENDIF
+      IN = IFSON
+ 105  INS = IN
+      IN =  FRERE(IN)
+      IF (IN.NE.INO) GO TO 105
+        IF (INOS.EQ.0) THEN
+          FRERE(INS) = -I
+          GO TO 120
+        ELSE
+          FRERE(INS) =  INOS
+        ENDIF
+ 107    IN = INOS
+        IF (IN.EQ.0) GO TO 120
+ 108    INT = IN
+        IN =  FRERE(IN)
+        IF (IN.GT.0) GO TO 108
+        FRERE(INT) = -I
+        GO TO 120
+#endif
+  110   IS = IS + 1
+  120   IB = FRERE(I)
+        IF (IB.GE.0) THEN
+          IF (IB.GT.0) NA(IL) = 0
+          I = IB
+        ELSE
+          I = -IB
+          IL = IL + 1
+        ENDIF
+  160 CONTINUE
+  161 NSTEPS = IS - 1
+      DO I=1, N
+        IF (NV(I).EQ.0) THEN
+          FRERE(I) = N+1
+        ELSE
+          NFSIZ(I) = ND(NODE(I))
+          IF (SUBORD(I) .NE.0) THEN
+           INOS = -FILS(I)  ! Real son
+           INO = I
+           DO WHILE (SUBORD(INO).NE.0) 
+             IS = SUBORD(INO)
+             FILS(INO) = IS
+             INO = IS
+           END DO
+           FILS(INO) = -INOS
+          ENDIF
+        ENDIF
+      ENDDO
+      RETURN
+      END SUBROUTINE SMUMPS_557
+#endif
       SUBROUTINE SMUMPS_201(NE, ND, NSTEPS,
-     * MAXFR, MAXELIM, K50, SIZEFAC )
+     * MAXFR, MAXELIM, K50, SIZEFAC, MAXFAC )
       IMPLICIT NONE
       INTEGER NSTEPS
-      INTEGER  MAXFR, MAXELIM, K50, SIZEFAC
+      INTEGER  MAXFR, MAXELIM, K50, SIZEFAC, MAXFAC
       INTEGER  NE(NSTEPS), ND(NSTEPS)
       INTEGER ITREE, NFR, NELIM
       MAXFR   = 0
+      MAXFAC  = 0
       MAXELIM = 0
       SIZEFAC = 0
       DO ITREE=1,NSTEPS
@@ -3138,9 +3829,11 @@ C
         IF (NFR-NELIM.GT.MAXELIM) MAXELIM = NFR - NELIM
         IF (K50.EQ.0) THEN
           SIZEFAC = SIZEFAC + (2*NFR - NELIM)*NELIM 
+          MAXFAC = MAX(MAXFAC, (2*NFR - NELIM)*NELIM )
         ELSE
          SIZEFAC = SIZEFAC + (NELIM*(NELIM+1))/2 + 
      &                       (NFR-NELIM)*NELIM
+         MAXFAC = MAX(MAXFAC, NFR * NELIM)
         ENDIF
       END DO
       RETURN
@@ -3179,8 +3872,6 @@ C
       IF (ISON.GT.0) GO TO 13
  11   CONTINUE
       NBLEAF = ILEAF-1
-      CALL SMUMPS_311(N, PERM, 
-     &      NA, NBLEAF, IW4(1))
       IF (N.GT.1) THEN
        IF (NBLEAF.GT.N-2) THEN
         IF (NBLEAF.EQ.N-1) THEN
@@ -3230,8 +3921,6 @@ C
       IF (ISON.GT.0) GO TO 13
  11   CONTINUE
       NBLEAF = ILEAF-1
-      CALL SMUMPS_311(N, PERM, 
-     &      NA, NBLEAF, IW4(1,1))
       IW4(1:N,1) = NA(1:N)
       IF (N.GT.1) THEN
        IF (NBLEAF.GT.N-2) THEN
@@ -3321,8 +4010,6 @@ C
       IF (ISON.GT.0) GO TO 13
  11   CONTINUE
       NBLEAF = ILEAF-1
-      CALL SMUMPS_311(N, PERM, 
-     &      NA, NBLEAF, IW4(1,1))
       IW4(1:N,1) = NA(1:N)
       IF (N.GT.1) THEN
        IF (NBLEAF.GT.N-2) THEN
@@ -3355,7 +4042,9 @@ C
       INTEGER, ALLOCATABLE, DIMENSION(:) :: IW
       REAL, ALLOCATABLE, DIMENSION(:) :: S1
       REAL, ALLOCATABLE, DIMENSION(:) :: S2
+      TARGET :: S2
       INTEGER ICNTL64(10), INFO64(10)
+      INTEGER ICNTL_SYM_MWM(10),INFO_SYM_MWM(10)
       REAL CNTL64(10)
       INTEGER LDW, LDWMIN
       INTEGER MPRINT,LP, MP, IPIW, LIW, LIWMIN
@@ -3363,17 +4052,82 @@ C
       INTEGER NUMNZ, I, J, JPOS, K, NZREAL
       INTEGER PLENR, IP, IRNW
       LOGICAL PROK, IDENT, DUPPLI
+      INTEGER NZTOT, K50, KER_SIZE, NZER_DIAG, MTRANSLOC,RZ_DIAG
+      LOGICAL SCALINGLOC
+      INTEGER,POINTER,DIMENSION(:) :: ZERODIAG
+      INTEGER,POINTER,DIMENSION(:) :: STR_KER
+      INTEGER,POINTER,DIMENSION(:) :: MARKED
+      INTEGER,POINTER,DIMENSION(:) :: FLAG
+      INTEGER,POINTER,DIMENSION(:) :: PIV_OUT
+      REAL,POINTER,DIMENSION(:) :: WEIGHT
+      REAL THEMIN, THEMAX, COLNORM
+      REAL ZERO,TWO,ONE
+      PARAMETER(ZERO = 0.0E0,TWO = 2.0E0,ONE = 1.0E0)
       MPRINT = ICNTL(3)
       LP     = ICNTL(1)
       MP     = ICNTL(2)
       PROK = (MPRINT.GT.0)
       IF (PROK) WRITE(MPRINT,101)
- 101    FORMAT(/'****** Preprocessing of original matrix '/)
-      IF (MTRANS.LT.1 .OR. MTRANS.GT.6) GO TO 500
+ 101  FORMAT(/'****** Preprocessing of original matrix '/)
+      K50 = id%KEEP(50)
+      SCALINGLOC = .FALSE.
+      IF(id%KEEP(52) .EQ. -2) THEN
+         IF(.not.ASSOCIATED(id%A)) THEN
+            INFO(1) = -22
+            INFO(2) = 4
+            GOTO 500
+         ELSE
+            SCALINGLOC = .TRUE.
+         ENDIF
+      ELSE IF(id%KEEP(52) .EQ. 7) THEN
+         SCALINGLOC = .TRUE.
+         IF(.not.ASSOCIATED(id%A)) SCALINGLOC = .FALSE.
+         IF(K50 .NE. 2) THEN
+            IF( MTRANS .NE. 5 .AND. MTRANS .NE. 6 
+     *           .AND. MTRANS .NE. 7) THEN
+               SCALINGLOC = .FALSE.
+               IF (PROK) 
+     *              WRITE(MPRINT,*) 'Analysis: auto scaling set OFF'
+            ENDIF
+         ENDIF
+         IF(.not.ASSOCIATED(id%A)) THEN
+            SCALINGLOC = .FALSE.
+            IF (PROK) 
+     *           WRITE(MPRINT,*) 'Analysis: auto scaling set OFF'
+         ENDIF
+      ENDIF
+      IF(SCALINGLOC) THEN
+         IF (PROK) WRITE(MPRINT,*) 
+     *        'Scaling will be computed during analysis'
+      ENDIF
+      MTRANSLOC = MTRANS
+      IF (MTRANS.LT.0 .OR. MTRANS.GT.7) GO TO 500
+      IF (K50 .EQ. 0) THEN
+         IF(.NOT. SCALINGLOC .AND. MTRANS .EQ. 7) THEN 
+            GO TO 500
+         ELSE
+            MTRANSLOC = 5
+         ENDIF
+      ELSE
+         IF (MTRANS .EQ. 7) MTRANSLOC = 5
+      ENDIF
+      IF(SCALINGLOC .AND. MTRANSLOC .NE. 5 .AND.
+     *     MTRANSLOC .NE. 6 ) THEN
+         IF (PROK) WRITE(MPRINT,*)
+     *        'WARNING scaling required: set MTRANS option to 5'
+         MTRANSLOC = 5
+      ENDIF
       IF (N.EQ.1) THEN
         MTRANS=0
         GO TO 500
       ENDIF
+      IF(K50 .EQ. 2) THEN
+         NZTOT = 2*NZ+N
+      ELSE
+         NZTOT = NZ
+      ENDIF
+      ZERODIAG => id%IS1(N+1:2*N)
+      STR_KER => id%IS1(2*N+1:3*N)
       CALL SMUMPS_448(ICNTL64,CNTL64)
       ICNTL64(1) = ICNTL(1)
       ICNTL64(2) = ICNTL(2)
@@ -3384,48 +4138,50 @@ C
       ICNTL64(5) = -1
       IF (PROK) THEN
          WRITE(MPRINT,'(A)')
-     *     'Compute column permutation (Maximum Transversal):'
-         IF (MTRANS.EQ.1)
-     *   WRITE(MPRINT,'(A,I3,A)')' ... ICNTL(6)=',MTRANS
-         IF (MTRANS.EQ.2)
+     *     'Compute maximum matching (Maximum Transversal):',
+     *        MTRANSLOC
+         IF (MTRANSLOC.EQ.1)
+     *   WRITE(MPRINT,'(A,I3,A)')' ... ICNTL(6)=',MTRANSLOC
+         IF (MTRANSLOC.EQ.2)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANS,': BOTTLENECK THESIS'
-         IF (MTRANS.EQ.3)
+     *     ' ... ICNTL(6)=',MTRANSLOC,': BOTTLENECK THESIS'
+         IF (MTRANSLOC.EQ.3)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANS,': BOTTLENECK SIMAX'
-         IF (MTRANS.EQ.4)
+     *     ' ... ICNTL(6)=',MTRANSLOC,': BOTTLENECK SIMAX'
+         IF (MTRANSLOC.EQ.4)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANS,': MAXIMIZE SUM DIAGIONAL'
-         IF (MTRANS.EQ.5 .OR. MTRANS.EQ.6)
+     *     ' ... ICNTL(6)=',MTRANSLOC,': MAXIMIZE SUM DIAGIONAL'
+         IF (MTRANSLOC.EQ.5 .OR. MTRANSLOC.EQ.6)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANS,
+     *     ' ... ICNTL(6)=',MTRANSLOC,
      *     ': MAXIMIZE PRODUCT DIAGONAL AND SCALE'
       ENDIF
-      CNTL64(2) = HUGE(1.0E0)
+      id%INFOG(23) = MTRANSLOC
+      CNTL64(2) = HUGE(CNTL64(2))
       PLENR = 1
       IP    = PLENR + N
       IRNW  = IP + N + 1
-      IPIW  = IRNW + NZ
-      IF (MTRANS.EQ.1) LIWMIN = 5*N
-      IF (MTRANS.EQ.2) LIWMIN = 4*N
-      IF (MTRANS.EQ.3) LIWMIN = 10*N + NZ
-      IF (MTRANS.EQ.4) LIWMIN = 5*N
-      IF (MTRANS.EQ.5) LIWMIN = 5*N
-      IF (MTRANS.EQ.6) LIWMIN = 5*N + NZ
+      IPIW  = IRNW + NZTOT
+      IF (MTRANSLOC.EQ.1) LIWMIN = 5*N
+      IF (MTRANSLOC.EQ.2) LIWMIN = 4*N
+      IF (MTRANSLOC.EQ.3) LIWMIN = 10*N + NZTOT
+      IF (MTRANSLOC.EQ.4) LIWMIN = 5*N
+      IF (MTRANSLOC.EQ.5) LIWMIN = 5*N
+      IF (MTRANSLOC.EQ.6) LIWMIN = 5*N + NZTOT
       LIW = LIWMIN
-      LIWG  = LIW + (NZ + 2*N + 1)
+      LIWG  = LIW + (NZTOT + 2*N + 1)
       ALLOCATE(IW(LIWG), stat=allocok)
       IF (allocok .GT. 0 ) GOTO 410
-      IF (MTRANS.EQ.1) THEN
+      IF (MTRANSLOC.EQ.1) THEN
        LDWMIN = 1
       ENDIF
-      IF (MTRANS.EQ.2) LDWMIN = N
-      IF (MTRANS.EQ.3) LDWMIN = NZ
-      IF (MTRANS.EQ.4) LDWMIN = 2*N + NZ
-      IF (MTRANS.EQ.5) LDWMIN = 3*N + NZ
-      IF (MTRANS.EQ.6) LDWMIN = 4*N + NZ
+      IF (MTRANSLOC.EQ.2) LDWMIN = N
+      IF (MTRANSLOC.EQ.3) LDWMIN = NZTOT
+      IF (MTRANSLOC.EQ.4) LDWMIN = 2*N + NZTOT
+      IF (MTRANSLOC.EQ.5) LDWMIN = 3*N + NZTOT
+      IF (MTRANSLOC.EQ.6) LDWMIN = 4*N + NZTOT
       LDW   = LDWMIN
-      ALLOCATE(S1(NZ), stat=allocok)
+      ALLOCATE(S1(NZTOT), stat=allocok)
       IF (allocok .GT. 0 ) GOTO 420
       ALLOCATE(S2(LDW), stat=allocok)
       IF (allocok .GT. 0 ) GOTO 430
@@ -3433,130 +4189,487 @@ C
       DO 5 J=1,N
         IW(PLENR+J-1) = 0
   5   CONTINUE
-      DO 10 K=1,NZ
-         I = id%IRN(K)
-         J = id%JCN(K)
-         IF ( (J.LE.N).AND.(J.GE.1).AND.
+      IF(K50 .EQ. 0) THEN
+         DO 10 K=1,NZ
+            I = id%IRN(K)
+            J = id%JCN(K)
+            IF ( (J.LE.N).AND.(J.GE.1).AND.
      *           (I.LE.N).AND.(I.GE.1) ) THEN
-             IW(PLENR+J-1) = IW(PLENR+J-1) + 1
-             NZREAL = NZREAL + 1
-         ENDIF
- 10   CONTINUE
+               IW(PLENR+J-1) = IW(PLENR+J-1) + 1
+               NZREAL = NZREAL + 1
+            ENDIF
+ 10      CONTINUE
+      ELSE
+         ZERODIAG = 0
+         NZER_DIAG = N
+         RZ_DIAG = 0
+         DO K=1,NZ
+            I = id%IRN(K)
+            J = id%JCN(K)
+            IF ( (J.LE.N).AND.(J.GE.1).AND.
+     *           (I.LE.N).AND.(I.GE.1) ) THEN
+               IW(PLENR+J-1) = IW(PLENR+J-1) + 1
+               NZREAL = NZREAL + 1
+               IF(I .NE. J) THEN
+                  IW(PLENR+I-1) = IW(PLENR+I-1) + 1
+                  NZREAL = NZREAL + 1
+               ELSE
+                  ZERODIAG(I) = K
+                  IF(ASSOCIATED(id%A)) THEN
+                     IF(id%A(K) .EQ. 0.0E0) THEN
+                        RZ_DIAG = RZ_DIAG + 1
+                     ENDIF
+                  ENDIF
+                  NZER_DIAG = NZER_DIAG - 1
+               ENDIF
+            ENDIF
+         ENDDO
+#if(SP_DEBUG >= 1)
+         WRITE(*,*) 'NZER_DIAG,RZ_DIAG,TOTZER',NZER_DIAG,RZ_DIAG,
+     *        NZER_DIAG+RZ_DIAG
+#endif
+         DO I =1, N
+            IF(ZERODIAG(I) .EQ. 0) THEN
+               IW(PLENR+I-1) = IW(PLENR+I-1) + 1
+               NZREAL = NZREAL + 1
+            ENDIF
+         ENDDO
+      ENDIF
       IW(IP)   = 1
       DO 20 J=1,N
         IW(IP+J)   = IW(IP+J-1)+IW(PLENR+J-1)
   20  CONTINUE
       DO 25 J=1, N
         IW(PLENR+J-1 ) = IW(IP+J-1 )
-  25  CONTINUE
-      IF (MTRANS.EQ.1) THEN
-        DO 30 K=1,NZ
-         I = id%IRN(K)
-         J = id%JCN(K)
-         IF ( (J.LE.N).AND.(J.GE.1) .AND.
-     *           (I.LE.N).AND.(I.GE.1)) THEN
-           JPOS            = IW(PLENR+J-1)
-           IW(IRNW+JPOS-1) = I
-           IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
-         ENDIF
-  30    CONTINUE
-      ELSE
-        IF ( .not.ASSOCIATED(id%A)) THEN
-          INFO(1) = -22
-          INFO(2) = 4
-          GOTO 500
+#if (SP_DEBUG >= 2)
+        IF(IW(PLENR+J-1) .LE. 0) THEN
+           WRITE(*,*) 'J,IW(PLENR+J-1)',J,IW(PLENR+J-1)
+           CALL ABORT()
         ENDIF
-        DO 35 K=1,NZ
-         I = id%IRN(K)
-         J = id%JCN(K)
-         IF ( (J.LE.N).AND.(J.GE.1) .AND.
-     *           (I.LE.N).AND.(I.GE.1)) THEN
-          JPOS            = IW(PLENR+J-1)
-          IW(IRNW+JPOS-1) = I
-          S1(JPOS)         = id%A(K)
-          IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
+#endif
+  25  CONTINUE
+      IF(K50 .EQ. 0) THEN
+         IF (MTRANSLOC.EQ.1) THEN
+            DO 30 K=1,NZ
+               I = id%IRN(K)
+               J = id%JCN(K)
+               IF ( (J.LE.N).AND.(J.GE.1) .AND.
+     *              (I.LE.N).AND.(I.GE.1)) THEN
+                  JPOS            = IW(PLENR+J-1)
+                  IW(IRNW+JPOS-1) = I
+                  IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
+              ENDIF
+ 30         CONTINUE
+         ELSE
+            IF ( .not.ASSOCIATED(id%A)) THEN
+               INFO(1) = -22
+               INFO(2) = 4
+               GOTO 500
+            ENDIF
+            DO 35 K=1,NZ
+               I = id%IRN(K)
+               J = id%JCN(K)
+               IF ( (J.LE.N).AND.(J.GE.1) .AND.
+     *              (I.LE.N).AND.(I.GE.1)) THEN
+                  JPOS            = IW(PLENR+J-1)
+                  IW(IRNW+JPOS-1) = I
+                  S1(JPOS)         = id%A(K)
+                  IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
+               ENDIF
+ 35         CONTINUE
          ENDIF
-  35    CONTINUE
+      ELSE
+         IF (MTRANSLOC.EQ.1) THEN
+            DO K=1,NZ
+               I = id%IRN(K)
+               J = id%JCN(K)
+               IF ( (J.LE.N).AND.(J.GE.1) .AND.
+     *              (I.LE.N).AND.(I.GE.1)) THEN
+                  JPOS            = IW(PLENR+J-1)
+                  IW(IRNW+JPOS-1) = I
+                  IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
+                  IF(I.NE.J) THEN
+                     JPOS            = IW(PLENR+I-1)
+                     IW(IRNW+JPOS-1) = J
+                     IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
+                  ENDIF
+               ENDIF
+            ENDDO
+            DO I =1,N
+               IF(ZERODIAG(I) .EQ. 0) THEN
+                  JPOS            = IW(PLENR+I-1)
+                  IW(IRNW+JPOS-1) = I
+                  IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
+               ENDIF
+            ENDDO
+         ELSE
+            IF ( .not.ASSOCIATED(id%A)) THEN
+               INFO(1) = -22
+               INFO(2) = 4
+               GOTO 500
+            ENDIF
+            K = 1
+            THEMIN = ZERO
+            DO
+               IF(THEMIN .NE. ZERO) EXIT
+               THEMIN = ABS(id%A(K))
+               K = K+1
+            ENDDO
+            THEMAX = THEMIN
+            DO K=1,NZ
+               I = id%IRN(K)
+               J = id%JCN(K)
+               IF ( (J.LE.N).AND.(J.GE.1) .AND.
+     *              (I.LE.N).AND.(I.GE.1)) THEN
+                  JPOS            = IW(PLENR+J-1)
+#if (SP_DEBUG >= 2)
+                  IF(JPOS .LE. 0) THEN
+                     WRITE(*,*) 'I,J,JPOS,K',I,J,JPOS,K
+                     CALL ABORT()
+                  ENDIF
+#endif
+                  IW(IRNW+JPOS-1) = I
+                  S1(JPOS)         = id%A(K)
+                  IW(PLENR+J-1)   = IW(PLENR+J-1) + 1
+#if (SP_DEBUG >= 2)
+                  IF(IW(PLENR+J-1) .LE. 0) THEN
+                     WRITE(*,*) 'C0 J,IW(PLENR+J-1)',J,IW(PLENR+J-1)
+                     CALL ABORT()
+                  ENDIF
+#endif
+                  IF(ABS(id%A(K)) .GT. THEMAX) THEN
+                     THEMAX = ABS(id%A(K))
+                  ELSE IF(ABS(id%A(K)) .LT. THEMIN 
+     *                    .AND. ABS(id%A(K)).GT. ZERO) THEN
+                     THEMIN = ABS(id%A(K))
+                  ENDIF
+                  IF(I.NE.J) THEN
+                     JPOS            = IW(PLENR+I-1)
+#if (SP_DEBUG >= 2)
+                     IF(JPOS .LE. 0) THEN
+                        WRITE(*,*) 'C1 I,J,JPOS,K,PLENR',
+     *                       I,J,JPOS,K,PLENR
+                        CALL ABORT()
+                     ENDIF
+#endif
+                     IW(IRNW+JPOS-1) = J
+                     S1(JPOS)         = id%A(K)
+                     IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
+#if (SP_DEBUG >= 2)
+                     IF(IW(PLENR+J-1) .LE. 0) THEN
+                        WRITE(*,*) 'C2 J,IW(PLENR+J-1)',J,IW(PLENR+J-1)
+                        CALL ABORT()
+                     ENDIF
+#endif
+                  ENDIF
+               ENDIF
+#if (SP_DEBUG >= 3)
+               DO JPOS = 1,N
+                  IF(IW(PLENR+JPOS-1) .LT. IW(IP+JPOS-1)
+     *                 .OR. IW(PLENR+JPOS-1) .GT. IW(IP+JPOS)) THEN
+                     WRITE(*,*) 
+     *            'JPOS,IW(PLENR+JPOS-1),IW(IP+JPOS-1),IW(IP+JPOS)',
+     *                 JPOS,IW(PLENR+JPOS-1),IW(IP+JPOS-1),IW(IP+JPOS)
+                     CALL ABORT()
+                  ENDIF
+               ENDDO
+               IF(IW(PLENR+3289-1) .LE. 0) THEN
+                  WRITE(*,*) 'bbb I,J,JPOS,K',I,J,JPOS,K
+                  WRITE(*,*) 'IW(PLENR+J-1)',IW(PLENR+3289-1)
+                  CALL ABORT()
+               ENDIF
+#endif
+            ENDDO
+            DO I =1, N
+               IF(ZERODIAG(I) .EQ. 0) THEN
+                  JPOS            = IW(PLENR+I-1)
+                  IW(IRNW+JPOS-1) = I
+                  S1(JPOS)         = ZERO
+                  IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
+               ENDIF
+            ENDDO
+            CNTL64(2) = (LOG(THEMAX/THEMIN))*REAL(N)**2 + REAL(N)
+         ENDIF
       ENDIF
       DUPPLI = .FALSE.
       DO 50 I =1, N
-        PERM(I) = 0
+         PERM(I) = 0
  50   CONTINUE
       DO 55 J=1,N
-        DO 60 K=IW(IP+J-1), IW(IP+J) - 1
-         I = IW(IRNW+K-1)
-         IF (PERM(I).EQ.J) THEN
-           DUPPLI=.TRUE.
-           GOTO 65
-         ELSE
-           PERM(I) = J
-         ENDIF
- 60     CONTINUE
+         DO 60 K=IW(IP+J-1), IW(IP+J) - 1
+            I = IW(IRNW+K-1)
+            IF (PERM(I).EQ.J) THEN
+               DUPPLI=.TRUE.
+               GOTO 65
+            ELSE
+               PERM(I) = J
+            ENDIF
+ 60      CONTINUE
  55   CONTINUE
  65   IF (DUPPLI) THEN
-        write(6,*) '!!!! MC64 NOT USED (DUPLICATES) !!!'
-        IF (MP.GT.0 .AND. ICNTL(4).GE.2) THEN
-        WRITE(MP,'(A)')
+         IF (PROK) THEN
+            WRITE (MPRINT,'(A)')
+     *           ' Max. trans. not used : dupplicates in input matrix'
+         ENDIF
+         IF (MP.GT.0 .AND. ICNTL(4).GE.2) THEN
+            WRITE(MP,'(A)')
      *     ' *** WARNING during Numerical Max. transversal',
      *     ' *** Col permutation not computed because of',
      *     ' *** duplicate entries in the input matrix'
-        ENDIF
-        MTRANS=0
-        GOTO 390
+            IF(id%KEEP(52) .EQ. -2) THEN
+               WRITE(MP,'(A)')
+     *     ' *** WARNING scaling not computed because of',
+     *     ' *** duplicate entries in the input matrix'
+            ENDIF
+         ENDIF
+         MTRANS=0
+         id%KEEP(95) = 1
+         id%KEEP(52) = 0
+         GOTO 390
       ENDIF
-      CALL SMUMPS_443(MTRANS ,N, N, NZREAL, IW(IP), IW(IRNW), S1,
-     *            NUMNZ, PERM, LIW, IW(IPIW), LDW, S2,
-     *            ICNTL64, CNTL64, INFO64)
+      CALL SMUMPS_443(MTRANSLOC ,N, N, NZREAL, IW(IP), IW(IRNW), S1,
+     *     NUMNZ, PERM, LIW, IW(IPIW), LDW, S2,
+     *     ICNTL64, CNTL64, INFO64)
       IF (INFO64(1).LT.0) THEN
-       IF (LP.GT.0 .AND. ICNTL(4).GE.1)
-     * WRITE(LP,'(A,I5)')
-     *     ' ERROR in SMUMPS_443 INFO(1)=',INFO64(1)
-       GO TO 500
+         IF (LP.GT.0 .AND. ICNTL(4).GE.1)
+     *        WRITE(LP,'(A,I5)')
+     *        ' ERROR in SMUMPS_443 INFO(1)=',INFO64(1)
+         GO TO 500
       ENDIF
       IF (INFO64(1).GT.0) THEN
-        IF (MP.GT.0 .AND. ICNTL(4).GE.2)
-     *WRITE(MP,'(A,I5)')
-     *  ' WARNING in SMUMPS_443 INFO(1)=',INFO64(1)
+         IF (MP.GT.0 .AND. ICNTL(4).GE.2)
+     *        WRITE(MP,'(A,I5)')
+     *        ' WARNING in SMUMPS_443 INFO(1)=',INFO64(1)
+      ENDIF
+      IF(K50 .EQ. 2) THEN
+         KER_SIZE = 0
+         DO I=1,N
+            IF(ZERODIAG(I) .EQ. 0) THEN
+               IF(PERM(I) .EQ. I) THEN
+                  KER_SIZE = KER_SIZE + 1
+                  PERM(I) = -I
+                  STR_KER(KER_SIZE) = I
+               ENDIF
+            ENDIF
+         ENDDO
       ENDIF
       IF (NUMNZ.LT.N) GO TO 400
-      IDENT = .TRUE.
-      DO 80 J=1,N
-        JPERM = PERM(J)
-        IW(PLENR+JPERM-1) = J
-        IF (JPERM.NE.J) IDENT = .FALSE.
- 80   CONTINUE
-      IF (.NOT.IDENT) THEN
-       DO 100 K=1,NZ
-         J = id%JCN(K)
-         IF ((J.LE.0).OR.(J.GT.N)) GO TO 100
-         id%JCN(K) = IW(PLENR+J-1)
- 100   CONTINUE
-       IF (MP.GT.0 .AND. ICNTL(4).GE.2)
-     * WRITE(MP,'(/A)')
-     * ' WARNING input matrix data modified'
-      ENDIF
-      IF ( (MTRANS.EQ.5 .OR. MTRANS.EQ.6).AND.
-     *  ( ICNTL(8).EQ.7 )
-     *   ) THEN
-        IF ( associated(id%COLSCA))
-     *             DEALLOCATE( id%COLSCA )
-        IF ( associated(id%ROWSCA))
-     *             DEALLOCATE( id%ROWSCA )
+      IF(K50 .EQ. 0) THEN
+         IDENT = .TRUE.
+         IF(MTRANS .EQ. 0) GOTO 102
+         DO 80 J=1,N
+            JPERM = PERM(J)
+            IW(PLENR+JPERM-1) = J
+            IF (JPERM.NE.J) IDENT = .FALSE.
+ 80      CONTINUE
+         IF(IDENT) THEN 
+            MTRANS = 0
+         ELSE
+            IF(MTRANS .EQ. 7) THEN
+               MTRANS = -9876543
+               GOTO 102
+            ENDIF
+         ENDIF
+         IF (.NOT.IDENT) THEN
+            IF (PROK) WRITE(MPRINT,'(A)')
+     *           ' ... Apply column permutation'
+            DO 100 K=1,NZ
+               J = id%JCN(K)
+               IF ((J.LE.0).OR.(J.GT.N)) GO TO 100
+               id%JCN(K) = IW(PLENR+J-1)
+ 100        CONTINUE
+            IF (MP.GT.0 .AND. ICNTL(4).GE.2)
+     *           WRITE(MP,'(/A)')
+     *           ' WARNING input matrix data modified'
+         ENDIF
+ 102     CONTINUE
+         IF (SCALINGLOC) THEN
+            IF ( associated(id%COLSCA))
+     *           DEALLOCATE( id%COLSCA )
+            IF ( associated(id%ROWSCA))
+     *           DEALLOCATE( id%ROWSCA )
             ALLOCATE( id%COLSCA(N), stat=allocok)
-        IF (allocok .GT.0) id%INFO(1)=-13
+            IF (allocok .GT.0) THEN
+               id%INFO(1)=-5
+               id%INFO(2)=N
+               IF ((LP.GE.0).AND.(ICNTL(4).GE.1)) THEN
+                  WRITE (LP,'(/A)') '** Error in SMUMPS_203'
+                  WRITE (LP,'(A)') 
+     *                 '** Failure during allocation of COLSCA'
+                  GOTO 500
+               ENDIF
+            ENDIF
             ALLOCATE( id%ROWSCA(N), stat=allocok)
-        IF (allocok .GT.0) id%INFO(1)=-13
-        ICNTL(8) = -1
-        id%KEEP(74) = 1
-        DO 105 J=1,N
-          id%ROWSCA(J)            = REAL(EXP(S2(J)))
-          id%COLSCA(IW(PLENR+J-1))= REAL(EXP(S2(N+J)))
- 105    CONTINUE
+            IF (allocok .GT.0) THEN
+               id%INFO(1)=-5
+               id%INFO(2)=N
+               IF ((LP.GE.0).AND.(ICNTL(4).GE.1)) THEN
+                  WRITE (LP,'(/A)') '** Error in SMUMPS_203'
+                  WRITE (LP,'(A)') 
+     *                 '** Failure during allocation of ROWSCA'
+                  GOTO 500
+               ENDIF
+            ENDIF
+            id%KEEP(52) = -2
+            id%KEEP(74) = 1
+            DO 105 J=1,N
+               id%ROWSCA(J)            = REAL(EXP(S2(J)))
+               id%COLSCA(IW(PLENR+J-1))= REAL(EXP(S2(N+J)))
+ 105        CONTINUE
+         ENDIF
+      ELSE
+         IDENT = .FALSE.         
+#if (SP_DEBUG >= 3)
+         WRITE(*,*) PERM
+         WRITE(*,*) S2(1:N)
+         WRITE(*,*) S2(N+1:2*N)
+#endif
+         IF(SCALINGLOC) THEN
+            IF ( associated(id%COLSCA)) DEALLOCATE( id%COLSCA )
+            IF ( associated(id%ROWSCA)) DEALLOCATE( id%ROWSCA )
+            ALLOCATE( id%COLSCA(N), stat=allocok)
+            IF (allocok .GT.0) THEN
+               id%INFO(1)=-5
+               id%INFO(2)=N
+               IF ((LP.GE.0).AND.(ICNTL(4).GE.1)) THEN
+                  WRITE (LP,'(/A)') '** Error in SMUMPS_203'
+                  WRITE (LP,'(A)') 
+     *                 '** Failure during allocation of COLSCA'
+                  GOTO 500
+               ENDIF
+            ENDIF
+            ALLOCATE( id%ROWSCA(N), stat=allocok)
+            IF (allocok .GT.0) THEN
+               id%INFO(1)=-5
+               id%INFO(2)=N
+               IF ((LP.GE.0).AND.(ICNTL(4).GE.1)) THEN
+                  WRITE (LP,'(/A)') '** Error in SMUMPS_203'
+                  WRITE (LP,'(A)') 
+     *                 '** Failure during allocation of ROWSCA'
+                  GOTO 500
+               ENDIF
+            ENDIF
+            id%KEEP(52) = -2
+            id%KEEP(74) = 1
+            DO J=1,N
+               IF(PERM(J) .GT. 0) THEN
+                  id%ROWSCA(J) = REAL(EXP((S2(J)+S2(N+J))/TWO))
+                  id%COLSCA(J)= id%ROWSCA(J)
+#if (SP_DEBUG >= 3)
+                  WRITE(*,*) 'J,ROWSCA(J)',J,id%ROWSCA(J)
+#endif
+               ENDIF
+            ENDDO
+            DO JPOS=1,KER_SIZE
+               I = STR_KER(JPOS)
+               COLNORM = ONE
+               DO J = IW(IP+I-1),IW(IP+J) - 1
+                  K = IW(IRNW+J-1)
+                  COLNORM = MAX(COLNORM,ABS(S1(J)*id%ROWSCA(K)))
+               ENDDO
+               id%ROWSCA(I) = ONE / COLNORM
+               id%COLSCA(I) = id%ROWSCA(I)
+#if (SP_DEBUG >= 3)
+               WRITE(*,*) 'I,ROWSCA(I)',I,id%ROWSCA(I)
+#endif
+            ENDDO
+#if (SP_DEBUG >= 2)
+            WRITE(*,*) 'check scaling factors'
+            S1 = ZERO
+            DO K=1,NZ
+               I=id%IRN(K)
+               J=id%JCN(K)
+               S1(I) = MAX(ABS(S1(I)),
+     *              ABS(id%ROWSCA(I)*id%A(K)*id%COLSCA(J)))
+               S1(J) = MAX(ABS(S1(J)),
+     *              ABS(id%ROWSCA(I)*id%A(K)*id%COLSCA(J)))
+            ENDDO
+            COLNORM = SQRT(EPSILON(COLNORM))
+            DO K = 1,N
+               IF(PERM(K) .GT. 0) THEN
+                  IF( ABS(S1(K)) .LT. (ONE-COLNORM)
+     *                 .OR. ABS(S1(K)) .GT. (ONE+COLNORM) ) THEN
+                     WRITE(*,*) 'K,S1(K)',K,S1(K)
+                     CALL ABORT()
+                  ENDIF
+               ELSE
+                  IF( ABS(S1(K)) .GT. (ONE+COLNORM) ) THEN
+                     WRITE(*,*) 'K,S1(K)',K,S1(K)
+                     CALL ABORT()
+                  ENDIF
+               ENDIF
+            ENDDO
+            WRITE(*,*) 'scaling factors OK'
+#endif
+         ENDIF
+         IF(MTRANS .EQ. 7 .OR. id%KEEP(95) .EQ. 0) THEN
+#if 0
+            WRITE(*,*) 'NB zeors on diag, N/10',
+     *           NZER_DIAG+RZ_DIAG,N
+#endif       
+            IF((NZER_DIAG+RZ_DIAG) .LT. (N/10) 
+     *         .AND. id%KEEP(95) .EQ. 0) THEN
+               MTRANS = 0
+               id%KEEP(95) = 1
+               GOTO 390
+            ELSE
+               IF(id%KEEP(95) .EQ. 0) THEN
+                  id%KEEP(95) = 3
+               ENDIF
+               IF(MTRANS .EQ. 7) MTRANS = 5
+            ENDIF
+         ENDIF
+         IF(MTRANS .EQ. 0) GOTO 390
+         ICNTL_SYM_MWM = 0
+         INFO_SYM_MWM = 0
+         IF(MTRANS .EQ. 5 .OR. MTRANS .EQ. 6 .OR.
+     *        MTRANS .EQ. 7) THEN
+            ICNTL_SYM_MWM(1) = 0
+            ICNTL_SYM_MWM(2) = 1
+         ELSE IF(MTRANS .EQ. 3 .OR. MTRANS .EQ. 4) THEN
+            ICNTL_SYM_MWM(1) = 2
+            ICNTL_SYM_MWM(2) = 1
+         ELSE
+            ICNTL_SYM_MWM(1) = 0
+            ICNTL_SYM_MWM(2) = 1
+         ENDIF
+         MARKED => id%IS1(2*N+1:3*N)
+         FLAG => id%IS1(3*N+1:4*N)
+         PIV_OUT => id%IS1(4*N+1:5*N)
+         IF(MTRANSLOC .LT. 4) THEN
+            WEIGHT => S2(1:LDW)
+         ELSE
+            WEIGHT => S2(2*N+1:3*N+2)
+         ENDIF
+#if (SP_DEBUG >= 2)
+         WRITE(*,*) 'Before SMUMPS_551'         
+#endif
+         CALL SMUMPS_551(
+     *        N, NZREAL, IW(IP), IW(IRNW), S2, PERM, ZERODIAG,
+     *        ICNTL_SYM_MWM, WEIGHT, MARKED,FLAG,
+     *        PIV_OUT, INFO_SYM_MWM)
+#if (SP_DEBUG >= 2)
+         WRITE(*,*) 'After SMUMPS_551'  
+         WRITE(*,*) 'INFO =',INFO_SYM_MWM(1:4)
+#endif
+         IF(INFO_SYM_MWM(1) .NE. 0) THEN
+            WRITE(*,*) '** Error in SMUMPS_203'
+            RETURN
+         ENDIF
+         IF(INFO_SYM_MWM(3) .EQ. N) THEN
+            IDENT = .TRUE.
+         ELSE
+            DO I=1,N
+               PERM(I) = PIV_OUT(I)
+            ENDDO
+         ENDIF
+         id%KEEP(93) = INFO_SYM_MWM(4)
+         id%KEEP(94) = INFO_SYM_MWM(3)
+         IF (IDENT) MTRANS=0
       ENDIF
-      IF (IDENT) MTRANS=0
  390  IF (PROK .AND. (MTRANS.EQ.0)) THEN
         WRITE (MPRINT,'(A)')
-     *  '... Column permutation is identity matrix'
+     *  ' ... Column permutation is identity matrix'
       ENDIF
       GO TO 500
  400  IF ((LP.GE.0).AND.(ICNTL(4).GE.1))
@@ -3578,7 +4691,7 @@ C
        WRITE (LP,'(A)') '** Failure during allocation of S1'
       ENDIF
       INFO(1) = -5
-      INFO(2) = NZ
+      INFO(2) = NZTOT
       GOTO 500
  430  IF ((LP.GE.0).AND.(ICNTL(4).GE.1)) THEN
        WRITE (LP,'(/A)') '** Error in SMUMPS_203'
@@ -3648,8 +4761,13 @@ C
         END DO
       END IF
       IF ( MP.GT. 0 ) THEN
-        WRITE(MP,*) ' Node parallelism: ICNTL(12/13)=',
-     *                ICNTL(12),ICNTL(13)
+         WRITE(MP,*) ' ICNTL(13)= (0=scalapack on)',
+     *                ICNTL(13)
+        IF (ICNTL(40).EQ.0) THEN 
+              WRITE(MP,*) ' Node level parallelism ON'
+        ELSE
+              WRITE(MP,*) ' Node level parallelism OFF'
+        ENDIF
       END IF
       ONE_LEVEL2 = .FALSE.
       DO INODE = 1, N
@@ -3665,8 +4783,8 @@ C
           IF ( (SMUMPS_283( INODE,PROCNODE,SLAVEF).AND.
      &     (IN.NE.0.OR.NFRONT.NE.NPIV )) .OR. SLAVEF.EQ.1 ) GOTO 991
           IF ( NFRONT-NPIV > KEEP(9) .AND.
-     *       ( NPIV > KEEP(4) .OR. KEEP(45) .EQ. 0 )
-     *         .AND. ICNTL(12) .EQ. 0 ) THEN
+     *         ( NPIV > KEEP(4) .OR. KEEP(45) .EQ. 0 ) 
+     *         .AND. ICNTL(40) .EQ. 0 ) THEN
             PROCNODE( INODE ) = PROCNODE( INODE ) + SLAVEF
             ONE_LEVEL2 = .TRUE.
             NB_NIV2 = NB_NIV2 + 1
@@ -3711,6 +4829,8 @@ C
      *   ' has been selected for Scalapack'
         KEEP(38) = IROOTTREE
         PROCNODE( IROOTTREE ) = 1 + 2 * SLAVEF
+      ELSE IF (KEEP(60) .EQ. 2 .OR. KEEP(60).EQ.3) THEN
+        PROCNODE( KEEP(38) ) = 1 + 2 * SLAVEF
       ELSE
         KEEP(38) = 0
       END IF
@@ -3745,25 +4865,25 @@ C
       IF ( NNODE .GT. 0 ) THEN
         ALLOCATE( NUMNODE( NNODE  ), stat = allocok )
         if (allocok .gt. 0) THEN
-          INFO(1) = -13
+          INFO(1) = -7
           INFO(2) = NNODE
           RETURN
         endif
         ALLOCATE( NODEMAP( NNODE  ), stat = allocok )
         if (allocok .gt. 0) THEN
-          INFO(1) = -13
+          INFO(1) = -7
           INFO(2) = NNODE
           RETURN
         endif
         ALLOCATE( COST   ( NNODE  ), stat = allocok )
         if (allocok .gt. 0) THEN
-          INFO(1) = -13
+          INFO(1) = -7
           INFO(2) = NNODE
           RETURN
         endif
         ALLOCATE( MEMUSED( SLAVEF ), stat = allocok )
         if (allocok .gt. 0) THEN
-          INFO(1) = -13
+          INFO(1) = -7
           INFO(2) = SLAVEF
           RETURN
         endif
@@ -3963,11 +5083,12 @@ C
      $        ELEN(N), LAST(N), DEGREE(N), HEAD(N), 
      $        W(N)
       INTEGER IW(IWLEN), NV(N), NEXT(N)
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X, 
      $        NPRINC
+      INTEGER*8 HASH, HMOD
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
       WFLG = 2
@@ -4370,11 +5491,12 @@ C
      $        ELEN(N), LAST(N), DEGREE(N), HEAD(N), 
      $        W(N), NEXT(N)
       INTEGER IW(IWLEN), NV(N), PE(N)
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X,
      $        NBFLAG, NREAL, LASTD, NELME
+      INTEGER*8 HASH, HMOD
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
       WFLG = 2
@@ -4399,6 +5521,10 @@ C
       DO K=1,SIZE_SCHUR
        I = LISTVAR_SCHUR(K)
        DEGREE(I) = N+1
+       IF ((LEN(I) .EQ.0).OR.(LEN(I).EQ.-N-1)) THEN
+         PE (I)     = 0
+         LEN(I)     = 0
+       ENDIF
        DEG = N
        IF (LASTD.EQ.0) THEN
                LASTD     = I
@@ -4764,7 +5890,8 @@ C
            IF (ME.NE.LISTVAR_SCHUR(1)) THEN
              write(6,*) ' error 1 in SMUMPS_162 '
              write(6,*) ' wrong principal var for Schur !!'
-             stop
+             NCMPA = -N - 2
+             CALL SMUMPS_ABORT()
            ENDIF
            NELME    = -(NEL+1)
            DO X=1,N
@@ -4783,7 +5910,7 @@ C
         IF (NEL.NE.N) THEN
          write(*,*) ' Error 2 in SMUMPS_162 NEL, N=', NEL,N
          NCMPA = -N - 1
-         GOTO 500
+         CALL SMUMPS_ABORT()
         ENDIF
       ENDIF
       DO 290 I = 1, N
@@ -4992,41 +6119,6 @@ C
      *   NSLAVES, KEEP, TOT_CUT, STRAT, DEPTH )
       RETURN
       END SUBROUTINE SMUMPS_313
-      SUBROUTINE SMUMPS_311(N, PERM, 
-     *        INTLIST, TAILLE, TEMP)
-      INTEGER N, TAILLE
-      INTEGER PERM( N ), TEMP(N)
-      INTEGER INTLIST( TAILLE )
-      INTEGER I, SWAPI, I1
-      LOGICAL SORTED
-      IF (TAILLE .LT. 50) THEN
-      SORTED = .FALSE.
-      DO WHILE ( .NOT. SORTED )
-        SORTED = .TRUE.
-        DO I = 1, TAILLE - 1
-         IF ( PERM(INTLIST(I) ).GT.PERM(INTLIST(I+1) ) ) THEN
-            SORTED = .FALSE.
-            SWAPI            = INTLIST( I )
-            INTLIST( I )     = INTLIST( I + 1 )
-            INTLIST( I + 1 ) = SWAPI
-          END IF
-        END DO
-      END DO
-      ELSE 
-      TEMP = 0
-      DO I = 1, TAILLE 
-       I1 = INTLIST(I)
-       TEMP( PERM(I1) ) = I1
-      ENDDO
-      I1 = 0
-      DO I = 1,N
-        IF (TEMP(I).EQ.0) CYCLE
-        I1 = I1 + 1
-        INTLIST(I1) = TEMP(I)
-      ENDDO
-      ENDIF
-      RETURN
-      END SUBROUTINE SMUMPS_311
       SUBROUTINE SMUMPS_351
      * (N,NZ, IRN, ICN, IW, LW, IPE, LEN,
      * IQ, FLAG, IWFR,
@@ -5040,12 +6132,14 @@ C
       INTEGER IPE(N+1)
       INTEGER FLAG(N), IW(LW)
       INTEGER IQ(N)
-      INTEGER MP
+      INTEGER MP, MPG
       INTEGER I,K,J,N1,LAST,NDUP,K1,K2,L
       INTEGER NBERR
       INTEGER NZOFFA, NDIAGA
       REAL RSYM
+      INTRINSIC NINT
       MP = ICNTL(2)
+      MPG= ICNTL(3)
       NIORM  = 3*N
       NDIAGA = 0
       IERROR = 0
@@ -5109,13 +6203,9 @@ C
   110   CONTINUE
       ENDIF
       LAST = MAX(IPE(N)+IQ(N)-1,IQ(N))
-      DO 115 I = 1,N
-         FLAG(I) = 0
-         IPE(I)  = IQ(I)
-  115 CONTINUE
-      DO 130 K=1,LAST
-        IW(K) = 0
-  130 CONTINUE
+      FLAG(1:N) = 0
+      IPE(1:N)  = IQ(1:N)
+      IW(1:LAST) = 0
       IWFR = LAST + 1
       DO 200 K=1,NZ
          I = IRN(K)
@@ -5164,12 +6254,12 @@ C
       IF (NDUP.NE.0) THEN
        IWFR = 1
        DO 280 I=1,N
-         K1 = IPE(I) 
          IF (IQ(I).EQ.0) THEN
              LEN(I) = 0
             IPE(I) = IWFR
             GOTO 280
          ENDIF
+         K1 = IPE(I) 
          K2 = K1 + IQ(I) - 1
          L = IWFR
          IPE(I) = IWFR
@@ -5188,6 +6278,12 @@ C
       RSYM =  REAL(NDIAGA+2*NZOFFA - (IWFR-1))/
      *            REAL(NZOFFA+NDIAGA) 
       symmetry = NINT (100.0*RSYM)
+         IF (MPG .GT. 0)
+     &  write(MPG,'(A,I5)') 
+     &  ' ... Structural symmetry (in percent)=', symmetry
+        IF (MP.GT.0 .AND. MPG.NE.MP)
+     &  write(MP,'(A,I5)') 
+     &  ' ... Structural symmetry (in percent)=', symmetry
       ELSE
        symmetry = 100
       ENDIF
@@ -5204,16 +6300,19 @@ C
       INTEGER PE(N), IW(IWLEN), NV(N)
       INTEGER NBBUCK
       INTEGER HEAD(0:NBBUCK+1), WF(N)
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X,
      $        NBFLAG, NREAL, LASTD, NELME, WF3, WF4, N2, PAS
+       INTEGER*8 HASH, HMOD
        REAL    RMF, RMF1 
        REAL    dummy
        INTEGER idummy
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD, HUGE
+      INTEGER TOTEL
+      LOGICAL COMPRESS
       idummy = HUGE(idummy) - 1
       dummy = REAL(idummy)
       N2 = -NBBUCK-1
@@ -5230,24 +6329,56 @@ C
       LASTD  = 0
       HEAD(0:NBBUCK+1) = 0
       DO 10 I = 1, N
-        LAST (I) = 0
-        NV (I) = 1
-        W (I) = 1
+        LAST(I) = 0
+        W(I) = 1
         ELEN (I) = 0
    10 CONTINUE
-      DO I=1,N
-        IF (LEN(I).LT.0) THEN 
-           DEGREE (I) = N2
-           NBFLAG     = NBFLAG +1
-           IF (LEN(I).EQ.-N-1) THEN
-            LEN (I)    = 0
-           ELSE
-            LEN (I)    = - LEN(I)
-           ENDIF
-        ELSE
-         DEGREE (I) = LEN (I)
-        ENDIF
-      ENDDO
+      IF(NV(1) .LT. 0) THEN
+         COMPRESS = .FALSE.
+      ELSE
+         COMPRESS = .TRUE.
+      ENDIF
+      IF(COMPRESS) THEN
+         TOTEL = 0
+         DO I=1,N
+            IF (LEN(I).LT.0) THEN 
+               DEGREE (I) = N2
+               NBFLAG     = NBFLAG +1
+               IF (LEN(I).EQ.-N-1) THEN
+                  LEN (I)    = 0
+                  PE (I)     = 0
+               ELSE
+                  LEN (I)    = - LEN(I)
+               ENDIF
+            ELSE
+               TOTEL = TOTEL + NV(I)
+               DEGREE(I) = 0
+               DO J= PE(I) , PE(I)+LEN(I)-1 
+                  DEGREE(I) = DEGREE(I) + NV(IW(J))
+               ENDDO
+            ENDIF
+         ENDDO
+      ELSE
+         DO I=1,N
+            NV(I) = 1
+            IF (LEN(I).LT.0) THEN 
+               DEGREE (I) = N2
+               NBFLAG     = NBFLAG +1
+               IF (LEN(I).EQ.-N-1) THEN
+                  LEN (I)    = 0
+                  PE (I)     = 0
+               ELSE
+                  LEN (I)    = - LEN(I)
+               ENDIF
+            ELSE
+               DEGREE (I) = LEN (I)
+            ENDIF
+         ENDDO
+         TOTEL = N - NBFLAG
+      ENDIF
+#if(SP_DEBUG >= 2)
+         write(*,*) 'deginit fin totel =',TOTEL
+#endif
       NREAL = N - NBFLAG
       DO 20 I = 1, N
         DEG = DEGREE (I)
@@ -5276,14 +6407,19 @@ C
            NEXT (I) = INEXT
            HEAD (DEG) = I
         ELSE
-          NEL = NEL + 1
+          NEL = NEL + NV(I)
           ELEN (I) = -NEL
           PE (I) = 0
           W (I) = 0
         ENDIF
    20 CONTINUE
-      NLEFT = N-NEL
-   30 IF (NEL .LT. NREAL) THEN
+      NLEFT = TOTEL-NEL
+#if(SP_DEBUG >= 1)
+      IF(NREAL .GT. TOTEL) THEN
+         CALL ABORT()
+      ENDIF
+#endif
+   30 IF (NEL .LT. TOTEL) THEN
         DO 40 DEG = MINDEG, NBBUCK
           ME = HEAD (DEG)
           IF (ME .GT. 0) GO TO 50
@@ -5291,7 +6427,7 @@ C
    50   MINDEG = DEG
         IF (ME.LE.0) THEN
           NCMPA = -N
-          GOTO 500
+          CALL SMUMPS_ABORT()
         ENDIF
        IF (DEG.GT.N) THEN
          J = NEXT(ME)
@@ -5623,7 +6759,7 @@ C
           ENDIF
   250   CONTINUE
         P = PME1
-        NLEFT = N - NEL
+        NLEFT = TOTEL - NEL
         DO 260 PME = PME1, PME2
           I = IW (PME)
           NVI = -NV (I)
@@ -5732,33 +6868,39 @@ C
           ELEN (E) = -K
         ENDIF
   290 CONTINUE
-      DO 300 I = 1, N
-        K = ABS (ELEN (I))
-        LAST (K) = I
-        ELEN (I) = K
-  300 CONTINUE
+      IF(.NOT. COMPRESS) THEN
+         DO 300 I = 1, N
+            K = ABS (ELEN (I))
+            LAST (K) = I
+            ELEN (I) = K
+ 300     CONTINUE
+      ENDIF
  500  PFREE = MAXMEM
       RETURN
-      END
+      END SUBROUTINE SMUMPS_337
       SUBROUTINE SMUMPS_421 
-     $                ( IVersion, THRESH, NDENSE, 
+     $                (TOTEL, IVersion, THRESH, NDENSE, 
      $                 N, IWLEN, PE, PFREE, LEN, IW, NV, 
      $                 ELEN, LAST, NCMPA, DEGREE, HEAD, NEXT, W) 
+      INTEGER TOTEL
       INTEGER N, IWLEN, PE(N), PFREE, LEN(N), IW(IWLEN), NV(N), 
-     $        ELEN(N), LAST(N), NCMPA, DEGREE(N), HEAD(N), NEXT(N), 
-     $        W(N)
+     $     ELEN(N), NCMPA, DEGREE(N), 
+     *     LAST(TOTEL), HEAD(TOTEL), NEXT(N), 
+     $     W(N)
       INTEGER NDENSE(N)
       INTEGER IVersion, THRESH
       INTEGER THRESM, MINDEN, MAXDEN, NDME
       INTEGER NBD,NBED, NBDM, LASTD, NELME, DEG1
       LOGICAL IDENSE
       REAL RELDEN
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X
+      INTEGER*8 HASH, HMOD
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
+      LOGICAL COMPRESS
       RELDEN = REAL(0)
       IF (THRESH.GT.0) THEN 
          THRESM  = MIN(N,THRESH)
@@ -5769,11 +6911,11 @@ C
           RELDEN = RELDEN/REAL(N)
          THRESM =  INT(RELDEN)*10 + (THRESM-INT(RELDEN))/10 + 1
       ELSE
-         THRESM = N
+         THRESM = TOTEL
       ENDIF
       IF (THRESM.GE.0) THEN
-       IF ((THRESM.GT.N).OR.(THRESM.LT.2)) THEN 
-          THRESM = N
+       IF ((THRESM.GT.TOTEL).OR.(THRESM.LT.2)) THEN 
+          THRESM = TOTEL
        ENDIF
       ENDIF
       LASTD = 0
@@ -5792,69 +6934,99 @@ C
         NDENSE(I)= 0
         LAST (I) = 0
         HEAD (I) = 0
-        NV (I) = 1
         W (I) = 1
         ELEN (I) = 0
-        DEGREE (I) = LEN (I)
    10 CONTINUE
+      HEAD(N:TOTEL) = 0
+      LAST(N:TOTEL) = 0
+      IF(NV(1) .LT. 0) THEN
+         COMPRESS = .FALSE.
+      ELSE
+         COMPRESS = .TRUE.
+      ENDIF
+      IF(COMPRESS) THEN
+         DO I=1,N
+            DEGREE(I) = 0
+            DO J= PE(I) , PE(I)+LEN(I)-1 
+               DEGREE(I) = DEGREE(I) + NV(IW(J))
+            ENDDO
+         ENDDO
+      ELSE
+         DO I=1,N
+            NV(I) = 1
+            DEGREE (I) = LEN (I)
+         ENDDO
+      ENDIF
+#if(SP_DEBUG >= 2)
+         write(*,*) 'deginit fin totel =',TOTEL
+#endif
       DO 20 I = 1, N
-        DEG = DEGREE (I)
-        IF (DEG .GT. 0) THEN
-          IF ( (THRESM.GE.0) .AND.
-     &         (DEG+1.GE.THRESM) ) THEN
-            NBD = NBD+1
-            IF (DEG+1.NE.N-NEL) THEN
-             DEGREE(I) = DEGREE(I)+N+1
-             DEG = N
-             INEXT = HEAD (DEG)
-             IF (INEXT .NE. 0) LAST (INEXT) = I
-             NEXT (I) = INEXT
-             HEAD (DEG) = I 
-             LAST(I)  = 0
-             IF (LASTD.EQ.0) LASTD=I
+         DEG = DEGREE (I)
+         IF (DEG .GT. 0) THEN
+            IF ( (THRESM.GE.0) .AND.
+     &           (DEG+NV(I).GE.THRESM) ) THEN
+               NBD = NBD+1
+               IF (DEG+NV(I).NE.TOTEL-NEL) THEN
+                  DEGREE(I) = DEGREE(I)+TOTEL+1
+                  DEG = TOTEL
+                  INEXT = HEAD (DEG)
+                  IF (INEXT .NE. 0) LAST (INEXT) = I
+                  NEXT (I) = INEXT
+                  HEAD (DEG) = I 
+                  LAST(I)  = 0
+                  IF (LASTD.EQ.0) LASTD=I
+               ELSE
+                  NBED = NBED+1
+                  DEGREE(I) = TOTEL+1
+                  DEG = TOTEL
+                  IF (LASTD.EQ.0) THEN
+                     LASTD     = I 
+                     HEAD(DEG) = I
+                     NEXT(I)   = 0 
+                     LAST(I)   = 0
+                  ELSE
+                     NEXT(LASTD) = I
+                     LAST(I)     = LASTD
+                     LASTD       = I
+                     NEXT(I)     = 0
+                  ENDIF
+               ENDIF
             ELSE
-             NBED = NBED+1
-             DEGREE(I) = N+1
-             DEG = N
-             IF (LASTD.EQ.0) THEN
-               LASTD     = I 
-               HEAD(DEG) = I
-               NEXT(I)   = 0 
-               LAST(I)   = 0
-             ELSE
-               NEXT(LASTD) = I
-               LAST(I)     = LASTD
-               LASTD       = I
-               NEXT(I)     = 0
-             ENDIF
+               INEXT = HEAD (DEG)
+               IF (INEXT .NE. 0) LAST (INEXT) = I
+               NEXT (I) = INEXT
+               HEAD (DEG) = I
             ENDIF
-          ELSE
-            INEXT = HEAD (DEG)
-            IF (INEXT .NE. 0) LAST (INEXT) = I
-            NEXT (I) = INEXT
-            HEAD (DEG) = I
-          ENDIF
-        ELSE
-          NEL = NEL + 1
-          ELEN (I) = -NEL
-          PE (I) = 0
-          W (I) = 0
-        ENDIF
-   20 CONTINUE
-          IF (NBD.EQ.0) THRESM = N
-   30 IF (NEL .LT. N) THEN
-        DO 40 DEG = MINDEG, N
+         ELSE
+            NEL = NEL + NV(I)
+            ELEN (I) = -NEL
+            PE (I) = 0
+            W (I) = 0
+         ENDIF
+ 20   CONTINUE
+#if (SP_DEBUG>=2)
+      DO I=1,N
+         IF(NEXT(I) .GT. N .AND. ELEN(I) .GT. 0) THEN
+            WRITE(*,*) 'ERROR I, NEXT(I)',I,NEXT(I)
+            CALL ABORT()
+         ENDIF
+      ENDDO
+#endif
+          IF (NBD.EQ.0) THRESM = TOTEL
+          NLEFT = TOTEL - NEL
+ 30       IF (NEL .LT. TOTEL) THEN
+        DO 40 DEG = MINDEG, TOTEL
           ME = HEAD (DEG)
           IF (ME .GT. 0) GO TO 50
    40   CONTINUE
    50   MINDEG = DEG
-        IF (DEG.LT.N)  THEN
+        IF (DEG.LT.TOTEL)  THEN
           INEXT = NEXT (ME)
           IF (INEXT .NE. 0) LAST (INEXT) = 0
           HEAD (DEG) = INEXT
         ELSE
           NBDM = MAX(NBDM,NBD)
-          IF (DEGREE(ME).GT.N+1) THEN
+          IF (DEGREE(ME).GT.TOTEL+1) THEN
             MINDEN = NBD
             MAXDEN = 0
             IF (WFLG+NBD+1 .LE. WFLG) THEN
@@ -5917,7 +7089,7 @@ C
             MAXDEN = MAX (MAXDEN, NDME)
             IF (NDENSE(ME).EQ.0) NDENSE(ME) =1
             IF (IVersion.EQ.1) THEN
-              DEG = MAX (DEGREE(ME)-(N+1), 1)
+              DEG = MAX (DEGREE(ME)-(TOTEL+1), 1)
             ELSE
               DEG = NDENSE(ME)
             ENDIF
@@ -5925,33 +7097,39 @@ C
             MINDEG = MIN(DEG,MINDEG)
             JNEXT = HEAD(DEG)
             IF (JNEXT.NE. 0) LAST (JNEXT) = ME
+#if(SP_DEBUG >= 2)
+            IF(JNEXT .GT. N .OR. JNEXT .LE. 0) THEN
+               WRITE(*,*) 'pb JNEXT',JNEXT
+               CALL ABORT()
+            ENDIF
+#endif
             NEXT(ME) = JNEXT
             HEAD(DEG) = ME
             ME    = INEXT
             IF (ME.NE.0) THEN
-              IF (DEGREE(ME).GT.(N+1) ) GOTO 51
+              IF (DEGREE(ME).GT.(TOTEL+1) ) GOTO 51
             ENDIF
-            HEAD (N) = ME
+            HEAD (TOTEL) = ME
             IF (IVersion .EQ.1 ) THEN
-             THRESM = N
+             THRESM = TOTEL
             ELSE
              THRESM=MAX(THRESM*2,MINDEN+(MAXDEN-MINDEN)/2)
              THRESM = MIN(THRESM,NBD)
-             IF (THRESM.GE.NBD) THRESM=N
+             IF (THRESM.GE.NBD) THRESM=TOTEL
             ENDIF
             NBD    = NBED
             GOTO 30
           ENDIF
-          IF (DEGREE(ME).EQ.N+1) THEN
+          IF (DEGREE(ME).EQ.TOTEL+1) THEN
            IF (NBD.NE.NBED) THEN
             write(6,*) ' Internal ERROR quasi dense rows remains'
-            stop
+            CALL SMUMPS_ABORT()
            ENDIF
            NELME    = -(NEL+1)
            DO 59 X=1,N
             IF ((PE(X).GT.0) .AND. (ELEN(X).LT.0)) THEN
              PE(X) = -ME
-            ELSEIF (DEGREE(X).EQ.N+1) THEN
+            ELSEIF (DEGREE(X).EQ.TOTEL+1) THEN
              NEL   = NEL + NV(X)
              PE(X) = -ME
              ELEN(X) = 0
@@ -5961,10 +7139,10 @@ C
            ELEN(ME) = NELME
            NV(ME)   = NBD
            PE(ME)   = 0
-           IF (NEL.NE.N) THEN
+           IF (NEL.NE.TOTEL) THEN
             write(6,*) 'Internal ERROR 2 detected in QAMD'
             write(6,*) ' NEL not equal to N: N, NEL =',N,NEL
-            stop
+            CALL SMUMPS_ABORT()
            ENDIF
            GOTO 265
           ENDIF
@@ -5987,14 +7165,20 @@ C
               NV (I) = -NVI
               PME2 = PME2 + 1
               IW (PME2) = I
-              IF (DEGREE(I).LE.N) THEN
+              IF (DEGREE(I).LE.TOTEL) THEN
               ILAST = LAST (I)
               INEXT = NEXT (I)
               IF (INEXT .NE. 0) LAST (INEXT) = ILAST
               IF (ILAST .NE. 0) THEN
-                NEXT (ILAST) = INEXT
+#if(SP_DEBUG >= 2)
+                 IF(INEXT .GT. N .OR. INEXT .LT. 0) THEN
+                    WRITE(*,*) 'pb INEXT',INEXT
+                    CALL ABORT()
+                 ENDIF
+#endif
+                 NEXT (ILAST) = INEXT
               ELSE
-                HEAD (DEGREE (I)) = INEXT
+                 HEAD (DEGREE (I)) = INEXT
               ENDIF
               ELSE
                NDENSE(ME) = NDENSE(ME) + NVI
@@ -6071,14 +7255,20 @@ C
                 NV (I) = -NVI
                 IW (PFREE) = I
                 PFREE = PFREE + 1
-                IF (DEGREE(I).LE.N) THEN
+                IF (DEGREE(I).LE.TOTEL) THEN
                 ILAST = LAST (I)
                 INEXT = NEXT (I)
                 IF (INEXT .NE. 0) LAST (INEXT) = ILAST
                 IF (ILAST .NE. 0) THEN
-                  NEXT (ILAST) = INEXT
+#if(SP_DEBUG >= 2)
+                   IF(INEXT .GT. N .OR. INEXT .LT. 0) THEN
+                      WRITE(*,*) 'pb INEXT 2',INEXT
+                      CALL ABORT()
+                   ENDIF
+#endif
+                   NEXT (ILAST) = INEXT
                 ELSE
-                  HEAD (DEGREE (I)) = INEXT
+                   HEAD (DEGREE (I)) = INEXT
                 ENDIF
                 ELSE
                  NDENSE(ME) = NDENSE(ME) + NVI
@@ -6106,7 +7296,7 @@ C
         ENDIF
         DO 150 PME = PME1, PME2
           I = IW (PME)
-          IF (DEGREE(I).GT.N) GOTO 150
+          IF (DEGREE(I).GT.TOTEL) GOTO 150
           ELN = ELEN (I)
           IF (ELN .GT. 0) THEN
             NVI = -NV (I)
@@ -6125,7 +7315,7 @@ C
   150   CONTINUE
         DO 180 PME = PME1, PME2
           I = IW (PME)
-          IF (DEGREE(I).GT.N) GOTO 180
+          IF (DEGREE(I).GT.TOTEL) GOTO 180
           P1 = PE (I)
           P2 = P1 + ELEN (I) - 1
           PN = P1
@@ -6162,7 +7352,7 @@ C
             J = IW (P)
             NVJ = NV (J)
             IF (NVJ .GT. 0) THEN
-              IF (DEGREE(J).LE.N) DEG=DEG+NVJ
+              IF (DEGREE(J).LE.TOTEL) DEG=DEG+NVJ
               IW (PN) = J
               PN = PN + 1
               HASH = HASH + J
@@ -6190,9 +7380,21 @@ C
             HASH = MOD (HASH, HMOD) + 1
             J = HEAD (HASH)
             IF (J .LE. 0) THEN
+#if(SP_DEBUG >= 2)
+               IF(-J .GT. N .OR. -J .LT. 0) THEN
+                  WRITE(*,*) 'pb next J',J
+                  CALL ABORT()
+               ENDIF
+#endif
               NEXT (I) = -J
               HEAD (HASH) = -I
             ELSE
+#if(SP_DEBUG >= 2)
+               IF(LAST(J) .GT. N .OR. LAST(J) .LT. 0) THEN
+                  WRITE(*,*) 'pb LAST(J)',LAST(J)
+                  CALL ABORT()
+               ENDIF
+#endif
               NEXT (I) = LAST (J)
               LAST (J) = I
             ENDIF
@@ -6210,7 +7412,7 @@ C
         ENDIF
         DO 250 PME = PME1, PME2
           I = IW (PME)
-          IF ( (NV(I).LT.0) .AND. (DEGREE(I).LE.N) ) THEN
+          IF ( (NV(I).LT.0) .AND. (DEGREE(I).LE.TOTEL) ) THEN
             HASH = LAST (I)
             J = HEAD (HASH)
             IF (J .EQ. 0) GO TO 250
@@ -6243,6 +7445,12 @@ C
                 NV (J) = 0
                 ELEN (J) = 0
                 J = NEXT (J)
+#if(SP_DEBUG >= 2)
+                IF(J .GT. N .OR. J .LT. 0) THEN
+                   WRITE(*,*) 'pb3 J',J
+                   CALL ABORT()
+                ENDIF
+#endif
                 NEXT (JLAST) = J
                 GO TO 220
   240           CONTINUE
@@ -6257,74 +7465,92 @@ C
           ENDIF
   250   CONTINUE
         P = PME1
-        NLEFT = N - NEL
+        NLEFT = TOTEL - NEL
         DO 260 PME = PME1, PME2
           I = IW (PME)
           NVI = -NV (I)
           IF (NVI .GT. 0) THEN
             NV (I) = NVI
-            IF (DEGREE(I).LE.N) THEN
+            IF (DEGREE(I).LE.TOTEL) THEN
             DEG = MIN (DEGREE (I)+ DEGME - NVI, NLEFT - NVI)
             DEGREE (I) = DEG
             IDENSE = .FALSE.
-           IF ( (Iversion .NE. 1).AND. (THRESM.GE.0)) THEN
-             IF (DEG+NVI .GE. THRESM) THEN
-              IF (THRESM.EQ.N) THEN
-               IF ((ELEN(I).LE.2) .AND. ((DEG+NVI).EQ.NLEFT) ) THEN
-                DEGREE(I) = N+1
+       IF ( (Iversion .NE. 1).AND. (THRESM.GE.0)) THEN
+          IF (DEG+NVI .GE. THRESM) THEN
+             IF (THRESM.EQ.TOTEL) THEN
+                IF ((ELEN(I).LE.2) .AND. ((DEG+NVI).EQ.NLEFT) ) THEN
+                   DEGREE(I) = TOTEL+1
+                   IDENSE = .TRUE.
+                ENDIF
+             ELSE
                 IDENSE = .TRUE.
-               ENDIF
-              ELSE
-               IDENSE = .TRUE.
-               IF ((ELEN(I).LE.2).AND.((DEG+NVI).EQ.NLEFT) ) THEN
-                 DEGREE(I) = N+1
-               ELSE
-                 DEGREE(I) = N+1+DEGREE(I)
-               ENDIF
-              ENDIF
+                IF ((ELEN(I).LE.2).AND.((DEG+NVI).EQ.NLEFT) ) THEN
+                   DEGREE(I) = TOTEL+1
+                ELSE
+                   DEGREE(I) = TOTEL+1+DEGREE(I)
+                ENDIF
              ENDIF
-             IF (IDENSE) THEN
-               P1 = PE(I)
-               P2 = P1 + ELEN(I) - 1
-               IF (P2.GE.P1) THEN
-               DO 264 PJ=P1,P2
-                 E= IW(PJ)
-                 NDENSE (E) = NDENSE(E) + NVI
- 264           CONTINUE
-               ENDIF
-               NBD = NBD+NVI
-               DEG = N
-               IF (DEGREE(I).EQ.N+1) THEN
+          ENDIF
+          IF (IDENSE) THEN
+             P1 = PE(I)
+             P2 = P1 + ELEN(I) - 1
+             IF (P2.GE.P1) THEN
+                DO 264 PJ=P1,P2
+                   E= IW(PJ)
+                   NDENSE (E) = NDENSE(E) + NVI
+ 264            CONTINUE
+             ENDIF
+             NBD = NBD+NVI
+             DEG = TOTEL
+             IF (DEGREE(I).EQ.TOTEL+1) THEN
                 NBED = NBED +NVI
                 IF (LASTD.EQ.0) THEN
-                 LASTD     = I
-                 HEAD(DEG) = I
-                 NEXT(I)   = 0
-                 LAST(I)   = 0
+                   LASTD     = I
+                   HEAD(DEG) = I
+                   NEXT(I)   = 0
+                   LAST(I)   = 0
                 ELSE
-                 NEXT(LASTD) = I
-                 LAST(I)     = LASTD
-                 LASTD       = I
-                 NEXT(I)     = 0
+#if(SP_DEBUG >= 2)
+                   IF(I .GT. N .OR. I .LT. 0) THEN
+                      WRITE(*,*) 'pb4 I',I
+                      CALL ABORT()
+                   ENDIF
+#endif
+                   NEXT(LASTD) = I
+                   LAST(I)     = LASTD
+                   LASTD       = I
+                   NEXT(I)     = 0
                 ENDIF
-               ELSE
+             ELSE
                 INEXT = HEAD(DEG)
                 IF (INEXT .NE. 0) LAST (INEXT) = I
+#if(SP_DEBUG >= 2)
+                IF(INEXT .GT. N .OR. INEXT .LT. 0) THEN
+                   WRITE(*,*) 'pb5 INEXT',INEXT
+                   CALL ABORT()
+                ENDIF
+#endif
                 NEXT (I) = INEXT
                 HEAD (DEG) = I
                 LAST(I)    = 0
                 IF (LASTD.EQ.0) LASTD=I
-               ENDIF
              ENDIF
-            ENDIF
-            IF (.NOT.IDENSE) THEN
-            INEXT = HEAD (DEG)
-            IF (INEXT .NE. 0) LAST (INEXT) = I
-            NEXT (I) = INEXT
-            LAST (I) = 0
-            HEAD (DEG) = I
-            ENDIF
-            MINDEG = MIN (MINDEG, DEG)
+          ENDIF
+       ENDIF
+       IF (.NOT.IDENSE) THEN
+          INEXT = HEAD (DEG)
+          IF (INEXT .NE. 0) LAST (INEXT) = I
+#if(SP_DEBUG >= 2)
+          IF(INEXT .GT. N .OR. INEXT .LT. 0) THEN
+             WRITE(*,*) 'pb7 INEXT,N,DEG',INEXT,N,DEG
+             CALL ABORT()
+          ENDIF
+#endif
+          NEXT (I) = INEXT
+          LAST (I) = 0
+          HEAD (DEG) = I
+       ENDIF
+       MINDEG = MIN (MINDEG, DEG)
             ENDIF
             IW (P) = I
             P = P + 1
@@ -6368,14 +7594,717 @@ C
           ELEN (E) = -K
         ENDIF
   290 CONTINUE
-      DO 300 I = 1, N
-        K = ABS (ELEN (I))
-        LAST (K) = I
-        ELEN (I) = K
-  300 CONTINUE
+      IF(.NOT. COMPRESS) THEN
+         DO 300 I = 1, N
+            K = ABS (ELEN (I))
+            LAST (K) = I
+            ELEN (I) = K
+ 300     CONTINUE
+      ENDIF
       PFREE = MAXMEM
       RETURN
-      END
+      END SUBROUTINE SMUMPS_421
+      SUBROUTINE CST_AMF (N, NBBUCK, 
+     $     IWLEN, PE, PFREE, LEN, IW, NV, ELEN,
+     $     LAST, NCMPA, DEGREE, WF, NEXT, W, HEAD,
+     *     CONSTRAINT,THESON )
+      IMPLICIT NONE
+      INTEGER N, IWLEN, PFREE, LEN(N), 
+     $        ELEN(N), LAST(N), NCMPA, DEGREE(N), NEXT(N),
+     $        W(N) 
+      INTEGER PE(N), IW(IWLEN), NV(N)
+      INTEGER NBBUCK
+      INTEGER HEAD(0:NBBUCK+1), WF(N)
+      INTEGER CONSTRAINT(N),THESON(N)
+      INTEGER PREV,TOTO
+      LOGICAL TROUVE
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
+     $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
+     $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
+     $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X,
+     $        NBFLAG, NREAL, LASTD, NELME, WF3, WF4, N2, PAS
+       INTEGER*8 HASH, HMOD
+       REAL    RMF, RMF1 
+       REAL    dummy
+       INTEGER idummy
+      INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
+      INTRINSIC MAX, MIN, MOD, HUGE
+      INTEGER TOTEL
+      idummy = HUGE(idummy) - 1
+      dummy = REAL(idummy)
+      N2 = -NBBUCK-1
+      PAS = MAX((N/8), 1)
+      WFLG = 2
+      NCMPA = 0
+      NEL = 0
+      HMOD = MAX (1, NBBUCK-1)
+      DMAX = 0
+      MEM = PFREE - 1
+      MAXMEM = MEM
+      MINDEG = 0
+      NBFLAG = 0
+      LASTD  = 0
+      HEAD(0:NBBUCK+1) = 0
+      DO 10 I = 1, N
+         THESON(I) = 0
+         LAST (I) = 0
+         W (I) = 1
+         ELEN (I) = 0
+   10 CONTINUE
+      TOTEL = 0
+      DO I=1,N
+         IF (LEN(I).LT.0) THEN 
+            DEGREE (I) = N2
+            NBFLAG     = NBFLAG +1
+            IF (LEN(I).EQ.-N-1) THEN
+               LEN (I)    = 0
+               PE (I)     = 0
+            ELSE
+               LEN (I)    = - LEN(I)
+            ENDIF
+         ELSE
+            TOTEL = TOTEL + NV(I)
+            DEGREE(I) = 0
+            DO J= PE(I) , PE(I)+LEN(I)-1 
+               DEGREE(I) = DEGREE(I) + NV(IW(J))
+            ENDDO
+         ENDIF
+      ENDDO
+#if(SP_DEBUG >= 2)
+         write(*,*) 'deginit fin totel =',TOTEL
+#endif
+      NREAL = N - NBFLAG
+      DO 20 I = 1, N
+        DEG = DEGREE (I)
+        IF (DEG.EQ.N2) THEN
+             DEG = NBBUCK + 1
+             IF (LASTD.EQ.0) THEN
+               LASTD     = I
+               HEAD(DEG) = I
+               NEXT(I)   = 0
+               LAST(I)   = 0
+             ELSE
+               NEXT(LASTD) = I
+               LAST(I)     = LASTD
+               LASTD       = I
+               NEXT(I)     = 0
+             ENDIF
+         GOTO 20
+        ENDIF
+        IF (DEG .GT. 0) THEN
+           WF(I) = DEG
+           IF (DEG.GT.N) THEN
+            DEG = MIN(((DEG-N)/PAS) + N , NBBUCK)
+           ENDIF
+           INEXT = HEAD (DEG)
+           IF (INEXT .NE. 0) LAST (INEXT) = I
+           NEXT (I) = INEXT
+           HEAD (DEG) = I
+        ELSE
+           NEL = NEL + NV(I)
+           ELEN (I) = -NEL
+           PE (I) = 0
+           W (I) = 0
+        ENDIF
+   20 CONTINUE
+      NLEFT = TOTEL-NEL
+#if(SP_DEBUG >= 2)
+      WRITE(*,*) 'before 30, NEL = ',NEL
+#endif
+#if(SP_DEBUG >= 1)
+      IF(NREAL .GT. TOTEL) THEN
+         CALL ABORT()
+      ENDIF
+#endif
+ 30   IF (NEL .LT. TOTEL) THEN
+         DO 40 DEG = MINDEG, NBBUCK
+            ME = HEAD (DEG)
+            IF (ME .GT. 0) GO TO 50
+ 40      CONTINUE
+ 50      MINDEG = DEG
+         IF (ME.LE.0) THEN
+            NCMPA = -N
+            CALL SMUMPS_ABORT()
+         ENDIF
+         IF (DEG.GT.N) THEN
+            J = NEXT(ME)
+            K = WF(ME)
+            IF(CONSTRAINT(ME) .LT. 0) THEN
+               K = -1
+            ENDIF
+ 55         CONTINUE
+            IF (J.GT.0) THEN
+               IF(CONSTRAINT(J) .GE. 0) THEN
+                  IF (WF(J).LT.K .OR. K .LT. 0) THEN
+                     ME = J
+                     K  = WF(ME)
+                  ENDIF
+               ENDIF
+               J= NEXT(J)
+               GOTO 55
+            ENDIF
+            ILAST = LAST(ME)
+            INEXT = NEXT(ME)
+            IF (INEXT .NE. 0) LAST (INEXT) = ILAST
+            IF (ILAST .NE. 0) THEN
+               NEXT (ILAST) = INEXT
+            ELSE
+               HEAD (DEG) = INEXT
+            ENDIF
+         ELSE
+            IF(CONSTRAINT(ME) .GE. 0) GOTO 59
+ 56         CONTINUE
+            IF(NEXT(ME) .NE. 0) THEN
+               ME = NEXT(ME)
+               IF(CONSTRAINT(ME) .GE. 0) THEN
+                  GOTO 59
+               ELSE
+                  GOTO 56
+               ENDIF
+            ELSE
+ 57            DEG = DEG+1
+               ME = HEAD(DEG) 
+               IF(ME .GT. 0) THEN
+                  IF(CONSTRAINT(ME) .GE. 0) THEN
+                     GOTO 59
+                  ELSE
+                     GOTO 56
+                  ENDIF
+               ELSE
+                  GOTO 57
+               ENDIF
+            ENDIF   
+ 59         PREV = LAST (ME)
+            INEXT = NEXT (ME)
+            IF(PREV .NE. 0) THEN
+               NEXT(PREV) = INEXT
+            ELSE
+               HEAD (DEG) = INEXT
+            ENDIF
+            IF (INEXT .NE. 0) LAST (INEXT) = PREV
+         ENDIF
+         TOTO = ME
+ 5910    IF(TOTO .NE. 0) THEN
+            J = CONSTRAINT(TOTO)
+            IF(J .GT. 0) THEN
+               CONSTRAINT(J) = 0
+            ENDIF
+            TOTO = THESON(TOTO)
+            GOTO 5910
+         ENDIF
+            ELENME = ELEN (ME)
+            ELEN (ME) = - (NEL + 1)
+            NVPIV = NV (ME)
+#if(SP_DEBUG >= 4)
+            TOTO = ME
+            I = 0
+            DO 
+               IF(TOTO .LE. 0) EXIT
+               TOTO = THESON(TOTO)
+               I = I+1
+            ENDDO
+            IF(I .NE. NVPIV) THEN
+               WRITE(*,*) 'ME,NEL,I,NVPIV',ME,NEL,I,NVPIV
+               CALL ABORT()
+            ENDIF
+#endif
+            NEL = NEL + NVPIV
+            NV (ME) = -NVPIV
+            DEGME = 0
+            IF (ELENME .EQ. 0) THEN
+               PME1 = PE (ME)
+               PME2 = PME1 - 1
+               DO 60 P = PME1, PME1 + LEN (ME) - 1
+                  I = IW (P)
+                  NVI = NV (I)
+                  IF (NVI .GT. 0) THEN
+                     DEGME = DEGME + NVI
+                     NV (I) = -NVI
+                     PME2 = PME2 + 1
+                     IW (PME2) = I
+                     IF (DEGREE(I).NE.N2) THEN
+                        ILAST = LAST (I)
+                        INEXT = NEXT (I)
+                        IF (INEXT .NE. 0) LAST (INEXT) = ILAST
+                        IF (ILAST .NE. 0) THEN
+                           NEXT (ILAST) = INEXT
+                        ELSE
+                           IF (WF(I).GT.N) THEN
+                              DEG = MIN(((WF(I)-N)/PAS) + N , NBBUCK)
+                           ELSE
+                              DEG = WF(I)
+                           ENDIF
+                           HEAD (DEG) = INEXT
+                        ENDIF
+                     ENDIF
+                  ENDIF
+ 60            CONTINUE
+               NEWMEM = 0
+            ELSE
+          P = PE (ME)
+          PME1 = PFREE
+          SLENME = LEN (ME) - ELENME
+          DO 120 KNT1 = 1, ELENME + 1
+            IF (KNT1 .GT. ELENME) THEN
+              E = ME
+              PJ = P
+              LN = SLENME
+            ELSE
+              E = IW (P)
+              P = P + 1
+              PJ = PE (E)
+              LN = LEN (E)
+            ENDIF
+            DO 110 KNT2 = 1, LN
+              I = IW (PJ)
+              PJ = PJ + 1
+              NVI = NV (I)
+              IF (NVI .GT. 0) THEN
+                IF (PFREE .GT. IWLEN) THEN
+                  PE (ME) = P
+                  LEN (ME) = LEN (ME) - KNT1
+                  IF (LEN (ME) .EQ. 0) PE (ME) = 0
+                  PE (E) = PJ
+                  LEN (E) = LN - KNT2
+                  IF (LEN (E) .EQ. 0) PE (E) = 0
+                  NCMPA = NCMPA + 1
+                  DO 70 J = 1, N
+                    PN = PE (J)
+                    IF (PN .GT. 0) THEN
+                      PE (J) = IW (PN)
+                      IW (PN) = -J
+                    ENDIF
+   70             CONTINUE
+                  PDST = 1
+                  PSRC = 1
+                  PEND = PME1 - 1
+   80             CONTINUE
+                  IF (PSRC .LE. PEND) THEN
+                    J = -IW (PSRC)
+                    PSRC = PSRC + 1
+                    IF (J .GT. 0) THEN
+                      IW (PDST) = PE (J)
+                      PE (J) = PDST
+                      PDST = PDST + 1
+                      LENJ = LEN (J)
+                      DO 90 KNT3 = 0, LENJ - 2
+                        IW (PDST + KNT3) = IW (PSRC + KNT3)
+   90                 CONTINUE
+                      PDST = PDST + LENJ - 1
+                      PSRC = PSRC + LENJ - 1
+                    ENDIF
+                    GO TO 80
+                  ENDIF
+                  P1 = PDST
+                  DO 100 PSRC = PME1, PFREE - 1
+                    IW (PDST) = IW (PSRC)
+                    PDST = PDST + 1
+  100             CONTINUE
+                  PME1 = P1
+                  PFREE = PDST
+                  PJ = PE (E)
+                  P = PE (ME)
+                ENDIF
+                DEGME = DEGME + NVI
+                NV (I) = -NVI
+                IW (PFREE) = I
+                PFREE = PFREE + 1
+              IF (DEGREE(I).NE.N2) THEN
+                ILAST = LAST (I)
+                INEXT = NEXT (I)
+                IF (INEXT .NE. 0) LAST (INEXT) = ILAST
+                IF (ILAST .NE. 0) THEN
+                  NEXT (ILAST) = INEXT
+                ELSE
+                  IF (WF(I).GT.N) THEN
+                   DEG = MIN(((WF(I)-N)/PAS) + N , NBBUCK)
+                  ELSE
+                   DEG = WF(I)
+                  ENDIF
+                  HEAD (DEG) = INEXT
+                ENDIF
+              ENDIF
+              ENDIF
+  110       CONTINUE
+            IF (E .NE. ME) THEN
+#if (SP_DEBUG >= 4 )
+             IF(ME .GT. N .OR. ME .LE. 0) THEN
+                WRITE(*,*) 'pb1111111111111111111111'
+                CALL ABORT()
+             ENDIF
+#endif
+              PE (E) = -ME
+              W (E) = 0
+            ENDIF
+  120     CONTINUE
+          PME2 = PFREE - 1
+          NEWMEM = PFREE - PME1
+          MEM = MEM + NEWMEM
+          MAXMEM = MAX (MAXMEM, MEM)
+        ENDIF
+        DEGREE (ME) = DEGME
+        PE (ME) = PME1
+        LEN (ME) = PME2 - PME1 + 1
+        IF (WFLG+N .LE. WFLG) THEN
+          DO 130 X = 1, N
+            IF (W (X) .NE. 0) W (X) = 1
+  130     CONTINUE
+          WFLG = 2
+        ENDIF
+        DO 150 PME = PME1, PME2
+          I = IW (PME)
+          ELN = ELEN (I)
+          IF (ELN .GT. 0) THEN
+            NVI = -NV (I)
+            WNVI = WFLG - NVI
+            DO 140 P = PE (I), PE (I) + ELN - 1
+              E = IW (P)
+              WE = W (E)
+              IF (WE .GE. WFLG) THEN
+                WE = WE - NVI
+              ELSE IF (WE .NE. 0) THEN
+                WE = DEGREE (E) + WNVI
+                WF(E) = 0
+              ENDIF
+              W (E) = WE
+  140       CONTINUE
+          ENDIF
+  150   CONTINUE
+        DO 180 PME = PME1, PME2
+          I = IW (PME)
+          P1 = PE (I)
+          P2 = P1 + ELEN (I) - 1
+          PN = P1
+          HASH = 0
+          DEG  = 0
+          WF3  = 0
+          WF4  = 0
+          NVI  = -NV(I)
+          DO 160 P = P1, P2
+            E = IW (P)
+            DEXT = W (E) - WFLG
+            IF (DEXT .GT. 0) THEN
+              IF ( WF(E) .EQ. 0 ) THEN
+               WF(E) = DEXT * ( (2 * DEGREE(E))  -  DEXT - 1)
+              ENDIF
+              WF4 = WF4 + WF(E)
+              DEG = DEG + DEXT
+              IW (PN) = E
+              PN = PN + 1
+              HASH = HASH + E
+            ELSE IF (DEXT .EQ. 0) THEN
+#if defined (NOAGG4)
+              IW (PN) = E
+              PN = PN + 1
+              HASH = HASH + E
+#else
+#if (SP_DEBUG >= 4 )
+             IF(ME .GT. N .OR. ME .LE. 0) THEN
+                WRITE(*,*) 'pb22222222222222222222222'
+                CALL ABORT()
+             ENDIF
+#endif
+              PE (E) = -ME
+              W (E) = 0
+#endif
+            ENDIF
+  160     CONTINUE
+          ELEN (I) = PN - P1 + 1
+          P3 = PN
+          DO 170 P = P2 + 1, P1 + LEN (I) - 1
+            J = IW (P)
+            NVJ = NV (J)
+            IF (NVJ .GT. 0) THEN
+              DEG = DEG + NVJ
+              WF3 = WF3 + NVJ
+              IW (PN) = J
+              PN = PN + 1
+              HASH = HASH + J
+            ENDIF
+  170     CONTINUE
+          IF (DEGREE(I).EQ.N2) DEG = N2
+#if defined (NOAGG4)
+          IF (ELEN(I).EQ.1 .AND. P3.EQ.PN) THEN
+#else
+          IF (DEG .EQ. 0) THEN
+#endif
+#if (SP_DEBUG >= 4 )
+             IF(ME .GT. N .OR. ME .LE. 0) THEN
+                WRITE(*,*) 'pb3333333333333333333333'
+                CALL ABORT()
+             ENDIF
+#endif
+            PE (I) = -ME
+            NVI = -NV (I)
+            DEGME = DEGME - NVI
+            NVPIV = NVPIV + NVI
+            NEL = NEL + NVI
+            NV (I) = 0
+            ELEN (I) = 0
+          ELSE
+            IF (DEGREE(I).NE.N2) THEN
+                 IF ( DEGREE (I).LT.DEG ) THEN
+                   WF4 = 0
+                   WF3 = 0
+                 ELSE
+                   DEGREE(I)  = DEG
+                 ENDIF
+            ENDIF
+            WF(I)      = WF4 + 2*NVI*WF3
+            IW (PN) = IW (P3)
+            IW (P3) = IW (P1)
+            IW (P1) = ME
+            LEN (I) = PN - P1 + 1
+            IF (DEG.NE.N2) THEN
+            HASH = MOD (HASH, HMOD) + 1
+            J = HEAD (HASH)
+            IF (J .LE. 0) THEN
+              NEXT (I) = -J
+              HEAD (HASH) = -I
+            ELSE
+              NEXT (I) = LAST (J)
+              LAST (J) = I
+            ENDIF
+            LAST (I) = HASH
+            ENDIF
+          ENDIF
+  180   CONTINUE
+        DEGREE (ME) = DEGME
+        DMAX = MAX (DMAX, DEGME)
+        WFLG = WFLG + DMAX
+        IF (WFLG+N .LE. WFLG) THEN
+          DO 190 X = 1, N
+            IF (W (X) .NE. 0) W (X) = 1
+  190     CONTINUE
+          WFLG = 2
+        ENDIF
+        DO 250 PME = PME1, PME2
+          I = IW (PME)
+          IF ( (NV (I) .LT. 0) .AND. (DEGREE(I).NE.N2) ) THEN
+            HASH = LAST (I)
+            J = HEAD (HASH)
+            IF (J .EQ. 0) GO TO 250
+            IF (J .LT. 0) THEN
+              I = -J
+              HEAD (HASH) = 0
+            ELSE
+              I = LAST (J)
+              LAST (J) = 0
+            ENDIF
+            IF (I .EQ. 0) GO TO 250
+  200       CONTINUE
+            IF (NEXT (I) .NE. 0) THEN
+              LN = LEN (I)
+              ELN = ELEN (I)
+              DO 210 P = PE (I) + 1, PE (I) + LN - 1
+                W (IW (P)) = WFLG
+  210         CONTINUE
+              JLAST = I
+              J = NEXT (I)
+  220         CONTINUE
+              IF (J .NE. 0) THEN
+                 IF(CONSTRAINT(J) .LT. 0
+     *                .AND. CONSTRAINT(I) .LT. 0) THEN
+                    GOTO 240
+                 ENDIF
+                 IF(CONSTRAINT(I) .GE. 0) THEN
+                    IF(CONSTRAINT(J) .LT. 0) THEN
+                       TOTO = I
+ 221                   IF(TOTO .NE. 0) THEN
+                          IF(CONSTRAINT(TOTO) .EQ. J) THEN
+                             GOTO 225
+                          ENDIF
+                          TOTO =THESON(TOTO)
+                          GOTO 221
+                       ENDIF
+                    ELSE
+                       GOTO 225
+                    ENDIF
+                 ELSE
+                    IF(CONSTRAINT(J) .GE. 0) THEN
+                       TOTO = J
+ 222                   IF(TOTO .NE. 0) THEN
+                          IF(CONSTRAINT(TOTO) .EQ. I) THEN
+                             GOTO 225
+                          ENDIF
+                          TOTO =THESON(TOTO)
+                          GOTO 222
+                       ENDIF
+                    ENDIF
+                 ENDIF
+                 GOTO 240
+ 225             CONTINUE
+                 IF (LEN (J) .NE. LN) GO TO 240
+                 IF (ELEN (J) .NE. ELN) GO TO 240
+                 DO 230 P = PE (J) + 1, PE (J) + LN - 1
+                    IF (W (IW (P)) .NE. WFLG) GO TO 240
+ 230             CONTINUE
+                 TOTO = I
+ 231             IF(THESON(TOTO) .NE. 0) THEN
+                    TOTO = THESON(TOTO)
+                    GOTO 231
+                 ENDIF
+                 THESON(TOTO) = J
+                 IF(CONSTRAINT(I) .LT. 0) THEN
+                    CONSTRAINT(I) = 0
+                 ENDIF
+#if (SP_DEBUG >= 4 )
+                 IF(I .GT. N .OR. I .LE. 0) THEN
+                    WRITE(*,*) 'pb444444444444444444'
+                    CALL ABORT()
+                 ENDIF
+#endif
+                 PE (J) = -I
+                 WF(I)  = MAX(WF(I),WF(J))
+                 NV (I) = NV (I) + NV (J)
+                 NV (J) = 0
+                 ELEN (J) = 0
+                 J = NEXT (J)
+                 NEXT (JLAST) = J
+                 GO TO 220
+ 240             CONTINUE
+                 JLAST = J
+                 J = NEXT (J)
+                 GO TO 220
+              ENDIF
+              WFLG = WFLG + 1
+              I = NEXT (I)
+              IF (I .NE. 0) GO TO 200
+           ENDIF
+          ENDIF
+ 250   CONTINUE
+        P = PME1
+        NLEFT = TOTEL - NEL
+        DO 260 PME = PME1, PME2
+           I = IW (PME)
+           NVI = -NV (I)
+           IF (NVI .GT. 0) THEN
+              NV (I) = NVI
+              IF (DEGREE(I).NE.N2) THEN
+                 DEG = MIN (DEGREE (I) + DEGME - NVI, NLEFT - NVI)
+                 IF (DEGREE (I) + DEGME .GT. NLEFT ) THEN
+                  DEG = DEGREE(I)
+                  RMF1  = REAL(DEG)*REAL( (DEG-1) + 2*DEGME )
+     &                 - REAL(WF(I))
+                  DEGREE(I) = NLEFT - NVI
+                  DEG       = DEGREE(I) 
+                  RMF = REAL(DEG)*REAL(DEG-1) 
+     &                 -  REAL(DEGME-NVI)*REAL(DEGME-NVI-1)
+                  RMF = MIN(RMF, RMF1)
+               ELSE 
+                  DEG = DEGREE(I)
+                  DEGREE(I) = DEGREE (I) + DEGME - NVI
+                  RMF  = REAL(DEG)*REAL( (DEG-1) + 2*DEGME ) 
+     &                 - REAL(WF(I))
+               ENDIF
+               RMF =  RMF / REAL(NVI+1)
+               IF (RMF.LT.dummy) THEN
+                  WF(I) = INT ( ANINT( RMF ))
+               ELSEIF (RMF / REAL(N) .LT. dummy) THEN 
+                  WF(I) = INT ( ANINT( RMF/REAL(N) ))
+               ELSE
+                  WF(I) = idummy
+               ENDIF
+               WF(I) = MAX(1,WF(I))
+               DEG = WF(I)
+               IF (DEG.GT.N) THEN
+                  DEG = MIN(((DEG-N)/PAS) + N , NBBUCK)
+               ENDIF
+               INEXT = HEAD (DEG)
+               IF (INEXT .NE. 0) LAST (INEXT) = I
+               NEXT (I) = INEXT
+               LAST (I) = 0
+               HEAD (DEG) = I
+               MINDEG = MIN (MINDEG, DEG)
+            ENDIF
+            IW (P) = I
+            P = P + 1
+         ENDIF
+ 260  CONTINUE
+      NV (ME) = NVPIV + DEGME
+      LEN (ME) = P - PME1
+      IF (LEN (ME) .EQ. 0) THEN
+         PE (ME) = 0
+         W (ME) = 0
+      ENDIF
+      IF (NEWMEM .NE. 0) THEN
+         PFREE = P
+         MEM = MEM - NEWMEM + LEN (ME)
+      ENDIF
+      GO TO 30
+      ENDIF
+#if(SP_DEBUG >= 2)
+      WRITE(*,*) '30 END, NEL =',NEL
+#endif
+      IF (NEL.LT.N) THEN 
+           DO DEG = MINDEG, NBBUCK+1
+             ME = HEAD (DEG)
+             IF (ME .GT. 0) GO TO 51
+           ENDDO
+   51      MINDEG = DEG
+           NELME    = -(NEL+1)
+           DO X=1,N
+            IF ((PE(X).GT.0) .AND. (ELEN(X).LT.0)) THEN
+#if (SP_DEBUG >= 4 )
+             IF(ME .GT. N .OR. ME .LE. 0) THEN
+                WRITE(*,*) 'pb55555555555555555555'
+                CALL ABORT()
+             ENDIF
+#endif
+             PE(X) = -ME
+            ELSEIF (DEGREE(X).EQ.N2) THEN
+             NEL   = NEL + NV(X)
+#if (SP_DEBUG >= 4 )
+             IF(ME .GT. N .OR. ME .LE. 0) THEN
+                WRITE(*,*) 'pb66666666666666666666666'
+                CALL ABORT()
+             ENDIF
+#endif
+             PE(X) = -ME
+             ELEN(X) = 0
+             NV(X) = 0
+            ENDIF
+           ENDDO
+           ELEN(ME) = NELME
+           NV(ME)   = N-NREAL
+           PE(ME)   = 0
+        IF (NEL.NE.N) THEN
+         NCMPA = -N - 1
+         GOTO 500
+        ENDIF
+      ENDIF
+      DO 290 I = 1, N
+         IF (ELEN (I) .EQ. 0) THEN
+            J = -PE (I)
+ 270        CONTINUE
+            IF (ELEN (J) .GE. 0) THEN
+               J = -PE (J)
+               GO TO 270
+            ENDIF
+            E = J
+            K = -ELEN (E)
+            J = I
+ 280        CONTINUE
+            IF (ELEN (J) .GE. 0) THEN
+               JNEXT = -PE (J)
+               PE (J) = -E
+               IF (ELEN (J) .EQ. 0) THEN
+                  ELEN (J) = K
+                  K = K + 1
+               ENDIF
+               J = JNEXT
+               GO TO 280
+            ENDIF
+            ELEN (E) = -K
+         ENDIF
+ 290  CONTINUE
+#if (SP_DEBUG >= 10)
+      write(*,*) 'PE',PE
+      write(*,*) 'NV',NV
+#endif
+ 500  PFREE = MAXMEM
+      RETURN
+      END SUBROUTINE CST_AMF
       SUBROUTINE SMUMPS_422 
      $                ( THRESH, NDENSE, 
      $                 N, IWLEN, PE, PFREE, LEN, IW, NV, 
@@ -6395,10 +8324,11 @@ C
       INTEGER FDEG, ThresMin, ThresPrev, IBEGSchur, NbSchur, 
      $        ThresMinINIT
       LOGICAL SchurON
-      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, HASH, HMOD, I,
+      INTEGER DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      $        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
      $        LENJ, LN, MAXMEM, ME, MEM, MINDEG, NEL, NEWMEM,
      $        NLEFT, NVI, NVJ, NVPIV, SLENME, WE, WFLG, WNVI, X
+      INTEGER*8 HASH, HMOD 
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
         IF (N.EQ.1) THEN
@@ -6456,7 +8386,6 @@ C
         ELEN (I) = 0
         DEGREE (I) = LEN (I)
    10 CONTINUE
-      NbSchur = 0
       DO 20 I = 1, N
         DEG = DEGREE (I)
         IF (PERM(I).EQ.N) THEN
@@ -6610,33 +8539,45 @@ C
             GOTO 30
           ENDIF
           IF (DEGREE(ME).EQ.N+1) THEN
-           IF (ME.NE.LISTVAR_SCHUR(1)) THEN
-             write(6,*) ' Error in SMUMPS_422 '
-             write(6,*) ' wrong principal var for Schur !!'
-             stop
-           ENDIF
            IF (NBD.NE.NBED) THEN
           write(6,*) ' ERROR in SMUMPS_422 quasi dense rows remains'
-            stop
+            CALL SMUMPS_ABORT()
            ENDIF
+           NbSchur = 0   ! Only for checking
            NELME    = -(NEL+1)
            DO 59 X=1,N
             IF ((PE(X).GT.0) .AND. (ELEN(X).LT.0)) THEN
-             PE(X) = -ME
+             PE(X) = -LISTVAR_SCHUR(1)
             ELSEIF (DEGREE(X).EQ.N+1) THEN
              NEL   = NEL + NV(X)
              PE(X) = -ME
              ELEN(X) = 0
              NV(X) = 0
+             NbSchur = NbSchur+ 1
             ENDIF
    59      CONTINUE
+           IF (NbSchur.NE.SIZE_SCHUR) then
+             write(6,*) ' Internal error 2 in QAMD :',
+     &         ' Schur size expected:',SIZE_SCHUR, 'Real:', NbSchur
+             STOP
+           ENDIF
            ELEN(ME) = NELME
            NV(ME)   = NBD
            PE(ME)   = 0
            IF (NEL.NE.N) THEN
             write(6,*) 'Internal ERROR 2 detected in QAMD'
             write(6,*) ' NEL not equal to N: N, NEL =',N,NEL
-            stop
+            CALL SMUMPS_ABORT()
+           ENDIF
+           IF (ME.NE. LISTVAR_SCHUR(1)) THEN
+             DO I=1, SIZE_SCHUR
+               PE(LISTVAR_SCHUR(I)) = -LISTVAR_SCHUR(1)
+             ENDDO
+             PE(LISTVAR_SCHUR(1)) = 0
+             NV( LISTVAR_SCHUR(1))= NV(ME)
+             NV(ME)               = 0
+             ELEN( LISTVAR_SCHUR(1)) = ELEN(ME)
+             ELEN(ME)             = 0
            ENDIF
            GOTO 265
           ENDIF
@@ -7027,7 +8968,7 @@ C
       ENDIF
       PFREE = MAXMEM
       RETURN
-      END
+      END SUBROUTINE SMUMPS_422 
       SUBROUTINE SMUMPS_423(N, SYM, NPROCS, IORD)
       IMPLICIT NONE
       INTEGER N, NPROCS, IORD, SYM
@@ -7077,79 +9018,250 @@ C
       RETURN
       END SUBROUTINE SMUMPS_423
       SUBROUTINE SMUMPS_510
-     *           (KEEP10, KEEP2, KEEP50, NSLAVES)
+     *     (KEEP10, KEEP2, KEEP48 ,KEEP50, NSLAVES)
       IMPLICIT NONE
-      INTEGER NSLAVES, KEEP10, KEEP2, KEEP50
-           KEEP10 = MIN(-KEEP10*KEEP2,-1)
+      INTEGER NSLAVES, KEEP10, KEEP2, KEEP48, KEEP50
+      KEEP10 = MAX(KEEP10*KEEP2,1)
 #if defined(t3e) 
-           KEEP10 = MAX(-1500000, KEEP10)
+      KEEP10 = MIN(1500000, KEEP10)
 #elif defined(SP_)
-           KEEP10 = MAX(-3000000, KEEP10)
+      KEEP10 = MIN(3000000, KEEP10)
 #else
-           KEEP10 = MAX(-2000000, KEEP10)
+      KEEP10 = MIN(2000000, KEEP10)
 #endif
 #if defined(t3e) 
-        IF (NSLAVES .GT. 64) THEN
-           KEEP10 = 
-     &      MAX(-(8*(KEEP2*KEEP2)/NSLAVES)-1, KEEP10)
-        ELSE
-           KEEP10 = 
-     &      MAX(-(4*(KEEP2*KEEP2)/NSLAVES)-1, KEEP10)
-        ENDIF 
+      IF (NSLAVES .GT. 64) THEN
+         KEEP10 = 
+     &        MIN((8*(KEEP2*KEEP2)/NSLAVES)+1, KEEP10)
+      ELSE
+         KEEP10 = 
+     &        MIN((4*(KEEP2*KEEP2)/NSLAVES)+1, KEEP10)
+      ENDIF 
 #else
-        IF (NSLAVES.GT.64) THEN
-           KEEP10 = 
-     &      MAX(-(6*(KEEP2*KEEP2)/NSLAVES)-1, KEEP10)
-        ELSE
-           KEEP10 = 
-     &      MAX(-(4*(KEEP2*KEEP2)/NSLAVES)-1, KEEP10)
-        ENDIF
+      IF (NSLAVES.GT.64) THEN
+         KEEP10 = 
+     &        MIN((6*(KEEP2*KEEP2)/NSLAVES)+1, KEEP10)
+      ELSE
+         KEEP10 = 
+     &        MIN((4*(KEEP2*KEEP2)/NSLAVES)+1, KEEP10)
+      ENDIF
 #endif
-       IF (KEEP50 .EQ. 0 ) THEN
+         IF (KEEP50 .EQ. 0 ) THEN
+            KEEP10 = MAX(KEEP10,((7*KEEP2*KEEP2)/
+     *           4/MAX(NSLAVES-1,1)) + KEEP2)
+         ELSE
+            KEEP10 = MAX(KEEP10,((7*KEEP2*KEEP2)/
+     *           4/(MAX(NSLAVES-1,1))) +KEEP2)
+         ENDIF
+      IF (KEEP50 .EQ. 0 ) THEN
 #if defined(t3e)
-          KEEP10 = MIN(KEEP10,-200000)
-#else
-          KEEP10 = MIN(KEEP10,-300000)
+         KEEP10 = MAX(KEEP10,200000)
+#else 
+         KEEP10 = MAX(KEEP10,300000)
 #endif
-       ELSE
+      ELSE
 #if defined(t3e)
-          KEEP10 = MIN(KEEP10,-40000)
-#else
-          KEEP10 = MIN(KEEP10,-80000)
+         KEEP10 = MAX(KEEP10,40000)
+#else 
+         KEEP10 = MAX(KEEP10,80000)
 #endif
-       ENDIF
+      ENDIF
+      KEEP10 = -KEEP10 
       RETURN
       END SUBROUTINE SMUMPS_510
-      SUBROUTINE SMUMPS_363(N,FRERE, STEP, FILS,
-     *     NA,LNA,NE,ND,NSTEPS,PERM,SYM,INFO,LP,K47
-     *     ,PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR
+      SUBROUTINE SMUMPS_534( N,FRERE, FILS,
+     *     NA,NE,ND,PERM,SYM,INFO,LP,K47,K81,
+     *     PROCNODE,SLAVEF,PEAK)
+      IMPLICIT NONE
+      INTEGER N,PERM,SYM, LP, SIZE_MEM_SBTR
+      INTEGER FRERE(N), FILS(N)
+      INTEGER NA(N), NE(N), ND(N),K47,K81
+      INTEGER INFO(40)
+      INTEGER SLAVEF,PROCNODE(N)
+      REAL PEAK
+      INTEGER NBROOT, NBLEAF, LNA, allocok, LEAF, I, NSTEPS,
+     *        K47_LOC, K81_LOC
+      INTEGER, ALLOCATABLE, DIMENSION (:) :: NEW_NA, STEP
+      INTEGER TEMP_MEM(1),SBTR_WHICH_M
+      INTEGER, ALLOCATABLE, DIMENSION (:,:) :: MEM_SUBTREE,MY_ROOT,
+     $     MY_SIZE,MY_LEAF
+      INTEGER, ALLOCATABLE, DIMENSION (:) ::      DEPTH_FIRST
+      REAL, ALLOCATABLE, DIMENSION (:) :: COST_TRAV
+      IF (N.EQ.1) THEN
+        NBROOT = 1
+        NBLEAF = 1 
+      ELSEIF (NA(N).LT.0) THEN
+        NBLEAF = N
+        NBROOT = N
+      ELSEIF (NA(N-1).LT.0) THEN
+        NBLEAF = N-1
+        NBROOT = NA(N)
+      ELSE
+        NBLEAF = NA(N-1)
+        NBROOT = NA(N)
+      ENDIF
+      LNA = NBROOT + NBLEAF + 2
+      ALLOCATE (NEW_NA (LNA), STEP(N), stat=allocok)
+      IF (allocok > 0 ) THEN
+        INFO(1) = -7
+        INFO(2) = LNA + N
+        RETURN
+      ENDIF
+      NEW_NA(1)=NBLEAF
+      NEW_NA(2)=NBROOT
+      LEAF = 3
+      IF ( N == 1 ) THEN
+          NEW_NA(LEAF) = 1
+          LEAF = LEAF + 1
+      ELSE IF (NA(N) < 0) THEN
+          NEW_NA(LEAF) = - NA(N)-1
+          LEAF = LEAF + 1
+          DO I = 1, NBLEAF - 1
+            NEW_NA(LEAF) = NA(I)
+            LEAF = LEAF + 1
+          ENDDO
+      ELSE IF (NA(N-1) < 0 ) THEN
+          NEW_NA(LEAF) = - NA(N-1) - 1
+          LEAF =LEAF + 1
+          IF ( NBLEAF > 1 ) THEN
+            DO I = 1, NBLEAF - 1
+              NEW_NA(LEAF) = NA(I)
+              LEAF = LEAF + 1
+            ENDDO
+          ENDIF
+      ELSE
+          DO I = 1, NBLEAF
+            NEW_NA(LEAF) = NA(I)
+            LEAF = LEAF + 1
+          ENDDO
+      END IF
+      SIZE_MEM_SBTR=NEW_NA(2)
+      ALLOCATE(MEM_SUBTREE(SIZE_MEM_SBTR,SLAVEF),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= SIZE_MEM_SBTR*SLAVEF
+         RETURN
+      ENDIF
+      ALLOCATE(MY_ROOT(SIZE_MEM_SBTR,SLAVEF),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= SIZE_MEM_SBTR*SLAVEF
+         RETURN
+      ENDIF
+      ALLOCATE(MY_LEAF(SIZE_MEM_SBTR,SLAVEF),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= SIZE_MEM_SBTR*SLAVEF
+         RETURN
+      ENDIF
+      ALLOCATE(MY_SIZE(SIZE_MEM_SBTR,SLAVEF),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= SIZE_MEM_SBTR*SLAVEF
+         RETURN
+      ENDIF
+      DO I = 1, N
+        STEP(I)=I
+        IF ( FRERE(I) .EQ. 0 ) THEN
+          NEW_NA(LEAF) = I
+          LEAF = LEAF + 1
+        END IF
+      END DO
+      NSTEPS = N
+      K47_LOC = 0
+      K81_LOC = 0
+      SBTR_WHICH_M=0
+      ALLOCATE(DEPTH_FIRST(1),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= 1
+         RETURN
+      ENDIF
+      ALLOCATE(COST_TRAV(1),stat=allocok) 
+      IF (allocok .ne.0) THEN
+         info(1)= -7
+         info(2)= 1
+         RETURN
+      ENDIF
+      CALL SMUMPS_363(N,FRERE, STEP, FILS,
+     *     NEW_NA,LNA,NE,ND,NSTEPS,PERM,SYM,INFO,LP,K47_LOC,K81_LOC,0,
+     *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK,SBTR_WHICH_M
+     $     ,1,1,DEPTH_FIRST,COST_TRAV,MY_LEAF,MY_SIZE,MY_ROOT
      *)
+      NA(1:NBLEAF)=NEW_NA(3:2+NBLEAF)
+      NA(N)=NBROOT
+      IF (N.GT.1) THEN
+       IF (NBLEAF.GT.N-2) THEN
+        IF (NBLEAF.EQ.N-1) THEN
+         NA(N-1) = -NA(N-1)-1
+         NA(N)   = NBROOT
+        ELSE
+         NA(N) = -NA(N)-1
+        ENDIF
+       ELSE
+        NA(N-1) = NBLEAF
+        NA(N)   = NBROOT
+       ENDIF
+      ENDIF
+      DEALLOCATE(MEM_SUBTREE)
+      DEALLOCATE(NEW_NA,STEP)
+      DEALLOCATE(DEPTH_FIRST,COST_TRAV)
+      DEALLOCATE(MY_LEAF,MY_SIZE,MY_ROOT)
+      RETURN
+      END SUBROUTINE SMUMPS_534
+      SUBROUTINE SMUMPS_363(N,FRERE, STEP, FILS,
+     *     NA,LNA,NE,ND,NSTEPS,PERM,SYM,INFO,LP,K47,K81,K76,
+     *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK
+     $     ,SBTR_WHICH_M,SIZE_DEPTH_FIRST,SIZE_COST_TRAV,
+     $     DEPTH_FIRST_TRAV,COST_TRAV,MY_FIRST_LEAF,
+     $     MY_NB_LEAF,MY_ROOT_SBTR
+     $     )
       IMPLICIT NONE
       INTEGER N,PERM,SYM, NSTEPS, LNA, LP, SIZE_MEM_SBTR
       INTEGER FRERE(NSTEPS), FILS(N), STEP(N)
-      INTEGER NA(LNA), NE(NSTEPS), ND(NSTEPS),K47
+      INTEGER NA(LNA), NE(NSTEPS), ND(NSTEPS),K47,K81,K76
       INTEGER INFO(40)
       INTEGER SLAVEF,PROCNODE(NSTEPS)
-      INTEGER MEM_SUBTREE(SIZE_MEM_SBTR,SLAVEF)
+      INTEGER MEM_SUBTREE(SIZE_MEM_SBTR,SLAVEF),SBTR_WHICH_M
+      INTEGER MY_FIRST_LEAF(SIZE_MEM_SBTR,SLAVEF),
+     $     MY_ROOT_SBTR(SIZE_MEM_SBTR,SLAVEF),
+     $     MY_NB_LEAF(SIZE_MEM_SBTR,SLAVEF)
       EXTERNAL SMUMPS_283,SMUMPS_275
       LOGICAL SMUMPS_283
       INTEGER SMUMPS_275
-      INTEGER ITOP,IFATH,IN,LSTK,NSTK,INODE,K,I,allocok
+      REAL PEAK
+      INTEGER SIZE_DEPTH_FIRST,DEPTH_FIRST_TRAV(SIZE_DEPTH_FIRST)
+      INTEGER SIZE_COST_TRAV
+      REAL COST_TRAV(SIZE_COST_TRAV)
+      INTEGER, DIMENSION (:), ALLOCATABLE :: DEPTH
+      INTEGER ITOP,IFATH,IN,LSTK,NSTK,INODE,K,I,allocok,LOCAL_PERM
       INTEGER*8 NCB
       INTEGER NELIM,NFR,LEAF,NBLEAF,NBROOT, SIZE_TAB
-      INTEGER, DIMENSION (:), ALLOCATABLE :: ROOT,fact,IPOOL,TNSTK
+      INTEGER, DIMENSION (:), ALLOCATABLE :: ROOT,IPOOL,TNSTK
       INTEGER, DIMENSION (:), ALLOCATABLE,TARGET :: SON,TEMP
-      INTEGER*8, DIMENSION (:), ALLOCATABLE :: M
+      INTEGER*8, DIMENSION (:), ALLOCATABLE :: M,M_TOTAL, FACT
       INTEGER*8, DIMENSION (:), ALLOCATABLE :: TAB1,TAB2
       INTEGER, DIMENSION (:), POINTER :: TAB
-      INTEGER J,x,y,z,dernier,fin
+      INTEGER J,x,y,z,dernier,fin,RANK_TRAV
       INTEGER cour,t,II,temporary
-      INTEGER actuel,CB_current,CB_MAX
+      INTEGER actuel,CB_current,CB_MAX,ROOT_OF_CUR_SBTR
       INTEGER*8, DIMENSION (:), ALLOCATABLE :: T1,T2
       INTEGER, DIMENSION (:), ALLOCATABLE :: RESULT
-      INTEGER*8 MEM_SIZE,FACT_SIZE,SUM,MEM_SEC_PERM
-      INTEGER INDICE(SLAVEF),ID
-      IF (K47 == 4 ) THEN
+      INTEGER*8 MEM_SIZE,FACT_SIZE,SUM,MEM_SEC_PERM,FACT_SIZE_T,
+     $     MEM_SIZE_T,TOTAL_MEM_SIZE,TMP_TOTAL_MEM_SIZE,TMP_SUM
+      LOGICAL   SBTR_M
+      INTEGER INDICE(SLAVEF),ID,FIRST_LEAF,SIZE_SBTR
+      EXTERNAL SMUMPS_170,SMUMPS_167
+      LOGICAL SMUMPS_170,SMUMPS_167
+      DOUBLE PRECISION COST_NODE
+      TOTAL_MEM_SIZE=0
+      ROOT_OF_CUR_SBTR=0
+      IF((PERM.EQ.0).OR.(PERM.EQ.1).OR.
+     $     (PERM.EQ.2).OR.(PERM.EQ.3).OR.(PERM.EQ.4).OR.
+     $     (PERM.EQ.5).OR.(PERM.EQ.6))THEN
+         LOCAL_PERM=0
+      ENDIF
+      IF (K47 == 4 .OR. ((K47.GE.2).AND.(K81.GE. 1))) THEN
         DO I=1,SLAVEF
           INDICE(I)=1
         ENDDO
@@ -7159,22 +9271,36 @@ C
           ENDDO
         ENDDO
       ENDIF
+      SBTR_M=((K47 == 4 .OR. ((K47.GE.2).AND.(K81 .GE. 1))))
       MEM_SIZE=0
       FACT_SIZE=0
-      IF (PERM .NE. 0 .AND. PERM .NE. 1 .AND.((PERM.EQ.2).AND.
-     $(K47.LT.4))) THEN
+      IF ((PERM.EQ.8).AND.
+     * (.NOT.(K47 == 4 .OR. ((K47.GE.2).AND.(K81 .GE. 1))))) THEN
          WRITE(*,*) "Internal Error in SMUMPS_363",PERM
          CALL SMUMPS_ABORT()
       END IF
       NBLEAF = NA(1)
       NBROOT = NA(2)
       IF((PERM.EQ.0).AND.(NBROOT.EQ.NBLEAF)) RETURN
+      IF (SBTR_M.OR.(PERM.EQ.2))  THEN
+         IF((SBTR_WHICH_M.EQ.1).AND.(PERM.NE.1))THEN
+            ALLOCATE(M_TOTAL(NSTEPS), stat=allocok )
+            IF (allocok > 0) THEN
+               IF ( LP .GT. 0 )
+     *              WRITE(LP,*)'Memory allocation error in
+     $              SMUMPS_363'
+               INFO(1)=-7
+               INFO(2)=NSTEPS
+               RETURN
+            ENDIF
+         ENDIF
+      ENDIF
       ALLOCATE( IPOOL(NBLEAF), M(NSTEPS), fact(NSTEPS),
      *          TNSTK(NSTEPS), stat=allocok )
       IF (allocok > 0) THEN
         IF ( LP .GT. 0 )
      *    WRITE(LP,*)'Memory allocation error in SMUMPS_363'
-        INFO(1)=-13
+        INFO(1)=-7
         INFO(2)=NSTEPS
         RETURN
       ENDIF
@@ -7189,7 +9315,7 @@ C
       IF (allocok > 0) THEN
         IF ( LP .GT. 0 )
      *    WRITE(LP,*)'Memory allocation error in SMUMPS_363'
-        INFO(1)=-13
+        INFO(1)=-7
         INFO(2)=NSTEPS
         RETURN
       ENDIF
@@ -7198,12 +9324,12 @@ C
       IF (allocok > 0) THEN
         IF ( LP .GT. 0 )
      *    WRITE(LP,*)'Memory allocation error in SMUMPS_363'
-        INFO(1)=-13
+        INFO(1)=-7
         INFO(2)=SIZE_TAB
         RETURN
       ENDIF
       IF(NBROOT.EQ.NBLEAF)THEN
-        IF(PERM.NE.1)THEN
+        IF((PERM.NE.1).OR.(PERM.EQ.4).OR.(PERM.EQ.6))THEN
           WRITE(*,*)'Internal Error in reordertree:'
           WRITE(*,*)'  problem with perm parameter in reordertree'
           CALL SMUMPS_ABORT()
@@ -7216,8 +9342,69 @@ C
      &    RESULT,T1,T2)
         GOTO 789
       ENDIF
+      IF((PERM.EQ.3).OR.(PERM.EQ.4))THEN
+         ALLOCATE(DEPTH(NSTEPS),stat=allocok)
+         IF (allocok > 0) THEN
+            IF ( LP .GT. 0 )
+     *           WRITE(LP,*)'Memory allocation error in
+     $           SMUMPS_363'
+            INFO(1)=-7
+            INFO(2)=NSTEPS
+            RETURN
+         ENDIF
+         DEPTH=0
+         NBROOT = NA(2)
+         IPOOL(1:NBROOT) = NA(3+NBLEAF:2+NBLEAF+NBROOT)
+         fin=NBROOT
+         LEAF=NA(1)
+ 499     CONTINUE
+         INODE=IPOOL(fin)
+         IF(INODE.LT.0)THEN
+            WRITE(*,*)'Internal Error in reordertree INODE < 0 !'
+            CALL SMUMPS_ABORT()
+         ENDIF
+         IN=INODE
+ 4602    IN = FILS(IN)
+         IF (IN .GT. 0 ) THEN
+            GOTO 4602
+         ENDIF
+         IN=-IN
+         DO I=1,NE(STEP(INODE))
+            SON(I)=IN
+            IN=FRERE(STEP(IN))
+         ENDDO
+         DO I=1,NE(STEP(INODE))
+            IPOOL(fin)=SON(I)
+            DEPTH(STEP(SON(I)))=DEPTH(STEP(INODE))+1
+            SON(I)=0
+            fin=fin+1
+         ENDDO
+         IF(NE(STEP(INODE)).EQ.0)THEN
+            LEAF=LEAF-1
+         ELSE
+            fin=fin-1
+            GOTO 499
+         ENDIF
+         fin=fin-1
+         IF(fin.EQ.0) GOTO 489
+         GOTO 499
+ 489     CONTINUE
+      ENDIF
+      IF(K76.EQ.4)THEN
+         RANK_TRAV=NSTEPS
+         DEPTH_FIRST_TRAV=0
+      ENDIF
+      IF((K76.EQ.5).OR.(PERM.EQ.5).OR.(PERM.EQ.6))THEN
+         COST_TRAV=0.0E0
+         COST_NODE=0.0E0
+      ENDIF        
       DO I=1,NSTEPS
          M(I)=0
+         IF (SBTR_M.OR.(PERM.EQ.2))  THEN
+            IF((SBTR_WHICH_M.EQ.1).AND.(PERM.NE.1))THEN
+               M_TOTAL(I)=0
+            ENDIF
+         ENDIF
       ENDDO
       DO I=1,NSTEPS
          fact(I)=0
@@ -7239,6 +9426,15 @@ C
         IF (IN .GT. 0 ) GOTO 101
         IF(NE(STEP(INODE)).EQ.0) THEN
            M(STEP(INODE))=NFR*NFR
+           IF (SBTR_M.OR.(PERM.EQ.2))  THEN
+                 M_TOTAL(STEP(INODE))=NFR*NFR
+           ENDIF
+        ENDIF
+        IF((PERM.EQ.4).OR.(PERM.EQ.3))THEN
+           IF(SMUMPS_170(STEP(INODE),
+     $PROCNODE,SLAVEF))THEN
+              DEPTH(STEP(INODE))=0
+           ENDIF
         ENDIF
         IF ( SYM .eq. 0 ) THEN
           FACT(STEP(INODE))=FACT(STEP(INODE))+
@@ -7256,6 +9452,10 @@ C
         ELSE
            IFATH = -IN
            FACT(STEP(IFATH))=FACT(STEP(IFATH))+FACT(STEP(INODE))
+           IF((PERM.EQ.3).OR.(PERM.EQ.4))THEN
+              DEPTH(STEP(IFATH))=MAX(DEPTH(STEP(INODE)),
+     $             DEPTH(STEP(IFATH)))
+           ENDIF
         ENDIF
         TNSTK(STEP(IFATH)) = TNSTK(STEP(IFATH)) - 1
         IF ( TNSTK(STEP(IFATH)) .EQ. 0 ) THEN
@@ -7271,7 +9471,7 @@ C
            ENDIF
            NCB=ND(STEP(INODE))-I
            IN=-IN
-           IF(PERM.NE.2)THEN
+           IF(PERM.NE.7)THEN
               DO I=1,NE(STEP(INODE))
                  SON(I)=IN
                  TEMP(I)=IN
@@ -7284,7 +9484,7 @@ C
                  IF(IN.GT.0) IN=FRERE(STEP(IN))
               ENDDO
            ENDIF
-           IF(PERM.EQ.2) GOTO 213
+           IF(PERM.EQ.7) GOTO 213
            DO II=1,NE(STEP(INODE))
              TAB1(II)=0
              TAB2(II)=0
@@ -7295,14 +9495,14 @@ C
                 NELIM=NELIM+1
                 GOTO 151
              ENDIF       
-             IF(PERM.EQ.0)THEN
+             IF((PERM.EQ.0).OR.(PERM.EQ.5))THEN
                TAB1(II)=M(STEP(SON(II)))-
      &           ((ND(STEP(SON(II)))-NELIM)*(ND(STEP(SON(II)))
      &           -NELIM))
                TAB2(II)=(ND(STEP(SON(II)))-NELIM)
      *                *(ND(STEP(SON(II)))-NELIM)
              ENDIF
-             IF(PERM.EQ.1) THEN
+             IF((PERM.EQ.1).OR.(PERM.EQ.6)) THEN
                 TAB1(II)=M(STEP(SON(II)))-
      $               ((ND(STEP(SON(II)))-NELIM)*
      *               (ND(STEP(SON(II)))-NELIM))
@@ -7310,10 +9510,53 @@ C
                 TAB2(II)=((ND(STEP(SON(II)))-NELIM)
      *                *(ND(STEP(SON(II)))-NELIM))+FACT(STEP(SON(II)))
              ENDIF
-           ENDDO
-           CALL SMUMPS_462(SON,NE(STEP(INODE)),TAB1,TAB2,PERM
+             IF(PERM.EQ.2)THEN
+                IF (SMUMPS_170(STEP(INODE),
+     $               PROCNODE,SLAVEF))THEN
+                   TAB1(II)=M_TOTAL(STEP(SON(II)))-
+     &                  ((ND(STEP(SON(II)))-NELIM)*(ND(STEP(SON(II)))
+     &                  -NELIM))
+                   TAB2(II)=(ND(STEP(SON(II)))-NELIM)
+     *                  *(ND(STEP(SON(II)))-NELIM)
+                ELSE
+                   TAB1(II)=M(STEP(SON(II)))-
+     &                  ((ND(STEP(SON(II)))-NELIM)*(ND(STEP(SON(II)))
+     &                  -NELIM))
+                   TAB2(II)=(ND(STEP(SON(II)))-NELIM)
+     *                  *(ND(STEP(SON(II)))-NELIM)                
+                ENDIF
+             ENDIF
+             IF(PERM.EQ.3)THEN
+                IF (SMUMPS_170(STEP(INODE),
+     $               PROCNODE,SLAVEF))THEN
+                   TAB1(II)=M(STEP(SON(II)))-
+     &                  ((ND(STEP(SON(II)))-NELIM)*(ND(STEP(SON(II)))
+     &                  -NELIM))
+                   TAB2(II)=(ND(STEP(SON(II)))-NELIM)
+     *                  *(ND(STEP(SON(II)))-NELIM)                
+                ELSE
+                   TAB1(II)=DEPTH(STEP(SON(II)))
+                   TAB2(II)=M(STEP(SON(II)))
+                ENDIF
+             ENDIF
+             IF(PERM.EQ.4)THEN
+                IF (SMUMPS_170(STEP(INODE),
+     $               PROCNODE,SLAVEF))THEN
+                   TAB1(II)=M(STEP(SON(II)))-
+     &                  ((ND(STEP(SON(II)))-NELIM)*(ND(STEP(SON(II)))
+     &                  -NELIM))-FACT(STEP(SON(II)))
+                   TAB2(II)=(ND(STEP(SON(II)))-NELIM)
+     *                  *(ND(STEP(SON(II)))-NELIM)                
+                ELSE
+                   TAB1(II)=DEPTH(STEP(SON(II)))
+                   TAB2(II)=M(STEP(SON(II)))
+                ENDIF
+             ENDIF
+          ENDDO
+          CALL SMUMPS_462(SON,NE(STEP(INODE)),TAB1,TAB2,
+     $         LOCAL_PERM
      &           ,RESULT,T1,T2)
-           IF(PERM.EQ.0) THEN
+          IF(PERM.EQ.0) THEN
              DO II=1,NE(STEP(INODE))
                cour=TEMP(II)
                NELIM=1
@@ -7332,10 +9575,10 @@ C
               DO II=1,NE(STEP(INODE))
                 cour=TEMP(II)
                 NELIM=1
- 154            cour=FILS(cour)
+ 187            cour=FILS(cour)
                 IF(cour.GT.0) THEN
                    NELIM=NELIM+1
-                   GOTO 154
+                   GOTO 187
                 ENDIF       
                 TAB1(II)=(ND(STEP(TEMP(II)))-NELIM)*
      *             (ND(STEP(TEMP(II)))-NELIM)+FACT(STEP(TEMP(II)))
@@ -7348,9 +9591,12 @@ C
            DO II=1,2
               SUM=0
               FACT_SIZE=0
+              FACT_SIZE_T=0
               MEM_SIZE=0
+              MEM_SIZE_T=0
               CB_MAX=0
               CB_CURRENT=0
+              TMP_SUM=0
               IF(II.EQ.1) TAB=>SON 
               IF(II.EQ.2) TAB=>TEMP
               DO I=1,NE(STEP(INODE))
@@ -7363,25 +9609,53 @@ C
                  ENDIF       
                  NFR=ND(STEP(TAB(I)))
                  MEM_SIZE=MAX(MEM_SIZE,(M(STEP(TAB(I)))+SUM+FACT_SIZE))
+                 IF (SBTR_M.OR.(PERM.EQ.2)) THEN
+                       MEM_SIZE_T=MAX(MEM_SIZE_T,(M_TOTAL(STEP(TAB(I)))+
+     $                      SUM+
+     $                      FACT_SIZE_T))
+                       FACT_SIZE_T=FACT_SIZE_T+fact(STEP(TAB(I)))
+                 ENDIF
+                 TOTAL_MEM_SIZE=MAX(TOTAL_MEM_SIZE,
+     $                (M(STEP(TAB(I)))+SUM+FACT_SIZE))
+                 TMP_SUM=TMP_SUM+fact(STEP(TAB(I)))
                  SUM=SUM+(NFR-NELIM)*(NFR-NELIM)
-                 IF(PERM.EQ.1) FACT_SIZE=FACT_SIZE+fact(STEP(TAB(I)))
+                 IF((PERM.EQ.1).OR.(PERM.EQ.4))THEN
+                    FACT_SIZE=FACT_SIZE+fact(STEP(TAB(I)))
+                 ENDIF
               ENDDO
-              IF((II.EQ.1).OR.(PERM.EQ.2)) THEN
+              TOTAL_MEM_SIZE=MAX(TOTAL_MEM_SIZE,((ND(STEP(IFATH))
+     $             *ND(STEP(IFATH)))+MAX(SUM,NCB*NCB)+TMP_SUM))
+              IF(II.EQ.1)THEN
+                 TMP_TOTAL_MEM_SIZE=TOTAL_MEM_SIZE
+              ENDIF
+              IF((II.EQ.1).OR.(PERM.EQ.7)) THEN
                  M(STEP(IFATH))=MAX(MEM_SIZE,((ND(STEP(IFATH))
      $             *ND(STEP(IFATH)))+MAX(SUM,NCB*NCB)+FACT_SIZE))
+                 IF (SBTR_M.OR.(PERM.EQ.2))  THEN
+                       M_TOTAL(STEP(IFATH))=MAX(MEM_SIZE_T,
+     $                      ((ND(STEP(IFATH))
+     $                      *ND(STEP(IFATH)))+MAX(SUM,NCB*NCB)+
+     $                      FACT_SIZE_T))
+                 ENDIF
               ENDIF
-              IF((II.EQ.2).AND.(PERM.NE.2))THEN
+              IF((II.EQ.2).AND.(PERM.EQ.1).OR.(PERM.EQ.0).OR.
+     $             (PERM.EQ.5).OR.(PERM.EQ.6).OR.
+     $             (.NOT.SBTR_M.OR.(SBTR_WHICH_M.NE.1)))THEN
                  MEM_SEC_PERM=MAX(MEM_SIZE,((ND(STEP(IFATH))
      $             *ND(STEP(IFATH)))+MAX(SUM,NCB*NCB)+FACT_SIZE))
               ENDIF
+              IF((PERM.EQ.2).OR.(PERM.EQ.3).OR.(PERM.EQ.4))THEN
+                 MEM_SEC_PERM=999999999
+              ENDIF
            ENDDO
-           IF(PERM.EQ.2) GOTO 96
+           IF(PERM.EQ.7) GOTO 96
            IF(MEM_SEC_PERM.EQ.M(STEP(IFATH))) THEN
               TAB=>TEMP
            ELSE IF (MEM_SEC_PERM.LT.M(STEP(IFATH))) THEN
               WRITE(*,*)'Probleme dans reorder!!!!'
               CALL SMUMPS_ABORT()
            ELSE 
+              TOTAL_MEM_SIZE=TMP_TOTAL_MEM_SIZE
               TAB=>SON
            ENDIF
            DO I=NE(STEP(INODE)),1,-1
@@ -7409,7 +9683,7 @@ C
  116    CONTINUE
         NBROOT = NA(2)
         IPOOL(1:NBROOT) = NA(3+NBLEAF:2+NBLEAF+NBROOT)
-        IF(PERM.EQ.2) GOTO 001
+        IF(PERM.EQ.7) GOTO 001
         IF (PERM.eq.1) THEN
           DO I=1,NBROOT
             TAB1(I)=M(STEP(NA(I+2+NBLEAF)))-FACT(STEP(NA(I+2+NBLEAF)))
@@ -7421,51 +9695,207 @@ C
  001    CONTINUE
         fin=NBROOT
         LEAF=NA(1)
+        FIRST_LEAF=-9999
+        SIZE_SBTR=0
  999    CONTINUE
         INODE=IPOOL(fin)
-        IF ( K47 == 4 ) THEN
-              IF((SLAVEF.NE.1).AND.
-     $          SMUMPS_283(STEP(INODE),PROCNODE,SLAVEF))THEN
-                 ID=SMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
-                 MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))
-                 INDICE(ID+1)=INDICE(ID+1)+1
-              ENDIF
-              IF((SLAVEF.EQ.1).AND.FRERE(STEP(INODE)).EQ.0)THEN
-                 ID=SMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
-                 MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))
-                 INDICE(ID+1)=INDICE(ID+1)+1
-              ENDIF
-        ENDIF
         IF(INODE.LT.0)THEN
            WRITE(*,*)'Internal Error in reordertree INODE < 0 !'
            CALL SMUMPS_ABORT()
         ENDIF
+        IF(SIZE_SBTR.NE.0)THEN 
+           IF(.NOT.SMUMPS_167(STEP(INODE),PROCNODE,SLAVEF))THEN
+              IF ( K47 == 4 .OR. ((K81.GE.1).AND.(K47.GE.2))) THEN
+                 IF((SLAVEF.NE.1))THEN
+                    MY_FIRST_LEAF(INDICE(ID+1)-1,ID+1)=FIRST_LEAF
+                    MY_NB_LEAF(INDICE(ID+1)-1,ID+1)=SIZE_SBTR
+                    FIRST_LEAF=-9999
+                    SIZE_SBTR=0
+                 ENDIF
+              ENDIF
+           ENDIF
+        ENDIF
+        IF(SMUMPS_283(STEP(INODE),PROCNODE,SLAVEF))THEN
+           ROOT_OF_CUR_SBTR=INODE
+        ENDIF
+        IF (K76.EQ.4)THEN
+           IF(SLAVEF.NE.1)THEN
+              WRITE(*,*)'INODE=',INODE,'RANK',RANK_TRAV
+              IF(SMUMPS_167(STEP(INODE),PROCNODE,SLAVEF))THEN
+                 DEPTH_FIRST_TRAV(STEP(INODE))=DEPTH_FIRST_TRAV(STEP(
+     $                ROOT_OF_CUR_SBTR))
+              ELSE
+                 DEPTH_FIRST_TRAV(STEP(INODE))=RANK_TRAV
+              ENDIF
+              RANK_TRAV=RANK_TRAV-1
+           ENDIF
+        ENDIF
+        IF (K76.EQ.5)THEN
+           IF(SLAVEF.NE.1)THEN
+              IN = INODE
+ 395          IN = FRERE(STEP(IN))
+              IF (IN.GT.0) GO TO 395
+              IF (IN.LT.0) THEN
+                 IFATH = -IN
+              ENDIF
+              NFR    = ND(STEP(INODE))
+              NELIM = 0
+              IN = INODE
+ 396          NELIM = NELIM + 1
+              IN = FILS(IN)
+              IF (IN .GT. 0 ) GOTO 396
+              CALL SMUMPS_511(NFR,NELIM,NELIM,
+     *             SYM,1,COST_NODE)
+              IF(FRERE(STEP(INODE)).NE.0)THEN
+                 IF(SMUMPS_167(STEP(INODE),PROCNODE,SLAVEF))THEN
+                    COST_TRAV(STEP(INODE))=COST_TRAV(STEP(
+     $                   ROOT_OF_CUR_SBTR))
+                 ELSE
+                    COST_TRAV(STEP(INODE))=COST_NODE+
+     $                   COST_TRAV(STEP(IFATH))+
+     $                   ((NFR-NELIM)*(NFR-NELIM)*15)
+                 ENDIF
+              ELSE
+                 COST_TRAV(STEP(INODE))=COST_NODE
+              ENDIF
+              IF(K76.EQ.5)THEN
+                 WRITE(*,*)'INODE=',INODE,'COST=',COST_TRAV(STEP(INODE))
+              ENDIF
+           ENDIF
+        ENDIF
+        IF ( K47 == 4 .OR. ((K81.GE.1).AND.(K47.GE.2))) THEN
+              IF((SLAVEF.NE.1).AND.
+     $          SMUMPS_283(STEP(INODE),PROCNODE,SLAVEF))THEN
+                IF (NE(STEP(INODE)).NE.0) THEN
+                   ID=SMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
+                   IF((SBTR_WHICH_M.EQ.1).AND.(PERM.NE.1))THEN
+                      MEM_SUBTREE(INDICE(ID+1),ID+1)=
+     $                     M_TOTAL(STEP(INODE))
+                   ELSE
+                      MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))                      
+                   ENDIF
+                   MY_ROOT_SBTR(INDICE(ID+1),ID+1)=INODE
+                  INDICE(ID+1)=INDICE(ID+1)+1
+                ENDIF
+              ENDIF
+              IF((SLAVEF.EQ.1).AND.FRERE(STEP(INODE)).EQ.0)THEN
+                 ID=SMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
+                 IF((SBTR_WHICH_M.EQ.1).AND.(PERM.NE.1))THEN
+                    MEM_SUBTREE(INDICE(ID+1),ID+1)=
+     $                   M_TOTAL(STEP(INODE))
+                 ELSE
+                    MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))                      
+                 ENDIF
+                 INDICE(ID+1)=INDICE(ID+1)+1
+              ENDIF
+        ENDIF
         IN=INODE
  5602   IN = FILS(IN)
         IF (IN .GT. 0 ) THEN
+           dernier=IN
            GOTO 5602
         ENDIF
         IN=-IN
         DO I=1,NE(STEP(INODE))
-           SON(I)=IN
+           TEMP(I)=IN
+           IF((PERM.EQ.5).OR.(PERM.EQ.6))THEN
+              IF((SLAVEF.NE.1).AND.(.NOT.SMUMPS_170(
+     $             STEP(INODE),PROCNODE,SLAVEF)))THEN
+                 NFR    = ND(STEP(INODE))
+                 NELIM = 0
+                 II = TEMP(I)
+ 845             NELIM = NELIM + 1
+                 II = FILS(II)
+                 IF (II .GT. 0 ) GOTO 845
+                 CALL SMUMPS_511(NFR,NELIM,NELIM,
+     *                SYM,1,COST_NODE)
+                 TAB1(I)=COST_NODE+
+     $                COST_TRAV(STEP(INODE))
+                 TAB2(I)=0.0E0
+              ELSE
+                 SON(I)=IN
+              ENDIF
+           ELSE
+              SON(I)=IN
+           ENDIF
            IN=FRERE(STEP(IN))
         ENDDO
+        IF((PERM.EQ.5).OR.(PERM.EQ.6))THEN
+           IF((SLAVEF.NE.1).AND.(.NOT.SMUMPS_170(
+     $          STEP(INODE),PROCNODE,SLAVEF)))THEN
+              CALL SMUMPS_462(TEMP,NE(STEP(INODE)),TAB1,TAB2,
+     $             LOCAL_PERM
+     &             ,RESULT,T1,T2)
+              TAB=>TEMP
+              DO I=NE(STEP(INODE)),1,-1
+                 IF(I.EQ.NE(STEP(INODE))) THEN
+                    FILS(dernier)=-TAB(I)
+                    dernier=TAB(I)
+                    GOTO 221
+                 ENDIF
+                 IF(I.EQ.1) THEN
+                    FRERE(STEP(dernier))=TAB(I)
+                    FRERE(STEP(TAB(I)))=-INODE
+                    GOTO 221
+                 ENDIF
+                 IF(I.GT.1) THEN
+                    FRERE(STEP(dernier))=TAB(I)
+                    dernier=TAB(I)
+                    GOTO 221
+                 ENDIF
+ 221             CONTINUE
+                 SON(NE(STEP(INODE))-I+1)=TAB(I)
+              ENDDO
+           ENDIF
+        ENDIF
         DO I=1,NE(STEP(INODE))
            IPOOL(fin)=SON(I)
            SON(I)=0
            fin=fin+1
         ENDDO
         IF(NE(STEP(INODE)).EQ.0)THEN
-           IF(PERM.NE.2) NA(LEAF+2)=INODE
+           IF ( K47 == 4 .OR. ((K81.GE.1).AND.(K47.GE.2))) THEN
+              IF(SLAVEF.NE.1)THEN
+                 IF(SMUMPS_167(STEP(INODE),PROCNODE,SLAVEF))THEN
+                    IF(FIRST_LEAF.EQ.-9999)THEN
+                       FIRST_LEAF=INODE
+                    ENDIF
+                    SIZE_SBTR=SIZE_SBTR+1
+                 ENDIF
+              ENDIF
+           ENDIF
+           IF(PERM.NE.7)THEN
+              NA(LEAF+2)=INODE
+           ENDIF
            LEAF=LEAF-1
         ELSE
            fin=fin-1
            GOTO 999
         ENDIF
         fin=fin-1
-        IF(fin.EQ.0) GOTO 789
+        IF(fin.EQ.0) THEN
+           IF(SIZE_SBTR.NE.0)THEN 
+              IF ( K47 == 4 .OR. ((K81.GE.1).AND.(K47.GE.2))) THEN
+                 IF((SLAVEF.NE.1))THEN
+                    MY_FIRST_LEAF(INDICE(ID+1)-1,ID+1)=FIRST_LEAF
+                    MY_NB_LEAF(INDICE(ID+1)-1,ID+1)=SIZE_SBTR
+                    FIRST_LEAF=-9999
+                    SIZE_SBTR=0
+                 ENDIF
+              ENDIF
+           ENDIF
+           GOTO 789
+        ENDIF
         GOTO 999
  789    CONTINUE
+        NBROOT=NA(2)
+        NBLEAF=NA(1)
+        PEAk=0.0E0
+        FACT_SIZE=0
+        DO I=1,NBROOT
+           PEAK=MAX(PEAK,REAL(M(STEP(NA(2+NBLEAF+I)))))
+           FACT_SIZE=FACT_SIZE+FACT(STEP(NA(2+NBLEAF+I)))
+        ENDDO
         DEALLOCATE(IPOOL)
         DEALLOCATE(M)
         DEALLOCATE(fact)
@@ -7477,6 +9907,14 @@ C
         DEALLOCATE(T2)
         DEALLOCATE(RESULT)
         DEALLOCATE(TEMP)
+        IF((PERM.EQ.3).OR.(PERM.EQ.4))THEN
+           DEALLOCATE(DEPTH)
+        ENDIF
+        IF (SBTR_M.OR.(PERM.EQ.2))  THEN
+           IF((SBTR_WHICH_M.EQ.1).AND.(PERM.NE.1).OR.(PERM.EQ.2))THEN
+              DEALLOCATE(M_TOTAL)
+           ENDIF
+        ENDIF
       RETURN
       END SUBROUTINE SMUMPS_363
       RECURSIVE SUBROUTINE SMUMPS_462(TAB,DIM,TAB1,TAB2,PERM,
@@ -7530,7 +9968,7 @@ C
           ENDIF
           GOTO 3
         ENDIF
-        IF((PERM.EQ.0).OR.(PERM.EQ.1)) THEN
+        IF((PERM.EQ.0).OR.(PERM.EQ.1).OR.(PERM.EQ.2)) THEN
           IF(TEMP1(I1).GT.TEMP1(I2))THEN
             TAB1(J)=TEMP1(I1)
             TAB2(J)=TEMP2(I1)

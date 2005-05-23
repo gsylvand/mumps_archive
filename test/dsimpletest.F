@@ -1,6 +1,5 @@
-C This file is part of DMUMPS VERSION 4.3.2
-C This Version was built on Wed Nov 12 16:57:09 2003
-C COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+C This file is part of DMUMPS VERSION 4.4.2
+C This Version was built on Mon May 23 09:41:55 2005
 C
 C
       PROGRAM DMUMPS_TEST

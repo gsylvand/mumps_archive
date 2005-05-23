@@ -1,18 +1,19 @@
-# This file is part of MUMPS VERSION 4.3.2
-# This Version was built on Wed Nov 12 16:57:09 2003
-# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+# This file is part of MUMPS VERSION 4.4.2
+# This Version was built on Mon May 23 09:41:55 2005
 #
 #
 
-include ../Makefile.inc
 
 default:double
+
 all: simple double cmplx cmplx16
 
 simple : ssimpletest
 double : dsimpletest c_example
 cmplx  : csimpletest
 cmplx16: zsimpletest
+
+include ../Makefile.inc
 
 .SUFFIXES: .F .o
 .F.o:

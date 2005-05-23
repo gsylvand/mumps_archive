@@ -1,69 +1,48 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
         MODULE DMUMPS_BUFFER
         PRIVATE
-        PUBLIC :: DMUMPS_61,
+        PUBLIC :: DMUMPS_61, DMUMPS_528,
      *   DMUMPS_53 ,       DMUMPS_57 ,
      *   DMUMPS_55, DMUMPS_59,
      *   DMUMPS_54,DMUMPS_58,
@@ -79,11 +58,12 @@ C
      *   DMUMPS_73, DMUMPS_74,
      *   DMUMPS_63,DMUMPS_77, 
      *   DMUMPS_60,
-     *   DMUMPS_460, DMUMPS_469,
-     *   DMUMPS_498, DMUMPS_502
+     *   DMUMPS_524, DMUMPS_469,
+     *   DMUMPS_460, DMUMPS_502,
+     *   DMUMPS_519
         INTEGER NEXT, REQ, CONTENT, OVHSIZE
         PARAMETER( NEXT = 0, REQ = 1, CONTENT = 2, OVHSIZE = 2 )
-        INTEGER, SAVE :: SIZEofINT
+        INTEGER, SAVE :: SIZEofINT, BUF_MYID
         TYPE DMUMPS_BUFFER_TYPE
           INTEGER LBUF, HEAD, TAIL,LBUF_INT, ILASTMSG
           INTEGER, DIMENSION(:),POINTER :: CONTENT
@@ -93,6 +73,11 @@ C
         TYPE ( DMUMPS_BUFFER_TYPE ), SAVE :: BUF_LOAD
         INTEGER, SAVE :: SIZE_RBUF_BYTES
       CONTAINS
+        SUBROUTINE DMUMPS_528( MYID )
+        IMPLICIT NONE
+        INTEGER MYID
+        BUF_MYID  = MYID
+        END SUBROUTINE DMUMPS_528
         SUBROUTINE DMUMPS_61( IntSize )
         IMPLICIT NONE
         INTEGER IntSize
@@ -233,7 +218,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
              IERR = -2
              RETURN
@@ -290,16 +277,17 @@ C
         IF ( SIZE .NE. POSITION ) CALL DMUMPS_1( BUF_CB, POSITION )
         RETURN
         END SUBROUTINE DMUMPS_66
-        SUBROUTINE DMUMPS_72( INODE, IFATH,
-     *             LCB, LSOL, CB, SOL,
+        SUBROUTINE DMUMPS_72( NRHS, INODE, IFATH,
+     *             EFF_CB_SIZE, LD_CB, NPIV, CB, SOL,
      *             DEST, COMM, IERR )
         IMPLICIT NONE
-        INTEGER INODE, IFATH, LCB, LSOL 
+        INTEGER NRHS, INODE, IFATH, EFF_CB_SIZE, LD_CB, NPIV 
         INTEGER DEST, COMM, IERR
-        DOUBLE PRECISION CB( LCB ), SOL( MAX( 1, LSOL ) )
+        DOUBLE PRECISION CB( LD_CB*NRHS),
+     *                   SOL( MAX(1,NPIV*NRHS) )
         INCLUDE 'mpif.h'
         INCLUDE 'mumps_tags.h'
-        INTEGER SIZE, SIZE1, SIZE2
+        INTEGER SIZE, SIZE1, SIZE2, K
         INTEGER POSITION, IREQ, IPOS
         INTEGER IONE
         INTEGER DEST2(1)
@@ -307,13 +295,16 @@ C
         DEST2(1) = DEST
         IERR = 0
         CALL MPI_PACK_SIZE( 4, MPI_INTEGER, COMM, SIZE1, IERR )
-        CALL MPI_PACK_SIZE( LCB + LSOL, MPI_DOUBLE_PRECISION, COMM,
+        CALL MPI_PACK_SIZE( NRHS * (EFF_CB_SIZE + NPIV),
+     *                      MPI_DOUBLE_PRECISION, COMM,
      *                      SIZE2, IERR )
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         POSITION = 0
         CALL MPI_PACK( INODE, 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
@@ -321,19 +312,25 @@ C
         CALL MPI_PACK( IFATH, 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-        CALL MPI_PACK( LCB  , 1, MPI_INTEGER,
+        CALL MPI_PACK( EFF_CB_SIZE  , 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-        CALL MPI_PACK( LSOL , 1, MPI_INTEGER,
+        CALL MPI_PACK( NPIV , 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-        CALL MPI_PACK( CB,    LCB, MPI_DOUBLE_PRECISION,
+        DO K = 1, NRHS
+               CALL MPI_PACK( CB ( 1 + LD_CB * (K-1) ),
+     *                        EFF_CB_SIZE, MPI_DOUBLE_PRECISION,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-        IF ( LSOL .GT. 0 ) THEN
-          CALL MPI_PACK( SOL  , LSOL, MPI_DOUBLE_PRECISION,
-     *                          BUF_CB%CONTENT( IPOS ), SIZE,
-     *                          POSITION, COMM, IERR )
+        END DO
+        IF ( NPIV .GT. 0 ) THEN
+          DO K=1, NRHS
+          CALL MPI_PACK( SOL(1+NPIV*(K-1)),
+     *                         NPIV, MPI_DOUBLE_PRECISION,
+     *                         BUF_CB%CONTENT( IPOS ), SIZE,
+     *                         POSITION, COMM, IERR )
+          ENDDO
         END IF
         CALL MPI_ISEND( BUF_CB%CONTENT( IPOS ), POSITION, MPI_PACKED,
      *                  DEST, MASTER2SLAVE, COMM,
@@ -346,17 +343,18 @@ C
         IF ( SIZE .NE. POSITION ) CALL DMUMPS_1( BUF_CB, POSITION )
         RETURN
         END SUBROUTINE DMUMPS_72
-        SUBROUTINE DMUMPS_78( NODE1, NODE2, NCB, LONG,
+        SUBROUTINE DMUMPS_78( NRHS, NODE1, NODE2, NCB, LDW,
+     *             LONG,
      *             IW, W,
      *             DEST, TAG, COMM, IERR )
         IMPLICIT NONE
-        INTEGER DEST, TAG, COMM, IERR
-        INTEGER NODE1, NODE2, NCB, LONG
+        INTEGER LDW, DEST, TAG, COMM, IERR
+        INTEGER NRHS, NODE1, NODE2, NCB, LONG
         INTEGER IW( MAX( 1, LONG ) )
-        DOUBLE PRECISION W( MAX( 1, LONG ) )
+        DOUBLE PRECISION W( MAX( 1, LDW * NRHS ) )
         INCLUDE 'mpif.h'
         INTEGER POSITION, IREQ, IPOS
-        INTEGER SIZE1, SIZE2, SIZE
+        INTEGER SIZE1, SIZE2, SIZE, K
         INTEGER IONE
         INTEGER DEST2(1)
         PARAMETER ( IONE=1 )
@@ -369,14 +367,16 @@ C
         END IF
         SIZE2 = 0
         IF ( LONG .GT. 0 ) THEN
-          CALL MPI_PACK_SIZE( LONG, MPI_DOUBLE_PRECISION,
+          CALL MPI_PACK_SIZE( NRHS*LONG, MPI_DOUBLE_PRECISION,
      *                        COMM, SIZE2, IERR )
         END IF
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         POSITION = 0
         CALL MPI_PACK( NODE1, 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
@@ -396,9 +396,11 @@ C
           CALL MPI_PACK( IW, LONG, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-          CALL MPI_PACK( W,  LONG, MPI_DOUBLE_PRECISION,
+          DO K=1, NRHS
+          CALL MPI_PACK( W(1+(K-1)*LDW), LONG, MPI_DOUBLE_PRECISION,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
+          END DO
         END IF
         CALL MPI_ISEND( BUF_CB%CONTENT( IPOS ), POSITION, MPI_PACKED,
      *                  DEST, TAG, COMM, BUF_CB%CONTENT( IREQ ), IERR )
@@ -579,7 +581,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         POSITION = IPOS
         BUF_CB%CONTENT( POSITION ) = INODE
         POSITION = POSITION + 1
@@ -659,7 +663,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         IF (NELIM.NE.0) THEN
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
              IERR = -2 
@@ -728,18 +734,19 @@ C
         END SUBROUTINE DMUMPS_70
         SUBROUTINE DMUMPS_67(DESC_IN_LU,
      *  IPERE, NFRONT_PERE, NASS_PERE, NSLAVES_PERE,
-     *  ISON, NBROW, LMAP, MAPROW, IW_CBSON, A_CBSON,
+     *  ISON, NBROW, LMAP, MAPROW, PERM, IW_CBSON, A_CBSON,
      *  ISLAVE, PDEST, PDEST_MASTER, COMM, IERR, 
      *  
      * KEEP, STEP, N, SLAVEF,
-     * ISTEP_TO_INIV2, TAB_POS_IN_PERE
-     *   )
+     * ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+     * MAX_ROW_LENGTH, SIZE_SLAVE_REALS )
         IMPLICIT NONE
         INTEGER IPERE, ISON, NBROW 
         INTEGER PDEST, ISLAVE, COMM, IERR
         INTEGER PDEST_MASTER, NASS_PERE, NSLAVES_PERE,
      *          NFRONT_PERE, LMAP
-        INTEGER MAPROW( LMAP )
+        INTEGER MAPROW( LMAP ), PERM( MAX(1, NBROW ))
+        INTEGER MAX_ROW_LENGTH, SIZE_SLAVE_REALS
         INTEGER IW_CBSON( * )
         DOUBLE PRECISION A_CBSON( * )
         LOGICAL DESC_IN_LU
@@ -754,7 +761,7 @@ C
         INTEGER SIZE, SIZE1, SIZE2, POSITION,I
         INTEGER APOS, IPOS_IN_SLAVE
         INTEGER INDICE_PERE, NROW, IPOS, IREQ, NOSLA
-        INTEGER IONE
+        INTEGER IONE, J, THIS_ROW_LENGTH
         INTEGER PDEST2(1)
         PARAMETER ( IONE=1 )
         PDEST2(1) = PDEST
@@ -768,19 +775,44 @@ C
         NFRONT = LROW + NPIV
         HS     = 6 + IW_CBSON( 6 )
         IF ( PDEST .EQ. PDEST_MASTER ) THEN
+          IF (KEEP(50) == 0 ) THEN
           CALL MPI_PACK_SIZE( NBROW + 4, MPI_INTEGER,
      *                        COMM, SIZE1, IERR )
-        ELSE
-          CALL MPI_PACK_SIZE( NBROW + 4 + LROW, MPI_INTEGER,
+          ELSE
+          CALL MPI_PACK_SIZE( 2*NBROW + 4, MPI_INTEGER,
      *                        COMM, SIZE1, IERR )
+          ENDIF
+        ELSE
+          IF (KEEP(50) == 0 ) THEN
+            CALL MPI_PACK_SIZE( NBROW + 4 + LROW, MPI_INTEGER,
+     *                        COMM, SIZE1, IERR )
+          ELSE
+            CALL MPI_PACK_SIZE( 2*NBROW + 4 + MAX_ROW_LENGTH,
+     *                       MPI_INTEGER, COMM, SIZE1, IERR )
+          ENDIF
         END IF
-        CALL MPI_PACK_SIZE( LROW * NBROW, MPI_DOUBLE_PRECISION,
+        IF (KEEP(50)==0) THEN
+         IF (NBROW > 0) THEN
+         CALL MPI_PACK_SIZE( LROW * NBROW, MPI_DOUBLE_PRECISION,
      *                      COMM, SIZE2, IERR )
+         ELSE
+         SIZE2=0
+         ENDIF
+        ELSE
+         IF (SIZE_SLAVE_REALS > 0) THEN
+         CALL MPI_PACK_SIZE( SIZE_SLAVE_REALS, MPI_DOUBLE_PRECISION,
+     *                      COMM, SIZE2, IERR )
+         ELSE
+         SIZE2=0
+         ENDIF
+        ENDIF
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , PDEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
              IERR = -2
              RETURN
@@ -795,42 +827,80 @@ C
         CALL MPI_PACK( NBROW, 1, MPI_INTEGER,
      *                 BUF_CB%CONTENT( IPOS ), SIZE,
      *                 POSITION, COMM, IERR )
+        IF (KEEP(50)==0) THEN
         CALL MPI_PACK( LROW, 1, MPI_INTEGER,
      *                 BUF_CB%CONTENT( IPOS ), SIZE,
      *                 POSITION, COMM, IERR )
+        ELSE
+        CALL MPI_PACK( MAX_ROW_LENGTH, 1, MPI_INTEGER,
+     *                 BUF_CB%CONTENT( IPOS ), SIZE,
+     *                 POSITION, COMM, IERR )
+        ENDIF
         IF ( PDEST .NE. PDEST_MASTER ) THEN
+          IF (KEEP(50)==0) THEN
           CALL MPI_PACK( IW_CBSON( HS + NROW +  NPIV + 1 ), LROW,
      *                 MPI_INTEGER,
      *                 BUF_CB%CONTENT( IPOS ), SIZE,
      *                 POSITION, COMM, IERR )
+          ELSE
+           IF (MAX_ROW_LENGTH > 0) THEN
+           CALL MPI_PACK( IW_CBSON( HS + NROW +  NPIV + 1 ),
+     *                 MAX_ROW_LENGTH,
+     *                 MPI_INTEGER,
+     *                 BUF_CB%CONTENT( IPOS ), SIZE,
+     *                 POSITION, COMM, IERR )
+           ENDIF
+          ENDIF
         END IF
-        DO I = 1, LMAP
-          INDICE_PERE = MAPROW( I )
-          CALL DMUMPS_47(
-     *         KEEP, IPERE, STEP, N, SLAVEF,
-     *         ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+        DO J=1, NBROW
+           I = PERM(J)
+           INDICE_PERE=MAPROW(I)
+           CALL DMUMPS_47(
+     *          KEEP, IPERE, STEP, N, SLAVEF,
+     *          ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      *
-     *         NASS_PERE,
-     *         NFRONT_PERE - NASS_PERE,
-     *         NSLAVES_PERE,
-     *         INDICE_PERE,
-     *         NOSLA,
-     *         IPOS_IN_SLAVE )
-          INDICE_PERE = IPOS_IN_SLAVE
-          IF ( NOSLA .EQ. ISLAVE .OR. NBROW .EQ. LMAP ) THEN
-            CALL MPI_PACK( INDICE_PERE, 1, MPI_INTEGER,
-     *                        BUF_CB%CONTENT( IPOS ), SIZE,
-     *                        POSITION, COMM, IERR )
-            IF (DESC_IN_LU) THEN 
-               APOS = ( I - 1 ) * LROW + 1
-            ELSE
-               APOS = ( I - 1 ) * NFRONT + NPIV + 1
-            ENDIF
-            CALL MPI_PACK( A_CBSON( APOS ), LROW, MPI_DOUBLE_PRECISION,
-     *                        BUF_CB%CONTENT( IPOS ), SIZE,
-     *                        POSITION, COMM, IERR )
-          END IF
-        END DO
+     *          NASS_PERE,
+     *          NFRONT_PERE - NASS_PERE,
+     *          NSLAVES_PERE,
+     *          INDICE_PERE,
+     *          NOSLA,
+     *          IPOS_IN_SLAVE )
+           INDICE_PERE = IPOS_IN_SLAVE
+           CALL MPI_PACK( INDICE_PERE, 1, MPI_INTEGER,
+     *          BUF_CB%CONTENT( IPOS ), SIZE,
+     *          POSITION, COMM, IERR )
+        ENDDO
+        DO J=1, NBROW
+           I = PERM(J)
+           INDICE_PERE=MAPROW(I)
+           CALL DMUMPS_47(
+     *          KEEP, IPERE, STEP, N, SLAVEF,
+     *          ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+     *          
+     *          NASS_PERE,
+     *          NFRONT_PERE - NASS_PERE,
+     *          NSLAVES_PERE,
+     *          INDICE_PERE,
+     *          NOSLA,
+     *          IPOS_IN_SLAVE )
+          IF (KEEP(50).ne.0) THEN
+            THIS_ROW_LENGTH = LROW + I - LMAP
+            CALL MPI_PACK( THIS_ROW_LENGTH, 1, MPI_INTEGER,
+     *                      BUF_CB%CONTENT( IPOS ), SIZE,
+     *                      POSITION, COMM, IERR )
+         ELSE
+            THIS_ROW_LENGTH = LROW
+         ENDIF
+         IF (DESC_IN_LU) THEN 
+            APOS = ( I - 1 ) * LROW + 1
+         ELSE
+            APOS = ( I - 1 ) * NFRONT + NPIV + 1
+         ENDIF
+         CALL MPI_PACK( A_CBSON( APOS ), THIS_ROW_LENGTH,
+     *        MPI_DOUBLE_PRECISION,
+     *        BUF_CB%CONTENT( IPOS ), SIZE,
+     *        POSITION, COMM, IERR )
+        ENDDO
         CALL MPI_ISEND( BUF_CB%CONTENT( IPOS ), POSITION, MPI_PACKED,
      *                  PDEST, CONTSIPERENIV2, COMM,
      *                  BUF_CB%CONTENT( IREQ ), IERR )
@@ -884,7 +954,9 @@ C
           CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE, DEST
      &                 )
-          IF (IERR .LT. 0 ) RETURN
+          IF (IERR .LT. 0 ) THEN
+             RETURN
+          ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
              IERR = -2
              RETURN
@@ -1006,7 +1078,8 @@ C
             END IF
           END DO
         END IF
- 500    RETURN
+ 500    CONTINUE
+        RETURN
         END SUBROUTINE DMUMPS_71
         SUBROUTINE DMUMPS_65( INODE, NFRONT,
      *             NCOL, NPIV, FPERE, LASTBL, IPIV, VAL,
@@ -1050,7 +1123,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 NDEST , PDEST
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         IF (SIZE.GT.SIZE_RBUF_BYTES) THEN
           SSS = 0 
           IF ( LASTBL ) THEN
@@ -1177,7 +1252,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 NDEST, PDEST
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         BUF_CB%ILASTMSG = BUF_CB%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
         IPOS = IPOS - OVHSIZE
         DO IDEST = 1, NDEST - 1
@@ -1265,7 +1342,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE, PDEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
              IERR = -2
              RETURN
@@ -1418,7 +1497,9 @@ C
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE, DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES) THEN
              IERR = -2
              RETURN
@@ -1469,7 +1550,9 @@ C
           WRITE(*,*) 'Increase small buffer size. Trying again.'
           GOTO 10
         END IF
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         BUF_SMALL%CONTENT( IPOS )     = ISON
         BUF_SMALL%CONTENT( IPOS + 1 ) = NELIM_ROOT
         CALL MPI_ISEND( BUF_SMALL%CONTENT( IPOS ), SIZE, 
@@ -1498,7 +1581,9 @@ C
            WRITE(*,*)  'Increase small buf. size'
            CALL DMUMPS_ABORT()
         END IF
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         BUF_SMALL%CONTENT( IPOS     ) = TOT_ROOT_SIZE
         BUF_SMALL%CONTENT( IPOS + 1 ) = TOT_CONT2RECV
         CALL MPI_ISEND( BUF_SMALL%CONTENT( IPOS ), SIZE, 
@@ -1507,26 +1592,28 @@ C
      *                  BUF_SMALL%CONTENT( IREQ ), IERR )
         END SUBROUTINE DMUMPS_73
         SUBROUTINE DMUMPS_63
-     *             ( INODE, W, LW, DEST,MSGTAG,COMM,IERR )
+     *             ( NRHS, INODE, W, LW, LD_W, DEST,MSGTAG,COMM,IERR )
         IMPLICIT NONE
-        INTEGER INODE,LW,COMM,IERR,DEST,MSGTAG
-        DOUBLE PRECISION W(LW)
+        INTEGER NRHS, INODE,LW,COMM,IERR,DEST,MSGTAG, LD_W
+        DOUBLE PRECISION W(LD_W, *)
         INCLUDE 'mpif.h'
         INTEGER SIZE, SIZE1, SIZE2
         INTEGER POSITION, IREQ, IPOS
-        INTEGER IONE
+        INTEGER IONE, K
         INTEGER DEST2(1)
         PARAMETER ( IONE=1 )
         IERR = 0
         DEST2(1) = DEST
         CALL MPI_PACK_SIZE( 2 , MPI_INTEGER, COMM, SIZE1, IERR )
-        CALL MPI_PACK_SIZE( LW, MPI_DOUBLE_PRECISION, COMM,
+        CALL MPI_PACK_SIZE( LW*NRHS, MPI_DOUBLE_PRECISION, COMM,
      *                      SIZE2, IERR )
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE, DEST2
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         POSITION = 0
         CALL MPI_PACK( INODE, 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
@@ -1534,9 +1621,11 @@ C
         CALL MPI_PACK( LW   , 1, MPI_INTEGER,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
-        CALL MPI_PACK( W    , LW, MPI_DOUBLE_PRECISION,
+        DO K=1, NRHS
+        CALL MPI_PACK( W(1,K), LW, MPI_DOUBLE_PRECISION,
      *                        BUF_CB%CONTENT( IPOS ), SIZE,
      *                        POSITION, COMM, IERR )
+        END DO
         CALL MPI_ISEND( BUF_CB%CONTENT( IPOS ), POSITION, MPI_PACKED,
      *                  DEST, MSGTAG, COMM,
      *                  BUF_CB%CONTENT( IREQ ), IERR )
@@ -1549,8 +1638,9 @@ C
         RETURN
         END SUBROUTINE DMUMPS_63
         SUBROUTINE DMUMPS_77
-     *             ( BDC_MEM, COMM, NPROCS, LOAD,
-     *               MEM,
+     *             ( BDC_SBTR,BDC_MEM,BDC_MD, COMM, NPROCS, LOAD,
+     *               MEM,SBTR_CUR,
+     *               LU_USAGE,
 #if ! defined(OLD_LOAD_MECHANISM)
      *               FUTURE_NIV2,
 #endif
@@ -1560,9 +1650,10 @@ C
 #if ! defined(OLD_LOAD_MECHANISM)
         INTEGER FUTURE_NIV2(NPROCS)
 #endif
+        DOUBLE PRECISION LU_USAGE
         DOUBLE PRECISION LOAD
-        DOUBLE PRECISION MEM
-        LOGICAL BDC_MEM
+        DOUBLE PRECISION MEM,SBTR_CUR
+        LOGICAL BDC_MEM,BDC_SBTR,BDC_MD
         INCLUDE 'mpif.h'
         INCLUDE 'mumps_tags.h'
         INTEGER POSITION, IREQ, IPOS, SIZE1, SIZE2, SIZE
@@ -1581,7 +1672,9 @@ C
           ENDIF
         ENDDO
 #endif
-        IF ( NDEST .eq. 0 ) RETURN
+        IF ( NDEST .eq. 0 ) THEN
+           RETURN
+        ENDIF
         CALL MPI_PACK_SIZE( 1 + (NDEST-1) * OVHSIZE, 
      *                       MPI_INTEGER, COMM,
      *                       SIZE1, IERR )
@@ -1589,13 +1682,21 @@ C
         IF (BDC_MEM) THEN
           NREALS = 2
         ENDIf
+        IF (BDC_SBTR)THEN
+          NREALS = 3
+        ENDIF
+        IF(BDC_MD)THEN
+           NREALS=NREALS+1
+        ENDIF
         CALL MPI_PACK_SIZE( NREALS, MPI_DOUBLE_PRECISION,
      &                      COMM, SIZE2, IERR )
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR, 
      &                  IZERO, MYID2 
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
         IPOS = IPOS - OVHSIZE
         DO IDEST = 1, NDEST - 1
@@ -1617,6 +1718,16 @@ C
      *                   BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
      *                   POSITION, COMM, IERR )
         END IF
+        IF (BDC_SBTR) THEN
+          CALL MPI_PACK( SBTR_CUR, 1, MPI_DOUBLE_PRECISION,
+     *                   BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *                   POSITION, COMM, IERR )
+        END IF
+        IF(BDC_MD)THEN
+           CALL MPI_PACK( LU_USAGE, 1, MPI_DOUBLE_PRECISION,
+     *          BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *          POSITION, COMM, IERR )
+        ENDIF
         IDEST = 0
         DO I = 0, NPROCS - 1
 #if ! defined(OLD_LOAD_MECHANISM)
@@ -1641,37 +1752,63 @@ C
         IF ( SIZE .NE. POSITION )
      *  CALL DMUMPS_1( BUF_LOAD, POSITION )
         END SUBROUTINE DMUMPS_77
-        SUBROUTINE DMUMPS_498
-     *             ( WHAT, COMM, NPROCS, LOAD,
+        SUBROUTINE DMUMPS_460
+     *             ( WHAT, COMM, NPROCS, 
+#if ! defined(OLD_LOAD_MECHANISM)
+     *               FUTURE_NIV2,
+#endif
+     *               LOAD,UPD_LOAD,
      *               MYID, IERR)
         IMPLICIT NONE
         INTEGER COMM, NPROCS, MYID, IERR, WHAT
-        DOUBLE PRECISION LOAD
+        DOUBLE PRECISION LOAD,UPD_LOAD
         INCLUDE 'mpif.h'
         INCLUDE 'mumps_tags.h'
         INTEGER POSITION, IREQ, IPOS, SIZE1, SIZE2, SIZE
         INTEGER I, NDEST, IDEST, IPOSMSG, NREALS
         INTEGER IZERO
         INTEGER MYID2(1)
+#if ! defined(OLD_LOAD_MECHANISM)
+        INTEGER FUTURE_NIV2(NPROCS)
+#endif
         PARAMETER ( IZERO=0 )
-        IF (WHAT .NE. 2 .AND. WHAT .NE. 3) THEN
+        IERR = 0
+        IF (WHAT .NE. 2 .AND. WHAT .NE. 3 .AND.
+     $       WHAT.NE.6.AND. WHAT.NE.8 .AND.WHAT.NE.9.AND.
+     $       WHAT.NE.17) THEN
           WRITE(*,*)
-     *  "Internal error 1 in DMUMPS_498"
+     *  "Internal error 1 in DMUMPS_460",WHAT
         END IF
         MYID2(1) = MYID
         NDEST = NPROCS - 1
-        IF ( NDEST .eq. 0 ) RETURN
+#if ! defined(OLD_LOAD_MECHANISM)
+        NDEST = 0
+        DO I = 1, NPROCS
+          IF ( I .NE. MYID + 1 .AND. FUTURE_NIV2(I).NE.0) THEN
+            NDEST = NDEST + 1
+          ENDIF
+        ENDDO
+#endif
+        IF ( NDEST .eq. 0 ) THEN
+           RETURN
+        ENDIF
         CALL MPI_PACK_SIZE( 1 + (NDEST-1) * OVHSIZE, 
      *                       MPI_INTEGER, COMM,
      *                       SIZE1, IERR )
-        NREALS = 1
+        IF((WHAT.NE.17).AND.(WHAT.NE.10))THEN
+           NREALS = 1
+        ELSE
+           NREALS = 2
+        ENDIF
         CALL MPI_PACK_SIZE( NREALS, MPI_DOUBLE_PRECISION,
      &                      COMM, SIZE2, IERR )
         SIZE = SIZE1 + SIZE2
         CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR, 
      &                  IZERO, MYID2 
      &               )
-        IF ( IERR .LT. 0 ) RETURN
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
         BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
         IPOS = IPOS - OVHSIZE
         DO IDEST = 1, NDEST - 1
@@ -1687,167 +1824,17 @@ C
         CALL MPI_PACK( LOAD, 1, MPI_DOUBLE_PRECISION,
      *                 BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
      *                 POSITION, COMM, IERR )
+        IF((WHAT.EQ.17).OR.(WHAT.EQ.10))THEN
+           CALL MPI_PACK( UPD_LOAD, 1, MPI_DOUBLE_PRECISION,
+     *          BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *          POSITION, COMM, IERR )
+        ENDIF
         IDEST = 0
         DO I = 0, NPROCS - 1
+#if ! defined(OLD_LOAD_MECHANISM)
+          IF ( I .NE. MYID .AND. FUTURE_NIV2(I+1) .NE. 0) THEN
+#else
           IF ( I .ne. MYID ) THEN
-            IDEST = IDEST + 1
-            CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
-     *                      POSITION, MPI_PACKED, I,
-     *                      UPDATE_LOAD, COMM,
-     *                      BUF_LOAD%CONTENT( IREQ+(IDEST-1)*OVHSIZE ),
-     *                      IERR )
-          END IF
-        END DO
-        SIZE = SIZE - ( NDEST - 1 ) * OVHSIZE * SIZEofINT
-        IF ( SIZE .LT. POSITION ) THEN
-          WRITE(*,*) ' Error in DMUMPS_BUF_SEND_UPDATE_POOL'
-          WRITE(*,*) ' Size,position=',size,position
-          CALL DMUMPS_ABORT()
-        END IF
-        IF ( SIZE .NE. POSITION )
-     *  CALL DMUMPS_1( BUF_LOAD, POSITION )
-        RETURN
-        END SUBROUTINE DMUMPS_498
-        SUBROUTINE DMUMPS_502( COMM, MYID, NPROCS, IERR)
-        IMPLICIT NONE
-        INCLUDE 'mpif.h'
-        INCLUDE 'mumps_tags.h'
-        INTEGER IPOS, IREQ, IDEST, IPOSMSG, POSITION, I
-        INTEGER COMM, MYID, IERR, NPROCS
-        INTEGER IZERO
-        INTEGER MYID2(1)
-        PARAMETER ( IZERO=0 )
-        INTEGER NDEST, NINTS, SIZE
-        INTEGER WHAT
-        IERR = 0
-        MYID2(1) = MYID
-        NDEST = NPROCS - 1
-        NINTS = 1 + ( NDEST-1 ) * OVHSIZE
-        CALL MPI_PACK_SIZE( NINTS, 
-     *                       MPI_INTEGER, COMM,
-     *                       SIZE, IERR )
-        CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR,
-     *       IZERO, MYID2 )
-        IF ( IERR .LT. 0 ) RETURN
-        BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
-        IPOS = IPOS - OVHSIZE
-        DO IDEST = 1, NDEST - 1
-          BUF_LOAD%CONTENT( IPOS + ( IDEST - 1 ) * OVHSIZE ) =
-     *    IPOS + IDEST * OVHSIZE
-        END DO
-        BUF_LOAD%CONTENT( IPOS + ( NDEST - 1 ) * OVHSIZE ) = 0
-        IPOSMSG = IPOS + OVHSIZE * NDEST
-        POSITION = 0
-        WHAT = 4
-        CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        IDEST = 0
-        DO I = 0, NPROCS - 1
-          IF ( I .NE. MYID ) THEN
-            IDEST = IDEST + 1
-            CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
-     *                      POSITION, MPI_PACKED, I,
-     *                      UPDATE_LOAD, COMM,
-     *                      BUF_LOAD%CONTENT( IREQ+(IDEST-1)*OVHSIZE ),
-     *                      IERR )
-          END IF
-        END DO
-        SIZE = SIZE - ( NDEST - 1 ) * OVHSIZE * SIZEofINT
-        IF ( SIZE .LT. POSITION ) THEN
-          WRITE(*,*) ' Error in DMUMPS_460'
-          WRITE(*,*) ' Size,position=',size,position
-          CALL DMUMPS_ABORT()
-        END IF
-        IF ( SIZE .NE. POSITION )
-     *  CALL DMUMPS_1( BUF_LOAD, POSITION )
-        RETURN
-        END SUBROUTINE DMUMPS_502
-        SUBROUTINE DMUMPS_460( BDC_MEM,
-     *      COMM, MYID, NPROCS,
-#if ! defined(OLD_LOAD_MECHANISM)
-     *      FUTURE_NIV2,
-#endif
-     *      NSLAVES,
-     *      LIST_SLAVES,
-     *      MEM_INCREMENT, FLOPS_INCREMENT, IERR )
-        IMPLICIT NONE
-        INCLUDE 'mpif.h'
-        INCLUDE 'mumps_tags.h'
-        LOGICAL BDC_MEM
-        INTEGER COMM, MYID, NPROCS, NSLAVES, IERR
-#if ! defined(OLD_LOAD_MECHANISM)
-        INTEGER FUTURE_NIV2(NPROCS)
-#endif
-        INTEGER LIST_SLAVES(NSLAVES)
-        DOUBLE PRECISION MEM_INCREMENT(NSLAVES)
-        DOUBLE PRECISION FLOPS_INCREMENT(NSLAVES)
-        INTEGER NDEST, NINTS, NREALS, SIZE1, SIZE2, SIZE
-        INTEGER IPOS, IPOSMSG, IREQ, POSITION
-        INTEGER I, IDEST, WHAT
-        INTEGER IZERO
-        INTEGER MYID2(1)
-        PARAMETER ( IZERO=0 )
-        MYID2(1)=MYID
-        IERR = 0
-#if ! defined(OLD_LOAD_MECHANISM)
-        NDEST = 0
-        DO I = 1, NPROCS
-          IF ( I .NE. MYID + 1 .AND. FUTURE_NIV2(I).NE.0) THEN
-            NDEST = NDEST + 1
-          ENDIF
-        ENDDO
-#else
-        NDEST = NPROCS - 1
-#endif
-        IF ( NDEST == 0 ) RETURN
-        NINTS = 2 +  NSLAVES + ( NDEST - 1 ) * OVHSIZE
-        NREALS = NSLAVES
-        IF (BDC_MEM) NREALS = NREALS + NSLAVES
-        CALL MPI_PACK_SIZE( NINTS, 
-     *                       MPI_INTEGER, COMM,
-     *                       SIZE1, IERR )
-        CALL MPI_PACK_SIZE( NREALS, MPI_DOUBLE_PRECISION,
-     *       COMM, SIZE2, IERR )
-        SIZE = SIZE1+SIZE2
-        CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR,
-     *       IZERO, MYID2 )
-        IF ( IERR .LT. 0 ) RETURN
-        BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
-        IPOS = IPOS - OVHSIZE
-        DO IDEST = 1, NDEST - 1
-          BUF_LOAD%CONTENT( IPOS + ( IDEST - 1 ) * OVHSIZE ) =
-     *    IPOS + IDEST * OVHSIZE
-        END DO
-        BUF_LOAD%CONTENT( IPOS + ( NDEST - 1 ) * OVHSIZE ) = 0
-        IPOSMSG = IPOS + OVHSIZE * NDEST
-        POSITION = 0
-        WHAT = 1
-        CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        CALL MPI_PACK( NSLAVES, 1, MPI_INTEGER,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        CALL MPI_PACK( LIST_SLAVES, NSLAVES, MPI_INTEGER,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        CALL MPI_PACK( FLOPS_INCREMENT, NSLAVES,
-     *      MPI_DOUBLE_PRECISION,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        IF (BDC_MEM) THEN
-          CALL MPI_PACK( MEM_INCREMENT, NSLAVES,
-     *      MPI_DOUBLE_PRECISION,
-     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
-     *      POSITION, COMM, IERR )
-        END IF
-        IDEST = 0
-        DO I = 0, NPROCS - 1
-#if ! defined(OLD_LOAD_MECHANISM)
-        IF ( I .NE. MYID .AND. FUTURE_NIV2(I+1) .NE. 0) THEN
-#else
-        IF ( I .NE. MYID ) THEN
 #endif
             IDEST = IDEST + 1
             CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
@@ -1867,6 +1854,258 @@ C
      *  CALL DMUMPS_1( BUF_LOAD, POSITION )
         RETURN
         END SUBROUTINE DMUMPS_460
+        SUBROUTINE DMUMPS_519
+     *             ( WHAT, COMM, NPROCS,
+     *               FATHER_NODE,INODE,NCB,K81,
+     *               MYID,REMOTE, IERR)
+        IMPLICIT NONE
+        INTEGER COMM, NPROCS, MYID, IERR, WHAT,REMOTE
+        INTEGER FATHER_NODE,INODE
+        INCLUDE 'mpif.h'
+        INCLUDE 'mumps_tags.h'
+        INTEGER POSITION, IREQ, IPOS, SIZE
+        INTEGER I, NDEST, IDEST, IPOSMSG
+        INTEGER IZERO,NCB,K81
+        INTEGER MYID2(1)
+        PARAMETER ( IZERO=0 )
+        MYID2(1) = MYID
+        NDEST = 1
+        IF ( NDEST .eq. 0 ) THEN
+           RETURN
+        ENDIF
+        IF((K81.EQ.2).OR.(K81.EQ.3))THEN
+           CALL MPI_PACK_SIZE( 4 + OVHSIZE, 
+     *          MPI_INTEGER, COMM,
+     *          SIZE, IERR )
+        ELSE
+           CALL MPI_PACK_SIZE( 2 + OVHSIZE, 
+     *          MPI_INTEGER, COMM,
+     *          SIZE, IERR )
+        ENDIF
+        CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR, 
+     &                  IZERO, MYID2 
+     &               )
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
+        BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
+        IPOS = IPOS - OVHSIZE
+        DO IDEST = 1, NDEST - 1
+          BUF_LOAD%CONTENT( IPOS + ( IDEST - 1 ) * OVHSIZE ) =
+     *    IPOS + IDEST * OVHSIZE
+        END DO
+        BUF_LOAD%CONTENT( IPOS + ( NDEST - 1 ) * OVHSIZE ) = 0
+        IPOSMSG = IPOS + OVHSIZE * NDEST
+        POSITION = 0
+        CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
+     *                 BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *                 POSITION, COMM, IERR )
+        CALL MPI_PACK( FATHER_NODE, 1, MPI_INTEGER,
+     *                 BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *                 POSITION, COMM, IERR )
+        IF((K81.EQ.2).OR.(K81.EQ.3))THEN
+           CALL MPI_PACK( INODE, 1, MPI_INTEGER,
+     *          BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *          POSITION, COMM, IERR )
+           CALL MPI_PACK( NCB, 1, MPI_INTEGER,
+     *          BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *          POSITION, COMM, IERR )
+        ENDIF
+        IDEST = 1
+        CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
+     *                 POSITION, MPI_PACKED, REMOTE,
+     *                 UPDATE_LOAD, COMM,
+     *                 BUF_LOAD%CONTENT( IREQ+(IDEST-1)*OVHSIZE ),
+     *                 IERR )
+        SIZE = SIZE - ( NDEST - 1 ) * OVHSIZE * SIZEofINT
+        IF ( SIZE .LT. POSITION ) THEN
+          WRITE(*,*) ' Error in DMUMPS_519'
+          WRITE(*,*) ' Size,position=',size,position
+          stop
+        END IF
+        IF ( SIZE .NE. POSITION )
+     *  CALL DMUMPS_1( BUF_LOAD, POSITION )
+        RETURN
+        END SUBROUTINE DMUMPS_519
+        SUBROUTINE DMUMPS_502( COMM, MYID, NPROCS,
+     *  IERR)
+        IMPLICIT NONE
+        INCLUDE 'mpif.h'
+        INCLUDE 'mumps_tags.h'
+        INTEGER IPOS, IREQ, IDEST, IPOSMSG, POSITION, I
+        INTEGER COMM, MYID, IERR, NPROCS
+        INTEGER IZERO
+        INTEGER MYID2(1)
+        PARAMETER ( IZERO=0 )
+        INTEGER NDEST, NINTS, SIZE
+        INTEGER WHAT
+        IERR = 0
+        MYID2(1) = MYID
+        NDEST = NPROCS - 1
+        NINTS = 1 + ( NDEST-1 ) * OVHSIZE
+        CALL MPI_PACK_SIZE( NINTS, 
+     *                       MPI_INTEGER, COMM,
+     *                       SIZE, IERR )
+        CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR,
+     *       IZERO, MYID2 )
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
+        BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
+        IPOS = IPOS - OVHSIZE
+        DO IDEST = 1, NDEST - 1
+          BUF_LOAD%CONTENT( IPOS + ( IDEST - 1 ) * OVHSIZE ) =
+     *    IPOS + IDEST * OVHSIZE
+        END DO
+        BUF_LOAD%CONTENT( IPOS + ( NDEST - 1 ) * OVHSIZE ) = 0
+        IPOSMSG = IPOS + OVHSIZE * NDEST
+        POSITION = 0
+        WHAT = 4
+        CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        IDEST = 0
+        DO I = 0, NPROCS - 1
+           IF ( I .ne. MYID ) THEN
+              IDEST = IDEST + 1
+              CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
+     *             POSITION, MPI_PACKED, I,
+     *             UPDATE_LOAD, COMM,
+     *             BUF_LOAD%CONTENT( IREQ+(IDEST-1)*OVHSIZE ),
+     *             IERR )
+           END IF
+        END DO
+        SIZE = SIZE - ( NDEST - 1 ) * OVHSIZE * SIZEofINT
+        IF ( SIZE .LT. POSITION ) THEN
+          WRITE(*,*) ' Error in DMUMPS_524'
+          WRITE(*,*) ' Size,position=',size,position
+          CALL DMUMPS_ABORT()
+        END IF
+        IF ( SIZE .NE. POSITION )
+     *  CALL DMUMPS_1( BUF_LOAD, POSITION )
+        RETURN
+        END SUBROUTINE DMUMPS_502
+        SUBROUTINE DMUMPS_524( BDC_MEM,
+     *      COMM, MYID, NPROCS,
+#if ! defined(OLD_LOAD_MECHANISM)
+     *      FUTURE_NIV2,
+#endif
+     *      NSLAVES,
+     *      LIST_SLAVES,INODE,
+     *      MEM_INCREMENT, FLOPS_INCREMENT,CB_BAND, WHAT,
+     *      IERR )
+        IMPLICIT NONE
+        INCLUDE 'mpif.h'
+        INCLUDE 'mumps_tags.h'
+        LOGICAL BDC_MEM
+        INTEGER COMM, MYID, NPROCS, NSLAVES, IERR
+#if ! defined(OLD_LOAD_MECHANISM)
+        INTEGER FUTURE_NIV2(NPROCS)
+#endif
+        INTEGER LIST_SLAVES(NSLAVES),INODE
+        DOUBLE PRECISION MEM_INCREMENT(NSLAVES)
+        DOUBLE PRECISION FLOPS_INCREMENT(NSLAVES)
+        DOUBLE PRECISION CB_BAND(NSLAVES)
+        INTEGER NDEST, NINTS, NREALS, SIZE1, SIZE2, SIZE
+        INTEGER IPOS, IPOSMSG, IREQ, POSITION
+        INTEGER I, IDEST, WHAT
+        INTEGER IZERO
+        INTEGER MYID2(1)
+        PARAMETER ( IZERO=0 )
+        MYID2(1)=MYID
+        IERR = 0
+#if ! defined(OLD_LOAD_MECHANISM)
+        NDEST = 0
+        DO I = 1, NPROCS
+          IF ( I .NE. MYID + 1 .AND. FUTURE_NIV2(I).NE.0) THEN
+            NDEST = NDEST + 1
+          ENDIF
+        ENDDO
+#else
+        NDEST = NPROCS - 1
+#endif
+        IF ( NDEST == 0 ) THEN
+           RETURN
+        ENDIF
+        NINTS = 2 +  NSLAVES + ( NDEST - 1 ) * OVHSIZE + 1
+        NREALS = NSLAVES
+        IF (BDC_MEM) NREALS = NREALS + NSLAVES
+        IF(WHAT.EQ.19) THEN 
+           NREALS = NREALS + NSLAVES
+        ENDIF
+        CALL MPI_PACK_SIZE( NINTS, 
+     *                       MPI_INTEGER, COMM,
+     *                       SIZE1, IERR )
+        CALL MPI_PACK_SIZE( NREALS, MPI_DOUBLE_PRECISION,
+     *       COMM, SIZE2, IERR )
+        SIZE = SIZE1+SIZE2
+        CALL DMUMPS_4( BUF_LOAD, IPOS, IREQ, SIZE, IERR,
+     *       IZERO, MYID2 )
+        IF ( IERR .LT. 0 ) THEN
+           RETURN
+        ENDIF
+        BUF_LOAD%ILASTMSG = BUF_LOAD%ILASTMSG + ( NDEST - 1 ) * OVHSIZE
+        IPOS = IPOS - OVHSIZE
+        DO IDEST = 1, NDEST - 1
+          BUF_LOAD%CONTENT( IPOS + ( IDEST - 1 ) * OVHSIZE ) =
+     *    IPOS + IDEST * OVHSIZE
+        END DO
+        BUF_LOAD%CONTENT( IPOS + ( NDEST - 1 ) * OVHSIZE ) = 0
+        IPOSMSG = IPOS + OVHSIZE * NDEST
+        POSITION = 0
+        CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        CALL MPI_PACK( NSLAVES, 1, MPI_INTEGER,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        CALL MPI_PACK( INODE, 1, MPI_INTEGER,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        CALL MPI_PACK( LIST_SLAVES, NSLAVES, MPI_INTEGER,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        CALL MPI_PACK( FLOPS_INCREMENT, NSLAVES,
+     *      MPI_DOUBLE_PRECISION,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        IF (BDC_MEM) THEN
+          CALL MPI_PACK( MEM_INCREMENT, NSLAVES,
+     *      MPI_DOUBLE_PRECISION,
+     *      BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *      POSITION, COMM, IERR )
+        END IF
+        IF(WHAT.EQ.19)THEN
+           CALL MPI_PACK( CB_BAND, NSLAVES,
+     *          MPI_DOUBLE_PRECISION,
+     *          BUF_LOAD%CONTENT( IPOSMSG ), SIZE,
+     *          POSITION, COMM, IERR )
+        ENDIF
+        IDEST = 0
+        DO I = 0, NPROCS - 1
+#if ! defined(OLD_LOAD_MECHANISM)
+        IF ( I .NE. MYID .AND. FUTURE_NIV2(I+1) .NE. 0) THEN
+#else
+        IF ( I .NE. MYID ) THEN
+#endif
+            IDEST = IDEST + 1
+            CALL MPI_ISEND( BUF_LOAD%CONTENT( IPOSMSG ),
+     *                      POSITION, MPI_PACKED, I,
+     *                      UPDATE_LOAD, COMM,
+     *                      BUF_LOAD%CONTENT( IREQ+(IDEST-1)*OVHSIZE ),
+     *                      IERR )
+          END IF
+        END DO
+        SIZE = SIZE - ( NDEST - 1 ) * OVHSIZE * SIZEofINT
+        IF ( SIZE .LT. POSITION ) THEN
+          WRITE(*,*) ' Error in DMUMPS_524'
+          WRITE(*,*) ' Size,position=',size,position
+          CALL DMUMPS_ABORT()
+        END IF
+        IF ( SIZE .NE. POSITION )
+     *  CALL DMUMPS_1( BUF_LOAD, POSITION )
+        RETURN
+        END SUBROUTINE DMUMPS_524
         SUBROUTINE DMUMPS_60
      *             ( DMUMPS_LBUFR_BYTES)
         IMPLICIT NONE

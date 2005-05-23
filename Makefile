@@ -1,6 +1,5 @@
-# This file is part of MUMPS VERSION 4.3.2
-# This Version was built on Wed Nov 12 16:57:09 2003
-# COPYRIGHT (C) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster, J.-Y. L Excellent
+# This file is part of MUMPS VERSION 4.4.2
+# This Version was built on Mon May 23 09:41:55 2005
 #
 #
 default: double
@@ -30,9 +29,9 @@ libseqneeded:
 
 # Build the libpord.a library and copy it into ./lib
 ../lib/libpord.a:
-	if [ $(LPORDDIR) != "" ] ; then \
+	if [ "$(LPORDDIR)" != "" ] ; then \
 	cd src; cd $(LPORDDIR); make CC="$(CC)" CFLAGS="$(OPTC)" AR="$(AR)" ARFUNCT= RANLIB="$(RANLIB)"; fi;
-	if [ $(LPORDDIR) != "" ] ; then \
+	if [ "$(LPORDDIR)" != "" ] ; then \
 	cd src; cp $(LPORDDIR)/libpord.a ../lib/libpord.a; fi;
 
 double: requiredobj

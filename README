@@ -1,9 +1,8 @@
 ===========================================
-MUMPS version 4.3
-See accompanying Copyright Notice.
+MUMPS version 4.4.2
 ===========================================
 
-MUMPS 4.3 solves a sparse system of linear equations A x = b
+MUMPS 4.4.2 solves a sparse system of linear equations A x = b
 using Gaussian elimination. Please read this README file and the
 documentation (./doc/userguide_4.3.[ps,pdf]) for a complete list of
 functionalities. Documentation and publications about MUMPS can
@@ -18,6 +17,7 @@ mumps@cerfacs.fr.
 MUMPS has been partially supported by the Esprit IV Project PARASOL,
 and by CERFACS, ENSEEIHT-IRIT, INRIA Rhone-Alpes, LBNL-NERSC,
 PARALLAB and RAL.
+The authors are P. Amestoy, I. Duff, J. Koster and J.-Y. L'Excellent.
 Some contributions were done by C. Bousquet, C. Daniel, A. Guermouche,
 G. Richard, S. Pralet, M. Tuma, C. Voemel.
 
@@ -58,8 +58,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.3.1.tar.gz
-% cd MUMPS_4.3.1
+% tar zxvf MUMPS_4.4.2.tar.gz
+% cd MUMPS_4.4.2
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -90,9 +90,8 @@ Make.inc/Makefile.SP.PAR into Makefile.inc
 In certain cases, Makefile.inc should be adapted to fit with
 your architecture, libraries and compiler (see comments in
 the Makefile.inc.generic or Makefile.inc.generic.SEQ for details).
-The variables BLAS (BLAS library), SCALAP (ScaLAPACK library),
-LAPACK (symbols of LAPACK used by MUMPS are sometimes already
-included in Scalapack), INCPAR (include files for MPI), LIBPAR
+The variables LIBBLAS (BLAS library), SCALAP (ScaLAPACK library),
+INCPAR (include files for MPI), LIBPAR
 (library files for MPI) are concerned.
 
 By default, only the double precision version of MUMPS
@@ -138,15 +137,18 @@ architectures and are defined in specific Makefiles.
 Sequential version
 ------------------
 
-Using Makefile.<ARCH>.SEQ builds a sequential version
-of MUMPS instead of a parallel. This can be useful if you
-don't have MPI, ScaLAPACK, etc... installed on your system.
+You can use the parallel MPI version of MUMPS on a single
+processor. If you only plan to use MUMPS on a uniprocessor
+machine, and do not want to install parallel libraries
+such as MPI, ScaLAPACK, etc... then it might be more convenient
+to use one of the Makefile.<ARCH>.SEQ to build a sequential
+version of MUMPS instead of a parallel one.
 
 For that, a dummy MPI library (available in ./libseq) defining
 all symbols related to parallel libraries is used at the link
 phase.
 
-Note that you should use 'make cleanall' before building the
+Note that you should use 'make clean' before building the
 MUMPS sequential library if you had previously built a parallel
 version. And vice versa.
 
@@ -168,7 +170,7 @@ Otherwise some derived datatypes may not match.
 Platform dependencies
 ---------------------
 
-Versions of MUMPS_4.3.1 should work on IBM SP systems,
+Versions of MUMPS_4.4.2 should work on IBM SP systems,
 SGI Origin 2000, COMPAQ ALPHA systems and some Linux clusters.
 
 We could potentially generate versions for any other
@@ -212,6 +214,10 @@ of more than 1 processor.
 Release history
 ---------------
 
+Release 4.4.2     : May 2005
+Release 4.4.1     : May 2005
+Release 4.4.0     : April 2005
+Release 4.3.3     : December 2003 (Mari Berglund)
 Release 4.3.2     : November 2003
 Release 4.3.1     : October 2003
 Release 4.3       : July 2003
@@ -241,6 +247,43 @@ Version 2.0.4     : Mar 24, 1998
 Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
+
+
+Changes from Version 4.4.0 to Version 4.4.2
+* 2D cyclic Schur better validated
+
+
+Changes from Version 4.3.4 to Version 4.4.0
+* 2D block cyclic Schur complement matrix
+* symmetric indefinite matrices better handled
+* Right-hand side vectors can be sparse
+* Solution can be kept distributed on the processors
+* METIS allowed for element-entry
+* Parallel performance and memory usage improved:
+   - load is updated more often for type 2 nodes
+   - scheduling under memory constraints
+   - reduced message sizes in symmetric case
+   - some linear searches avoided when sending contributions
+* Avoid array copies in the call to MUMPS_DISTRIBUTE
+  (such copies appeared with intel compiler version 8.0)
+* Workaround MPI_AllReduce problem with booleans if mpich
+  and MUMPS are compiled with different compilers
+* Reduced message sizes for CB blocks in symmetric case
+* Various minor improvements
+
+
+
+Changes from Version 4.3.3 to Version 4.3.4
+* Copies of some large CB blocks suppressed
+  in local assemblies from child to parent
+* gathering of solution optimized in solve phase
+
+Changes from Version 4.3.2 to Version 4.3.3
+
+* Control parameters of symbolic factorization modified.
+* Global distribution time and arrowheads computation
+  slightly optimized.
+* Multiple Right-Hand-Side implemented.
 
 Changes from Version 4.3.1 to Version 4.3.2
 

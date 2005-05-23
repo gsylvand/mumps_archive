@@ -1,65 +1,44 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
       INTEGER FUNCTION SMUMPS_50 
      *         ( SLAVEF, K48, K10, K50,
@@ -75,9 +54,9 @@ C
       KMAX = SMUMPS_497( K10, NCB )
       NASS = NFRONT - NCB
       NSLAVESMIN  = 1
-      IF ( K48 .EQ.0 ) THEN 
+      IF ( K48 .EQ.0 .OR. (K48.EQ.5 .AND.K50.EQ.0)) THEN 
          NSLAVESMIN = MAX(NCB/MAX(1,KMAX),1)
-      ELSE IF (K48 .EQ. 3 ) THEN
+      ELSE IF (K48 .EQ. 3 .OR.(K48.EQ.5 .AND.K50.NE.0) ) THEN
         Wmax    = SMUMPS_45(KMAX,NFRONT,NASS)
         Wtotal  = SMUMPS_45(NCB,NFRONT,NASS)
         Wmaster = REAL(NASS*NASS)*REAL(NASS)/(3.0)
@@ -86,6 +65,9 @@ C
         ELSE
          NSLAVESMIN = MAX ( NINT ( Wtotal / Wmax ), 1 )
         ENDIF
+        IF (K48 .EQ. 5) THEN
+          NSLAVESMIN = MAX ( NSLAVESMIN/2, 1 )
+        END IF
       ELSE IF (K48 .EQ. 4 ) THEN
          IF ( K10 > 0 ) THEN
            WRITE(*,*) 'Internal Error 1 in SMUMPS_50'
@@ -93,19 +75,19 @@ C
          ENDIF
          KMAX=ABS(K10)
          IF(K50.EQ.0)THEN
-            NSLAVESMIN = MAX(INT((NFRONT*NCB)/KMAX),1)
+            NSLAVESMIN = MAX(INT((NCB*NCB)/KMAX),1)
          ELSE
             ACC=0
             NSLAVESMIN=0
             DO WHILE (ACC.NE.NCB)
-               x=INT((-(NFRONT-NCB+ACC)
-     $              +SQRT(REAL(((NFRONT-NCB+ACC)*
-     $              (NFRONT-NCB+ACC))+REAL(4)*
-     *              (KMAX))))/
+               x=INT((-REAL(NFRONT-NCB+ACC)
+     $              +SQRT(((REAL(NFRONT-NCB+ACC)*
+     $              REAL(NFRONT-NCB+ACC))+REAL(4)*
+     *              REAL(KMAX))))/
      $              REAL(2))
                ACC=ACC+x
                NSLAVESMIN=NSLAVESMIN+1
-               IF (((NCB-(ACC+NFRONT-NCB))*NFRONT).LT.KMAX)THEN
+               IF (((NCB-ACC)*NCB).LT.KMAX)THEN
                   ACC=NCB 
                   NSLAVESMIN=NSLAVESMIN+1
                ENDIF
@@ -130,11 +112,11 @@ C
       EXTERNAL SMUMPS_497,SMUMPS_442,
      *        SMUMPS_50,
      *        SMUMPS_46
-      IF (K48 .eq. 0 .OR. K48.eq.3) THEN
+      IF (K48 .eq. 0 .OR. K48.eq.3.OR.K48.EQ.5) THEN
          KMAX = SMUMPS_497( K10, NCB )
          KMIN = SMUMPS_442( K10, K50, KMAX, NCB)
          NSLAVESMAX = SMUMPS_46(
-     &                SLAVEF, K48, KMIN, NFRONT, NCB )
+     &                SLAVEF, K48, K50, KMIN, NFRONT, NCB )
       ELSE
          NSLAVESMAX = SLAVEF-1
       ENDIF
@@ -157,23 +139,37 @@ C
       INTEGER SMUMPS_497, SMUMPS_442,
      *        SMUMPS_50
       IF ( WHAT .NE. 1 .and. WHAT .NE. 2 ) THEN
+        IF (WHAT .NE. 4 .and. WHAT .NE. 5 .AND.
+     *       KEEP(48).NE.5 ) THEN
         WRITE(*,*) "Internal error 1 in SMUMPS_503"
         CALL SMUMPS_ABORT()
+        END IF
       ENDIF
       KMAX    = SMUMPS_497( KEEP(10), NCB )
-      NSLAVES = SMUMPS_50( SLAVEF, KEEP(48),
-     *          KEEP(10), KEEP(50),
-     *          NFR, NCB )
-      IF ( KEEP(48) == 0 ) THEN
+      IF (WHAT .EQ.1.OR.WHAT.EQ.2) THEN
+        NSLAVES = SMUMPS_50( SLAVEF, KEEP(48),
+     *            KEEP(10), KEEP(50),
+     *            NFR, NCB )
+      ELSE
+        NSLAVES=SLAVEF
+      ENDIF
+      IF ( KEEP(48) == 0 .OR. (KEEP(48).EQ.5.AND.KEEP(50).EQ.0)) THEN
         NBROWMAX = NCB / NSLAVES + MOD( NCB, NSLAVES )
-        IF ( WHAT == 2 ) MAXSURFCB = NBROWMAX * NCB
-      ELSE IF ( KEEP(48) == 3 ) THEN
+        IF ( WHAT == 2 .OR. WHAT == 5 ) MAXSURFCB = NBROWMAX * NCB
+      ELSE IF (KEEP(48) == 3.OR.(KEEP(48).EQ.5.AND.KEEP(50).NE.0))THEN
         KMIN = SMUMPS_442( KEEP(10), KEEP(50), KMAX, NCB )  
         SIZEDUMMY        = 1
-        CALL  SMUMPS_440(
-     *    WHAT, NSLAVES, NFR, NCB, 
-     *    KMIN, KMAX, SLAVEF,
-     *    NBROWMAX, MAXSURFCB, TABDUMMY, SIZEDUMMY) 
+        IF(WHAT.GT.3)THEN
+           CALL  SMUMPS_440(
+     *          WHAT-3, NSLAVES, NFR, NCB, 
+     *          KMIN, KMAX, SLAVEF,
+     *          NBROWMAX, MAXSURFCB, TABDUMMY, SIZEDUMMY) 
+        ELSE
+           CALL  SMUMPS_440(
+     *          WHAT, NSLAVES, NFR, NCB, 
+     *          KMIN, KMAX, SLAVEF,
+     *          NBROWMAX, MAXSURFCB, TABDUMMY, SIZEDUMMY) 
+        ENDIF
       ELSE IF ( KEEP(48) == 4 ) THEN
          IF (KEEP(10) > 0) THEN
             WRITE(*,*) "Internal error 2 in SMUMPS_503"
@@ -182,7 +178,7 @@ C
          IF(KEEP(50).EQ.0)THEN
             IF ( ABS(KEEP(10)) * ( SLAVEF - 1 ) > NCB *NFR ) THEN
               NBROWMAX = (NCB + SLAVEF -2 ) / ( SLAVEF - 1 )
-              IF ( WHAT == 2 ) MAXSURFCB = NBROWMAX *NFR
+              IF ( WHAT == 2 ) MAXSURFCB = NBROWMAX *NCB
             ELSE
               NBROWMAX=INT (( ABS(KEEP(10)) + NFR - 1 )/ NFR)
               IF ( WHAT == 2 ) MAXSURFCB = ABS(KEEP(10))
@@ -196,25 +192,29 @@ C
             IF ( WHAT == 2 ) MAXSURFCB = ABS(KEEP(10))
          ENDIF
       ELSE
+#if defined(perfnal)
+        WRITE(*,*) "UNDEFINED KEEP(48) STRATEGY"
+        CALL SMUMPS_ABORT()
+#endif
         NBROWMAX = NCB
         IF (WHAT == 2) MAXSURFCB = NCB * NCB
       ENDIF 
       NBROWMAX = MIN ( MAX(NBROWMAX, 1), NCB)
       RETURN
       END SUBROUTINE SMUMPS_503
-      INTEGER FUNCTION SMUMPS_46( SLAVEF, K48, 
+      INTEGER FUNCTION SMUMPS_46( SLAVEF, K48, K50,
      *         BLSIZE, NFRONT, NCB)
       IMPLICIT NONE
-      INTEGER, INTENT (IN) :: SLAVEF, K48, BLSIZE, NFRONT, NCB
+      INTEGER, INTENT (IN) :: SLAVEF, K48, K50, BLSIZE, NFRONT, NCB
       INTEGER NSLAVES, NASS
       REAL Wtotal, Wblsize
       REAL SMUMPS_45
       EXTERNAL          SMUMPS_45
       NASS = NFRONT - NCB
       NSLAVES  = SLAVEF-1
-      IF ( K48 .EQ.0 ) THEN 
+      IF ( K48 .EQ.0 .OR. (K48.EQ.5 .AND. K50.EQ.0)) THEN 
          NSLAVES = MAX(NCB/MAX(1,BLSIZE),1)
-      ELSE IF (K48 .EQ. 3 ) THEN
+      ELSE IF (K48.EQ.3 .OR. (K48.EQ.5 .AND. K50.NE.0))THEN
         Wblsize = SMUMPS_45(BLSIZE,NFRONT,NASS)
         Wtotal  = SMUMPS_45(NCB,NFRONT,NASS)
         NSLAVES = MAX(NINT ( Wtotal / Wblsize ), 1)
@@ -223,36 +223,6 @@ C
      *               MIN ( NSLAVES,(SLAVEF-1) )
       RETURN
       END FUNCTION SMUMPS_46
-      INTEGER FUNCTION SMUMPS_439( SLAVEF, K48, K10, 
-     *         K50, NFRONT, NCB, NSLAVES)
-      IMPLICIT NONE
-      INTEGER, INTENT (IN) :: SLAVEF, K48, K10, K50, NFRONT, 
-     *                        NCB, NSLAVES
-      INTEGER NBROWMAX, KMIN, KMAX, 
-     *        GETPOSITIONS, TABDUMMY(1), SIZEDUMMY, 
-     *        MAXSURFDUMMY
-      INTEGER SMUMPS_442, SMUMPS_497
-      EXTERNAL SMUMPS_442, SMUMPS_497, 
-     *        SMUMPS_440
-      IF ( K48 .EQ.0 ) THEN 
-       NBROWMAX =  NCB/NSLAVES + MOD(NCB,NSLAVES)
-      ELSE IF (K48 .EQ. 3 ) THEN
-        KMAX = SMUMPS_497(K10, NCB)
-        KMIN = SMUMPS_442(K10, K50, KMAX, NCB)
-        GETPOSITIONS = 1
-        SIZEDUMMY        = 1
-        CALL  SMUMPS_440(
-     *    GETPOSITIONS, NSLAVES, NFRONT, NCB, 
-     *    KMIN, KMAX, SLAVEF,
-     *    NBROWMAX, MAXSURFDUMMY, TABDUMMY, SIZEDUMMY) 
-      ELSE IF(K48.EQ.4)THEN
-         NBROWMAX =NCB
-      ELSE
-        NBROWMAX = NCB
-      ENDIF
-      SMUMPS_439 = MIN(MAX(NBROWMAX,1), NCB)
-      RETURN
-      END FUNCTION SMUMPS_439
       SUBROUTINE  SMUMPS_440( 
      *    GETPOSITIONS, NSLAVES, NFRONT, NCB, 
      *    KMIN, KMAX, SLAVEF,
@@ -266,12 +236,14 @@ C
       REAL Wtotal, W, COSTni
       REAL delta
       INTEGER  SumNi, NCOLim1, I, BLSIZE, NASS
-      LOGICAL GETROW, GETSURF, GETPOS
+      LOGICAL GETROW, GETSURF, GETPOS, GET_AVGROW, GET_AVGSURF
       REAL SMUMPS_45
       EXTERNAL          SMUMPS_45
-      GETROW =((GETPOSITIONS.EQ.1).OR.(GETPOSITIONS.EQ.2))
+      GETROW = (GETPOSITIONS.EQ.1)
       GETSURF= (GETPOSITIONS.EQ.2)
-      GETPOS = (GETPOSITIONS.GE.3)
+      GETPOS = (GETPOSITIONS.EQ.3)
+      GET_AVGROW = (GETPOSITIONS.EQ.4)
+      GET_AVGSURF = (GETPOSITIONS.EQ.5)
       NBROWMAX  = 0
       MAXSURFCB = 0
       IF (GETPOS) THEN 
@@ -292,10 +264,10 @@ C
         SumNi   = 0
         NCOLim1 = NASS
         DO I = 1, NSLAVES-1
-          delta   = REAL(2*NCOLim1-NASS)**2 + 
+          delta   = REAL(2*NCOLim1-NASS+1)**2 + 
      &                  (REAL(4)*W)/REAL(NASS*(NSLAVES-I+1))
           delta   = SQRT(delta)
-          delta   = (REAL(-2*NCOLim1+NASS) + delta )/REAL(2)
+          delta   = (REAL(-2*NCOLim1+NASS-1) + delta )/REAL(2)
           BLSIZE  = MAX(INT(delta), 1)
           IF ( (NFRONT-NCOLim1-BLSIZE) .LE. NSLAVES-I ) THEN
             BLSIZE = 1
@@ -313,17 +285,22 @@ C
             NBROWMAX  = MAX ( NBROWMAX, 
      *       BLSIZE )
              RETURN
+          ELSEIF (GET_AVGSURF) THEN
+            NBROWMAX = NBROWMAX + BLSIZE
+            MAXSURFCB = MAXSURFCB + BLSIZE*(SumNi+BLSIZE) 
+          ELSEIF (GET_AVGROW) THEN
+             NBROWMAX = NBROWMAX + BLSIZE
           ENDIF
           SumNi   = SumNi + BLSIZE
         ENDDO
         BLSIZE = NCB - SumNi
         IF (BLSIZE.LE.0) THEN
-          write(*,*) ' Error in SMUMPS_BLOC2_init: ', 
+          write(*,*) ' Error in SMUMPS_440: ', 
      &     ' size lastbloc ', BLSIZE
           CALL SMUMPS_ABORT()
         ENDIF
         if (NCOLim1+BLSIZE.NE.NFRONT) then
-          write(*,*) ' Error in SMUMPS_BLOC2_init: ', 
+          write(*,*) ' Error in SMUMPS_440: ', 
      &     ' NCOLim1, BLSIZE, NFRONT=', 
      *       NCOLim1, BLSIZE, NFRONT
           CALL SMUMPS_ABORT()
@@ -337,6 +314,14 @@ C
         ELSEIF ( GETROW ) THEN         
             NBROWMAX  = MAX ( NBROWMAX, 
      *       BLSIZE )
+        ELSEIF (GET_AVGSURF) THEN
+          NBROWMAX = NBROWMAX + BLSIZE
+          MAXSURFCB = MAXSURFCB + BLSIZE*(SumNi+BLSIZE)
+          NBROWMAX=(NBROWMAX+NSLAVES-1)/NSLAVES
+          MAXSURFCB=(MAXSURFCB+NSLAVES-1)/NSLAVES
+        ELSEIF (GET_AVGROW) THEN
+          NBROWMAX = NBROWMAX + BLSIZE
+          NBROWMAX=(NBROWMAX+NSLAVES-1)/NSLAVES
         ENDIF
       ENDIF
       RETURN
@@ -408,6 +393,10 @@ C
          J = ISTEP_TO_INIV2 ( STEP(INODE) )
          FIRST_INDEX = TAB_POS_IN_PERE (ISLAVE,J)
          SIZE = TAB_POS_IN_PERE (ISLAVE+1,J) - FIRST_INDEX 
+      ELSEIF (KEEP(48).EQ.5) THEN
+         J = ISTEP_TO_INIV2 ( STEP(INODE) )
+         FIRST_INDEX = TAB_POS_IN_PERE (ISLAVE,J)
+         SIZE = TAB_POS_IN_PERE (ISLAVE+1,J) - FIRST_INDEX 
       ELSE
        WRITE(*,*) 'Error in SMUMPS_BLOC2 undef strat'  
        CALL SMUMPS_ABORT()
@@ -454,6 +443,7 @@ C
            ENDIF
            NSLAVES = MAX(NSLAVES_ref,NSLAVES)
          ENDIF
+         NSLAVES = MIN (NSLAVES, NMB_OF_CAND)
          IF ( NSLAVES.GT.NSLAVES_ref) THEN
           NPIV = NFRONT - NCB
           IF ( K50.EQ.0 ) THEN
@@ -516,6 +506,15 @@ C
           END IF
          END DO
       ELSEIF (KEEP(48).EQ.4) THEN
+         J = ISTEP_TO_INIV2 ( STEP(INODE) )
+         ISHIFT = POSITION - NASS
+         DO ISLAVE = NSLAVES,1,-1
+          IF ( ISHIFT .GE. TAB_POS_IN_PERE(ISLAVE,J)) THEN
+           IPOSSLAVE = ISHIFT - TAB_POS_IN_PERE(ISLAVE,J) + 1
+           EXIT
+          END IF
+         END DO
+      ELSEIF (KEEP(48).EQ.5) THEN
          J = ISTEP_TO_INIV2 ( STEP(INODE) )
          ISHIFT = POSITION - NASS
          DO ISLAVE = NSLAVES,1,-1

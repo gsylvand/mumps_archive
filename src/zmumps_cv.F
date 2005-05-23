@@ -1,65 +1,44 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
-C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
       module ZMUMPS_CV
       implicit none
@@ -69,6 +48,8 @@ C
       integer,pointer,dimension(:,:),SAVE::cv_cand
       integer,pointer,dimension(:),SAVE::cv_par2_nodes
       integer,SAVE::cv_slavef,cv_nb_niv2,cv_lp,cv_mp
+      integer,SAVE::cv_stack_peak
+      integer,SAVE::cv_mem_strat
       integer,parameter::cv_invalid=-9999
       integer,parameter::cv_d_invalid=-9999.D0
       integer,parameter::cv_equilib_flops=1
@@ -83,8 +64,8 @@ C
       integer,dimension(:),allocatable,save :: score
       contains
       subroutine ZMUMPS_369(n,slavef,icntl,info,
-     *                        ne,na,nfsiz,frere,fils,keep,
-     *                        procnode,ssarbr,nbsa,istat)
+     *                        ne,nfsiz,frere,fils,keep,
+     *                        procnode,ssarbr,nbsa,peak,istat)
       implicit none
       type nodelist
          integer::nodenumber
@@ -127,7 +108,7 @@ C
       integer,pointer,dimension(:):: cv_nodetype,cv_nodelayer,
      *          cv_layerl0_array,cv_proc_sorted,cv_potsplit,cv_depth
       integer,dimension(:),pointer::
-     *    cv_ne,cv_na,cv_nfsiz,cv_frere,cv_fils,cv_keep,cv_info,
+     *    cv_ne,cv_nfsiz,cv_frere,cv_fils,cv_keep,cv_info,
      *    cv_procnode,cv_ssarbr,cv_icntl
       type(alloc_arraytype),pointer,dimension(:)::cv_layer_p2node
       DOUBLE PRECISION,dimension(:),pointer:: cv_ncostw,
@@ -135,17 +116,19 @@ C
      * ,cv_layerl0_sorted_costw
       type(procs4node),dimension(:),pointer :: cv_prop_map
       integer,intent(in)::n,slavef
-      integer, intent(inout),TARGET:: ne(n),na(n),nfsiz(n),
+      integer, intent(inout),TARGET:: ne(n),nfsiz(n),
      *         procnode(n),ssarbr(n),frere(n),fils(n),keep(150),
      *         icntl(40),info(40)
       integer,intent(out)::nbsa,istat
-      integer ierr,nmb_thislayer,layernmb,mapalgo,allocok
+      integer ierr,nmb_thislayer,layernmb,mapalgo,allocok,i
       integer,pointer,dimension(:)::thislayer
       integer,parameter::memonly=1,floponly=2,hybrid=3
       DOUBLE PRECISION:: 
      *         maxwork,minwork,maxmem,minmem,workbalance,membalance
-      logical::continue
+      DOUBLE PRECISION:: cost_root_node
+      logical::cont
       character (len=48):: err_rep,subname
+      DOUBLE PRECISION peak
       istat=-1
       subname='DISTRIBUTE'
       cv_lp=icntl(1)
@@ -153,8 +136,8 @@ C
       nullify(thislayer)
       err_rep='INITPART1'
       call ZMUMPS_478(n,slavef,
-     *                   frere,fils,nfsiz,ne,na,keep,icntl,info,
-     *                   procnode,ssarbr,ierr)
+     *                   frere,fils,nfsiz,ne,keep,icntl,info,
+     *                   procnode,ssarbr,peak,ierr)
       if (ierr.ne.0) goto 99999
       err_rep='PROCINIT'
       call ZMUMPS_391(istat=ierr)
@@ -168,18 +151,17 @@ C
       err_rep='LAYERL0'
       call ZMUMPS_381(ierr)
       if (ierr.ne.0) goto 99999
-      err_rep='FIND_POTSPLIT'
-      call ZMUMPS_375(cv_equilib_flops,ierr)
+      if(cv_keep(82) .eq. 0) then
+         err_rep='FIND_POTSPLIT'
+         call ZMUMPS_375(cv_equilib_flops,ierr)
+      endif
       if (ierr.ne.0) goto 99999
       err_rep='INITPART2'
       call ZMUMPS_479(ierr)
       if (ierr.ne.0) goto 99999
-      err_rep='SELECT_TYPE3'      
-      call ZMUMPS_396(ierr)
-      if (ierr.ne.0) goto 99999
       err_rep='WORKMEM_'
       call ZMUMPS_408(
-     *     cv_proc_workload(:),cv_proc_memused(:),
+     *     cv_proc_workload,cv_proc_memused,
      *     maxwork,minwork,maxmem,minmem)
       if(maxwork.gt.0) then
          workbalance=minwork/maxwork
@@ -196,13 +178,29 @@ C
       if (allocok.gt.0) then
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 2*cv_maxnsteps+cv_maxnodenmb
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'memory allocation error in ',subname
          ierr = cv_error_memalloc
          goto 99999
       end if
-      continue=.TRUE. !continue is TRUE, if there is a layer with 
+      cont=.TRUE. !cont is TRUE, if there is a layer with 
       layernmb=0
       mapalgo=floponly  !equilibration of flops
-      do while((continue).OR.(layernmb.le.cv_maxlayer))
+      err_rep='SELECT_TYPE3'      
+      call ZMUMPS_396(ierr)
+      if (ierr.ne.0) goto 99999
+      IF (cv_keep(38) .ne. 0 .and. cv_keep(60) .eq. 0 ) THEN
+        call ZMUMPS_511(cv_nfsiz(KEEP(38)),
+     *               cv_nfsiz(KEEP(38)), cv_nfsiz(KEEP(38)),
+     *               cv_keep(50), 3, cost_root_node)
+        cost_root_node = cost_root_node / cv_slavef
+        do i=1, cv_slavef
+          cv_proc_memused(i)=cv_proc_memused(i)+
+     *        cv_nfsiz(KEEP(38))*cv_nfsiz(KEEP(38))/cv_slavef
+          cv_proc_workload(i)=cv_proc_workload(i)+DBLE(cost_root_node)
+        enddo
+      ENDIF
+      do while((cont).OR.(layernmb.le.cv_maxlayer))
          err_rep='FIND_THIS'
          call ZMUMPS_376(layernmb,thislayer,nmb_thislayer,
      *                                ierr)
@@ -212,8 +210,16 @@ C
      *                    (layernmb,thislayer,nmb_thislayer,ierr)
          if (ierr.ne.0) goto 99999
          err_rep='DO_SPLITTING'
-         if(layernmb.gt.0) call ZMUMPS_370
-     *                    (layernmb,thislayer,nmb_thislayer,ierr)
+         if(cv_keep(82) .gt. 0) then
+#if (check_mumps_cv >= 3)
+            write(*,*) 'call splitting for layer',layernmb
+#endif
+            if(layernmb.gt.0) call ZMUMPS_NEWSPLITTING
+     *           (layernmb,thislayer,nmb_thislayer,ierr)
+         else
+            if(layernmb.gt.0) call ZMUMPS_370
+     *           (layernmb,thislayer,nmb_thislayer,ierr)
+         endif
          if (ierr.ne.0) goto 99999
          err_rep='ASSIGN_TYPES'
          call ZMUMPS_416(layernmb,thislayer,nmb_thislayer,
@@ -236,7 +242,7 @@ C
             if (ierr.ne.0) goto 99999
             err_rep='WORKMEM_'
             call ZMUMPS_408(
-     *                          cv_proc_workload(:),cv_proc_memused(:),
+     *                          cv_proc_workload,cv_proc_memused,
      *                                   maxwork,minwork,maxmem,minmem)
             if(maxwork.gt.0) then
                workbalance=minwork/maxwork
@@ -271,12 +277,14 @@ C
                   if (ierr.ne.0) goto 99999
                endif
             else
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Unknown mapalgo in ',subname
                return
             endif
       endif
          layernmb=layernmb+1
          err_rep='HIGHER_LAYER'
-         call ZMUMPS_377(layernmb,layernmb,continue,ierr)
+         call ZMUMPS_377(layernmb,layernmb,cont,ierr)
          if (ierr.ne.0) goto 99999
       end do
 #if defined(t3e)
@@ -292,11 +300,13 @@ C
       call ZMUMPS_371(ierr)
       if (ierr.ne.0) goto 99999
       err_rep='STORE_GLOB'
-      call ZMUMPS_402(ne,na,nfsiz,frere,fils,keep,
+      call ZMUMPS_402(ne,nfsiz,frere,fils,keep,
      *                         info,procnode,ssarbr,nbsa)
       err_rep='mem_dealloc'
       deallocate(thislayer,STAT=ierr)
       if (ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'Memory deallocation error in ',subname
          ierr = cv_error_memdeloc
          goto 99999
       endif
@@ -306,6 +316,10 @@ C
       istat=0
       return 
 99999 continue
+      if(cv_lp.gt.0) then
+         write(cv_lp,*)'Error in ',subname,', layernmb=',layernmb
+         write(cv_lp,*)'procedure reporting the error: ',err_rep
+      endif
       if(ierr.eq.cv_error_memalloc) then
          info(1) = cv_info(1)
          info(2) = cv_info(2)
@@ -354,13 +368,13 @@ C
          else if(cv_slavef.lt.48) then
             if (maxi.le.DBLE(1.5)*mini) accepted=.TRUE.
          else if(cv_slavef.lt.128) then
-            if (maxi.le.DBLE(3)*mini) accepted=.TRUE.
+            if (maxi.le.DBLE(1.5)*mini) accepted=.TRUE.
          else if(cv_slavef.lt.256) then
-            if (maxi.le.DBLE(4)*mini) accepted=.TRUE.
+            if (maxi.le.DBLE(2)*mini) accepted=.TRUE.
          else if(cv_slavef.lt.512) then
-            if (maxi.le.DBLE(6)*mini) accepted=.TRUE.
+            if (maxi.le.DBLE(3)*mini) accepted=.TRUE.
          else if(cv_slavef.gt.512) then
-            if (maxi.le.DBLE(7.5)*mini) accepted=.TRUE.
+            if (maxi.le.DBLE(4)*mini) accepted=.TRUE.
          end if
          if ((.NOT.accepted).AND.(alternative_criterion)) then
             mean=SUM(workload)/max(DBLE(cv_slavef),DBLE(1))
@@ -493,6 +507,8 @@ C
       cv_total_amalg=cv_total_amalg+1
       call ZMUMPS_436(ison,ifather,ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'PROPMAP4AMALG error in ',subname
          istat = ierr
          return
       end if
@@ -507,15 +523,16 @@ C
      *                                                   memused
       integer, intent(out)::procnode(cv_n),istat
       logical, intent(in), OPTIONAL:: respect_prop
-      integer nmb_listnodes,sorted_nmb(cv_maxnsteps),i,j,ierr,
+      integer nmb_listnodes,i,j,ierr,
      *        nodenumber,proc
-      DOUBLE PRECISION sorted_costw(cv_maxnsteps),tot_work,
-     *                 sorted_costm(cv_maxnsteps),tot_mem,work,mem
+      DOUBLE PRECISION tot_work,tot_mem,work,mem
       character (len=48):: err_rep,subname
       istat=-1
       subname='ARRANGEL0'
       if ((.NOT.associated(cv_tcostw)).OR.(.NOT.associated(cv_tcostm)))
      *   then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:tcost must be allocated in ',subname
          return
       end if 
       if((map_strat.ne.cv_equilib_flops).and.
@@ -542,6 +559,8 @@ C
          if(ierr.eq.0) then
             procnode(nodenumber)=proc
          else
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             do j=1,cv_slavef
                workload(j)=cv_proc_workload(j)
                memused(j)=cv_proc_memused(j)
@@ -638,6 +657,8 @@ C
                cv_info(1) = cv_error_memalloc
                cv_info(2) = (3+cv_slavef+1)*par_nodes_in_layer
                istat = cv_error_memalloc
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'memory allocation error in ',subname
                return
             end if
             cv_layer_p2node(layernmb)%nmb_t2s=par_nodes_in_layer         
@@ -714,6 +735,8 @@ C
       subname='CALCCOSTS'
       if ((.NOT.associated(cv_tcostw)).OR.(.NOT.associated(cv_tcostm)))
      *   then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:tcost must be allocated in ',subname
          return
       end if 
       do i=1,cv_n
@@ -727,6 +750,8 @@ C
             cv_depth(i)=1
             call ZMUMPS_404(i,ierr)
             if (ierr.ne.0) then
+          if(cv_lp.gt.0) 
+     *    write(cv_lp,*)'Failure reported by ',err_rep, ' in ',subname
                return
             end if 
          end if
@@ -768,7 +793,7 @@ C
       integer in,inode,j,kmax,npiv,nfront,ncb,ncol,
      *        min_needed,max_needed,more_than_needed,total_nmb_cand,
      *        nmb_type2_thislayer,fraction,
-     *        total_cand_layer,cand_strat, keep48_loc
+     *        total_cand_layer,cand_strat, keep48_loc, WHAT_LOC
       DOUBLE PRECISION flop1,work_type2_thislayer,
      *        relative_weight,workmaster,nrow
       logical force_cand
@@ -777,10 +802,12 @@ C
       integer ZMUMPS_497, ZMUMPS_50, 
      *        ZMUMPS_52
       external ZMUMPS_497, ZMUMPS_50, 
-     *        ZMUMPS_52
+     *        ZMUMPS_52, ZMUMPS_503
       istat=-1
       subname='COSTS_LAYER_T2'
       if (cv_keep(24).lt.1) then
+          if(cv_lp.gt.0) 
+     *    write(cv_lp,*)'Error in ',subname,'. Wrong keep24'
          return
       endif
       force_cand=(mod(cv_keep(24),2).eq.0)
@@ -793,6 +820,8 @@ C
             work_type2_thislayer=work_type2_thislayer+cv_ncostw(inode)
          end do
          if(cv_relax.le.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'Error in ',subname,'. Wrong cv_relax'
             return
          endif
          total_cand_layer=cv_relax*cv_slavef
@@ -813,6 +842,7 @@ C
               else
                 keep48_loc=3
               endif
+              if (cv_keep(48).EQ.5) keep48_loc = 5
                min_needed = ZMUMPS_50(
      *             cv_slavef, keep48_loc,cv_keep(10),
      *             cv_keep(50),nfront,ncb)
@@ -834,6 +864,8 @@ C
                elseif (cand_strat.eq.3) then
                   more_than_needed=cv_slavef-1-min_needed
                else
+                  if(cv_lp.gt.0) 
+     *            write(cv_lp,*)'Unknown cand. strategy in ',subname
                   return
                endif
                total_nmb_cand=min(min_needed+more_than_needed,
@@ -914,6 +946,8 @@ C
       if((cv_keep(24).ne.8).AND.(cv_keep(24).ne.10)
      *    .AND.(cv_keep(24).ne.12).AND.(cv_keep(24).ne.14)
      *    .AND.(cv_keep(24).ne.16).AND.(cv_keep(24).ne.18)) then
+          if(cv_lp.gt.0) 
+     *    write(cv_lp,*)'Error in ',subname,'. Wrong keep24'
          return
       endif
       nmb_type2_thislayer=cv_layer_p2node(layernmb)%nmb_t2s
@@ -949,10 +983,13 @@ C
             else
               keep48_loc=3
             endif
+            if (cv_keep(48).EQ.5) keep48_loc = 5
             min_needed= ZMUMPS_50
      *          (cv_slavef, keep48_loc,cv_keep(10),
      *           cv_keep(50),nfront,ncb)
             if(min_needed.lt.1) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Error in ',subname,'.NEG min_needed'
                return
             endif
             if ((cv_keep(24).eq.8).OR.(cv_keep(24).eq.14).OR.
@@ -962,7 +999,7 @@ C
                   if( ZMUMPS_481(inode,jj))
      *                 npropmap=npropmap+1
                end do
-               total_nmb_cand=max(npropmap,min_needed)
+               total_nmb_cand=max(npropmap-1,min_needed)
             elseif(cv_keep(24).eq.10) then 
                if(work_type2_thislayer.gt.0) then
                   relative_weight=cv_ncostw(inode)/work_type2_thislayer
@@ -971,7 +1008,7 @@ C
                endif
                total_nmb_cand=NINT(relative_weight *
      *              DBLE(total_cand_layer))
-               total_nmb_cand=max(total_nmb_cand,min_needed)
+               total_nmb_cand=max(total_nmb_cand-1,min_needed)
             elseif((cv_keep(24).eq.12).OR.(cv_keep(24).eq.16)) then 
                if(layernmb.lt.cv_dist_L0_mixed_strat_bound) then
                   if(cv_mp.gt.0)then 
@@ -983,7 +1020,7 @@ C
                      if( ZMUMPS_481(inode,jj))
      *                    npropmap=npropmap+1
                   end do
-                  total_nmb_cand=max(npropmap,min_needed)
+                  total_nmb_cand=max(npropmap-1,min_needed)
                else
                   if(cv_mp.gt.0)then 
                      write(cv_mp,*)'Strat', cv_keep(24),
@@ -996,9 +1033,11 @@ C
                   endif
                   total_nmb_cand=NINT(relative_weight *
      *                 DBLE(total_cand_layer))
-                  total_nmb_cand=max(total_nmb_cand,min_needed)
+                  total_nmb_cand=max(total_nmb_cand-1,min_needed)
                endif
             else
+               if(cv_lp.gt.0) 
+     *              write(cv_lp,*)'Unknown cand. strategy in ',subname
                return
             endif
             total_nmb_cand=max(total_nmb_cand,1)
@@ -1087,12 +1126,18 @@ C
             npiv=npiv+1
          end do
          if(in.eq.0) cycle
-         if(npiv.ge.cv_keep(1)) cycle
+         if((npiv.ge.cv_keep(1)).and.
+     *       (nfront-npiv.ge.cv_keep(1))) cycle
          ifather=inode
          do while(ifather.gt.0)
             ifather=cv_frere(ifather)
          end do
          ifather=-ifather
+         if(cv_keep(82) .gt. 0) then
+            if(cv_nodetype(ifather) .gt. 0) then
+               cycle
+            endif
+         endif
          if((cv_frere(ifather).eq.0).AND.(cv_keep(60).ne.0))cycle
          npiv_ifath=0
          in=ifather
@@ -1100,11 +1145,13 @@ C
             in=cv_fils(in)
             npiv_ifath=npiv_ifath+1
          end do
-         fill= 2*npiv*npiv_ifath 
-     *       + 2*npiv*(cv_nfsiz(ifather)-cv_nfsiz(inode)) 
-         if((npiv < cv_keep(1)).AND.(cv_slavef.gt.64)) then
+         if((npiv.ge.cv_keep(1)).and.
+     *       (cv_nfsiz(ifather).ge.2*cv_keep(1))) cycle
+         fill= 2*npiv*(cv_nfsiz(ifather)-nfront+npiv) 
+         if(cv_slavef.gt.8) then
          elseif(fill.ge.
-     *      (cv_nfsiz(ifather)*cv_nfsiz(ifather)*cv_keep(1))/100)
+     *      ((cv_nfsiz(ifather)+npiv)*(cv_nfsiz(ifather)+npiv)*
+     *      cv_keep(1))/100)
      *      then
             cycle
          endif
@@ -1120,14 +1167,18 @@ C
            endif
          endif
          if((nfront-npiv > cv_keep(9)).and.(npiv<cv_keep(4))) then
-         elseif((cv_slavef.gt.64).AND.
-     *      (npiv<cv_keep(1)).AND.(npiv*100<cv_nfsiz(inode))) then
+         elseif((npiv.lt.cv_keep(1)).AND.(cv_slavef.gt.64).AND.
+     *      (npiv*100<nfront)) then
+         elseif ((cv_nfsiz(ifather).LT.2*cv_keep(1)).OR.
+     *          (cv_nfsiz(ifather).EQ.npiv_ifath) ) then
          else
             cycle
          endif
          err_rep='AMALG_SONFATH'
          call ZMUMPS_414(ifather,inode,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat=ierr
             return
          endif
@@ -1135,6 +1186,538 @@ C
       istat=0
       return
       end subroutine ZMUMPS_410
+      subroutine ZMUMPS_NEWSPLITTING(
+     *     layernmb,thislayer,nmb_thislayer,
+     *     istat)
+      implicit none
+      integer,intent(in)::layernmb,thislayer(cv_maxnodenmb),
+     *     nmb_thislayer
+      integer,intent(out)::istat
+      integer i,k1,k2,k3,ierr,inode,in,nfront,npiv,
+     *     npiv_son,ison,ifather,
+     *     nmb_type2
+      logical doit
+      character (len=48):: err_rep,subname
+      istat=-1
+      subname='NEWSPLITTING'
+      if((layernmb.lt.0).or.(layernmb.gt.cv_maxlayer)) return
+      if (cv_slavef.eq.1) then
+         return
+      endif
+      do i=1,nmb_thislayer
+         ierr=0
+         inode=thislayer(i)
+         err_rep='GET_SPLIT_INKPART'
+#if (check_mumps_cv >= 3)
+         write(*,*) 'call get inkpart inode = ',inode
+#endif
+         call ZMUMPS_525(inode,
+     *        doit,npiv,nfront,k1,k3,ierr)
+         if(ierr.ne.0) then
+            if(cv_lp.gt.0)
+     *           write(cv_lp,*)'Error reported by ',
+     *           err_rep,' in ',subname
+            istat =ierr
+            return
+         endif
+         if(.NOT.doit) then
+#if (check_mumps_cv>=1)
+            write(*,*) 'doit = false'
+#endif
+            cycle
+         endif
+         if(k3.eq.1) then
+#if (check_mumps_cv>=1)
+            write(*,*) 'k3 = 1'
+#endif
+            cycle
+         endif
+         err_rep='GET_MEMSPLIT_INKPART'
+#if (check_mumps_cv >= 3)
+         write(*,*) 'call get mem inkpart inode = ',inode
+#endif
+         call ZMUMPS_526(inode,
+     *        doit,npiv,nfront,k2,ierr)
+         if(ierr.ne.0) then
+            if(cv_lp.gt.0)
+     *           write(cv_lp,*)'Error reported by ',
+     *           err_rep,' in ',subname
+            istat =ierr
+            return
+         endif
+#if (check_mumps_cv >= 1)
+         write(*,*) '******* splitting decision for node',inode
+         write(*,*) 'min flops split = ',k1
+         write(*,*) 'max flops split = ',k3
+         write(*,*) 'min mem split   = ',k2
+#endif
+         k1 = MAX(k1,k2)
+         k1 = MIN(k1,k3)
+         if( k1 .eq. 1) cycle
+#if (check_mumps_cv >= 1)
+         if( k1.gt.cv_keep(82) .or.
+     *        k1 .le. 0) then
+            write(*,*) 'pb : try to split in',k1,'parts'
+         endif
+         write(*,*) 'decided to split in',k1,'parts'
+#endif
+         err_rep='SPLITNODE_INKPART'
+#if (check_mumps_cv >= 3)
+         write(*,*) 'call split inkpart inode = ',
+     *        inode,nfront,npiv,k1
+#endif
+         call ZMUMPS_529(inode,nfront,npiv,k1,
+     *        ison,ifather,ierr)
+         if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,
+     *           ' in ',subname
+            istat = ierr
+            return
+         endif
+      end do
+      istat=0
+      return
+      end subroutine ZMUMPS_NEWSPLITTING
+      subroutine ZMUMPS_525(inode,
+     *     doit,npiv,nfront,k1,k3,istat)
+      implicit none
+      integer,intent(in)::inode
+      logical,intent(out)::doit
+      integer,intent(out),OPTIONAL::npiv,nfront,istat
+      integer,intent(out),OPTIONAL::k1,k3
+      integer in,nfr_ifather,npiv_ifather,npiv2,nfront2,npiv_son2
+      integer npropmap,j,ncb,kmax,keep48_loc,nslaves_max,
+     *     nslaves_estim,strat,kk
+      DOUBLE PRECISION wk_master,wk_slave,wk_master2,wk_slave2
+      integer ZMUMPS_497,
+     *     ZMUMPS_52,
+     *     ZMUMPS_50 
+      external ZMUMPS_497
+      external ZMUMPS_52
+      external ZMUMPS_50
+      doit=.FALSE.
+      if(present(npiv)) npiv=cv_invalid
+      if(present(nfront)) nfront=cv_invalid
+      if(present(k1)) k1=1
+      if(present(k3)) k3 =1
+      if(present(istat)) istat=-1
+#if( check_mumps_cv>=1)
+      if(cv_frere(inode).eq.cv_n+1) then
+         write(*,*) 'try to split a non principale variable'
+         write(*,*) 'inode = ', inode
+         return
+      endif
+#endif
+      doit=.TRUE.
+      if (cv_nodetype(inode) .gt. 0) then
+         doit=.FALSE.
+#if (check_mumps_cv >= 3)
+         write(*,*) 'node',inode,'already splitted, doit =',
+     *        doit
+#endif
+         istat = 0
+         return
+      endif
+      if ((cv_frere(inode).eq.0).AND.
+     *     ((cv_keep(60).ne.0).OR.(cv_keep(19).le.0))) then
+         doit=.FALSE.
+         istat = 0
+         return
+      endif
+      nfront=cv_nfsiz(inode)
+      in=inode
+      npiv=0
+      do while (in.gt.0)
+         in=cv_fils(in)
+         npiv=npiv+1
+      end do 
+#if (check_mumps_cv >= 3)
+      write(*,*) 'nfront =',nfront,'npiv',npiv
+#endif
+      npiv_son2 = max(npiv/2,1)  !We cut inode in the middle
+      if(npiv.le.npiv_son2) then
+         doit=.FALSE.
+         istat = 0
+         return
+      endif
+      if( .not. ZMUMPS_359(nfront,npiv_son2) )then
+         doit=.FALSE.
+#if(check_mumps_cv>=1)
+         write(*,*) 'don t split node',inode,
+     *        'because son is not of type 2'
+#endif
+         istat = 0
+         return
+      endif
+      in = inode
+      npropmap=0
+      do j=1,cv_slavef
+         if( ZMUMPS_481(in,j)) then
+            npropmap=npropmap+1
+         endif
+      end do
+      ncb = nfront - npiv
+      kmax = ZMUMPS_497(cv_keep(10),ncb)
+      if (cv_keep(50) ==  0) then
+         keep48_loc=0
+      else
+         keep48_loc=3
+      endif
+      if (cv_keep(48).EQ.5) keep48_loc = 5
+      if(npropmap .gt. cv_keep(83)) then
+         nslaves_max   = ZMUMPS_52(
+     *        cv_slavef, keep48_loc, cv_keep(10),
+     *        cv_keep(50), nfront, ncb )
+         nslaves_estim = min(npropmap,nslaves_max)
+         nslaves_estim = MAX(nslaves_estim,1)
+      else
+         nslaves_max   = ZMUMPS_52(
+     *        cv_slavef, keep48_loc, cv_keep(10),
+     *        cv_keep(50), nfront, ncb )
+         nslaves_estim = ZMUMPS_50(
+     *     cv_slavef, keep48_loc,cv_keep(10),
+     *     cv_keep(50), nfront, ncb )
+         nslaves_estim = MAX(nslaves_estim,1)
+         nslaves_estim = min(nslaves_estim,nslaves_max)
+      endif
+      if (cv_keep(50).eq.0) then
+         wk_master = (DBLE(2)/DBLE(3))*
+     *        DBLE(npiv)*DBLE(npiv)*DBLE(npiv)+
+     *        DBLE(npiv)*DBLE(npiv)*DBLE(nfront-npiv)
+      else
+         wk_master = DBLE(npiv)*DBLE(npiv)*DBLE(npiv)/DBLE(3)
+      end if
+      strat = cv_keep(62)
+      doit = .TRUE.
+      k1 = cv_keep(82)
+      k3 = cv_keep(82)
+      do kk=1,cv_keep(82)-1
+         npiv2 = npiv/kk
+         if(npiv2 .eq. 0) then
+            k1 = MAX(1,kk-1)
+            exit
+         endif
+         wk_master2 = wk_master / DBLE(kk)
+         nfront2 = nfront-npiv+npiv2
+         if (cv_keep(50).eq.0) then
+            wk_slave2  = ( DBLE(npiv2)*DBLE(nfront-npiv2) *
+     *           DBLE(2*nfront-npiv2) ) / DBLE(nslaves_estim)
+         else
+            wk_slave2 = 
+     *           ( DBLE(npiv2)*DBLE(nfront2-npiv2)*DBLE(nfront2) )
+     *           /   DBLE(nslaves_estim)
+         endif
+#if(check_mumps_cv>=1)
+         write(*,*) 'k =',kk
+         write(*,*) 'master work=',wk_master2
+         write(*,*) 'slave work=',wk_slave2
+         write(*,*) 'nslaves_estim=',nslaves_estim
+#endif
+         if(wk_master2.le.
+     *        (1 +DBLE(kk*strat)/DBLE(100))*wk_slave2) then
+            k1 = kk
+            exit
+         endif
+      enddo
+      do kk=1,cv_keep(82)-1
+         npiv2 = npiv/kk
+         if(npiv2 .eq. 0) then
+            k3 = MAX(1,kk-1)
+            exit
+         endif
+         wk_master2 = wk_master / DBLE(kk)
+         nfront2 = nfront
+         if (cv_keep(50).eq.0) then
+            wk_slave2  = ( DBLE(npiv2)*DBLE(nfront-npiv2) *
+     *           DBLE(2*nfront-npiv2) ) / DBLE(nslaves_estim)
+         else
+            wk_slave2 = 
+     *           ( DBLE(npiv2)*DBLE(nfront2-npiv2)*DBLE(nfront2) )
+     *           /   DBLE(nslaves_estim)
+         endif
+#if(check_mumps_cv>=1)
+         write(*,*) 'k =',kk
+         write(*,*) 'master work=',wk_master2
+         write(*,*) 'slave work=',wk_slave2
+         write(*,*) 'nslaves_estim=',nslaves_estim
+#endif
+         if(wk_master2.le.wk_slave2) then
+            k3 = kk
+            exit
+         endif
+      enddo
+      if(k3 .lt. k1) then
+         k3 = k1
+#if (check_mumps_cv>=1)
+         write(*,*) 'warning : k3 =',k3,
+     *        'k1 =',k1
+#endif
+      endif
+      if(present(istat)) istat=0
+      return
+      end subroutine ZMUMPS_525
+      subroutine ZMUMPS_526(inode,
+     *     doit,npiv,nfront,k2,istat)
+      implicit none
+      integer,intent(in)::inode
+      logical,intent(out)::doit
+      integer,intent(out),OPTIONAL::npiv,nfront,istat
+      integer,intent(out),OPTIONAL::k2
+      integer in,nfr_ifather,npiv_ifather,npiv2,nfront2,npiv_son2
+      integer npropmap,j,ncb,kmax,keep48_loc,nslaves_max,
+     *     nslaves_estim,strat,kk
+      DOUBLE PRECISION mem_master
+      doit=.FALSE.
+      if(present(npiv)) npiv=cv_invalid
+      if(present(nfront)) nfront=cv_invalid
+      if(present(k2)) k2=1
+      if(present(istat)) istat=-1
+#if( check_mumps_cv>=1)
+      if(cv_frere(inode).eq.cv_n+1) then
+         write(*,*) 'try to split a non principale variable'
+         write(*,*) 'inode = ', inode
+         return
+      endif
+#endif
+      doit=.TRUE.
+#if (check_mumps_cv >= 3) 
+      if (cv_nodetype(inode) .gt. 0) then
+         doit=.FALSE.
+#if (check_mumps_cv >= 3)
+         write(*,*) 'node',inode,'already splitted, doit =',
+     *        doit
+#endif
+         istat = 0
+         return
+      endif
+      if ((cv_frere(inode).eq.0).AND.
+     *     ((cv_keep(60).ne.0).OR.(cv_keep(19).le.0))) then
+         doit=.FALSE.
+         istat = 0
+         return
+      endif
+#endif
+      nfront=cv_nfsiz(inode)
+      in=inode
+      npiv=0
+      do while (in.gt.0)
+         in=cv_fils(in)
+         npiv=npiv+1
+      end do 
+#if (check_mumps_cv >= 3)
+      write(*,*) 'nfront =',nfront,'npiv',npiv
+#endif
+      doit = .TRUE.
+      k2 = cv_keep(82)
+      do kk=1,cv_keep(82)-1
+         npiv2 = npiv/kk
+         if(npiv2 .eq. 0) then
+            k2 = MAX(1,kk-1)
+            exit
+         endif
+         if (cv_keep(50).eq.0) then
+            mem_master  = DBLE(npiv2)*DBLE(nfront)
+         else
+            mem_master  = DBLE(npiv2)*DBLE(npiv2)
+         endif
+#if(check_mumps_cv>=1)
+         write(*,*) 'k =',kk
+         write(*,*) 'master_mem =',mem_master,
+     *        'memory peak =',cv_stack_peak,
+     *        'max mem authorized',
+     *        (DBLE(cv_mem_strat)/DBLE(100))*cv_stack_peak
+#endif
+         if(mem_master.le.
+     *        (DBLE(cv_mem_strat)/DBLE(100))*cv_stack_peak) then
+            k2 = kk
+            exit
+         endif
+      enddo      
+      if(present(istat)) istat=0
+      return
+      end subroutine ZMUMPS_526
+      subroutine ZMUMPS_529(inode,nfront,npiv,k,
+     *     ison,ifather,istat)
+      implicit none
+      integer, intent(in)::nfront,npiv
+      integer, intent(in):: k
+      integer inode
+      integer,intent(out)::ison,ifather 
+      integer, intent(out)::istat
+      integer i,lev,in,in_son,in_father,in_grandpa,
+     *     npiv_son,nfrontk,npivk,d1,f1,e1,dk,fk,next_father
+      DOUBLE PRECISION:: ncostm,ncostw,ncostm_ison,ncostw_ison,
+     *                   ncostm_ifather,ncostw_ifather
+      character (len=48):: subname
+      istat=-1
+      subname='SPLITNODE_INKPART'
+      ison=-1
+      ifather=-1
+      ncostw=cv_ncostw(inode)
+      ncostm=cv_ncostm(inode)
+      nfrontk = nfront
+      npivk = npiv
+#if (check_mumps_cv >= 1)
+      if(k .gt. cv_keep(82)) then
+         write(*,*) 'pb1 in ',subname
+         return
+      endif
+#endif
+      npiv_son = npiv/k
+#if (check_mumps_cv >= 3)
+      write(*,*) 'npiv_son = ', npiv_son
+#endif
+      cv_keep(2)=max(cv_keep(2),nfront-npiv_son)
+      d1 = inode
+      f1 = d1
+      e1 = cv_frere(d1)
+      do i=1,npiv_son-1
+         f1 = cv_fils(f1)
+#if (check_mumps_cv >= 1)
+         if(f1 .le. 0)then
+            write(*,*) 'pb2 in ',subname
+            return
+         endif
+#endif
+      enddo
+#if (check_mumps_cv >= 1)
+      write(*,*) 'inode, last var, frere',
+     *     d1,f1,e1
+#endif
+      ison = d1
+      in_son = f1
+      next_father = cv_fils(in_son)
+      call ZMUMPS_418(npiv_son,nfrontk,
+     *     ncostw_ison,ncostm_ison)
+      cv_ncostw(ison)=ncostw_ison
+      cv_ncostm(ison)=ncostm_ison
+      if(associated(cv_tcostw)) cv_tcostw(ison) = cv_tcostw(inode) 
+     *     -ncostw +cv_ncostw(ison)
+      if(associated(cv_tcostm)) cv_tcostm(ison) = cv_tcostm(inode) 
+     *     -ncostm +cv_ncostm(ison)
+      do lev = 1,k-1
+         ifather = next_father
+         in_father = ifather
+#if (check_mumps_cv >= 1)
+         if(ifather .le. 0) then
+            write(*,*) ifather,'pb3 in ',subname,
+     *           ' loop =',lev,' k =',k
+            return
+         endif
+#endif
+         if(lev .eq. k-1) then
+            do while (cv_fils(in_father).gt.0)
+               in_father=cv_fils(in_father)
+            end do
+         else
+            do i=1,npiv_son-1
+               in_father=cv_fils(in_father)
+#if (check_mumps_cv >= 1)
+               if(in_father .le. 0) then
+                  write(*,*) 'pb4 in ',subname
+                  return
+               endif
+#endif
+            enddo
+         endif
+         cv_frere(ison)=-ifather
+         next_father = cv_fils(in_father)
+         cv_fils(in_father)=-ison
+         cv_nfsiz(ison)=nfrontk  !ison has the same front size as inode
+         cv_nfsiz(ifather)=nfrontk-npiv_son
+         cv_ne(ifather)=1
+         cv_keep(61)=cv_keep(61)+1 !number_of_split_nodes += 1
+         call ZMUMPS_418(npiv_son,nfrontk-npiv_son,
+     *        ncostw_ifather,ncostm_ifather)
+         cv_ncostw(ifather)=ncostw_ifather
+         cv_ncostm(ifather)=ncostm_ifather
+         if(associated(cv_tcostw))      
+     *        cv_tcostw(ifather) = cv_tcostw(ison)+cv_ncostw(ifather)
+         if(associated(cv_tcostm))      
+     *        cv_tcostm(ifather) = cv_tcostm(ison)+cv_ncostm(ifather)
+         cv_total_split=cv_total_split+1
+         if(lev .gt. 1) then
+            call ZMUMPS_437(inode,ison,ierr)
+            if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *              write(cv_lp,*)'PROPMAP4SPLIT error in ',subname
+               istat = ierr
+               return
+            endif
+         endif
+         if( ZMUMPS_359(nfrontk-npiv_son,npiv_son) ) then
+            cv_nodetype(ifather) = 2
+         else
+            cv_nodetype(ifather) = 1
+         endif
+         nfrontk = nfrontk-npiv_son
+         npivk = npivk - npiv_son
+         ison = ifather
+         in_son = in_father
+      enddo
+      dk = ifather
+      fk = in_father
+      if( ZMUMPS_359(nfrontk,npivk) ) then
+         cv_nodetype(dk) = 2
+      else
+         cv_nodetype(dk) = 1
+      endif
+      call ZMUMPS_418(npivk,nfrontk,
+     *     ncostw_ifather,ncostm_ifather)
+      cv_ncostw(dk)=ncostw_ifather
+      cv_ncostm(dk)=ncostm_ifather
+      if(associated(cv_tcostw))      
+     *     cv_tcostw(dk) = cv_tcostw(ison)+cv_ncostw(dk)
+      if(associated(cv_tcostm))      
+     *     cv_tcostm(dk) = cv_tcostm(ison)+cv_ncostm(dk)
+      cv_fils(f1) = next_father
+      cv_frere(dk) = e1
+      in = e1
+      do while (in.gt.0)
+         in=cv_frere(in)
+      end do
+      in = -in
+      do while(cv_fils(in).gt.0)
+         in=cv_fils(in)
+      end do
+      in_grandpa = in
+      if(cv_fils(in_grandpa).eq.-d1) then
+         cv_fils(in_grandpa)=-dk
+      else
+         in=-cv_fils(in_grandpa)
+         do while(cv_frere(in) .ne. d1)
+#if (check_mumps_cv >= 1)
+            if(cv_frere(in) .le. 0) then
+               write(*,*) 'pb6 in ',subname
+               return
+            endif
+#endif
+            in=cv_frere(in)
+         end do
+         cv_frere(in) = dk
+      end if
+      ison = dk
+      do lev=1,k
+#if (check_mumps_cv >= 3)
+         write(*,*) 'node ',ison
+#endif
+         do while (cv_fils(ison).gt.0)
+            ison=cv_fils(ison)
+         end do
+         ison = -cv_fils(ison)
+      enddo
+      call ZMUMPS_437(inode,dk,ierr)
+      if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'PROPMAP4SPLIT error in ',subname
+         istat = ierr
+         return
+      endif
+      cv_nsteps = cv_nsteps + k-1
+      istat = 0 
+      return
+      end subroutine ZMUMPS_529
       subroutine ZMUMPS_370(
      *                              layernmb,thislayer,nmb_thislayer,
      *                              istat)
@@ -1173,6 +1756,8 @@ C
          call ZMUMPS_400(inode,
      *                              doit,npiv,nfront,npiv_son,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat =ierr
             return
          endif
@@ -1181,6 +1766,8 @@ C
          call ZMUMPS_401(inode,nfront,npiv,npiv_son,
      *                           ison,ifather,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat = ierr
             return
          endif
@@ -1211,7 +1798,12 @@ C
       do i=1,cv_n
          if (cv_frere(i).lt.cv_n+1) then
             if(cv_nodetype(i).eq.cv_invalid) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Error in ',subname
                return
+            endif
+            if (i.eq.cv_keep(38)) then
+               cv_nodetype(i)=3
             endif
             cv_procnode(i)=(cv_nodetype(i)-1)*cv_slavef+cv_procnode(i)
             in=cv_fils(i)
@@ -1275,11 +1867,11 @@ C
             call ZMUMPS_459(cv_layerl0_end-oldl0end,
      *            cv_layerl0_array(oldl0end+1:cv_layerl0_end),
      *     cv_layerl0_sorted_costw(oldl0end+1:cv_layerl0_end))
-           call ZMUMPS_SORT_MMERGE(
+           call ZMUMPS_516(
      *        cv_layerl0_start,oldl0end,oldl0end-cv_layerl0_start+1,
      *        oldl0end+1,cv_layerl0_end,cv_layerl0_end-oldl0end,
-     *        cv_layerl0_array,cv_layerl0_array,
-     *        cv_layerl0_sorted_costw,cv_layerl0_sorted_costw)
+     *        cv_layerl0_array,
+     *        cv_layerl0_sorted_costw)
          endif
       istat=0
       return
@@ -1306,7 +1898,7 @@ C
       if((map_strat.ne.cv_equilib_flops).and.
      *   (map_strat.ne.cv_equilib_mem)) return
       dummy=HUGE(dummy) !dummy will hold the workload of least 
-      do i=1,cv_slavef
+      do i=cv_slavef,1,-1
          if (
      *       ((.NOT.respect_proportional)
      *        .OR. 
@@ -1342,11 +1934,12 @@ C
       implicit none
       integer,intent(in)::map_strat
       integer,intent(out)::istat
-      DOUBLE PRECISION costs(cv_n),aux_dbl
-      integer i,j,indices(cv_n),aux_int,inode,in,nfront,npiv,
+      DOUBLE PRECISION aux_dbl,current_max,temp_max
+      integer i,j,aux_int,inode,in,nfront,npiv,
      *     nslaves_estim,strat,kmax,ncb,npropmap, blsize, 
-     *     nslaves_max, keep48_loc
+     *     nslaves_max, keep48_loc,current_max_node
       DOUBLE PRECISION wk_slave, wk_master
+      DOUBLE PRECISION,DIMENSION(:), POINTER ::  costs
       logical doit
       character (len=48):: subname
       integer ZMUMPS_497, 
@@ -1354,35 +1947,36 @@ C
       external ZMUMPS_497, 
      *        ZMUMPS_52
       istat=-1
+      current_max_node=-9999
+      current_max=0.0D0
       subname='FIND_POTSPLIT'
       if(map_strat.eq.cv_equilib_flops) then
-         costs=cv_ncostw
+         costs=>cv_ncostw
       elseif(map_strat.eq.cv_equilib_mem) then
-         costs=cv_ncostm
+         costs=>cv_ncostm
       endif
-      do i=1,cv_n
-         indices(i)=i
-      enddo
       if((cv_slavef.eq.1).OR.(cv_keep(62).lt.1))then
          cv_potsplit(1:cv_maxcut)=cv_invalid
          istat=0
          return
       end if
-      do i=1,min(cv_maxcut,cv_n-1)
-         do j=i+1,cv_n
-            if(costs(j).gt.costs(i))then
-               aux_dbl=costs(j)
-               costs(j)=costs(i)
-               costs(i)=aux_dbl
-               aux_int=indices(j)
-               indices(j)=indices(i)
-               indices(i)=aux_int
-            end if
-         end do
-      end do
+      current_max=HUGE(current_max);
+      current_max_node=cv_n+1
       aux_int=1
       do i=1,min(cv_maxcut,cv_n)
-         inode=indices(i)
+         temp_max=0.0D0
+         do j=1,cv_n
+            if(costs(j).ge.temp_max)then
+               if(((costs(j).eq.current_max).and.
+     $              (j.lt.current_max_node)).or.
+     $              (costs(j).lt.current_max))then
+                  temp_max=costs(j)
+                  inode=j
+               endif
+            endif
+         end do
+         current_max=costs(inode)
+         current_max_node=inode
          if((inode.lt.0).OR.(inode.gt.cv_n)) cycle
          doit = .TRUE.
          if (cv_frere(inode).eq.0) cycle
@@ -1406,6 +2000,7 @@ C
          else
            keep48_loc=3
          endif
+         if (cv_keep(48).EQ.5) keep48_loc = 5
          nslaves_max   = ZMUMPS_52(
      *        cv_slavef, keep48_loc, cv_keep(10),
      *        cv_keep(50), nfront, ncb )
@@ -1446,13 +2041,15 @@ C
       character (len=48):: subname
       istat=-1
       subname='FIND_THISLAYER'
-      thislayer(:)=0
+      thislayer=0
       nmb_thislayer=0
       if((nmb.lt.0).or.(nmb.gt.cv_maxlayer)) return
       do i=1,cv_n
          if(cv_nodelayer(i).eq.nmb) then
             nmb_thislayer=nmb_thislayer+1
             if(nmb_thislayer.gt.cv_maxnodenmb) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Problem with nmb_thislayer in ',subname
                return
             endif
             thislayer(nmb_thislayer)=i
@@ -1525,19 +2122,20 @@ C
       return
       end subroutine ZMUMPS_377
       subroutine ZMUMPS_478(n,slavef,
-     *                    frere,fils,nfsiz,ne,na,keep,icntl,info,
-     *                    procnode,ssarbr,istat)
+     *                    frere,fils,nfsiz,ne,keep,icntl,info,
+     *                    procnode,ssarbr,peak,istat)
       implicit none
       integer, intent(in)::n,slavef
       integer, intent(in), TARGET:: frere(n),fils(n),nfsiz(n),ne(n),
-     *  na(n),keep(150),icntl(40),info(40),
+     *  keep(150),icntl(40),info(40),
      *  procnode(n),ssarbr(n)
       integer,intent(out)::istat
       integer i,allocok,rest
+      DOUBLE PRECISION peak
       character (len=48):: subname
       intrinsic bit_size,min,max
       istat=-1
-      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_na,cv_keep,
+      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,
      *        cv_icntl,cv_info,cv_procnode,cv_ssarbr)
       nullify(cv_ncostw,cv_tcostw,cv_ncostm,cv_tcostm,
      *        cv_nodelayer,cv_nodetype,cv_depth,cv_potsplit,
@@ -1545,8 +2143,22 @@ C
       subname='INITPART1'
       cv_n=n
       cv_slavef=slavef
-      cv_maxcut=min(slavef,n/2)
+      cv_stack_peak = peak
+      cv_mem_strat = MAX((300 / cv_slavef),1)
       cv_keep=>keep
+      if(cv_keep(82) .lt. 0) then
+         write(cv_lp,*) 'warning in mumps_cv : keep(82) reset to 0'         
+         cv_keep(82) = 0
+      endif
+      if(cv_keep(83) .lt. 0) then
+         write(cv_lp,*) 'warning in mumps_cv : keep(83) reset to 0'         
+         cv_keep(83) = 0
+      endif
+      if(cv_keep(82) .gt. 0) then
+         cv_maxcut=-99999
+      else 
+         cv_maxcut =MIN(slavef,n/2)
+      endif
       if(slavef.gt.1) then 
          cv_mixed_strat_bound = max(cv_keep(78),1)
          cv_maxdepth = slavef
@@ -1556,6 +2168,8 @@ C
       endif
       cv_bitsize_of_int = bit_size(n)
       if(cv_bitsize_of_int.le.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Problem with bit size in ',subname
          return
       endif
       rest = mod(cv_slavef,cv_bitsize_of_int)
@@ -1566,20 +2180,31 @@ C
       endif
       allocate(cv_ncostw(n),cv_tcostw(n),cv_ncostm(n),cv_tcostm(n),
      *       cv_nodelayer(n),cv_nodetype(n),cv_depth(n),
-     *       cv_potsplit(cv_maxcut),
      *       cv_layerworkload(slavef),cv_layermemused(slavef),
      *       cv_prop_map(n),STAT=allocok)
       if (allocok.gt.0) then
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 14*n+2*cv_slavef+2*40+150
          istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'memory allocation error in ',subname
          return
       end if
+      if(cv_keep(82) .eq. 0) then
+         allocate(cv_potsplit(cv_maxcut),STAT=allocok)
+         if (allocok.gt.0) then
+            cv_info(1) = cv_error_memalloc
+            cv_info(2) = 14*n+2*cv_slavef+2*40+150
+            istat = cv_error_memalloc
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'memory allocation error in ',subname
+            return
+         end if
+      endif
       cv_frere=>frere
       cv_fils=>fils
       cv_nfsiz=>nfsiz
       cv_ne=>ne
-      cv_na=>na
       cv_icntl=>icntl
       cv_info=>info
       cv_procnode=>procnode
@@ -1588,6 +2213,8 @@ C
       cv_nodetype=cv_invalid
       cv_nsteps=keep(28) 
       if((keep(28).gt.n).OR.(keep(28).lt.0)) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'problem with nsteps in ',subname
          return
       end if
       cv_iroottree=cv_invalid
@@ -1600,12 +2227,18 @@ C
       cv_costm_total=0.
       cv_nodelayer=n+2
       cv_depth=cv_invalid
-      cv_potsplit=cv_invalid
+      if(cv_keep(82) .eq. 0) then
+         cv_potsplit=cv_invalid
+      endif
       cv_l0wthresh=0.0 !old value was 0.1
       cv_splitthresh=0.45
       cv_relax=DBLE(1) + DBLE(max(0,keep(68)))/DBLE(100)
       cv_maxlayer=0
-      cv_maxnsteps=cv_nsteps+cv_maxcut+1
+      if( cv_keep(82) .gt. 0) then
+         cv_maxnsteps= cv_nsteps+1
+      else
+         cv_maxnsteps=cv_nsteps+cv_maxcut+1
+      endif
       cv_layerworkload=DBLE(0)
       cv_layermemused=DBLE(0)
       cv_total_amalg=0
@@ -1644,6 +2277,8 @@ C
       end if
 #endif
       if(cv_maxnsteps.lt.1) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'problem with maxnsteps in ',subname
          return
       end if
       cv_maxnodenmb=cv_maxnsteps
@@ -1671,8 +2306,19 @@ C
             end if
          end if
       end do
+      if(cv_keep(82) .gt. 0) then
+#if (check_mumps_cv >= 1)
+         write(*,*) cv_maxnodenmb,
+     *        ' INITPART2 nodes found in the upper part'
+#endif
+         cv_maxcut = (cv_keep(82)-1)*cv_maxnodenmb
+         cv_maxnsteps = cv_maxnsteps+cv_maxcut
+         cv_maxnodenmb = cv_maxnsteps
+      endif
       nullify(cv_layer_p2node)
       if(cv_maxnodenmb.lt.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'problem with maxnodenmb in ',subname
          return
       elseif(cv_maxnodenmb.lt.1) then
          cv_maxnodenmb = 1
@@ -1682,6 +2328,8 @@ C
          cv_info(1) = cv_error_memalloc
          cv_info(2) = cv_maxnodenmb
          istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'memory allocation error in ',subname
          return
       end if
       do i=1,cv_maxnodenmb
@@ -1700,13 +2348,13 @@ C
       ZMUMPS_359=.FALSE.
       if( (nfront - npiv > cv_keep(9)) 
      *     .and. ((npiv > cv_keep(4)).or.(.TRUE.)) 
-     *     .and. (cv_icntl(12).eq.0) ) ZMUMPS_359=.TRUE.
+     *     .and. (cv_icntl(40).eq.0) ) ZMUMPS_359=.TRUE.
       return
       end function ZMUMPS_359
       subroutine ZMUMPS_381(istat)
       implicit none
       integer,intent(out)::istat
-      integer i,ierr,inode,procnode(cv_n)
+      integer i,ierr,inode
       logical accepted,splitting_allowed
       integer,parameter::map_strat=cv_equilib_flops
       DOUBLE PRECISION old_ratio,new_ratio
@@ -1724,8 +2372,10 @@ C
          err_rep='ARRANGEL0'
          call ZMUMPS_415(map_strat,
      *                           cv_layerworkload,cv_layermemused,
-     *                           procnode,ierr)
+     *                           cv_procnode,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat = ierr
             return
          end if
@@ -1735,6 +2385,8 @@ C
      *                           cv_layerworkload,cv_layermemused,
      *                           accepted,new_ratio,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat = ierr
             return
          end if
@@ -1745,6 +2397,8 @@ C
             err_rep='MAX_TCOST_L0'
             call ZMUMPS_389(map_strat,inode,ierr)
             if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
                istat = ierr
                return
             endif
@@ -1755,6 +2409,9 @@ C
                if(ierr.eq.1) then
                   accepted=.TRUE.
                elseif(ierr.ne.0) then
+                  if(cv_lp.gt.0) 
+     *            write(cv_lp,*)
+     *            'Error rep. by ',err_rep,' in ',subname
                   istat = ierr
                   return 
                endif
@@ -1771,28 +2428,31 @@ C
       err_rep='LIST2LAYER'
       call ZMUMPS_382(ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
          istat = ierr
          return
       end if
       err_rep='MAKE_PROPMAP'
       call ZMUMPS_477(ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
          istat = ierr
          return
       end if
       if ( cv_keep(75).EQ.1 ) then
          call ZMUMPS_415(map_strat,
      *                     cv_layerworkload,cv_layermemused,
-     *                     procnode,ierr, respect_prop=.TRUE.)
+     *                     cv_procnode,ierr, respect_prop=.TRUE.)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Error reported by ',err_rep,' in ',subname
             istat = ierr
             return
          end if
       endif
-      call ZMUMPS_386(procnode)
-      do i=1,cv_n
-         cv_procnode(i)=procnode(i)
-      end do
+      call ZMUMPS_386(cv_procnode)
       do i=1,cv_slavef
          cv_proc_workload(i)=cv_layerworkload(i)
          cv_proc_memused(i)=cv_layermemused(i)
@@ -1833,6 +2493,8 @@ C
       do i=1,cv_slavef
          call ZMUMPS_482(procindex,i,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0)write(cv_lp,*) 
+     *           'BIT_SET signalled error to',subname
             istat = ierr
             return
          end if
@@ -1841,12 +2503,16 @@ C
          if(cv_frere(i).eq.0) then
             call ZMUMPS_433(i,procindex,pctr,ierr)
             if(ierr.ne.0) then
+            if(cv_lp.gt.0)write(cv_lp,*) 
+     *           'PROPMAP signalled error to',subname
                istat = ierr
                return
             endif
             if((cv_keep(24).eq.16).OR.(cv_keep(24).eq.18)) then
-               call ZMUMPS_MOD_PROPMAP(i,procindex,pctr2,ierr)
+               call ZMUMPS_517(i,procindex,pctr2,ierr)
                if(ierr.ne.0) then
+                  if(cv_lp.gt.0)write(cv_lp,*) 
+     *           'MOD_PROPMAP signalled error to',subname
                   istat = ierr
                   return
                endif
@@ -1903,13 +2569,6 @@ C
             sorted_costm(nmb)=cv_ncostm(inode)
          else if(cv_nodetype(inode).eq.2) then
             nmb=nmb+1
-            sorted_nmb(nmb)=inode
-            sorted_costw(nmb)=cv_ncostw(inode)
-            sorted_costm(nmb)=cv_ncostm(inode)
-            nmb=nmb+1
-            sorted_nmb(nmb)=-inode 
-            sorted_costw(nmb)=cv_d_invalid
-            sorted_costm(nmb)=cv_d_invalid
             do j=1,cv_layer_p2node(layernmb)%nmb_t2s
                if(cv_layer_p2node(layernmb)%t2_nodenumbers(j).ne.inode)
      *            then 
@@ -1922,12 +2581,23 @@ C
                endif
             enddo
             if((sorted_costw(nmb).eq.cv_d_invalid).OR.
-     *        (sorted_costm(nmb).eq.cv_d_invalid)) then 
+     *           (sorted_costm(nmb).eq.cv_d_invalid)) then 
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Error in ',subname
                return
             end if
+            if(sorted_costw(nmb).lt.cv_ncostw(inode))then
+               sorted_costw(nmb)=cv_ncostw(inode)
+               sorted_costm(nmb)=cv_ncostm(inode)
+               sorted_nmb(nmb)=inode
+            else
+               sorted_nmb(nmb)=-inode
+            endif
          else if(cv_nodetype(inode).eq.3) then
             cycle
          else
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Unknown node type. Error in ',subname
             return
          end if
       end do
@@ -1948,14 +2618,17 @@ C
             err_rep='SORTPROCS'
             if(use_propmap) then
                call ZMUMPS_398(map_strat,
-     *              cv_proc_workload(:),cv_proc_memused(:),
+     *              cv_proc_workload,cv_proc_memused,
      *              INODE=inode,ISTAT=ierr)
             else
                call ZMUMPS_398(map_strat,
-     *              cv_proc_workload(:),cv_proc_memused(:),
+     *              cv_proc_workload,cv_proc_memused,
      *              ISTAT=ierr)
             end if
             if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)
+     *         'Error reported by ',err_rep,' in ',subname
                istat = ierr
                return
             endif
@@ -1971,6 +2644,8 @@ C
                endif
             enddo
             if(nmb_cand_needed.eq.cv_invalid) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Error in ',subname
                return
             endif
             do while((k.le.cv_slavef).and.(nmb_cand_needed.gt.0))
@@ -1998,26 +2673,66 @@ C
                else
                   k=k+1
                   if(k.gt.cv_slavef) then
+                     if(cv_lp.gt.0) 
+     *                    write(cv_lp,*)'Error in ',subname
                      return
                   endif
                end if
             end do
             if(nmb_cand_needed.gt.0) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Error in ',subname
                return
             endif
+            aux_flop=cv_ncostw(inode)
+            aux_mem=cv_ncostm(inode)
+            do while(k.le.cv_slavef)
+               if(((.not.cv_constr_work).or.
+     *              (cv_proc_workload(cv_proc_sorted(k))+aux_flop.lt.
+     *              cv_proc_maxwork(cv_proc_sorted(k)))) 
+     *              .AND.((.not.cv_constr_mem).or.
+     *              (cv_proc_memused(cv_proc_sorted(k))+aux_mem.lt.
+     *              cv_proc_maxmem(cv_proc_sorted(k))))
+     *              .AND.       !processor is not assigned as candidate
+     * (cv_layer_p2node(layernmb)%t2_cand(j,cv_proc_sorted(k)).eq.0))
+     *              then
+                  cv_procnode(inode)=cv_proc_sorted(k)
+                  cv_proc_workload(cv_proc_sorted(k))=
+     *                 cv_proc_workload(cv_proc_sorted(k))+aux_flop
+                  cv_proc_memused(cv_proc_sorted(k))=
+     *                 cv_proc_memused(cv_proc_sorted(k))+aux_mem
+                  cv_layer_p2node(layernmb)%t2_cand(j,cv_proc_sorted(k))
+     *                 =-inode
+                  cv_layerworkload(cv_proc_sorted(k))=
+     *                 cv_layerworkload(cv_proc_sorted(k))+aux_flop
+                  cv_layermemused(cv_proc_sorted(k))=
+     *                 cv_layermemused(cv_proc_sorted(k))+aux_mem
+                  exit
+               else
+                  k=k+1
+                  if(k.gt.cv_slavef) then
+                     if(cv_lp.gt.0) 
+     *                    write(cv_lp,*)'Error in ',subname
+                     return
+                  endif
+               end if
+            end do
          else
             inode=aux_int
             err_rep='SORTPROCS'
             if(use_propmap) then
                call ZMUMPS_398(map_strat,
-     *                        cv_proc_workload(:),cv_proc_memused(:),
+     *                        cv_proc_workload,cv_proc_memused,
      *                        INODE=inode,ISTAT=ierr)
             else
                call ZMUMPS_398(map_strat,
-     *                        cv_proc_workload(:),cv_proc_memused(:),
+     *                        cv_proc_workload,cv_proc_memused,
      *                        inode,ISTAT=ierr)
             endif
             if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *          write(cv_lp,*)
+     *          'Error reported by ',err_rep,' in ',subname
                istat = ierr
                return
             endif
@@ -2042,6 +2757,8 @@ C
                   else
                      k=k+1
                      if(k.gt.cv_slavef) then
+                        if(cv_lp.gt.0) 
+     *                  write(cv_lp,*)'Inconsist data in ',subname
                         return
                      endif
                   end if
@@ -2080,10 +2797,72 @@ C
                   else
                      k=k+1
                      if(k.gt.cv_slavef) then
+                        if(cv_lp.gt.0) 
+     *                       write(cv_lp,*)'Error in ',subname
                         return
                      endif
                   end if
                end do
+               nmb_cand_needed=cv_invalid
+               do j=1,cv_layer_p2node(layernmb)%nmb_t2s
+                  if(cv_layer_p2node(layernmb)%t2_nodenumbers(j)
+     $                 .ne.inode)
+     *                 then 
+                     cycle
+                  else
+                     nmb_cand_needed=
+     *                    cv_layer_p2node(layernmb)%
+     $                    t2_cand(j,cv_slavef+1)
+                     exit
+                  endif
+               enddo
+               if(nmb_cand_needed.eq.cv_invalid) then
+                  if(cv_lp.gt.0) 
+     *                 write(cv_lp,*)'Error in ',subname
+                  return
+               endif
+               aux_flop=
+     *              cv_layer_p2node(layernmb)%t2_candcostw(j)
+               aux_mem=
+     *              cv_layer_p2node(layernmb)%t2_candcostm(j)
+               do while((k.le.cv_slavef).and.(nmb_cand_needed.gt.0))
+                  if(((.not.cv_constr_work).or.
+     *                 (cv_proc_workload(cv_proc_sorted(k))+aux_flop.lt.
+     *                 cv_proc_maxwork(cv_proc_sorted(k))))
+     *                 .AND.((.not.cv_constr_mem).or.
+     *                 (cv_proc_memused(cv_proc_sorted(k))+aux_mem.lt.
+     *                 cv_proc_maxmem(cv_proc_sorted(k))))
+     *                 .AND.    !processor is not assigned as master
+     *                 (cv_layer_p2node(layernmb)%
+     $                 t2_cand(j,cv_proc_sorted(k)).eq.0))
+     *                 then
+                     cv_proc_workload(cv_proc_sorted(k))=
+     *                    cv_proc_workload(cv_proc_sorted(k))+aux_flop
+                     cv_proc_memused(cv_proc_sorted(k))=
+     *                    cv_proc_memused(cv_proc_sorted(k))+aux_mem
+                     cv_layer_p2node(layernmb)%
+     $                    t2_cand(j,cv_proc_sorted(k))
+     *                    =inode
+                     cv_layerworkload(cv_proc_sorted(k))=
+     *                    cv_layerworkload(cv_proc_sorted(k))+aux_flop
+                     cv_layermemused(cv_proc_sorted(k))=
+     *                    cv_layermemused(cv_proc_sorted(k))+aux_mem
+                     nmb_cand_needed=nmb_cand_needed-1
+                     k=k+1
+                  else
+                     k=k+1
+                     if(k.gt.cv_slavef) then
+                        if(cv_lp.gt.0) 
+     *                       write(cv_lp,*)'Error in ',subname
+                        return
+                     endif
+                  end if
+               end do
+               if(nmb_cand_needed.gt.0) then
+                  if(cv_lp.gt.0) 
+     *                 write(cv_lp,*)'Error in ',subname
+                  return
+               endif
             end if
          end if
       end do
@@ -2100,6 +2879,8 @@ C
             end if
          end do
          if (k.ne.nmb_cand_needed) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'Error in ',subname
             return
          endif
       enddo
@@ -2154,6 +2935,8 @@ C
       istat=-1
       if ((.NOT.associated(cv_tcostw)).OR.(.NOT.associated(cv_tcostm)))
      *   then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:tcost must be allocated in ',subname
          return
       end if 
       if((map_strat.ne.cv_equilib_flops).and.
@@ -2241,8 +3024,8 @@ C
                if(maxmem.le.mastermem-cv_ncostm(inode)
      *                +cv_layer_p2node(layernmb)%t2_candcostm(i))
      *            swapthem=.FALSE.
-               if(maxmem.le.cv_proc_memused(swapper)-cv_ncostm(inode)
-     *                +cv_layer_p2node(layernmb)%t2_candcostm(i))
+               if(maxmem.le.cv_proc_memused(swapper)+cv_ncostm(inode)
+     *                -cv_layer_p2node(layernmb)%t2_candcostm(i))
      *            swapthem=.FALSE.
                if(ke69 .gt. 1) then
                   if (.not. allowed_nodes(node_of_master)) then
@@ -2301,6 +3084,8 @@ C
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 2*cv_slavef
          istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'memory allocation error in ',subname
          return
       end if
       do i=1,cv_slavef
@@ -2321,14 +3106,14 @@ C
       istat=0
       return
       end subroutine ZMUMPS_391
-      recursive subroutine ZMUMPS_MOD_PROPMAP
+      recursive subroutine ZMUMPS_517
      *                    (inode,procindex,ctr,istat)
       implicit none
       integer, intent(in)::inode,ctr
       integer,dimension(cv_size_ind_proc),intent(in)::procindex    
       integer, intent(inout)::istat
       integer::j,k,in,in1,ierr,son,nmb_procs_inode,nmb_sons_inode,
-     *           procs4son(cv_size_ind_proc),current
+     *           procs4son(cv_size_ind_proc),current,i
       character (len=48):: subname
       DOUBLE PRECISION :: relative_weight,costs_sons
       DOUBLE PRECISION :: loc_relax, depth 
@@ -2337,10 +3122,12 @@ C
       intrinsic random_number
       integer nmb_propmap,nmb_propmap_strict,share2,procsrest,current2
       integer k69onid
+      integer procs_inode(slavef)
       if (ctr.le.0) then
          istat = 0
          return
       endif
+      procs_inode=-1
       istat= -1
       if(cv_frere(inode).eq.cv_n+1) return 
       subname='MOD_PROPMAP'
@@ -2348,10 +3135,33 @@ C
       cv_prop_map(inode)%allowed%ind_proc = procindex
       nmb_procs_inode = 0
       do j=1,cv_slavef
-         if( ZMUMPS_481(inode,j))
-     *        nmb_procs_inode = nmb_procs_inode + 1
+         if( ZMUMPS_481(inode,j))then
+            nmb_procs_inode = nmb_procs_inode + 1
+         endif
       end do
+      i=0
+      do j=1,cv_slavef
+            if(ke69 .gt.1) then
+               call ZMUMPS_493(j-1,
+     $              k69onid,ierr)
+            else
+               k69onid = j
+            endif
+            if(ZMUMPS_481(inode,k69onid))then
+               i = i + 1
+               procs_inode(i)=k69onid
+            endif
+      end do
+      if(i.ne.nmb_procs_inode)then
+         if(cv_lp.gt.0)
+     *        write(cv_lp,*)'Error in ',subname
+     *        ,subname
+         return
+      endif
       if(nmb_procs_inode.eq.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname
+     *        ,subname
          return
       end if
       if ((cv_nodelayer(inode).eq.0).AND.
@@ -2375,12 +3185,18 @@ C
       do while(in.gt.0)
          nmb_sons_inode = nmb_sons_inode + 1
          if(cv_tcostw(in).le.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'Subtree costs for ',in,
+     *                         ' should be positive in ',subname
             return
          endif
          costs_sons = costs_sons + cv_tcostw(in)
          in=cv_frere(in)
       enddo
       if(costs_sons.le.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname
+     *        ,subname
          return
       endif
       depth= max(DBLE(cv_mixed_strat_bound - ctr),DBLE(0))
@@ -2425,52 +3241,42 @@ C
             procsrest=nmb_procs_inode - nmb_propmap_strict
             share2=min(share2,procsrest)            
             CALL RANDOM_NUMBER(HARVEST=Y)
-            current2=current+INT(DBLE(Y)*DBLE(procsrest))
-            if(current2.gt.cv_slavef) current2=MOD(current2,cv_slavef)
-            do j=current2,cv_slavef
-               if(share2.le.0) exit
-               if(ke69 .gt.1) then
-                  call ZMUMPS_493(j-1,k69onid,ierr)
-               else
-                  k69onid = j
-               endif
-               if(( ZMUMPS_481(inode,k69onid)).AND.
-     *              (.NOT.ZMUMPS_480(procs4son,k69onid))) then
-                  call ZMUMPS_482(procs4son,k69onid,ierr)
-                  if(ierr.ne.0) then
-                     istat = ierr
-                     return
-                  end if
-                  share2 = share2 - 1
-               end if
-            end do
-            if(share2.gt.0) then
-               do j=1,current2 - 1
+            current2=INT(DBLE(Y)*DBLE(procsrest))
+            k=1
+            i=1
+            do while((share2.gt.0).and.(i.le.2))
+               do j=1,nmb_procs_inode
                   if(share2.le.0) exit
-                  if(ke69 .gt.1) then
-                     call ZMUMPS_493(j-1,k69onid,ierr)
-                  else
-                     k69onid = j
-                  endif
+                  k69onid = procs_inode(j)
                   if(( ZMUMPS_481(inode,k69onid)).AND.
      *                 (.NOT.ZMUMPS_480(procs4son,k69onid))) then
-                     call ZMUMPS_482(procs4son,k69onid,ierr)
-                     if(ierr.ne.0) then
-                        istat = ierr
-                        return
-                     end if
-                     share2 = share2 - 1
+                     if(k.ge.current2)then
+                        call ZMUMPS_482(procs4son,k69onid,ierr)
+                        if(ierr.ne.0) then
+                           if(cv_lp.gt.0)write(cv_lp,*) 
+     *                          'BIT_SET signalled error to',subname
+                           istat = ierr
+                           return
+                        end if
+                        share2 = share2 - 1
+                     endif
+                     k=k+1
                   end if
-               end do
-            endif
+               enddo
+               i=i+1
+            enddo
             if(share2.ne.0) then
+               if(cv_lp.gt.0) write(cv_lp,*)
+     *           'Error reported in ',subname
                return
             end if
          end if
          ierr=0
          in1=in
-         call ZMUMPS_MOD_PROPMAP(in1,procs4son,ctr-1,ierr)
+         call ZMUMPS_517(in1,procs4son,ctr-1,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) write(cv_lp,*)
+     *           'Error reported in ',subname
             istat=ierr
             return
          endif
@@ -2478,7 +3284,7 @@ C
       end do
       istat = 0 
       return
-      end subroutine ZMUMPS_MOD_PROPMAP
+      end subroutine ZMUMPS_517
       recursive subroutine ZMUMPS_433(inode,procindex,ctr,istat)
       implicit none
       integer, intent(in)::inode,ctr
@@ -2486,8 +3292,8 @@ C
       integer, intent(inout)::istat
       integer::j,k,in,in1,ierr,son,nmb_procs_inode,nmb_sons_inode,
      *           share,procs4son(cv_size_ind_proc),current,offset,
-     *           in_tmp,nfront,npiv,ncb,min_cand_needed,kmax,
-     *           keep48_loc
+     *           in_tmp,nfront,npiv,ncb,
+     *           keep48_loc,min_cand_needed
       character (len=48):: subname
       DOUBLE PRECISION :: relative_weight,costs_sons
       DOUBLE PRECISION :: loc_relax, depth 
@@ -2508,6 +3314,9 @@ C
       if(.NOT.associated(cv_prop_map(inode)%allowed)) then
          call ZMUMPS_434(inode,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'PROPMAP_INIT signalled error to'
+     *           ,subname
             istat = ierr
             return
          end if
@@ -2519,6 +3328,9 @@ C
      *        nmb_procs_inode = nmb_procs_inode + 1
       end do
       if(nmb_procs_inode.eq.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname
+     *        ,subname
          return
       end if
       if ((cv_nodelayer(inode).eq.0).AND.
@@ -2543,15 +3355,23 @@ C
       do while(in.gt.0)
          nmb_sons_inode = nmb_sons_inode + 1
          if(cv_tcostw(in).le.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'Subtree costs for ',in,
+     *                         ' should be positive in ',subname
             return
          endif
          costs_sons = costs_sons + cv_tcostw(in)
          in=cv_frere(in)
       enddo
       if(costs_sons.le.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname
+     *        ,subname
          return
       endif
       if(cv_relax.le.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname,'. Wrong cv_relax'
          return
       endif
       depth= max(DBLE(cv_n - ctr),DBLE(0))
@@ -2575,6 +3395,8 @@ C
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
             procs4son = procindex
+         elseif(nmb_procs_inode .LE. cv_keep(83)) then
+            procs4son = procindex
          else
             do k=1,cv_size_ind_proc
                do j=0,cv_bitsize_of_int-1
@@ -2595,23 +3417,23 @@ C
                in_tmp=cv_fils(in_tmp)
             end do
             ncb=nfront-npiv
-            kmax = ZMUMPS_497(cv_keep(10),ncb)
-            if(kmax.lt.1) then
-               kmax = max(kmax,1)
-            endif
             if (force_cand) then 
-            if (cv_keep(50) ==  0) then
-              keep48_loc=0
-            else
-              keep48_loc=3
-            endif
+               if (cv_keep(50) ==  0) then
+                  keep48_loc=0
+               else
+                  keep48_loc=3
+               endif
+               if (cv_keep(48).EQ.5) keep48_loc = 5
                min_cand_needed=
-     *         ZMUMPS_50
-     *          (cv_slavef, keep48_loc,cv_keep(10),cv_keep(50),
-     *           nfront,ncb)
+     *              ZMUMPS_50
+     *              (cv_slavef, keep48_loc,cv_keep(10),
+     *              cv_keep(50),
+     *              nfront,ncb)
+               min_cand_needed=min(cv_slavef,min_cand_needed+1)
             else
                min_cand_needed = 0
             endif
+            min_cand_needed = MAX(min_cand_needed, cv_keep(91))
             share= 
      *          max(1,NINT(relative_weight*DBLE(nmb_procs_inode)))
             share=min(share,nmb_procs_inode)
@@ -2626,6 +3448,8 @@ C
                if( ZMUMPS_481(inode,k69onid)) then
                   call ZMUMPS_482(procs4son,k69onid,ierr)
                   if(ierr.ne.0) then
+                     if(cv_lp.gt.0)write(cv_lp,*) 
+     *               'BIT_SET signalled error to',subname
                      istat = ierr
                      return
                   end if
@@ -2647,6 +3471,8 @@ C
                   if( ZMUMPS_481(inode,k69onid)) then
                      call ZMUMPS_482(procs4son,k69onid,ierr)
                      if(ierr.ne.0) then
+                        if(cv_lp.gt.0)write(cv_lp,*) 
+     *                  'BIT_SET signalled error to',subname
                         istat = ierr
                         return
                      end if
@@ -2660,11 +3486,15 @@ C
                end do
             endif
             if(share.ne.0) then
+               if(cv_lp.gt.0) write(cv_lp,*)
+     *              'Error reported in ',subname
                return
             end if
             share2=
      *          max(0,NINT(relative_weight*(loc_relax-DBLE(1))*
      *                                   DBLE(nmb_procs_inode)))
+            share2 = max(share2, min_cand_needed -nmb_propmap_strict, 
+     *                   (cv_keep(83)/2) - nmb_propmap_strict)
             procsrest=nmb_procs_inode - nmb_propmap_strict
             share2=min(share2,procsrest)
             CALL RANDOM_NUMBER(HARVEST=Y)
@@ -2681,6 +3511,8 @@ C
      *           (.NOT.ZMUMPS_480(procs4son,k69onid))) then
                   call ZMUMPS_482(procs4son,k69onid,ierr)
                   if(ierr.ne.0) then
+                     if(cv_lp.gt.0)write(cv_lp,*) 
+     *                 'BIT_SET signalled error to',subname
                      istat = ierr
                      return
                   end if
@@ -2699,6 +3531,8 @@ C
      *              (.NOT.ZMUMPS_480(procs4son,k69onid))) then
                      call ZMUMPS_482(procs4son,k69onid,ierr)
                      if(ierr.ne.0) then
+                        if(cv_lp.gt.0)write(cv_lp,*) 
+     *                       'BIT_SET signalled error to',subname
                         istat = ierr
                         return
                      end if
@@ -2707,6 +3541,8 @@ C
                end do
             endif
             if(share2.ne.0) then
+               if(cv_lp.gt.0) write(cv_lp,*)
+     *              'Error reported in ',subname
                return
             end if
          endif
@@ -2714,6 +3550,8 @@ C
          in1=in
          call ZMUMPS_433(in1,procs4son,ctr-1,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) write(cv_lp,*)
+     *         'Error reported in ',subname
             istat=ierr
             return
          endif
@@ -2737,6 +3575,9 @@ C
             cv_info(1) = cv_error_memalloc
             cv_info(2) = 1
             istat = cv_error_memalloc
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)
+     *           'memory allocation error in ',subname
             return
          end if
          nullify(cv_prop_map(inode)%allowed%ind_proc)
@@ -2749,6 +3590,9 @@ C
             cv_info(1) = cv_error_memalloc
             cv_info(2) = 1
             istat = cv_error_memalloc
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)
+     *           'memory allocation error in ',subname
             return
          end if
       end if
@@ -2773,12 +3617,18 @@ C
             deallocate(cv_prop_map(inode)%allowed%ind_proc,
      *                 STAT=ierr)
             if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *              write(cv_lp,*)'Memory deallocation error in ',
+     *              subname
                istat = cv_error_memdeloc
                return
             end if
          endif
          deallocate(cv_prop_map(inode)%allowed,STAT=ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *              write(cv_lp,*)'Memory deallocation error in ',
+     *              subname
             istat = cv_error_memdeloc
             return
          end if
@@ -2795,6 +3645,9 @@ C
       subname='PROPMAP4AMALG'
       call ZMUMPS_435(ison,ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'PROPMAP_TERM signalled error in ',
+     *        subname
          istat = ierr
          return
       end if
@@ -2809,10 +3662,18 @@ C
       istat= -1
       subname='PROPMAP4SPLIT'
       if((cv_frere(inode).eq.cv_n+1).OR.(cv_frere(ifather).eq.cv_n+1)
-     *    .OR.(.NOT.associated(cv_prop_map(inode)%allowed))) return 
+     *     .OR.(.NOT.associated(cv_prop_map(inode)%allowed))) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'tototo signalled error to'
+     *        ,subname
+         return
+      endif
       if(.NOT.associated(cv_prop_map(ifather)%allowed)) then
          call ZMUMPS_434(ifather,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'PROPMAP_INIT signalled error to '
+     *           ,subname
             istat = ierr
             return
          end if
@@ -2836,6 +3697,9 @@ C
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 12*cv_maxnsteps
          istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)
+     *        'memory allocation error in ',subname
          return
       end if
       do i=1,cv_maxnsteps
@@ -2846,6 +3710,8 @@ C
       cv_layerl0_end=0
       if ((.NOT.associated(cv_tcostw)).OR.(.NOT.associated(cv_tcostm)))
      *   then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:tcost must be allocated in ',subname
          return
       end if 
       cv_nbsa=0
@@ -2861,6 +3727,8 @@ C
          end if
       end do
       if(cv_nbsa.eq.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:no root nodes in ',subname
          return
       end if 
       call ZMUMPS_459(cv_layerl0_end-cv_layerl0_start+1,
@@ -2874,54 +3742,56 @@ C
       subroutine ZMUMPS_396(istat)
       implicit none
       integer,intent(out)::istat
-      integer i,in,npiv,nfront
+      integer i,nfront
       character (len=48):: subname
       subname='SELECT_TYPE3'
-      istat=-1
-      cv_iroottree=-1
-      cv_sizeroot=-1
-      do i=1,cv_n
-         if (cv_frere(i).lt.cv_n+1) then
-            in=i
-            npiv=0
-            do while (in.gt.0)
-               in = cv_fils(in)
-               npiv = npiv + 1
-            end do
-            nfront = cv_nfsiz(i)
-            if ((nfront.eq.npiv).and.
-     *           (nfront .gt.cv_sizeroot)) then
-               cv_iroottree = i
-               cv_sizeroot  = nfront
-            end if
-         end if
-      end do
-      if ((cv_iroottree.eq.-1).or.(cv_sizeroot.eq.-1)) then
-         return
-      endif
-      if(cv_slavef.eq.1) then
-         cv_keep(38) = 0
-      else if (cv_sizeroot.le.cv_slavef) then
-         cv_keep(38) = 0
-      else if(cv_nodelayer(cv_iroottree).eq.0) then
-         cv_keep(38)=0
-      else if((cv_sizeroot.gt.cv_keep(37)).and.(cv_icntl(13).eq.0)
-     *     .and.(cv_keep(60).eq.0)
-#ifndef try_null_space_not_tested
-     *     .and. (cv_keep(53).eq.0)  
-#endif
-     *         ) then
-         if (cv_mp.gt.0) write(cv_mp,*) 'A root of estimated size ',
-     *        cv_sizeroot,' has been selected for Scalapack.'
-         cv_keep(38) = cv_iroottree
-         cv_nodetype(cv_iroottree)=3
+      if (cv_keep(60).eq.2 .or. cv_keep(60).eq.3 ) then
+        cv_nodetype(cv_keep(38))=3
       else
+       if((cv_slavef.eq.1).OR.(cv_icntl(13).NE.0).OR.
+     $     (cv_keep(60).ne.0)) then
          cv_keep(38) = 0
-      end if
-      if ((cv_keep(38).eq.0).and.(cv_keep(53).ne.0)) then
-         cv_keep(20) = cv_iroottree
-      else if (cv_keep(60).eq.0) then
-         cv_keep(20) = 0
+       else
+         istat=-1
+         cv_iroottree=-1
+         cv_sizeroot=-1
+         do i=1,cv_n
+            if (cv_frere(i).eq.0) then
+               nfront = cv_nfsiz(i)
+               if (nfront .gt.cv_sizeroot) then
+                  cv_iroottree = i
+                  cv_sizeroot  = nfront
+               end if
+            end if
+         end do
+         if ((cv_iroottree.eq.-1).or.(cv_sizeroot.eq.-1)) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)
+     *           'Error: Can''t select type 3 node in ',subname
+            return
+         endif
+         if (cv_sizeroot.le.cv_slavef) then
+            cv_keep(38) = 0
+         else if(cv_nodelayer(cv_iroottree).eq.0) then
+            cv_keep(38)=0
+         else if((cv_sizeroot.gt.cv_keep(37))
+#ifndef try_null_space_not_tested
+     *           .and. (cv_keep(53).eq.0)  
+#endif
+     *           ) then
+            if (cv_mp.gt.0) write(cv_mp,*) 'A root of estimated size ',
+     *           cv_sizeroot,' has been selected for Scalapack.'
+            cv_keep(38) = cv_iroottree
+            cv_nodetype(cv_iroottree)=3
+         else
+            cv_keep(38) = 0
+         end if
+         if ((cv_keep(38).eq.0).and.(cv_keep(53).ne.0)) then
+            cv_keep(20) = cv_iroottree
+         else if (cv_keep(60).eq.0) then
+            cv_keep(20) = 0
+         endif
+       endif
       endif
       istat=0
       return
@@ -2944,9 +3814,12 @@ C
          cv_info(1) = cv_error_memalloc
          cv_info(2) = cv_nb_niv2*(cv_slavef+2)
          istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)
+     *        'memory allocation error in ',subname
          return
       end if
-      cv_par2_nodes(:)=0
+      cv_par2_nodes=0
       cv_cand(:,:)=0 
       dummy=1
       do layernmb=1,cv_maxlayer
@@ -2954,10 +3827,22 @@ C
             cv_par2_nodes(dummy)=
      *                  cv_layer_p2node(layernmb)%t2_nodenumbers(i)
             cv_cand(dummy,:)=cv_layer_p2node(layernmb)%t2_cand(i,:)
+#if(check_mumps_cv >= 3)
+            write(*,*) 't2node :',cv_par2_nodes(dummy)
+            if(cv_nodetype(cv_par2_nodes(dummy)) .ne. 2) then
+               write(*,*) 'pb in ',subname,
+     *              'node type =',cv_nodetype(cv_par2_nodes(dummy)),
+     *              'node =',cv_par2_nodes(dummy)
+               return
+            endif
+#endif
             dummy=dummy+1
          enddo
       enddo
       if(dummy.ne.cv_nb_niv2+1) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error in ',subname,
+     *        ' : dummy =',dummy,'nbniv2 =',cv_nb_niv2
          return
       endif
       istat=0
@@ -2983,6 +3868,8 @@ C
       if(present(istat))istat=-1
       if((map_strat.ne.cv_equilib_flops).and.
      *   (map_strat.ne.cv_equilib_mem)) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'error in ',subname
          return
       endif
       cv_proc_sorted=(/(i,i=1,cv_slavef)/)
@@ -3224,16 +4111,18 @@ C
       cv_total_split=cv_total_split+1
       call ZMUMPS_437(inode,ifather,ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'PROPMAP4SPLIT error in ',subname
          istat = ierr
          return
       end if
       istat = 0 
       return
       end subroutine ZMUMPS_401
-      subroutine ZMUMPS_402(ne,na,nfsiz,frere,fils,keep,
+      subroutine ZMUMPS_402(ne,nfsiz,frere,fils,keep,
      *                                info,procnode,ssarbr,nbsa)
       implicit none
-      integer,dimension(cv_n),intent(inout)::ne,na,nfsiz,frere,fils,
+      integer,dimension(cv_n),intent(inout)::ne,nfsiz,frere,fils,
      *                                     procnode,ssarbr
       integer, intent(inout):: keep(150),info(40),nbsa
       ne=cv_ne
@@ -3259,15 +4148,26 @@ C
       character (len=48):: subname
       istat=-1
       subname='TERMGLOB'
-      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_na,cv_keep,
+      if(cv_keep(82) .eq. 0) then
+         deallocate(cv_potsplit,STAT=ierr)
+         if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'Memory deallocation error in ',subname
+            istat = cv_error_memdeloc
+            return
+         end if
+      endif
+      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,
      *        cv_icntl,cv_info,cv_procnode,cv_ssarbr)
       deallocate(cv_proc_workload,cv_proc_maxwork,cv_proc_memused,
      *    cv_proc_maxmem,cv_nodetype,
-     *    cv_nodelayer,cv_proc_sorted,cv_potsplit,
+     *    cv_nodelayer,cv_proc_sorted,
      *    cv_ncostw,cv_ncostm,
      *    cv_layerworkload,cv_layermemused,
      *    STAT=ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Memory deallocation error in ',subname
          istat = cv_error_memdeloc
          return
       end if
@@ -3279,6 +4179,9 @@ C
      *                 cv_layer_p2node(layernmb)%t2_candcostm,
      *                 STAT=ierr)
             if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Memory deallocation error in ',
+     *                        subname
                istat = cv_error_memdeloc
                return
             end if
@@ -3287,6 +4190,8 @@ C
       if(associated(cv_layer_p2node)) then
          deallocate(cv_layer_p2node,STAT=ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *      write(cv_lp,*)'Memory deallocation error in ',subname
             istat = cv_error_memdeloc
             return
          end if
@@ -3294,12 +4199,17 @@ C
       do i=1,cv_n
          call ZMUMPS_435(i,ierr)
          if(ierr.ne.0) then
+            if(cv_lp.gt.0) 
+     *           write(cv_lp,*)'PROPMAP_TERM signalled error in ',
+     *           subname
             istat = ierr
             return
          end if
       end do
       if(associated(cv_prop_map))deallocate(cv_prop_map,STAT=ierr)
       if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Memory deallocation error in ',subname
          istat = cv_error_memdeloc
          return
       end if
@@ -3317,6 +4227,8 @@ C
       subname='TREECOSTS'
       if ((.NOT.associated(cv_tcostw)).OR.(.NOT.associated(cv_tcostm)))
      *   then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Error:tcost must be allocated in ',subname
          return
       end if 
       nfront=cv_nfsiz(pos)
@@ -3343,6 +4255,8 @@ C
             cv_depth(nextpos)=cv_depth(pos)+1
             call ZMUMPS_404(nextpos,ierr)
             if (ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Failure in recursive call to ',subname
                return
             end if 
             costw=costw+cv_tcostw(nextpos)
@@ -3429,6 +4343,8 @@ C
       enddo
       deallocate(cv_par2_nodes,cv_cand,STAT=istat)
       if(istat.ne.0) then
+         if(cv_lp.gt.0) 
+     *   write(cv_lp,*)'Memory deallocation error in ',subname
          istat = cv_error_memdeloc
          return
       end if
@@ -3663,7 +4579,7 @@ C
             return
          end if
          if(myrank .eq. i) then
-            namercv(:) = myname(:)
+            namercv = myname
          endif
          call mpi_bcast(namercv,lenrcv,mpi_integer,i,
      *        working_comm,ierr)
@@ -3734,14 +4650,14 @@ C
       thenode = mem_distribmpi(idproc)
       return
       end subroutine ZMUMPS_496
-      SUBROUTINE ZMUMPS_SORT_MMERGE(start1st,end1st,dim1,
+      SUBROUTINE ZMUMPS_516(start1st,end1st,dim1,
      *                             start2nd,end2nd,dim2,
-     *                             indx1,indx2,
-     *                             val11,val21)
+     *                             indx,
+     *                             val)
       implicit none
       integer, intent(in):: start1st,end1st,dim1,start2nd,end2nd,dim2
-      integer, intent(inout):: indx1(end1st), indx2(end2nd)
-      DOUBLE PRECISION, intent(inout):: val11(end1st),val21(end2nd)
+      integer, intent(inout):: indx(end2nd)
+      DOUBLE PRECISION, intent(inout):: val(end2nd)
       integer::index(dim1+dim2)
       DOUBLE PRECISION ::dummy1(dim1+dim2)
       integer:: a,b,c
@@ -3749,38 +4665,38 @@ C
       b=start2nd
       c=1
       do while((a.LT.end1st+1).AND.(b.LT.end2nd+1))
-         if(val11(a).GT.val21(b))then
-            index(c)=indx1(a)
-            dummy1(c)=val11(a)
+         if(val(a).GT.val(b))then
+            index(c)=indx(a)
+            dummy1(c)=val(a)
             a=a+1
             c=c+1
          else
-            index(c)=indx2(b)
-            dummy1(c)=val21(b)
+            index(c)=indx(b)
+            dummy1(c)=val(b)
             b=b+1
             c=c+1
          endif
       end do
       if(a.LT.end1st+1) then
          do while(a.LT.end1st+1)
-            index(c)=indx1(a)
-            dummy1(c)=val11(a)
+            index(c)=indx(a)
+            dummy1(c)=val(a)
             a=a+1
             c=c+1
          enddo
       elseif(b.LT.end2nd+1) then
          do while(b.LT.end2nd+1)
-            index(c)=indx2(b)
-            dummy1(c)=val21(b)
+            index(c)=indx(b)
+            dummy1(c)=val(b)
             b=b+1
             c=c+1
          enddo
       endif
-      indx1(start1st:end1st)=index(1:dim1)
-      val11(start1st:end1st)=dummy1(1:dim1)
-      indx2(start2nd:end2nd)=index(dim1+1:dim1+dim2)
-      val21(start2nd:end2nd)=dummy1(dim1+1:dim1+dim2)
-      end SUBROUTINE ZMUMPS_SORT_MMERGE
+      indx(start1st:end1st)=index(1:dim1)
+      val(start1st:end1st)=dummy1(1:dim1)
+      indx(start2nd:end2nd)=index(dim1+1:dim1+dim2)
+      val(start2nd:end2nd)=dummy1(dim1+1:dim1+dim2)
+      end SUBROUTINE ZMUMPS_516
       SUBROUTINE ZMUMPS_459(dim,indx,val1,val2)
       implicit none
       integer, intent(in):: dim

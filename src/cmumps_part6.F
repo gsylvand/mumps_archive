@@ -1,415 +1,45 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.3.2
-C   This Version was built on Wed Nov 12 16:57:09 2003
+C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
+C   This Version was built on Mon May 23 09:41:55 2005
 C
-C COPYRIGHT (c) 1996-2003 P. R. Amestoy, I. S. Duff, J. Koster,
-C                       J.-Y. L'Excellent
+C  This version of MUMPS is provided to you free of charge. It is public
+C  domain, based on public domain software developed during the Esprit IV
+C  european project PARASOL (1996-1999). It has been partially supported
+C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
+C  Rhone-Alpes, and LBNL.
 C
-C  CERFACS      , Toulouse    (France)  (http://www.cerfacs.fr)
-C  ENSEEIHT-IRIT, Toulouse    (France)  (http://www.enseeiht.fr)
-C  INRIA                      (France)  (http://www.inria.fr)
-C  PARALLAB     , Bergen      (Norway)  (http://www.parallab.uib.no)
+C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
+C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
-C All rights reserved.
+C  Up-to-date copies of the MUMPS package can be obtained
+C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  or http://graal.ens-lyon.fr/MUMPS
 C
-C  Your use or distribution of the package implies that you agree
-C  with this License. Up-to-date copies of the MUMPS package can be
-C  obtained from the Web page http://www.enseeiht.fr/apo/MUMPS/
 C
-C  This package is provided to you free of charge. It was
-C  initially based on public domain software developed during
-C  the European Esprit IV project PARASOL (1996-1999).
+C   THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
+C   EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY
-C  EXPRESSED OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
 C
-C  Permission is hereby granted to use or copy this
-C  package provided that the Copyright and this License is
-C  retained on all copies and that the package is used
-C  under the same terms and conditions. User documentation
-C  of any code that uses this software should include this
-C  complete Copyright notice and this License.
-C
-C  You can modify this code but, at no time shall the right
-C  or title to all or any part of this package pass to you.
-C  All information relating to any alteration or addition
-C  made to this package for the purposes of extending the
-C  capabilities or enhancing the performance of this package
-C  shall be made available free of charge to the authors for
-C  any purpose.
-C
-C  You shall acknowledge (using references [1] and [2])
-C  the contribution of this package in any publication
-C  of material dependent upon the use of the package.
-C  You shall use reasonable endeavours to notify
+C  User documentation of any code that uses this software can
+C  include this complete notice. You can acknowledge (using
+C  references [1], [2], and [3] the contribution of this package
+C  in any scientific publication dependent upon the use of the
+C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
+C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
-C  [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
-C  Multifrontal parallel distributed symmetric and unsymmetric solvers,
-C  in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
-C  An early version appeared as a Technical Report ENSEEIHT-IRIT (1998)
-C  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
+C   A fully asynchronous multifrontal solver using distributed dynamic
+C   scheduling, SIAM Journal of Matrix Analysis and Applications,
+C   Vol 23, No 1, pp 15-41 (2001).
 C
-C  [2] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
-C  A fully asynchronous multifrontal solver using distributed dynamic
-C  scheduling, SIAM Journal of Matrix Analysis and Applications,
-C  Vol 23, No 1, pp 15-41 (2001).
-C  An  early version appeared as a Technical Report ENSEEIHT-IRIT,
-C  RT/APO/99/2 (1999)  and is available at http://www.enseeiht.fr/apo/MUMPS/.
+C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
+C   S. Pralet (2005), Hybrid scheduling for the parallel solution
+C   of linear systems. Submitted to Parallel Computing.
 C
-C  None of the text from the Copyright notice up to and
-C  including this line shall be removed or altered in any way.
-C
-      RECURSIVE SUBROUTINE CMUMPS_41(
-     *     BLOQ, FLAG,
-     *     BUFR, LBUFR, LBUFR_BYTES,
-     *     MYID, SLAVEF, COMM,
-     *     N, IWCB, LIWW, POSIWCB,
-     *     W, LWC, POSWCB,
-     *     IIPOOL, III, IISSAR,
-     *     NBFINF, PTRICB, PTRACB, POOLSS, INFO,
-     *     IPOOL, LPOOL, STEP, FRERE, FILS, PROCNODE_STEPS,
-     *     PLEFTW, KEEP,
-     *     PTRIST, IW, LIW, A, LA, W2, MYLEAFE, RHSSOL, RHS )
-      IMPLICIT NONE
-      LOGICAL BLOQ, FLAG
-      INTEGER LBUFR, LBUFR_BYTES
-      INTEGER BUFR( LBUFR )
-      INTEGER MYID, SLAVEF, COMM
-      INTEGER N, LIWW
-      INTEGER IWCB( LIWW )
-      INTEGER LWC
-      COMPLEX W( LWC )
-      INTEGER POSIWCB, POSWCB
-      INTEGER IIPOOL, III, IISSAR, LPOOL
-      INTEGER IPOOL( LPOOL ), POOLSS( N )
-      INTEGER NBFINF, INFO(40)
-      INTEGER PLEFTW, KEEP( 150 )
-      INTEGER PROCNODE_STEPS( KEEP(28) ), FRERE( KEEP(28) )
-      INTEGER PTRICB(KEEP(28)), PTRACB(KEEP(28)), STEP( N ), FILS( N )
-      INTEGER LIW, LA
-      INTEGER PTRIST( KEEP(28) ), IW( LIW )
-      COMPLEX A( LA ), W2( N ), RHSSOL( N ), RHS(N)
-      INTEGER MYLEAFE
-      INCLUDE 'mpif.h'
-      INCLUDE 'mumps_tags.h'
-      INTEGER MSGSOU, MSGTAG, MSGLEN
-      INTEGER STATUS( MPI_STATUS_SIZE ), IERR
-      FLAG = .FALSE.
-      IF ( BLOQ ) THEN
-        CALL MPI_PROBE( MPI_ANY_SOURCE, MPI_ANY_TAG,
-     *                   COMM, STATUS, IERR )
-        FLAG = .TRUE.
-      ELSE
-        CALL MPI_IPROBE( MPI_ANY_SOURCE, MPI_ANY_TAG, COMM,
-     *                   FLAG, STATUS, IERR )
-      END IF
-      IF (FLAG) THEN
-         MSGSOU=STATUS(MPI_SOURCE)
-         MSGTAG=STATUS(MPI_TAG)
-         CALL MPI_GET_COUNT( STATUS, MPI_PACKED, MSGLEN, IERR )
-         IF ( MSGLEN .GT. LBUFR_BYTES ) THEN
-           INFO(1) = -20
-           INFO(2) = MSGLEN
-           CALL CMUMPS_44( MYID, SLAVEF, COMM )
-         ELSE
-           CALL MPI_RECV(BUFR, LBUFR_BYTES, MPI_PACKED, MSGSOU,
-     *                   MSGTAG, COMM, STATUS, IERR)
-           CALL CMUMPS_42( MSGTAG, MSGSOU,
-     *                BUFR, LBUFR, LBUFR_BYTES,
-     *                MYID, SLAVEF, COMM,
-     *                N, IWCB, LIWW, POSIWCB,
-     *                W, LWC, POSWCB,
-     *                IIPOOL, III, IISSAR,
-     *                NBFINF, PTRICB, PTRACB, POOLSS, INFO,
-     *                IPOOL, LPOOL, STEP,
-     *                FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,
-     *                PTRIST, IW, LIW, A, LA, W2, MYLEAFE, 
-     *                RHSSOL, RHS )
-         END IF
-      END IF
-      RETURN
-      END SUBROUTINE CMUMPS_41
-      RECURSIVE SUBROUTINE CMUMPS_42(
-     *                MSGTAG, MSGSOU,
-     *                BUFR, LBUFR, LBUFR_BYTES,
-     *                MYID, SLAVEF, COMM,
-     *                N, IWCB, LIWW, POSIWCB,
-     *                W, LWC, POSWCB,
-     *                IIPOOL, III, IISSAR,
-     *                NBFINF, PTRICB, PTRACB, POOLSS, INFO,
-     *                IPOOL, LPOOL, STEP,
-     *                FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,
-     *                PTRIST, IW, LIW, A, LA, W2, MYLEAFE, 
-     *                RHSSOL, RHS )
-      USE CMUMPS_BUFFER
-      IMPLICIT NONE
-      INTEGER MSGTAG, MSGSOU
-      INTEGER LBUFR, LBUFR_BYTES
-      INTEGER BUFR( LBUFR )
-      INTEGER MYID, SLAVEF, COMM
-      INTEGER N, LIWW
-      INTEGER IWCB( LIWW )
-      INTEGER LWC
-      COMPLEX W( LWC )
-      INTEGER POSIWCB, POSWCB
-      INTEGER IIPOOL, III, IISSAR, LPOOL
-      INTEGER IPOOL( LPOOL ), POOLSS( N )
-      INTEGER NBFINF, INFO(40)
-      INTEGER PLEFTW, KEEP( 150 )
-      INTEGER PTRICB(KEEP(28)), PTRACB(KEEP(28)), STEP( N ), FILS( N )
-      INTEGER FRERE(KEEP(28))
-      INTEGER PROCNODE_STEPS(KEEP(28))
-      INTEGER LIW, LA
-      INTEGER IW( LIW ), PTRIST( KEEP(28) )
-      COMPLEX A( LA ), W2( N ), RHSSOL( N ), RHS(N)
-      INTEGER MYLEAFE
-      INCLUDE 'mpif.h'
-      INCLUDE 'mumps_tags.h'
-      INTEGER POSITION, IF, INODE, IERR, LONG, DUMMY(1)
-      INTEGER P_UPDATE, P_SOL_MAS, LIELL
-      INTEGER NPIV, NPIV_CHECK, NROW_L, APOS, IPOS, NROW_RECU
-      INTEGER I, JJ, IN, PROCDEST
-      LOGICAL FLAG
-      COMPLEX ZERO, ALPHA
-      PARAMETER( ZERO = 0.0E0, ALPHA = -1.0E0 )
-      LOGICAL DEJA_SEND( 0:SLAVEF-1 )
-      INTEGER CMUMPS_275
-      EXTERNAL CMUMPS_275
-      IF (MSGTAG .EQ. FEUILLE) THEN
-          NBFINF = NBFINF - 1
-      ELSE IF (MSGTAG .EQ. NOEUD) THEN
-          POSITION = 0
-          CALL MPI_UNPACK(BUFR, LBUFR_BYTES, POSITION,
-     *        INODE, 1, MPI_INTEGER,
-     *        COMM, IERR)
-          CALL MPI_UNPACK(BUFR, LBUFR_BYTES, POSITION,
-     *        LONG, 1, MPI_INTEGER,
-     *        COMM, IERR)
-          IF (   POSIWCB - LONG - 2 .LT. 0
-     *      .OR. POSWCB - PLEFTW + 1 .LT. LONG ) THEN
-            CALL CMUMPS_95(N, KEEP(28), IWCB, LIWW, W, LWC,
-     *      POSWCB, POSIWCB, PTRICB, PTRACB)
-            IF ((POSIWCB - LONG - 2 ) .LT. 0) THEN
-              INFO(1)=-14
-              INFO(2)=-POSIWCB + LONG + 2
-              GOTO 260
-            END IF
-            IF ( POSWCB - PLEFTW + 1 .LT. LONG ) THEN
-              INFO(1) = -11
-              INFO(2) = LONG + PLEFTW - POSWCB - 1
-              GOTO 260
-            END IF
-          ENDIF
-          POSIWCB = POSIWCB - LONG - 2
-          PTRICB(STEP(INODE)) = POSIWCB + 1
-          IWCB(POSIWCB + 1) = LONG
-          IWCB(POSIWCB + 2) = 1
-          POSWCB = POSWCB - LONG
-          PTRACB(STEP(INODE)) = POSWCB + 1
-          IF (LONG .GT. 0) THEN
-            CALL MPI_UNPACK(BUFR, LBUFR_BYTES, POSITION,
-     *          IWCB(POSIWCB + 3), 
-     *          LONG, MPI_INTEGER, COMM, IERR)
-            CALL MPI_UNPACK(BUFR, LBUFR_BYTES, POSITION,
-     *          W(POSWCB + 1), LONG, 
-     *          MPI_COMPLEX, COMM, IERR)
-           DO JJ=0, LONG-1
-            RHSSOL(IWCB(POSIWCB+3+JJ)) = W(POSWCB+1+JJ)
-           ENDDO
-           IWCB(POSIWCB + 2) = 0
-           CALL CMUMPS_151(N, KEEP(28), IWCB, LIWW, W, LWC,
-     *        POSWCB,POSIWCB,PTRICB,PTRACB)
-          ENDIF
-          IF = FRERE( STEP(INODE) )
-          DO WHILE ( IF .GT. 0 )
-            IF ( CMUMPS_275(STEP(IF),PROCNODE_STEPS,
-     *           SLAVEF) .eq. MYID ) THEN
-              IPOOL( IIPOOL ) = IF
-              IIPOOL = IIPOOL + 1
-            END IF
-            IF = FRERE( STEP( IF ) )
-          END DO
-          IPOOL( IIPOOL ) = INODE
-          IIPOOL = IIPOOL + 1
-      ELSE IF ( MSGTAG .EQ. BACKSLV_MASTER2SLAVE ) THEN
-        POSITION = 0
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   INODE, 1, MPI_INTEGER, COMM, IERR )
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   NROW_RECU, 1, MPI_INTEGER, COMM, IERR )
-        IPOS   = PTRIST( STEP(INODE) )
-        NPIV   = - IW( IPOS     )
-        NROW_L =   IW( IPOS + 1 )
-        APOS   =   IW( IPOS + 3 )
-        IF ( NROW_L .NE. NROW_RECU ) THEN
-          WRITE(*,*) 'Error1 in 41S : NROW L/RECU=',NROW_L, NROW_RECU
-          CALL CMUMPS_ABORT()
-        END IF
-        LONG = NROW_L + NPIV
-        IF ( POSWCB - LONG .LT. PLEFTW - 1 ) THEN
-           CALL CMUMPS_95(N, KEEP(28), IWCB, LIWW, W, LWC,
-     *          POSWCB, POSIWCB, PTRICB, PTRACB)
-           IF ( POSWCB - LONG .LT. PLEFTW - 1 ) THEN
-             INFO(1) = -11
-             INFO(2) = LONG - POSWCB
-             GOTO 260
-           END IF
-        END IF
-        P_UPDATE  = PLEFTW
-        P_SOL_MAS = PLEFTW + NPIV
-        PLEFTW    = P_SOL_MAS + NROW_L
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   W( P_SOL_MAS),NROW_L, MPI_COMPLEX,
-     *                   COMM, IERR )
-        CALL CGEMV( 'N', NPIV, NROW_L, ALPHA, A( APOS ), NPIV,
-     *              W( P_SOL_MAS ), 1, ZERO, W( P_UPDATE ), 1 )
-        PLEFTW = PLEFTW - NROW_L
- 100    CALL CMUMPS_63( INODE, W(P_UPDATE), NPIV,
-     *                                MSGSOU, 
-     *                                BACKSLV_UPDATERHS,
-     *                                COMM, IERR )
-        IF ( IERR .EQ. -1 ) THEN
-          CALL CMUMPS_41(
-     *     .FALSE., FLAG,
-     *     BUFR, LBUFR, LBUFR_BYTES,
-     *     MYID, SLAVEF, COMM,
-     *     N, IWCB, LIWW, POSIWCB,
-     *     W, LWC, POSWCB,
-     *     IIPOOL, III, IISSAR,
-     *     NBFINF, PTRICB, PTRACB, POOLSS, INFO,
-     *     IPOOL, LPOOL, STEP,
-     *     FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,
-     *     PTRIST, IW, LIW, A, LA, W2, MYLEAFE, RHSSOL, RHS )
-          IF ( INFO( 1 ) .LT. 0 ) GOTO 270
-          GOTO 100
-        ELSE IF ( IERR .EQ. -2 ) THEN
-          INFO( 1 ) = -17
-          INFO( 2 ) = NPIV * KEEP(35) + 2 * KEEP(34)
-          GOTO 260
-        END IF
-        PLEFTW = PLEFTW - NPIV
-      ELSE IF ( MSGTAG .EQ. BACKSLV_UPDATERHS ) THEN
-        POSITION = 0
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   INODE, 1, MPI_INTEGER, COMM, IERR )
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   NPIV, 1, MPI_INTEGER, COMM, IERR )
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   W2, NPIV, MPI_COMPLEX,
-     *                   COMM, IERR )
-        W( PTRACB(STEP(INODE)): PTRACB(STEP(INODE)) + NPIV - 1 )
-     *    =   W( PTRACB(STEP(INODE)): PTRACB(STEP(INODE)) + NPIV - 1 )
-     *    +   W2( 1: NPIV )
-        IWCB( PTRICB(STEP(INODE)) + 1 )
-     *    = IWCB( PTRICB(STEP(INODE)) + 1 ) - 1
-        IF ( IWCB( PTRICB(STEP(INODE)) + 1 ) .EQ. 1 ) THEN
-          IPOS  = PTRIST(STEP(INODE)) + 2
-          LIELL = IW(IPOS-2)+IW(IPOS+1)
-          IPOS  = IPOS + 1
-          NPIV_CHECK = IW( IPOS )
-          IF ( NPIV .NE. NPIV_CHECK ) THEN
-            WRITE(*,*) 'Error 2 in usedbympima41s.F'
-            CALL CMUMPS_ABORT()
-          END IF
-          IPOS  = IPOS + 1
-          APOS  = IW( IPOS )
-          IF ( KEEP(50) .eq. 0 ) THEN
-            CALL CTRSV( 'U', 'N', 'U', NPIV, A(APOS), LIELL,
-     *                  W(PTRACB(STEP(INODE))),1)
-          ELSE
-            CALL CTRSV( 'U', 'N', 'U', NPIV, A(APOS), NPIV,
-     *                  W(PTRACB(STEP(INODE))),1)
-          END IF
-          IPOS = PTRIST(STEP(INODE)) + 5
-          IPOS = IW( IPOS ) + IPOS + 1
-          DO I = 1, NPIV
-            JJ = IW( IPOS + I - 1 )
-            RHSSOL( JJ ) = W( PTRACB(STEP(INODE)) + I - 1 )
-          END DO
-          IN = INODE
-  200     IN = FILS(IN)
-          IF (IN .GT. 0) GOTO 200
-          IF (IN .EQ. 0) THEN
-            MYLEAFE = MYLEAFE - 1
-            IF (MYLEAFE .EQ. 0) THEN
-              CALL CMUMPS_242( DUMMY, 1, MPI_INTEGER, MYID, COMM,
-     *                       FEUILLE, SLAVEF )
-              NBFINF = NBFINF - 1
-            ENDIF
-            IWCB( PTRICB(STEP(INODE)) + 1 )
-     *        = IWCB( PTRICB(STEP(INODE)) + 1 ) - 1
-            CALL CMUMPS_151(N, KEEP(28), IWCB, LIWW, W, LWC,
-     *          POSWCB, POSIWCB, PTRICB, PTRACB)
-            GOTO 270
-          ENDIF
-          DO I = 0, SLAVEF - 1
-            DEJA_SEND( I ) = .FALSE.
-          END DO
-          IN = -IN
- 300      CONTINUE
-            IF (CMUMPS_275(STEP(IN),PROCNODE_STEPS,
-     *          SLAVEF) .EQ. MYID) THEN
-              IPOOL(IIPOOL ) = IN
-              IIPOOL = IIPOOL + 1
-            ELSE
-              PROCDEST = CMUMPS_275( STEP(IN), PROCNODE_STEPS,
-     *                   SLAVEF )
-              IF ( .NOT. DEJA_SEND( PROCDEST ) ) THEN
- 110            CALL CMUMPS_78( IN, 0, 0, LIELL,
-     *          IWCB( PTRICB(STEP(INODE))+2 ),
-     *          W( PTRACB(STEP(INODE))),
-     *          PROCDEST, NOEUD, COMM, IERR )
-                IF ( IERR .EQ. -1 ) THEN
-                  CALL CMUMPS_41(
-     *            .FALSE., FLAG,
-     *            BUFR, LBUFR, LBUFR_BYTES,
-     *            MYID, SLAVEF, COMM,
-     *            N, IWCB, LIWW, POSIWCB,
-     *            W, LWC, POSWCB,
-     *            IIPOOL, III, IISSAR,
-     *            NBFINF, PTRICB, PTRACB, POOLSS, INFO,
-     *            IPOOL, LPOOL, STEP,
-     *            FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,
-     *            PTRIST, IW, LIW, A, LA, W2, MYLEAFE, RHSSOL, 
-     *            RHS)
-                  IF ( INFO( 1 ) .LT. 0 ) GOTO 270
-                  GOTO 110
-                ELSE IF ( IERR .eq. -2 ) THEN
-                  INFO(1) = -17
-                  INFO(2) = LIELL * KEEP(35) +
-     *                    ( LIELL + 2 ) * KEEP(34)
-                  GOTO 260
-                END IF
-                DEJA_SEND( PROCDEST ) = .TRUE.
-              END IF
-            END IF
-          IN = FRERE( STEP( IN ) )
-          IF ( IN .GT. 0 ) GOTO 300
-          IWCB( PTRICB(STEP( INODE )) + 1 )
-     *      = IWCB( PTRICB(STEP( INODE )) + 1 ) - 1
-          CALL CMUMPS_151(N, KEEP(28), IWCB, LIWW, W, LWC,
-     *          POSWCB, POSIWCB, PTRICB, PTRACB)
-        END IF
-      ELSE IF (MSGTAG.EQ.TERREUR) THEN
-          INFO(1) = -001
-          INFO(2) = MSGSOU
-          GO TO 270
-       ELSE IF ( (MSGTAG.EQ.UPDATE_LOAD).OR.
-     *      (MSGTAG.EQ.TAG_DUMMY) ) THEN
-          GO TO 270
-      ELSE
-          INFO(1) = -100
-          INFO(2) = MSGTAG
-          GOTO 260
-      ENDIF
-      GO TO 270
- 260  CONTINUE
-      CALL CMUMPS_44( MYID, SLAVEF, COMM )
- 270  CONTINUE
-      RETURN
-      END SUBROUTINE CMUMPS_42
       SUBROUTINE CMUMPS_324(A, NFRONT, NPIV, NBROW, K59)
       IMPLICIT NONE
       INTEGER NFRONT, NPIV, NBROW, K59
@@ -1029,21 +659,41 @@ C
       SUBROUTINE CMUMPS_140( N, INODE, IW, LIW, A, LA,
      *                           IOLDPS, POSELT, IFLAG,
      *                           UU, NNEG, NPVW,
-     *                           KEEP, MYID, SEUIL )
+     *                           KEEP, MYID, SEUIL, AVOID_DELAYED )
       IMPLICIT NONE
       INTEGER N, INODE, LIW, LA, IFLAG, NNEG, NPVW
       INTEGER MYID, SLAVEF, IOLDPS, POSELT
       INTEGER KEEP( 150 )
-      REAL UU, UUTEMP, SEUIL
+      REAL UU, SEUIL
       INTEGER POSFAC, NIRBDU, COMP
       COMPLEX A( LA )
       INTEGER IW( LIW )
-      INTEGER INOPV, IFINB, NFRONT, NPIV, LAELL, NBTLKJ
+      LOGICAL AVOID_DELAYED
+      INTEGER INOPV, IFINB, NFRONT, NPIV, LAELL, NBTLKJ,IBEG_BLOCK
       INTEGER NASS, NEL1, LDA
+      REAL UUTEMP
       EXTERNAL CMUMPS_330, CMUMPS_222, CMUMPS_234, 
      *         CMUMPS_230, CMUMPS_226, 
      *         CMUMPS_237
       INTEGER  CMUMPS_330
+      LOGICAL STATICMODE
+      REAL SEUIL_LOC
+      INTEGER PIVSIZ,IWPOS
+      INOPV = 0
+      SEUIL_LOC = SEUIL
+      IF(KEEP(97) .EQ. 0) THEN
+         STATICMODE = .FALSE.
+      ELSE
+         STATICMODE = .TRUE.
+      ENDIF
+      IF (AVOID_DELAYED) THEN
+        STATICMODE = .TRUE.
+        UUTEMP=UU
+        SEUIL_LOC = MAX(SEUIL,EPSILON(SEUIL))
+      ELSE
+        UUTEMP=UU
+      ENDIF
+      IBEG_BLOCK = 1
       NFRONT = IW(IOLDPS)
       LDA    = NFRONT
       NASS   = IABS(IW(IOLDPS+2))
@@ -1056,15 +706,20 @@ C
  50   CONTINUE
       CALL CMUMPS_222(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *                INOPV, NNEG, IFLAG,IOLDPS,POSELT,UUTEMP,
-     *                SEUIL)
+     *                SEUIL_LOC,KEEP,PIVSIZ)
       IF (IFLAG.LT.0) GOTO 500
       IF (INOPV.EQ.1) THEN
+         IF(STATICMODE) THEN
+            INOPV = -1
+            GOTO 50
+         ENDIF
          CALL CMUMPS_237(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *            LDA, IOLDPS,POSELT, KEEP, UUTEMP )
          GOTO 500
       END IF
       IF (INOPV.EQ.2) THEN
-         CALL CMUMPS_234(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
+         CALL CMUMPS_234(IBEG_BLOCK,
+     *            NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *            LDA, IOLDPS,POSELT,NBTLKJ,KEEP(4),UUTEMP,
      *            KEEP)
          GOTO 50
@@ -1076,14 +731,20 @@ C
        IW(IOLDPS+1) = IW(IOLDPS+1) + 1
        GO TO 500
       ENDIF
-       CALL CMUMPS_226(NFRONT, NASS, N,INODE,IW,LIW,A,LA,
+       CALL CMUMPS_226(IBEG_BLOCK,
+     *             NFRONT, NASS, N,INODE,IW,LIW,A,LA,
      *             LDA, UUTEMP, IOLDPS,POSELT,IFINB,
-     *             NBTLKJ,KEEP(4))
-       IW(IOLDPS+1) = IW(IOLDPS+1) + 1
+     *             NBTLKJ,PIVSIZ)
+       IF(PIVSIZ .EQ. 2) THEN
+          IWPOS = IOLDPS+IW(IOLDPS+1)+6
+          IW(IWPOS+NFRONT) = -IW(IWPOS+NFRONT)
+       ENDIF
+       IW(IOLDPS+1) = IW(IOLDPS+1) + PIVSIZ
        IF (IFINB.EQ.0) GOTO 50
        NPIV   = IW(IOLDPS+1)
        NEL1   = NASS - NPIV
-       CALL CMUMPS_234(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
+       CALL CMUMPS_234(IBEG_BLOCK,
+     *            NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *            LDA, IOLDPS,POSELT,NBTLKJ,KEEP(4),UUTEMP,
      *            KEEP)
        IF (IFINB.EQ.-1) THEN 
@@ -1099,13 +760,15 @@ C
      *   (NFRONT,NASS,N,INODE,IW,LIW,
      *    A,LA, INOPV,
      *    NNEG, 
-     *    IFLAG,IOLDPS,POSELT,UU, SEUIL)
+     *    IFLAG,IOLDPS,POSELT,UU, SEUIL,KEEP,PIVSIZ)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV,
      *        IOLDPS, POSELT, NNEG
+      INTEGER PIVSIZ
       COMPLEX A(LA) 
       REAL UU, UULOC, SEUIL
       INTEGER IW(LIW)
+      INTEGER KEEP(150)
        include 'mpif.h'
       INTEGER APOS, LDA
       REAL ZERO, RMAX
@@ -1115,10 +778,24 @@ C
       DATA ZERO /0.0E0/
         LDA   = NFRONT
         UULOC = UU
-        INOPV   = 0
+        PIVSIZ = 1
         NPIV    = IW(IOLDPS+1)
         NPIVP1  = NPIV + 1
         NASSW   = IABS(IW(IOLDPS+3))
+        IF(INOPV .EQ. -1) THEN
+           APOS = POSELT + LDA*(NPIVP1-1) + NPIV
+           IDIAG = APOS
+           IF(ABS(A(APOS)).LT.SEUIL) THEN
+              IF(REAL(A(APOS)) .GE. ZERO) THEN
+                 A(APOS) = SEUIL
+              ELSE
+                 A(APOS) = -SEUIL
+              ENDIF
+              KEEP(98) = KEEP(98)+1
+           ENDIF
+           GO TO 420
+        ENDIF
+        INOPV   = 0
         DO 460 IPIV=NPIVP1,NASSW
             APOS = POSELT + LDA*(IPIV-1) + NPIV
             IDIAG = APOS + IPIV - NPIVP1
@@ -1158,33 +835,36 @@ C
   420 CONTINUE
       RETURN
       END SUBROUTINE CMUMPS_222
-      SUBROUTINE CMUMPS_226(NFRONT,NASS,N,INODE,IW,LIW,
+      SUBROUTINE CMUMPS_226(IBEG_BLOCK,
+     *     NFRONT,NASS,N,INODE,IW,LIW,
      *     A,LA,LDA, UU,
-     *     IOLDPS,POSELT,IFINB,LKJIB,LKJIT)
+     *     IOLDPS,POSELT,IFINB,LKJIB,PIVSIZ)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFINB,LKJIB,LDA,
-     &        NPBEG
+     &        NPBEG, IBEG_BLOCK
       COMPLEX    A(LA)
       REAL   UU
       INTEGER IW(LIW)
       COMPLEX    VALPIV
       INTEGER APOS, IOLDPS, POSELT, K1POS, NCB1
-      INTEGER LKJIT
       INTEGER NPIV,JROW2
-      INTEGER NEL2,NPIVP1,LPOS,NEL
+      INTEGER NEL2,LPOS,NEL
       COMPLEX ONE, ALPHA
       REAL  ZERO
+      INTEGER PIVSIZ,NPIV_NEW,OFFDAG_OLD,LPOS1,LPOS2,JJ
+      INTEGER POSPV1,POSPV2,OFFDAG,IBEG,IEND,J2,K1,K2,IROW
+      COMPLEX SWOP,DETPIV,MULT1,MULT2
       PARAMETER(ONE=1.0E0, ALPHA=-1.0E0, ZERO=0.0E0)
       NPIV   = IW(IOLDPS+1)
-      NPIVP1 = NPIV + 1
-      NEL    = NFRONT - NPIVP1
+      NPIV_NEW = NPIV + PIVSIZ
+      NEL    = NFRONT - NPIV_NEW
       IFINB  = 0
       IF (IW(IOLDPS+3).LE.0) THEN
          IW(IOLDPS+3) = MIN0(NASS,LKJIB)
       ENDIF
       JROW2 = IW(IOLDPS+3)
-      NPBEG = IW(IOLDPS+4)
-      NEL2   = JROW2 - NPIVP1
+      NPBEG = IBEG_BLOCK
+      NEL2   = JROW2 - NPIV - PIVSIZ
       IF (NEL2.EQ.0) THEN
         IF (JROW2.EQ.NASS) THEN
           IFINB        = -1
@@ -1192,30 +872,88 @@ C
           IFINB        = 1
         ENDIF
       ENDIF
-      APOS   = POSELT + NPIV*(NFRONT + 1)
-      VALPIV = ONE/A(APOS)
-      LPOS   = APOS + LDA
-      IF ( UU.NE.ZERO) THEN
-        CALL CCOPY(NFRONT-NPIVP1, A(LPOS), LDA, A(APOS+1), 1)
+      IF(PIVSIZ .EQ. 1) THEN
+         APOS   = POSELT + NPIV*(NFRONT + 1)
+         VALPIV = ONE/A(APOS)
+         A(APOS) = VALPIV
+         LPOS   = APOS + LDA
+         IF ( UU.NE.ZERO) THEN
+            CALL CCOPY(NFRONT-NPIV_NEW, A(LPOS), LDA, A(APOS+1), 1)
+         ELSE
+            CALL CCOPY(NASS-NPIV_NEW, A(LPOS), LDA, A(APOS+1), 1)
+         END IF
+         CALL CMUMPS_CSYR('U', NEL2, -VALPIV, A(LPOS), LDA, A(LPOS+1), 
+     &        LDA)
+         IF (UU.NE.ZERO) THEN
+            CALL CSCAL(NFRONT-NPIV_NEW, VALPIV, A(LPOS), LDA)
+         ELSE
+            CALL CSCAL(NASS-NPIV_NEW, VALPIV, A(LPOS), LDA)
+         ENDIF
+         IF (NEL2.GT.0) THEN
+            K1POS = LPOS + NEL2*LDA
+            IF ( UU.NE.ZERO ) THEN
+               NCB1  = NFRONT - JROW2
+            ELSE
+               NCB1  = NASS   - JROW2
+            END IF
+            CALL CGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
+     &           A(K1POS), LDA, A(K1POS+1), LDA)
+         ENDIF
       ELSE
-        CALL CCOPY(NASS-NPIVP1, A(LPOS), LDA, A(APOS+1), 1)
-      END IF
-      CALL CMUMPS_CSYR('U', NEL2, -VALPIV, A(LPOS), LDA, A(LPOS+1), 
-     &             LDA)
-      IF (UU.NE.ZERO) THEN
-         CALL CSCAL(NFRONT-NPIVP1, VALPIV, A(LPOS), LDA)
-      ELSE
-         CALL CSCAL(NASS-NPIVP1, VALPIV, A(LPOS), LDA)
-      ENDIF
-      IF (NEL2.GT.0) THEN
-           K1POS = LPOS + NEL2*LDA
-           IF ( UU.NE.ZERO ) THEN
-             NCB1  = NFRONT - JROW2
-           ELSE
-             NCB1  = NASS   - JROW2
-           END IF
-           CALL CGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
-     &          A(K1POS), LDA, A(K1POS+1), LDA)
+         POSPV1 = POSELT + NPIV*(NFRONT + 1)
+         POSPV2 = POSPV1+NFRONT+1
+         OFFDAG_OLD = POSPV2 - 1
+         OFFDAG = POSPV1+1
+         SWOP = A(POSPV2)
+         DETPIV = A(OFFDAG)
+         A(POSPV2) = A(POSPV1)/DETPIV
+         A(POSPV1) = SWOP/DETPIV
+         A(OFFDAG) = -A(OFFDAG_OLD)/DETPIV
+         A(OFFDAG_OLD) = ZERO
+         LPOS1   = POSPV1 + LDA + 1
+         LPOS2   = POSPV2 + LDA + 1
+         CALL CCOPY(NFRONT-NPIV_NEW, A(LPOS1), LDA, A(POSPV1+2), 1)
+         CALL CCOPY(NFRONT-NPIV_NEW, A(LPOS2), LDA, A(POSPV2+1), 1)
+         JJ = POSPV2 + NFRONT-1
+         IBEG = JJ + 2
+         IEND = IBEG
+         DO J2 = 1,NEL2
+            K1 = JJ
+            K2 = JJ+1
+            MULT1 = - (A(POSPV1)*A(K1)+A(POSPV1+1)*A(K2))
+            MULT2 = - (A(POSPV1+1)*A(K1)+A(POSPV2)*A(K2))
+            K1 = POSPV1+2
+            K2 = POSPV2+1
+            DO IROW = IBEG,IEND
+               A(IROW) = A(IROW) + MULT1*A(K1) + MULT2*A(K2)
+               K1 = K1 + 1
+               K2 = K2 + 1
+            ENDDO
+            A(JJ) = MULT1
+            A(JJ+1) = MULT2
+            IBEG = IBEG + NFRONT
+            IEND = IEND + NFRONT + 1
+            JJ = JJ+NFRONT
+         ENDDO
+         IEND = IEND-1
+         DO J2 = JROW2+1,NFRONT
+            K1 = JJ
+            K2 = JJ+1
+            MULT1 = - (A(POSPV1)*A(K1)+A(POSPV1+1)*A(K2))
+            MULT2 = - (A(POSPV1+1)*A(K1)+A(POSPV2)*A(K2))
+            K1 = POSPV1+2
+            K2 = POSPV2+1
+            DO IROW = IBEG,IEND
+               A(IROW) = A(IROW) + MULT1*A(K1) + MULT2*A(K2)
+               K1 = K1 + 1
+               K2 = K2 + 1
+            ENDDO
+            A(JJ) = MULT1
+            A(JJ+1) = MULT2
+            IBEG = IBEG + NFRONT
+            IEND = IEND + NFRONT
+            JJ = JJ+NFRONT
+         ENDDO
       ENDIF
       RETURN
       END SUBROUTINE CMUMPS_226
@@ -1232,10 +970,11 @@ C
       INTEGER LDA
       COMPLEX ONE
       PARAMETER(ONE=1.0E0)
-        NEL    = NFRONT - 1
         APOS   = POSELT 
-        IF (NEL.EQ.0) GO TO 500
         VALPIV = ONE/A(APOS)
+        A(APOS) = VALPIV
+        NEL    = NFRONT - 1
+        IF (NEL.EQ.0) GO TO 500
         LDA    = NFRONT
         LPOS   = APOS + LDA
         CALL CMUMPS_CSYR('U',NEL, -VALPIV, 
@@ -1246,11 +985,12 @@ C
           END DO
   500   RETURN
         END SUBROUTINE CMUMPS_230
-      SUBROUTINE CMUMPS_234(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
+      SUBROUTINE CMUMPS_234(IBEG_BLOCK,
+     *    NFRONT,NASS,N,INODE,IW,LIW,A,LA,
      *    LDA,
      *    IOLDPS,POSELT,LKJIB,LKJIT,UUTEMP,KEEP)
       IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,LA,LIW
+      INTEGER NFRONT, NASS,N,LA,LIW, IBEG_BLOCK
       COMPLEX    A(LA)
       INTEGER IW(LIW) 
       INTEGER LKJIB, INODE, KEEP(150)
@@ -1270,7 +1010,7 @@ C
       LKJIBOLD = LKJIB
       NPIV   = IW(IOLDPS+1)
       JROW2  = IABS(IW(IOLDPS+3))
-      NPBEG  = IW(IOLDPS+4)
+      NPBEG  = IBEG_BLOCK
       HF     = 6 + IW(IOLDPS+5)
       NEL1   = NASS - JROW2
       LKJIW  = NPIV - NPBEG + 1
@@ -1285,9 +1025,9 @@ C
           LKJIB = NASS - NPIV
           IW(IOLDPS+3) = NASS
         ENDIF
-        IW(IOLDPS+4) = NPIV + 1
+        IBEG_BLOCK = NPIV + 1
       ELSEIF (JROW2.LT.NASS) THEN
-          IW(IOLDPS+4) = NPIV + 1
+          IBEG_BLOCK   = NPIV + 1
           IW(IOLDPS+3) = MIN0(JROW2+LKJIB,NASS)
           LKJIB  = MIN0(LKJIB,NASS-NPIV)
       ENDIF
@@ -1328,7 +1068,8 @@ C
      *                 LDA, NFRONT, 1 )
       END DO
       END IF
-  500 RETURN
+  500 CONTINUE
+      RETURN
       END SUBROUTINE CMUMPS_234
       SUBROUTINE CMUMPS_321(NFRONT,N,INODE,IW,LIW,A,LA,
      *                          IOLDPS,POSELT)
@@ -1346,7 +1087,7 @@ C
         NEL    = NFRONT - NPIV - 1
         APOS   = POSELT + (NPIV)*NFRONT + NPIV
         IF (NEL.EQ.0) GO TO 500
-        VALPIV = ONE/A(APOS)
+        VALPIV = A(APOS)
         LPOS   = APOS + NFRONT
         CALL CMUMPS_CSYR('U', NEL, -VALPIV, A(LPOS), NFRONT, A(LPOS+1), 
      &             NFRONT)
@@ -1399,7 +1140,7 @@ C
             END IF
         RETURN
         END SUBROUTINE CMUMPS_319
-      SUBROUTINE CMUMPS_237(NFRONT,NASS,N,INODE,
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V1(NFRONT,NASS,N,INODE,
      *    IW,LIW,A,LA,
      *    LDA,
      *    IOLDPS,POSELT,KEEP,UU)
@@ -1412,8 +1153,8 @@ C
       INTEGER POSELT, LDA
       INTEGER IOLDPS
       INTEGER BLSIZE, Block, IROW, NPIV, I
-      INTEGER UPOS, APOS, LPOS
-      COMPLEX  ONE, ALPHA
+      INTEGER UPOS, APOS, LPOS, U_MAJ
+      COMPLEX  ONE, ALPHA, SCALVAL
       REAL ZERO
       PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
       IF ( NFRONT - NASS > KEEP(57) ) THEN
@@ -1423,29 +1164,439 @@ C
       END IF
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
-       IF ( UU.eq.ZERO ) THEN
-         CALL CTRSM( 'L', 'L', 'N', 'N',
-     *               NPIV, NFRONT-NPIV, ONE,
+       UPOS = POSELT + NASS
+        IF (UU.EQ.ZERO) THEN
+         LPOS = POSELT + NASS*LDA 
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NASS, ONE,
      *               A( POSELT ), LDA,
-     *               A( POSELT + LDA * NPIV ), LDA )
+     *               A( LPOS ), LDA )
        ENDIF
        DO IROW = 1, NFRONT - NASS, BLSIZE
         Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
         LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS
-        DO I = 1, NPIV
-          CALL CCOPY( Block, A(LPOS+I-1), LDA, A(UPOS+(I-1)*LDA),1)
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS 
+        IF (UU.EQ.ZERO) THEN
+         U_MAJ = UPOS+IROW-1
+         DO I = 1, NPIV
+          CALL CCOPY( Block, A(LPOS+I-1),LDA, A(U_MAJ+(I-1)*LDA), 1)
           CALL CSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
-     *                A( UPOS + ( I - 1 ) * LDA ), 1 )
-        ENDDO
-        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-IROW+1, NPIV,
+     *                A( LPOS + I - 1  ), LDA )
+         ENDDO
+        ENDIF
+        CALL CGEMM( 'N', 'N', IROW+Block-1, Block, NPIV,
      *              ALPHA,  A( UPOS ), LDA,
      *              A( LPOS ), LDA,
      *              ONE,
      *              A( APOS ), LDA )
        END DO
       END IF
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V1
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V0(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, Block, IROW, NPIV, I
+      INTEGER UPOS, APOS, LPOS, U_MAJ
+      COMPLEX  ONE, ALPHA, SCALVAL
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       UPOS = POSELT + NASS
+       DO IROW = 1, NFRONT - NASS, BLSIZE
+        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS 
+        IF (UU.EQ.ZERO) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, Block, ONE,
+     *               A( POSELT ), LDA,
+     *               A( LPOS ), LDA )
+         U_MAJ = UPOS+IROW-1
+         DO I = 1, NPIV
+          CALL CCOPY( Block, A(LPOS+I-1),LDA, A(U_MAJ+(I-1)*LDA), 1)
+          CALL CSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1  ), LDA )
+         ENDDO
+        ENDIF
+        CALL CGEMM( 'N', 'N', IROW+Block-1, Block, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS ), LDA,
+     *              ONE,
+     *              A( APOS ), LDA )
+       END DO
+      END IF
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V0
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V2(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
+      INTEGER UPOS, APOS, LPOS
+      INTEGER I2, I2END, Block2
+      COMPLEX  ONE, ALPHA
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      BLSIZE2 = 16
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       IF ( UU.eq.ZERO ) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NPIV, ONE,
+     *               A( POSELT ), LDA,
+     *               A( POSELT + LDA * NPIV ), LDA )
+       ENDIF
+       DO IROWEND = NFRONT - NASS, 1, -BLSIZE
+        Block = MIN( BLSIZE, IROWEND )
+        IROW  = IROWEND - Block + 1
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS
+        IF (UU.NE.ZERO) THEN
+          UPOS = POSELT + NASS + IROW - 1
+        ENDIF
+        IF (UU.EQ.ZERO) THEN
+         DO I = 1, NPIV
+          CALL CCOPY( Block, A(LPOS+I-1), LDA, A(UPOS+(I-1)*LDA),1)
+          CALL CSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1 ), LDA )
+         ENDDO
+        ENDIF
+        DO I2END = Block, 1, -BLSIZE2
+          Block2 = MIN(BLSIZE2, I2END)
+          I2 = I2END - Block2+1
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS + LDA * Block ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+       END DO
+      END IF
+      RETURN
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V2
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V2_BUG(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
+      INTEGER UPOS, APOS, LPOS
+      INTEGER I2, I2END, Block2
+      COMPLEX  ONE, ALPHA
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      BLSIZE2 = 16
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       IF ( UU.eq.ZERO ) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NPIV, ONE,
+     *               A( POSELT ), LDA,
+     *               A( POSELT + LDA * NPIV ), LDA )
+       ENDIF
+       DO IROWEND = NFRONT - NASS, 1, -BLSIZE
+        Block = MIN( BLSIZE, IROWEND )
+        IROW  = IROWEND - Block + 1
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS
+        IF (UU.NE.ZERO) THEN
+          UPOS = POSELT + NASS + IROW - 1
+        ENDIF
+        IF (UU.EQ.ZERO) THEN
+         DO I = 1, NPIV
+          CALL CCOPY( Block, A(LPOS+I-1), LDA, A(UPOS+(I-1)*LDA),1)
+          CALL CSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1 ), LDA )
+         ENDDO
+        ENDIF
+        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+        DO I2END = Block, 1, -BLSIZE2
+          Block2 = MIN(BLSIZE2, I2END)
+          I2 = I2END - Block2+1
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+       END DO
+      END IF
+      RETURN
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V2_BUG
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V3(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
+      INTEGER UPOS, APOS, LPOS
+      INTEGER I2, I2END, Block2
+      COMPLEX  ONE, ALPHA
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      BLSIZE2 = 16
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       UPOS = POSELT + NASS
+       IF ( UU.eq.ZERO ) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NPIV, ONE,
+     *               A( POSELT ), LDA,
+     *               A( POSELT + LDA * NPIV ), LDA )
+         LPOS = POSELT + NASS*LDA 
+         DO I = 1, NPIV
+          CALL CCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
+     *                A(UPOS+(I-1)*LDA),1)
+          CALL CSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1 ), LDA )
+         ENDDO
+       ENDIF
+       DO IROWEND = NFRONT - NASS, 1, -BLSIZE
+        Block = MIN( BLSIZE, IROWEND )
+        IROW  = IROWEND - Block + 1
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS + IROW - 1
+        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS + LDA * Block ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+        DO I2END = Block, 1, -BLSIZE2
+          Block2 = MIN(BLSIZE2, I2END)
+          I2 = I2END - Block2+1
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+       END DO
+      END IF
+      RETURN
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V3
+      SUBROUTINE CMUMPS_FAC_T_LDLT_V4(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
+      INTEGER UPOS, APOS, LPOS
+      INTEGER I2, I2END, Block2
+      COMPLEX  ONE, ALPHA
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      BLSIZE2 = 16
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       UPOS = POSELT + NASS
+       IF ( UU.eq.ZERO ) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NPIV, ONE,
+     *               A( POSELT ), LDA,
+     *               A( POSELT + LDA * NPIV ), LDA )
+         LPOS = POSELT + NASS*LDA 
+         DO I = 1, NPIV
+          CALL CCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
+     *                A(UPOS+(I-1)*LDA),1)
+          CALL CSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1 ), LDA )
+         ENDDO
+       ENDIF
+       DO IROW = 1, NFRONT - NASS,  BLSIZE
+        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS + IROW - 1
+        DO I2 = 1, Block, BLSIZE2
+          Block2 = MIN(BLSIZE2, Block-I2+1)
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS + LDA * Block ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+       END DO
+      END IF
+      RETURN
+      END SUBROUTINE CMUMPS_FAC_T_LDLT_V4
+      SUBROUTINE CMUMPS_237(NFRONT,NASS,N,INODE,
+     *    IW,LIW,A,LA,
+     *    LDA,
+     *    IOLDPS,POSELT,KEEP,UU)
+      IMPLICIT NONE
+      INTEGER NFRONT, NASS,N,INODE,LA,LIW
+      COMPLEX    A(LA)
+      REAL   UU
+      INTEGER IW(LIW) 
+      INTEGER KEEP(150)
+      INTEGER POSELT, LDA
+      INTEGER IOLDPS
+      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
+      INTEGER UPOS, APOS, LPOS
+      INTEGER I2, I2END, Block2, idemi, kdemi
+      COMPLEX  ONE, ALPHA
+      REAL ZERO
+      PARAMETER (ONE=1.0E0, ALPHA=-1.0E0,ZERO=0.0E0)
+      IF ( NFRONT - NASS > KEEP(57) ) THEN
+        BLSIZE = KEEP(58)
+      ELSE
+        BLSIZE = NFRONT - NASS
+      END IF
+      BLSIZE2 = 16
+      NPIV = IW( IOLDPS + 1 )
+      IF ( NFRONT - NASS .GT. 0 ) THEN
+       UPOS = POSELT + NASS
+       IF ( UU.eq.ZERO ) THEN
+         CALL CTRSM( 'L', 'U', 'T', 'U',
+     *               NPIV, NFRONT-NPIV, ONE,
+     *               A( POSELT ), LDA,
+     *               A( POSELT + LDA * NPIV ), LDA )
+         LPOS = POSELT + NASS*LDA 
+         DO I = 1, NPIV
+          CALL CCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
+     *                A(UPOS+(I-1)*LDA),1)
+          CALL CSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
+     *                A( LPOS + I - 1 ), LDA )
+         ENDDO
+       ENDIF
+       kdemi = (NFRONT - NASS) / BLSIZE
+       kdemi = min(kdemi,1)
+       idemi = min(kdemi*BLSIZE, NFRONT - NASS)
+       DO IROW = 1, idemi,  BLSIZE
+        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS + IROW - 1
+        DO I2 = 1, Block, BLSIZE2
+          Block2 = MIN(BLSIZE2, Block-I2+1)
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+        IF ( idemi - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, idemi-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS + LDA * Block ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+       END DO
+       if (idemi.LT.NFRONT-NASS) THEN
+        LPOS = POSELT + NASS*LDA + Idemi * LDA
+        APOS = LPOS + NASS 
+        CALL CGEMM( 'N', 'N', Idemi, NFRONT-NASS-idemi, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS ), LDA,
+     *              ONE,
+     *              A( APOS ), LDA )
+       DO IROW = idemi+1, NFRONT - NASS,  BLSIZE
+        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
+        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
+        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
+        UPOS = POSELT + NASS + IROW - 1
+        DO I2 = 1, Block, BLSIZE2
+          Block2 = MIN(BLSIZE2, Block-I2+1)
+          CALL CGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
+     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
+     *               ONE,
+     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
+        ENDDO
+        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
+        CALL CGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
+     *              ALPHA,  A( UPOS ), LDA,
+     *              A( LPOS + LDA * Block ), LDA,
+     *              ONE,
+     *              A( APOS + LDA * Block ), LDA )
+        ENDIF
+       END DO
+       END IF
+      END IF
+      RETURN
       END SUBROUTINE CMUMPS_237
       SUBROUTINE CMUMPS_320( BUF, BLOCK_SIZE,
      *                           MYROW, MYCOL, NPROW, NPCOL,
@@ -1605,7 +1756,7 @@ C
      *   COMP, STEP, PIMASTER, PAMASTER, POSFAC,
      *   MYID, COMM, IFLAG, IERROR, NBFIN,
      *
-     *    PTLUST_S, root, OPASSW, OPELIW, ITLOC, FILS,  
+     *    PTLUST_S, PTRFAC, root, OPASSW, OPELIW, ITLOC, FILS,  
      *    PTRARW, PTRAIW, INTARR, DBLARR,
      *    ICNTL, KEEP, IPOOL, LPOOL, LEAF, ND, FRERE_STEPS,
      *    LPTRAR, NELT, FRTPTR, FRTELT, 
@@ -1632,11 +1783,13 @@ C
       INTEGER LPTRAR, NELT
       INTEGER FRTPTR( N+1 ), FRTELT( NELT )
       INTEGER COMM, MYID
-      INTEGER PTLUST_S(KEEP(28)), ITLOC(N), FILS(N), ND(KEEP(28))
+      INTEGER PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
+     *        ITLOC(N), FILS(N), ND(KEEP(28))
       INTEGER PTRAIW( LPTRAR ), PTRARW( LPTRAR )
       INTEGER FRERE_STEPS(KEEP(28))
       INTEGER INTARR( MAX(1,KEEP(14)) )
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
+      DOUBLE PRECISION FLOP1
       COMPLEX DBLARR( MAX(1,KEEP(13)) )
       INTEGER LEAF, LPOOL 
       INTEGER IPOOL( LPOOL )
@@ -1659,6 +1812,8 @@ C
       INTEGER allocok
       COMPLEX, DIMENSION(:),ALLOCATABLE :: UIP21K
       INTEGER, DIMENSION(:), ALLOCATABLE :: LIST_SLAVES_FOLLOW
+      INTEGER ITYPE2
+      PARAMETER (ITYPE2=2)
       LOGICAL LASTBL
       LOGICAL BLOCKING, SET_IRECV, MESSAGE_RECEIVED
       COMPLEX ONE,ALPHA
@@ -1713,9 +1868,11 @@ C
        LRLU  = LRLU - LAELL
        LRLUS = LRLUS - LAELL
       ENDIF
+      KEEP(67) = MIN(LRLUS, KEEP(67))
       POSBLOCFACTO = POSFAC
       POSFAC = POSFAC + LAELL
-      CALL CMUMPS_471(.FALSE.,LA-LRLUS,0,LAELL,KEEP)
+      CALL CMUMPS_471(.FALSE.,.FALSE.,
+     *                           LA-LRLUS,0,LAELL,KEEP,LRLU)
       IF ( NPIV.GT.0 ) THEN
         IPIV = IWPOS
         IWPOS = IWPOS + NPIV
@@ -1743,7 +1900,8 @@ C
      *    STATUS,
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -1765,7 +1923,8 @@ C
      *    STATUS,
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC, 
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -1836,8 +1995,7 @@ C
       LPOS = POSELT + NPIV1
       DPOS = POSBLOCFACTO
       DO I = 1, NPIV
-        VALPIV = ONE / A( DPOS )
-        CALL CSCAL( NROW1, VALPIV, A( LPOS ), NCOL1 )
+        CALL CSCAL( NROW1, A(DPOS), A( LPOS ), NCOL1 )
         LPOS = LPOS + 1
         DPOS = DPOS + NCOL + 1
       END DO
@@ -1871,6 +2029,10 @@ C
      *             A( DPOS + Block * NCOL1 ), NCOL1 )
       ENDDO
       ENDIF
+      FLOP1 = DBLE(NROW1) * DBLE(NPIV) *
+     *           ( 2 * NCOL  - NPIV + NROW1 +1 )
+      FLOP1 = -FLOP1
+      CALL CMUMPS_190( 1, .FALSE., FLOP1, KEEP )
  200  CONTINUE
       IW(IOLDPS) = IW(IOLDPS) - NPIV
       IW(IOLDPS + 3) = IW(IOLDPS+3) + NPIV
@@ -1879,7 +2041,8 @@ C
       LRLUS = LRLUS + LAELL
       POSFAC = POSFAC - LAELL
       IWPOS = IWPOS - NPIV
-      CALL CMUMPS_471(.FALSE.,LA-LRLUS,0,-LAELL,KEEP)
+      CALL CMUMPS_471(.FALSE.,.FALSE.,
+     *                           LA-LRLUS,0,-LAELL,KEEP,LRLU)
       IF ( NSLAVES_FOLLOW .NE. 0 .and. NPIV .NE. 0 ) THEN
          IPOSK = NPIV1 + 1
          JPOSK = NCOL1 - NROW1 + 1
@@ -1903,7 +2066,8 @@ C
      *         STATUS, 
      *         BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *         IWPOS, IWPOSCB, IPTRLU,
-     *         LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *         LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *         PTLUST_S, PTRFAC,
      *         PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *         IFLAG, IERROR, COMM,
      *         NBPROCFILS,
@@ -1958,7 +2122,8 @@ C
      *    
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, IW, LIW, A, LA,
-     *    NIRBDU, PTRIST, PTLUST_S, PTRAST, STEP, PIMASTER, PAMASTER,
+     *    NIRBDU, PTRIST, PTLUST_S, PTRFAC, PTRAST, STEP, PIMASTER,
+     *    PAMASTER,
      *    NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
      *    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
@@ -1968,10 +2133,10 @@ C
        IF ( IFLAG < 0 ) GOTO 600
        IF (NELIM.EQ.0) THEN
         CALL CMUMPS_314( N, INODE,  
-     *    PTRIST, PTRAST, PTLUST_S, IW, LIW, A, LA,
+     *    PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
      *    LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
      *    NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP)
+     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE2)
        ENDIF
       ENDIF
  600  CONTINUE
@@ -1988,13 +2153,13 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC, STEP,
      *             PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
      *             INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
      *             LPTRAR, NELT, FRTPTR, FRTELT, SEUIL, 
-     *             ISTEP_TO_INIV2, TAB_POS_IN_PERE )
+     *             ISTEP_TO_INIV2, TAB_POS_IN_PERE, AVOID_DELAYED )
       IMPLICIT NONE
       INCLUDE 'cmumps_root.h'
       INTEGER COMM_LOAD, ASS_IRECV
@@ -2015,7 +2180,8 @@ C
       INTEGER PTRARW(LPTRAR), PTRAIW(LPTRAR), ND( KEEP(28) )
       INTEGER FRERE(KEEP(28)), FILS(N) 
       INTEGER INTARR(MAX(1,KEEP(14)))
-      INTEGER PTRIST(KEEP(28)), PTRAST(KEEP(28)), PTLUST_S(KEEP(28)),
+      INTEGER PTRIST(KEEP(28)), PTRAST(KEEP(28)),
+     * PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
      *        
      * PIMASTER(KEEP(28)),
      *  PAMASTER(KEEP(28)),
@@ -2023,15 +2189,33 @@ C
      *        PROCNODE_STEPS(KEEP(28)), STEP(N)
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
       COMPLEX  DBLARR(MAX(1,KEEP(13)))
+      LOGICAL AVOID_DELAYED
       INTEGER INOPV, IFINB, NFRONT, NPIV, IBEGKJI, NBTLKJ
-      INTEGER NASS, IEND, IOLDPS, POSELT, LDAFS,allocok
+      INTEGER NASS, IEND, IOLDPS, POSELT, LDAFS,allocok, IBEG_BLOCK
       LOGICAL LASTBL 
+      REAL UUTEMP
       INTEGER , ALLOCATABLE, DIMENSION ( : ) :: IPIV
       EXTERNAL CMUMPS_223, CMUMPS_235,
      *         CMUMPS_227, CMUMPS_294,
      *         CMUMPS_44
+      LOGICAL STATICMODE
+      REAL SEUIL_LOC
+      INOPV = 0
+      IF(KEEP(97) .NE. 0) THEN
+         STATICMODE = .FALSE.
+      ELSE
+         STATICMODE = .TRUE.
+      ENDIF
+      IF (AVOID_DELAYED) THEN
+        STATICMODE = .TRUE.
+        UUTEMP=UU
+        SEUIL_LOC = MAX(SEUIL,EPSILON(SEUIL))
+      ELSE
+        UUTEMP=UU
+      ENDIF
+      IBEG_BLOCK=1
       NB_BLOC_FAC = 0
       IOLDPS = PTLUST_S(STEP( INODE ))
       POSELT = PTRAST( STEP( INODE ))
@@ -2052,12 +2236,16 @@ C
         GO TO 490
       END IF
  50   CONTINUE
-      IBEGKJI = IW(IOLDPS+4)
+      IBEGKJI = IBEG_BLOCK
       CALL CMUMPS_223(
      *                NFRONT,NASS,IBEGKJI, NASS, IPIV,
      *                N,INODE,IW,LIW,A,LA,NOFFW,INOPV,
-     *                IFLAG,IOLDPS,POSELT,UU, SEUIL)
+     *                IFLAG,IOLDPS,POSELT,UU, SEUIL_LOC,KEEP)
       IF (IFLAG.LT.0) GOTO 490
+         IF(INOPV.EQ. 1 .AND. STATICMODE) THEN
+            INOPV = -1
+            GOTO 50
+         ENDIF
       IF (INOPV.GE.1) THEN
           LASTBL = (INOPV.EQ.1)
           IEND = IW(IOLDPS+1)
@@ -2070,7 +2258,7 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC, STEP,
      *             PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
@@ -2081,7 +2269,7 @@ C
       ENDIF
       IF (INOPV.EQ.1) GO TO 500
       IF (INOPV.EQ.2) THEN
-         CALL CMUMPS_235(
+         CALL CMUMPS_235(IBEG_BLOCK,
      *            NASS,N,INODE,IW,LIW,A,LA,
      *            LDAFS, 
      *            IOLDPS,POSELT,NBTLKJ,KEEP(4),KEEP)
@@ -2090,8 +2278,9 @@ C
       NPVW = NPVW + 1
       IF (NASS.LE.1) THEN
         IFINB = -1
+        IF (NASS == 1) A(POSELT)=1.0E0/A(POSELT)
       ELSE
-         CALL CMUMPS_227(
+         CALL CMUMPS_227(IBEG_BLOCK,
      *             NASS, N,INODE,IW,LIW,A,LA,
      *             LDAFS, IOLDPS,POSELT,IFINB,
      *             NBTLKJ,KEEP(4))
@@ -2110,7 +2299,7 @@ C
      *             IFLAG, IERROR, IPOOL,LPOOL,
      *             SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
      *             LRLUS, NIRBDU, COMP,
-     *             PTRIST, PTRAST, PTLUST_S, STEP,
+     *             PTRIST, PTRAST, PTLUST_S, PTRFAC, STEP,
      *             PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
@@ -2121,7 +2310,7 @@ C
        ENDIF
        IF (IFINB.EQ.(-1)) GOTO 500
        NPIV   = IW(IOLDPS+1)
-       CALL CMUMPS_235(
+       CALL CMUMPS_235(IBEG_BLOCK,
      *            NASS,N,INODE,IW,LIW,A,LA,
      *            LDAFS, 
      *            IOLDPS,POSELT,NBTLKJ,KEEP(4),KEEP)
@@ -2138,7 +2327,7 @@ C
      *                   A, LA, NNEG, 
      *                   INOPV, IFLAG,
      *                   IOLDPS, POSELT, UU, 
-     *                   SEUIL )
+     *                   SEUIL,KEEP)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV
       INTEGER LPIV, IBEGKJI, NNEG
@@ -2147,6 +2336,7 @@ C
       REAL UU, UULOC, SEUIL
       INTEGER IW(LIW) 
       INTEGER   IOLDPS, POSELT
+      INTEGER KEEP(150)
        include 'mpif.h'
       INTEGER APOS, LDAFS
       REAL ZERO, RMAX
@@ -2156,12 +2346,25 @@ C
       DATA ZERO /0.0E0/
         LDAFS = NASS
         UULOC = UU
-        INOPV   = 0
         NPIV    = IW(IOLDPS+1)
         NPIVP1  = NPIV + 1
         ILOC = NPIVP1 - IBEGKJI + 1
         TIPIV( ILOC ) = ILOC
         NASSW   = IABS(IW(IOLDPS+3))
+        IF(INOPV .EQ. -1) THEN
+           APOS = POSELT + LDAFS*(NPIVP1-1) + NPIV
+           IDIAG = APOS
+           IF(ABS(A(APOS)).LT.SEUIL) THEN
+              IF(REAL(A(APOS)) .GE. ZERO) THEN
+                 A(APOS) = SEUIL
+              ELSE
+                 A(APOS) = -SEUIL
+              ENDIF
+              KEEP(98) = KEEP(98)+1
+           ENDIF
+           GO TO 420
+        ENDIF
+        INOPV   = 0
         DO 460 IPIV=NPIVP1,NASSW
             APOS = POSELT + LDAFS*(IPIV-1) + NPIV
             IDIAG = APOS + IPIV - NPIVP1
@@ -2201,6 +2404,7 @@ C
       RETURN
       END SUBROUTINE CMUMPS_223
       SUBROUTINE CMUMPS_235(
+     *                 IBEG_BLOCK,
      *                 NASS, N, INODE,
      *                 IW, LIW, A, LA,
      *                 LDAFS,
@@ -2211,7 +2415,7 @@ C
       COMPLEX    A(LA)
       INTEGER IW(LIW) 
       INTEGER LKJIB, INODE, KEEP(150)
-      INTEGER POSELT, LDAFS
+      INTEGER POSELT, LDAFS, IBEG_BLOCK
       INTEGER IOLDPS, NPIV, JROW2, NPBEG
       INTEGER NONEL, LKJIW, NEL1
       INTEGER HF
@@ -2225,7 +2429,7 @@ C
       LKJIBOLD = LKJIB
       NPIV   = IW(IOLDPS+1)
       JROW2  = IABS(IW(IOLDPS+3))
-      NPBEG  = IW(IOLDPS+4)
+      NPBEG  = IBEG_BLOCK
       HF     = 6 + IW(IOLDPS+5)
       NEL1   = NASS - JROW2
       LKJIW  = NPIV - NPBEG + 1
@@ -2242,7 +2446,7 @@ C
       ELSEIF (JROW2.LT.NASS) THEN
           IW(IOLDPS+3) = MIN0(JROW2+LKJIB,NASS)
       ENDIF
-      IW(IOLDPS+4) = NPIV + 1
+      IBEG_BLOCK = NPIV + 1
       IF (LKJIW.EQ.0) GO TO 500
       IF (NEL1.NE.0) THEN
         IF ( NASS - JROW2 > KEEP(7) ) THEN
@@ -2277,7 +2481,7 @@ C
       RETURN
       END SUBROUTINE CMUMPS_235
       SUBROUTINE CMUMPS_227
-     *     ( NASS, N, INODE, IW, LIW,
+     *     ( IBEG_BLOCK, NASS, N, INODE, IW, LIW,
      *     A, LA, LDAFS, 
      *     IOLDPS,POSELT,IFINB,LKJIB,LKJIT)
       IMPLICIT NONE
@@ -2287,7 +2491,7 @@ C
       INTEGER IW(LIW)
       COMPLEX    VALPIV
       INTEGER APOS, IOLDPS, POSELT, K1POS, NCB1
-      INTEGER LKJIT
+      INTEGER LKJIT, IBEG_BLOCK
       INTEGER NPIV,JROW2
       INTEGER NEL2,NPIVP1,LPOS
       COMPLEX ONE, ALPHA
@@ -2299,7 +2503,7 @@ C
          IW(IOLDPS+3) = MIN0(NASS,LKJIB)
       ENDIF
       JROW2 = IW(IOLDPS+3)
-      NPBEG = IW(IOLDPS+4)
+      NPBEG = IBEG_BLOCK
       NEL2   = JROW2 - NPIVP1
       IF (NEL2.EQ.0) THEN
         IF (JROW2.EQ.NASS) THEN
@@ -2310,6 +2514,7 @@ C
       ENDIF
       APOS   = POSELT + NPIV*(LDAFS + 1)
       VALPIV = ONE/A(APOS)
+      A(APOS) = VALPIV
       LPOS   = APOS + LDAFS
       CALL CCOPY(NASS-NPIVP1, A(LPOS), LDAFS, A(APOS+1), 1)
       CALL CMUMPS_CSYR('U', NEL2, -VALPIV, A(LPOS), LDAFS, A(LPOS+1), 
@@ -2332,7 +2537,7 @@ C
      *   COMP, STEP, PIMASTER, PAMASTER, POSFAC,
      *   MYID, COMM, IFLAG, IERROR, NBFIN,
      *
-     *    PTLUST_S, root, OPASSW, OPELIW, ITLOC, FILS,  
+     *    PTLUST_S, PTRFAC, root, OPASSW, OPELIW, ITLOC, FILS,  
      *    PTRARW, PTRAIW, INTARR, DBLARR,
      *    ICNTL, KEEP, IPOOL, LPOOL, LEAF, ND, FRERE_STEPS,
      *    LPTRAR, NELT, FRTPTR, FRTELT, 
@@ -2365,13 +2570,17 @@ C
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
       INTEGER COMM, MYID
-      INTEGER PTLUST_S(KEEP(28)), ITLOC( N ), FILS( N )
+      INTEGER PTLUST_S(KEEP(28)), PTRFAC(KEEP(28))
+      INTEGER ITLOC( N ), FILS( N )
       INTEGER ND( KEEP(28) ), FRERE_STEPS( KEEP(28) )
       INTEGER INTARR( MAX(1,KEEP(14)) )
-      REAL OPASSW, OPELIW
+      DOUBLE PRECISION OPASSW, OPELIW
+      DOUBLE PRECISION FLOP1
       COMPLEX  DBLARR( MAX(1,KEEP(13)) )
       INTEGER LEAF, LPOOL 
       INTEGER IPOOL( LPOOL )
+      INTEGER ITYPE2
+      PARAMETER(ITYPE2=2)
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER STATUS( MPI_STATUS_SIZE )
@@ -2433,9 +2642,11 @@ C
       END IF
       LRLU  = LRLU - LAELL
       LRLUS = LRLUS - LAELL
+      KEEP(67) = MIN(LRLUS, KEEP(67))
       POSBLOCFACTO = POSFAC
       POSFAC = POSFAC + LAELL
-      CALL CMUMPS_471(.FALSE.,LA-LRLUS,0, LAELL,KEEP)
+      CALL CMUMPS_471(.FALSE.,.FALSE.,
+     *                           LA-LRLUS,0, LAELL,KEEP,LRLU)
       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
      *                 A(POSBLOCFACTO), NPIV*NCOLU,
      *                 MPI_COMPLEX,
@@ -2458,7 +2669,8 @@ C
         LRLU  = LRLU + LAELL
         LRLUS = LRLUS + LAELL
         POSFAC = POSFAC - LAELL
-      CALL CMUMPS_471(.FALSE.,LA-LRLUS,0,-LAELL,KEEP)
+      CALL CMUMPS_471(.FALSE.,.FALSE.,
+     *                           LA-LRLUS,0,-LAELL,KEEP,LRLU)
       ENDIF
       DO WHILE ( PTRIST(STEP(INODE)) .EQ. 0 )
         MSGSOU = CMUMPS_275( STEP(INODE),
@@ -2472,7 +2684,8 @@ C
      *    STATUS, 
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -2497,7 +2710,8 @@ C
      *    STATUS, 
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -2519,7 +2733,8 @@ C
      *    STATUS, 
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU,
-     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S,
+     *    LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, PTRIST,
+     *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      *    IFLAG, IERROR, COMM,
      *    NBPROCFILS,
@@ -2552,6 +2767,9 @@ C
      *            A( LPOS ), NCOL1, ONE,
      *            A( CPOS ), NCOL1 )
        ENDIF
+       FLOP1 = DBLE(NCOLU*NPIV)*DBLE(2*NROW1)
+       FLOP1 = -FLOP1
+       CALL CMUMPS_190(1, .FALSE., FLOP1, KEEP )
       ENDIF
       IW( IOLDPS + 6 ) = IW( IOLDPS + 6 ) + 1
       IF (DYNAMIC) THEN
@@ -2560,7 +2778,8 @@ C
         LRLU  = LRLU + LAELL
         LRLUS = LRLUS + LAELL
         POSFAC = POSFAC - LAELL
-      CALL CMUMPS_471(.FALSE.,LA-LRLUS,0,-LAELL,KEEP)
+      CALL CMUMPS_471(.FALSE.,.FALSE.,
+     *                           LA-LRLUS,0,-LAELL,KEEP,LRLU)
       ENDIF
       NSLAVES_FOLLOW = IW( IOLDPS + 5 ) - 2
       IF ( IW( IOLDPS + 6 ) .eq. 0 .and.
@@ -2592,7 +2811,8 @@ C
      *    
      *    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      *    IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, IW, LIW, A, LA,
-     *    NIRBDU, PTRIST, PTLUST_S, PTRAST, STEP, PIMASTER, PAMASTER,
+     *    NIRBDU, PTRIST, PTLUST_S, PTRFAC,
+     *    PTRAST, STEP, PIMASTER, PAMASTER,
      *    NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
      *    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
@@ -2602,10 +2822,10 @@ C
        IF ( IFLAG < 0 ) GOTO 600
        IF (NELIM1.EQ.0) THEN
         CALL CMUMPS_314( N, INODE,  
-     *    PTRIST, PTRAST, PTLUST_S, IW, LIW, A, LA,
+     *    PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
      *    LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
      *    NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP)
+     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE2)
        ENDIF
       ENDIF
  600  CONTINUE
@@ -2621,7 +2841,9 @@ C
      *     KEEP, LOCAL_M, LOCAL_N,
      *     SBUF_SEND, SBUF_REC, OPS_SUBTREE, NSTEPS,
      *     NMB_PAR2, ISTEP_TO_INIV2, CANDIDATES, 
-     *     IFLAG, IERROR)
+     *     IFLAG, IERROR
+     $     ,MEMORY_MD,MAX_FRONT_SURFACE_LOCAL
+     $     )
       IMPLICIT NONE
       INTEGER  MYID, N, LNA, IFLAG, IERROR
       INTEGER  NRLADU, NIRADU, NRLNEC, NIRNEC
@@ -2646,7 +2868,7 @@ C
       INTEGER LEVEL, MAXTEMPCB, MAXITEMPCB
       LOGICAL UPDATE, UPDATEF, MASTER, MASTERF 
       INTEGER LEVELF, NCB, SIZECB, SIZECBI
-      INTEGER NBROWMAX, NSLAVES, TEMP,
+      INTEGER NBROWMAX, NSLAVES, TEMP, NSLAVES_LOC,
      *         NELIMF, NFRF, NCBF, CBMAXR, CBMAXS,
      *         NSLAVESF, NBROWMAXF, NCOLMAX, LKJIB,
      *         LKJIBT, KMAX
@@ -2654,7 +2876,8 @@ C
       INTEGER IROOT
       INTEGER allocok
       LOGICAL ROOT_OWNER
-      REAL OPS_NODE
+      DOUBLE PRECISION OPS_NODE
+      INTEGER MAX_FRONT_SURFACE_LOCAL,MEMORY_MD,BANDS_FCT
        INTEGER WHAT
       INTRINSIC MIN, INT, REAL
       INTEGER CMUMPS_275, CMUMPS_330, CMUMPS_497
@@ -2666,10 +2889,13 @@ C
       logical :: force_cand , concerned, UPDATES, STACKCB, MASTERSON
       integer :: nmb_of_cand,istat, IFSON, LEVELSON
       integer, allocatable :: cand_of_node(:)
+      MAX_FRONT_SURFACE_LOCAL=0
+      MEMORY_MD=0
+      BANDS_FCT=0
       ALLOCATE( LSTKR(NSTEPS), TNSTK(NSTEPS), IPOOL(NSTEPS),
      *          LSTKI(NSTEPS) , stat=allocok)
       if (allocok .GT. 0) THEN
-        IFLAG  =-13
+        IFLAG  =-7
         IERROR = 4*NSTEPS
         RETURN
       endif
@@ -2694,7 +2920,7 @@ C
       MAXITEMPCB = 0
       SBUF_SEND  = 1
       SBUF_REC   = 1
-      IF (KEEP(38) .NE. 0) THEN
+      IF (KEEP(38) .NE. 0 .AND. KEEP(60).EQ.0) THEN
         INODE  = KEEP(38)
         NRLADU = LOCAL_M*LOCAL_N
         NRLNEC = NRLADU
@@ -2724,6 +2950,23 @@ C
         MASTER = CMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
      *           .EQ. MYID
         LEVEL  = CMUMPS_330(STEP(INODE),PROCNODE,SLAVEF)
+        IF(KEEP(86).EQ.1)THEN
+           IF(MASTER.AND.(.NOT.CMUMPS_170(STEP(INODE),
+     $          PROCNODE,SLAVEF)))THEN
+              IF(LEVEL.EQ.1)THEN
+                 MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $                NFR*NFR)
+              ELSEIF(LEVEL.EQ.2)THEN
+                 IF(KEEP(50).EQ.0)THEN
+                    MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $                   NFR*NELIM)
+                 ELSE
+                    MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $                   NELIM*NELIM)
+                 ENDIF
+              ENDIF
+           ENDIF
+        ENDIF
       UPDATE=.FALSE.
       if(.NOT.force_cand) then
          UPDATE = ( (MASTER.AND.(LEVEL.NE.3) ).OR. LEVEL.EQ.2 )
@@ -2766,9 +3009,20 @@ C
              ELSE
                LKJIBT  = NELIM
              ENDIF
-             WHAT = 1 ! Compute NBROWMAX only
+             IF (KEEP(48) .EQ. 5) THEN
+                  WHAT = 4 ! Compute NBROWMAX only
+                  IF (FORCE_CAND) THEN
+                    NSLAVES_LOC=CANDIDATES(SLAVEF+1,
+     $                  ISTEP_TO_INIV2(STEP(INODE)))
+                  ELSE
+                    NSLAVES_LOC=SLAVEF-1
+                  ENDIF
+             ELSE
+                  WHAT = 1 ! Compute NBROWMAX only
+                  NSLAVES_LOC=SLAVEF
+             ENDIF
              CALL CMUMPS_503(WHAT, KEEP,
-     &       NCB, NFR, SLAVEF, NBROWMAX, IDUMMY)
+     &       NCB, NFR, NSLAVES_LOC, NBROWMAX, IDUMMY)
              SBUF_SEND = MAX(SBUF_SEND,
      *                       LKJIBT*NBROWMAX+6)
              SBUF_REC = MAX( SBUF_REC, NBROWMAX*LKJIBT+6 )
@@ -2791,11 +3045,25 @@ C
              SIZECB = 0
              SIZECBI    = NCB + 5 +  SLAVEF - 1
             ELSE
-             WHAT = 2 ! Both NBROWMAX and SIZECB
+             IF (KEEP(48) .EQ. 5) THEN
+               WHAT = 5
+               IF (FORCE_CAND) THEN
+                 NSLAVES_LOC=CANDIDATES(SLAVEF+1,
+     $                 ISTEP_TO_INIV2(STEP(INODE)))
+               ELSE
+                 NSLAVES_LOC=SLAVEF-1
+               ENDIF
+             ELSE
+               WHAT = 2 ! Both NBROWMAX and SIZECB
+               NSLAVES_LOC=SLAVEF
+             ENDIF
              CALL CMUMPS_503(WHAT, KEEP,
-     &            NCB, NFR, SLAVEF, NBROWMAX, SIZECB )
+     &         NCB, NFR, NSLAVES_LOC, NBROWMAX, SIZECB )
              NIRADU   = NIRADU+4+NELIM+NBROWMAX 
              NRLADU   = NRLADU + NELIM*NBROWMAX
+             IF(KEEP(86).EQ.1)THEN
+                BANDS_FCT=BANDS_FCT+(NELIM*NBROWMAX)
+             ENDIF
              NSLAVES = CMUMPS_52( SLAVEF,
      *       KEEP(48), KEEP(10), KEEP(50), NFR, NCB)
              SIZECBI      = 4 + NBROWMAX + NCB + NSLAVES + 1
@@ -2854,22 +3122,25 @@ C
         ENDIF
         IF (MASTER.OR.LEVEL.EQ.3) THEN
          IF (INODE.NE.KEEP(20).OR.(KEEP(60).EQ.0)) THEN
-          OPS_NODE = REAL(NELIM) * (
-     *        REAL( NFR * NFR ) + REAL( NFR )
-     *      - REAL( NFR*NELIM + NELIM + 1 )   )
-     *      + ( REAL(NELIM)*REAL(NELIM+1)*REAL(2*NELIM+1) )
-     *      / 6 
+            CALL CMUMPS_511(NFR, NELIM, NELIM,KEEP(50),
+     *           1,OPS_NODE)
          ELSE
            OPS_NODE = 0.0E0
          ENDIF
-         IF (CMUMPS_170(STEP(INODE),
-     *   PROCNODE, SLAVEF) ) THEN
-           OPS_SUBTREE = OPS_SUBTREE + OPS_NODE
-         ENDIF
          IF ( LEVEL .eq. 3 ) THEN
-            OPSA = OPSA + OPS_NODE / REAL( SLAVEF )
+            OPSA = OPSA + REAL(OPS_NODE) / REAL( SLAVEF )
          ELSE IF (MASTER) THEN
-            OPSA = OPSA + OPS_NODE
+            OPSA = OPSA + REAL(OPS_NODE)
+         ENDIF
+         IF (CMUMPS_170(STEP(INODE),
+     *   PROCNODE, SLAVEF) .OR. NE(STEP(INODE))==0) THEN
+           IF (LEVEL == 1) THEN
+             OPS_SUBTREE = OPS_SUBTREE + REAL(OPS_NODE)
+           ELSE
+             CALL CMUMPS_511(NFR, NELIM, NELIM,KEEP(50),
+     *           1,OPS_NODE)
+             OPS_SUBTREE = OPS_SUBTREE + REAL(OPS_NODE)
+           ENDIF
          ENDIF
         ENDIF
         IF (IFATH .EQ. 0) THEN
@@ -2913,22 +3184,37 @@ C
          NFRF = ND(STEP(IFATH))
          NCBF = NFRF - NELIMF
          IF (LEVELF.EQ.2) THEN
-           WHAT = 1 ! NBROWMAX only
+           IF (KEEP(48) .EQ. 5) THEN
+               WHAT = 4
+               IF (FORCE_CAND) THEN
+                 NSLAVES_LOC=CANDIDATES(SLAVEF+1,
+     $                 ISTEP_TO_INIV2(STEP(IFATH)))
+               ELSE
+                 NSLAVES_LOC=SLAVEF-1
+               ENDIF
+             ELSE
+               WHAT = 1 ! NBROWMAX only
+               NSLAVES_LOC=SLAVEF
+           ENDIF
            CALL CMUMPS_503(WHAT,
-     *     KEEP, NCBF, NFRF, SLAVEF, NBROWMAXF,IDUMMY)
+     *     KEEP, NCBF, NFRF, NSLAVES_LOC, NBROWMAXF,IDUMMY)
            NCOLMAX  = NCB
-           if (update.or.updatef) then 
-              CBMAXS = MAX(MIN(NELIMF,NCB)*NCOLMAX, 
-     *          MIN(NBROWMAXF,NCB)*NCOLMAX)
+           if(update)then
+              IF(MASTERF)THEN
+                 CBMAXS = MIN(NBROWMAXF,NCB)*NCOLMAX
+              ELSE
+                 CBMAXS = MAX(MIN(NELIMF,NCB)*NCOLMAX, 
+     *                MIN(NBROWMAXF,NCB)*NCOLMAX)
+              ENDIF
            else
               CBMAXS = 0
            end if
            IF (MASTERF) THEN
-            CBMAXR = MIN(NELIMF,NCB)*NCOLMAX
+                CBMAXR = MIN(NELIMF,NCB)*MIN(NCOLMAX,NELIMF)
            ELSE IF (UPDATEF) THEN
-            CBMAXR = MIN(NBROWMAXF,NCB)*NCOLMAX
+                 CBMAXR = MIN(NBROWMAXF,NCB)*NCOLMAX
            else
-            cbmaxr = 0
+              cbmaxr = 0
            ENDIF
          ELSEIF (LEVELF.EQ.3) THEN
            CBMAXR = LOCAL_M*LOCAL_N
@@ -2939,8 +3225,9 @@ C
          ENDIF
          IF (UPDATE) THEN
            SIZECB = MIN(CBMAXS, SIZECB)
-           IF ( .not. ( LEVELF .eq. 1 .AND. UPDATEF ) )
-     *     SBUF_SEND = MAX(SBUF_SEND, SIZECB+SIZECBI)
+           IF ( .not. ( LEVELF .eq. 1 .AND. UPDATEF ) )THEN
+              SBUF_SEND = MAX(SBUF_SEND, SIZECB+SIZECBI)
+           ENDIF
          ENDIF
          STACKCB = .FALSE.
          IF (UPDATEF) THEN 
@@ -2963,11 +3250,24 @@ C
               SIZECB = 0
              ENDIF
           ELSE 
-             WHAT = 2 ! Both NBROWMAX and SIZECB max are computed
+             IF (KEEP(48) .EQ. 5) THEN
+               WHAT = 5! Both NBROWMAX and SIZECB max are computed
+               IF (FORCE_CAND) THEN
+                 NSLAVES_LOC=CANDIDATES(SLAVEF+1,
+     $                 ISTEP_TO_INIV2(STEP(INODE)))
+               ELSE
+                 NSLAVES_LOC=SLAVEF-1
+               ENDIF
+             ELSE
+               WHAT = 2 ! Both NBROWMAX and SIZECB max are computed
+               NSLAVES_LOC=SLAVEF
+             ENDIF
              CALL CMUMPS_503( WHAT, KEEP,
-     &       NCB, NFR, SLAVEF, NBROWMAX, SIZECB )
+     &       NCB, NFR, NSLAVES_LOC, NBROWMAX, SIZECB )
+             SIZECB  = MIN(CBMAXR,SIZECB)
              MAXTEMPCB  = MAX(MAXTEMPCB, SIZECB)
              MAXITEMPCB = MAX(MAXITEMPCB, NBROWMAX + NCB + 6 )
+             SBUF_REC = MAX(SBUF_REC,SIZECB+NBROWMAX + NCB + 6)
              IF (MASTER) THEN
               SIZECBI =  NCB + 5 +  SLAVEF - 1
               SIZECB  = 0
@@ -2994,9 +3294,20 @@ C
                 IF (MASTER) THEN
                  SIZECBI =  NCB + 5 +  SLAVEF - 1
                 ELSE 
-                 WHAT = 2 ! Both SIZECB and NBROWMAX computed
+                 IF (KEEP(48) .EQ. 5) THEN
+                  WHAT = 5! Both NBROWMAX and SIZECB max are computed
+                  IF (FORCE_CAND) THEN
+                    NSLAVES_LOC=CANDIDATES(SLAVEF+1,
+     $                  ISTEP_TO_INIV2(STEP(INODE)))
+                  ELSE
+                    NSLAVES_LOC=SLAVEF-1
+                  ENDIF
+                 ELSE
+                  WHAT = 2 ! Both NBROWMAX and SIZECB max are computed
+                  NSLAVES_LOC=SLAVEF
+                 ENDIF
                  CALL CMUMPS_503(WHAT, KEEP,
-     &           NCB, NFR, SLAVEF, NBROWMAX, SIZECB )
+     &           NCB, NFR, NSLAVES_LOC, NBROWMAX, SIZECB )
                  SIZECBI =  NFR + 6 + SLAVEF - 1
                  SIZECBI = SIZECBI + NBROWMAX + NFR + 6
                 ENDIF 
@@ -3058,6 +3369,7 @@ C
           NIRNEC = NIRNEC + LIWK_QR
         END IF
       END IF
+      NRLNEC = MAX(NRLNEC, NRLADU+3*KEEP(127)*KEEP(84))
       SBUF_REC = MAX(SBUF_REC, MAXTEMPCB+MAXITEMPCB )
       SBUF_REC = SBUF_REC   + 10
       SBUF_SEND = SBUF_SEND + 10
@@ -3075,6 +3387,9 @@ C
        ENDIF
       ENDIF
       NIRBDU = NIRNEC + 2 * MAX(PERLU,10)*(NIRNEC/100+1)
+      IF(KEEP(86).EQ.1)THEN
+         MEMORY_MD=(PERLU*(NRLNEC/100+1))
+      ENDIF
       DEALLOCATE( LSTKR, TNSTK, IPOOL,
      *          LSTKI )
       RETURN
@@ -3092,13 +3407,13 @@ C
      *        STEP(N), 
      * PIMASTER(KEEP28),
      *  IW( LIW )
-      REAL FLOP1
+      DOUBLE PRECISION FLOP1
       INTEGER NUMORG, IN, NASS, IFSON, NUMSTK, NFRONT, NPIV, NCB, 
      &        LEVEL, ISON
       LOGICAL CMUMPS_170
       INTEGER CMUMPS_330
       EXTERNAL CMUMPS_170, CMUMPS_330
-      REAL ZERO
+      DOUBLE PRECISION ZERO
       PARAMETER (ZERO=0.0E0)
       FLOP1 = 0.0E0
       IF (CMUMPS_170(STEP(INODE),
@@ -3121,34 +3436,50 @@ C
       NPIV  = NASS + NUMORG
       NCB   = NFRONT - NPIV
       LEVEL = CMUMPS_330(STEP(INODE),PROCNODE_STEPS,SLAVEF)
+      CALL CMUMPS_511(NFRONT,NPIV,NPIV,KEEP50,LEVEL,FLOP1)
+      RETURN
+      END SUBROUTINE CMUMPS_137
+      SUBROUTINE CMUMPS_511(NFRONT,NPIV,NASS,
+     *                                 KEEP50,LEVEL,COST)
+      IMPLICIT NONE
+      INTEGER NFRONT,NPIV,KEEP50,LEVEL, NASS
+      DOUBLE PRECISION COST
       IF (KEEP50.EQ.0) THEN
         IF (LEVEL.EQ.1) THEN
-          FLOP1 = REAL(2) * REAL(NFRONT) * REAL(NPIV) *
-     *      REAL(NFRONT - NPIV - 1) +
-     *      REAL(NPIV * (NPIV + 1)) * REAL(2 * NPIV + 1) / REAL(3)
-          FLOP1 = FLOP1 + REAL(2 * NFRONT - NPIV - 1) * REAL(NPIV) /
-     *      REAL(2)
+          COST = DBLE(2) * DBLE(NFRONT) * DBLE(NPIV) *
+     *      DBLE(NFRONT - NPIV - 1) +
+     *      DBLE(NPIV * (NPIV + 1)) * DBLE(2 * NPIV + 1)
+     *          / DBLE(3)
+          COST = COST + DBLE(2 * NFRONT - NPIV - 1)
+     *      * DBLE(NPIV) /DBLE(2)
         ELSEIF (LEVEL.EQ.2) THEN
-          FLOP1 = REAL(2*NPIV)*REAL(NFRONT) -
-     *          REAL(NPIV+NFRONT)*REAL(NPIV+1)
-          FLOP1 = REAL(NPIV)*FLOP1 +
-     *     REAL(((2 * NPIV - NPIV - 1) * NPIV) / 2) +
-     *     REAL(NPIV) * REAL(NPIV + 1) * REAL(2 * NPIV + 1) /REAL(3)
+          COST = DBLE(2*NASS)*DBLE(NFRONT) -
+     *          DBLE(NASS+NFRONT)*DBLE(NPIV+1)
+          COST = DBLE(NPIV)*COST +
+     *     DBLE(((2 * NASS - NPIV - 1) * NPIV) / 2) +
+     *     DBLE(NPIV) * DBLE(NPIV + 1) *
+     *     DBLE(2 * NPIV + 1) /DBLE(3)
         ENDIF
       ELSE
         IF (LEVEL.EQ.1) THEN
-          FLOP1 = REAL(NPIV) * (
-     *          REAL( NFRONT ) * REAL( NFRONT ) + REAL( NFRONT )
-     *        - REAL( NFRONT*NPIV + NPIV + 1 )    )
-     *        + ( REAL(NPIV)*REAL(NPIV+1)*REAL(2*NPIV+1)  )
-     *        / REAL(6)
+          COST = DBLE(NPIV) * (
+     *          DBLE( NFRONT ) * DBLE( NFRONT ) +
+     *          DBLE( NFRONT ) - DBLE( NFRONT*NPIV
+     *          +NPIV+1 ))+( DBLE(NPIV)*DBLE(NPIV+1)
+     *          *DBLE(2*NPIV+1))/ DBLE(6)
+        ELSE IF (LEVEL.EQ.3.AND.KEEP50.EQ.2) THEN
+          COST = DBLE(2) * DBLE(NFRONT) * DBLE(NPIV) *
+     *      DBLE(NFRONT - NPIV - 1) +
+     *      DBLE(NPIV * (NPIV + 1)) *
+     *      DBLE(2 * NPIV + 1) / DBLE(3)
+          COST = COST + DBLE(2 * NFRONT - NPIV - 1)
+     *         * DBLE(NPIV) / DBLE(2)
         ELSE
-          FLOP1 = REAL(NPIV) * (
-     *          REAL( NPIV ) * REAL( NPIV ) + REAL( NPIV )
-     *        - REAL( NPIV*NPIV +  NPIV + 1 )    )
-     *        + ( REAL(NPIV)*REAL(NPIV+1)*REAL(2*NPIV+1) )
-     *        / REAL( 6 )
+          COST = DBLE(NPIV) * (
+     *          DBLE( NASS ) * DBLE( NASS ) + DBLE( NASS )
+     *        - DBLE( NASS*NPIV +  NPIV + 1 )    )
+     *        + ( DBLE(NPIV)*DBLE(NPIV+1)*DBLE(2*NPIV+1) )
+     *        / DBLE( 6 )
         ENDIF
       ENDIF
-      RETURN
-      END
+      END SUBROUTINE CMUMPS_511

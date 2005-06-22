@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,9 +38,9 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
-      SUBROUTINE CMUMPS_448(ICNTL,CNTL)
+      SUBROUTINE CMUMPS_448 (ICNTL,CNTL)
       IMPLICIT NONE
       INTEGER NICNTL, NCNTL
       PARAMETER (NICNTL=10, NCNTL=10)
@@ -62,7 +62,7 @@ C
    20 CONTINUE
       RETURN
       END
-      SUBROUTINE CMUMPS_443(JOB,M,N,NE,IP,IRN,A,NUM,PERM,LIW,IW,LDW,DW,
+      SUBROUTINE CMUMPS_443 (JOB,M,N,NE,IP,IRN,A,NUM,PERM,LIW,IW,LDW,DW,
      &           ICNTL,CNTL,INFO)
       IMPLICIT NONE
       INTEGER NICNTL, NCNTL, NINFO
@@ -70,14 +70,14 @@ C
       INTEGER JOB,M,N,NE,NUM,LIW,LDW
       INTEGER IP(N+1),IRN(NE),PERM(M),IW(LIW)
       INTEGER ICNTL(NICNTL),INFO(NINFO)
-      COMPLEX A(NE)
+      REAL A(NE)
       REAL DW(LDW),CNTL(NCNTL)
       INTEGER I,J,K,wARN1,WARN2,WARN4
       REAL             FACT,ZERO,ONE,RINF
       PARAMETER (ZERO=0.0D+00,ONE=1.0D+0)
-      EXTERNAL CMUMPS_457,CMUMPS_444,CMUMPS_451,CMUMPS_452,CMUMPS_454
+      EXTERNAL SMUMPS_457, SMUMPS_444, SMUMPS_451, SMUMPS_452 ,SMUMPS_454
       INTRINSIC ABS,LOG
-      RINF = CNTL(2)
+       RINF = CNTL(2)
       WARN1 = 0
       WARN2 = 0
       WARN4 = 0
@@ -182,13 +182,13 @@ C
         DO 10 J = 1,N
           IW(J) = IP(J+1) - IP(J)
    10   CONTINUE
-        CALL CMUMPS_457(M,N,IRN,NE,IP,IW(1),PERM,NUM,
+        CALL CMUMPS_457 (M,N,IRN,NE,IP,IW(1),PERM,NUM,
      &       IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1))
         GO TO 90
       ENDIF
       IF (JOB.EQ.2) THEN
         DW(1) = MAX(ZERO,CNTL(1))
-        CALL CMUMPS_444(M,N,NE,IP,IRN,A,PERM,NUM,
+        CALL CMUMPS_444 (M,N,NE,IP,IRN,A,PERM,NUM,
      &       IW(1),IW(N+1),IW(2*N+1),IW(2*N+M+1),DW,RINF)
         GO TO 90
       ENDIF
@@ -197,9 +197,9 @@ C
           IW(K) = IRN(K)
           DW(K) = ABS(A(K))
    20   CONTINUE
-        CALL CMUMPS_451(N,NE,IP,IW,DW)
+        CALL CMUMPS_451 (N,NE,IP,IW,DW)
         FACT = MAX(ZERO,CNTL(1))
-        CALL CMUMPS_452(M,N,NE,IP,IW(1),DW,PERM,NUM,IW(NE+1),
+        CALL CMUMPS_452 (M,N,NE,IP,IW(1),DW,PERM,NUM,IW(NE+1),
      &       IW(NE+N+1),IW(NE+2*N+1),IW(NE+3*N+1),IW(NE+4*N+1),
      &       IW(NE+5*N+1),IW(NE+5*N+M+1),FACT,RINF)
         GO TO 90
@@ -216,7 +216,7 @@ C
    50   CONTINUE
         DW(1) = MAX(ZERO,CNTL(1))
         IW(1) = JOB
-        CALL CMUMPS_454(M,N,NE,IP,IRN,DW(2*M+1),PERM,NUM,
+        CALL CMUMPS_454 (M,N,NE,IP,IRN,DW(2*M+1),PERM,NUM,
      &       IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
      &       DW(1),DW(M+1),RINF)
         GO TO 90
@@ -273,7 +273,7 @@ C
               DW(2*M+N+K) = DW(2*M+N+NE+I) * DW(2*M+N+K)
    65       CONTINUE
    66     CONTINUE
-          CALL CMUMPS_451(N,NE,IP,IW(3*N+2*M+1),DW(2*M+N+1))
+          CALL CMUMPS_451 (N,NE,IP,IW(3*N+2*M+1),DW(2*M+N+1))
           DO 176 J = 1,N
             IF (IP(J).NE.IP(J+1)) THEN
               FACT = DW(2*M+N+IP(J))
@@ -300,12 +300,12 @@ C
         DW(1) = MAX(ZERO,CNTL(1))
         IW(1) = JOB
         IF (JOB.EQ.5) THEN
-          CALL CMUMPS_454(M,N,NE,IP,IRN,DW(2*M+N+1),PERM,NUM,
+          CALL CMUMPS_454 (M,N,NE,IP,IRN,DW(2*M+N+1),PERM,NUM,
      &         IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
      &         DW(1),DW(M+1),RINF)
         ENDIF
         IF (JOB.EQ.6) THEN
-          CALL CMUMPS_454(M,N,NE,IP,IW(3*N+2*M+1),DW(2*M+N+1),PERM,NUM,
+          CALL CMUMPS_454 (M,N,NE,IP,IW(3*N+2*M+1),DW(2*M+N+1),PERM,NUM,
      &         IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
      &         DW(1),DW(M+1),RINF)
         ENDIF
@@ -370,32 +370,32 @@ C
         ENDIF
       ENDIF
    99 RETURN
- 9001 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2,
+ 9001 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2,
      &        ' because ',(A),' = ',I10)
- 9004 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2/
+ 9004 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2/
      &        '        LIW too small, must be at least ',I8)
- 9005 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2/
+ 9005 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2/
      &        '        LDW too small, must be at least ',I8)
- 9006 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2/
+ 9006 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2/
      &        '        Column ',I8,
      &        ' contains an entry with invalid row index ',I8)
- 9007 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2/
+ 9007 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2/
      &        '        Column ',I8,
      &        ' contains two or more entries with row index ',I8)
- 9008 FORMAT (' ****** Error in CMUMPS_443. INFO(1) = ',I2/
+ 9008 FORMAT (' ****** Error in SMUMPS_443. INFO(1) = ',I2/
      &        '        CNTL(2) is negative or zero.')
- 9010 FORMAT (' ****** Warning from CMUMPS_443. INFO(1) = ',I2)
+ 9010 FORMAT (' ****** Warning from SMUMPS_443. INFO(1) = ',I2)
  9011 FORMAT ('        - The matrix is structurally singular.')
  9012 FORMAT ('        - Some scaling factors may be too large.')
  9014 FORMAT ('        - CNTL(1) is negative and was treated as zero.')
- 9020 FORMAT (' ****** Input parameters for CMUMPS_443:'/
+ 9020 FORMAT (' ****** Input parameters for SMUMPS_443:'/
      &        ' JOB =',I10/' M   =',I10/' N   =',I10/' NE  =',I10)
  9021 FORMAT (' IP(1:N+1)   = ',8I8/(15X,8I8))
  9022 FORMAT (' IRN(1:NE)   = ',8I8/(15X,8I8))
  9023 FORMAT (' A(1:NE)     = ',4(1PE14.4)/(15X,4(1PE14.4)))
  9024 FORMAT (' ICNTL(1:10) = ',8I8/(15X,2I8))
  9025 FORMAT (' CNTL(1:10)  = ',4(1PE14.4)/(15X,4(1PE14.4)))
- 9030 FORMAT (' ****** Output parameters for CMUMPS_443:'/
+ 9030 FORMAT (' ****** Output parameters for SMUMPS_443:'/
      &        ' INFO(1:2)   = ',2I8)
  9031 FORMAT (' NUM         = ',I8)
  9032 FORMAT (' PERM(1:M)   = ',8I8/(15X,8I8))
@@ -407,7 +407,7 @@ C
       IMPLICIT NONE
       INTEGER M,N,NE,NUM
       INTEGER IP(N+1),IRN(NE),IPERM(M),JPERM(N),PR(N),Q(M),L(M)
-      COMPLEX A(NE)
+      REAL A(NE)
       REAL D(M), RINF
       INTEGER I,II,J,JJ,JORD,Q0,QLEN,IDUM,JDUM,ISP,JSP,
      &        K,KK,KK1,KK2,I0,UP,LOW
@@ -415,7 +415,7 @@ C
       REAL             ZERO,MINONE
       PARAMETER (ZERO=0.0D+0,MINONE=-1.0D+0)
       INTRINSIC ABS,MIN
-      EXTERNAL CMUMPS_445,CMUMPS_446,CMUMPS_447,CMUMPS_455
+      EXTERNAL SMUMPS_445, SMUMPS_446, SMUMPS_447, SMUMPS_455
       RLX = D(1)
       NUM = 0
       BV = RINF
@@ -518,7 +518,7 @@ C
             ELSE
               QLEN = QLEN + 1
               L(I) = QLEN
-              CALL CMUMPS_445(I,M,Q,D,L,1)
+              CALL CMUMPS_445 (I,M,Q,D,L,1)
             ENDIF
             JJ = IPERM(I)
             PR(JJ) = J
@@ -532,7 +532,7 @@ C
             BV = D(I)
             TBV = BV * (1-RLX)
             DO 152 IDUM = 1,M
-              CALL CMUMPS_446(QLEN,M,Q,D,L,1)
+              CALL CMUMPS_446 (QLEN,M,Q,D,L,1)
               L(I) = 0
               LOW = LOW - 1
               Q(LOW) = I
@@ -562,7 +562,7 @@ C
               D(I) = DNEW
               IF (DNEW.GE.TBV) THEN
                 IF (DI.NE.MINONE) THEN
-                  CALL CMUMPS_447(L(I),QLEN,M,Q,D,L,1)
+                  CALL CMUMPS_447 (L(I),QLEN,M,Q,D,L,1)
                 ENDIF
                 L(I) = 0
                 LOW = LOW - 1
@@ -572,7 +572,7 @@ C
                   QLEN = QLEN + 1
                   L(I) = QLEN
                 ENDIF
-                CALL CMUMPS_445(I,M,Q,D,L,1)
+                CALL CMUMPS_445 (I,M,Q,D,L,1)
               ENDIF
               JJ = IPERM(I)
               PR(JJ) = J
@@ -609,10 +609,10 @@ C
   193   CONTINUE
   100 CONTINUE
  1000 IF (M.EQ.N .and. NUM.EQ.N) GO TO 2000
-      CALL CMUMPS_455(M,N,IPERM,L,JPERM)
+      CALL CMUMPS_455 (M,N,IPERM,L,JPERM)
  2000 RETURN
       END
-      SUBROUTINE CMUMPS_445(I,N,Q,D,L,IWAY)
+      SUBROUTINE CMUMPS_445 (I,N,Q,D,L,IWAY)
       IMPLICIT NONE
       INTEGER I,N,IWAY
       INTEGER Q(N),L(N)
@@ -648,7 +648,7 @@ C
       L(I) = POS
       RETURN
       END
-      SUBROUTINE CMUMPS_446(QLEN,N,Q,D,L,IWAY)
+      SUBROUTINE CMUMPS_446 (QLEN,N,Q,D,L,IWAY)
       IMPLICIT NONE
       INTEGER QLEN,N,IWAY
       INTEGER Q(N),L(N)
@@ -699,7 +699,7 @@ C
       L(I) = POS
       RETURN
       END
-      SUBROUTINE CMUMPS_447(POS0,QLEN,N,Q,D,L,IWAY)
+      SUBROUTINE CMUMPS_447 (POS0,QLEN,N,Q,D,L,IWAY)
       IMPLICIT NONE
       INTEGER POS0,QLEN,N,IWAY
       INTEGER Q(N),L(N)
@@ -782,13 +782,13 @@ C
       L(I) = POS
       RETURN
       END
-      SUBROUTINE CMUMPS_458(M,N,NE,IP,IRN,A,MODE,PERM,IW,INFO)
+      SUBROUTINE CMUMPS_458 (M,N,NE,IP,IRN,A,MODE,PERM,IW,INFO)
       IMPLICIT NONE
       INTEGER M,N,NE,MODE,INFO
-      COMPLEX A(NE)
+      REAL A(NE)
       INTEGER IP(N+1),IRN(NE),PERM(*),IW(*)
       INTEGER I, K
-      EXTERNAL CMUMPS_456,CMUMPS_449
+      EXTERNAL SMUMPS_456 ,SMUMPS_449
       INFO = 0
       IF (M.LE.0 .OR. N.LE.0) THEN
         INFO = -2
@@ -803,9 +803,9 @@ C
         GO TO 299
       ENDIF
       IF (MODE.EQ.1) THEN
-        CALL CMUMPS_456(M,PERM,IW,INFO)
+        CALL CMUMPS_456 (M,PERM,IW,INFO)
       ELSE
-        CALL CMUMPS_456(N,PERM,IW,INFO)
+        CALL CMUMPS_456 (N,PERM,IW,INFO)
       ENDIF
       IF (INFO.NE.0) THEN
         INFO = -11
@@ -825,15 +825,15 @@ C
   150   CONTINUE
         GO TO 299
       ENDIF
-      CALL CMUMPS_449(M,N,NE,IP,IRN,A,PERM,IW(1),IW(N+1))
+      CALL CMUMPS_449 (M,N,NE,IP,IRN,A,PERM,IW(1),IW(N+1))
   299 RETURN
       END
-      SUBROUTINE CMUMPS_449(M,N,NE,IP,IRN,A,PERM,IW,DEST)
+      SUBROUTINE CMUMPS_449 (M,N,NE,IP,IRN,A,PERM,IW,DEST)
       IMPLICIT NONE
       INTEGER M,N,NE
-      COMPLEX A(NE)
+      REAL A(NE)
       INTEGER IP(N+1),IRN(NE),PERM(N),IW(N),DEST(NE)
-      COMPLEX AOLD,ANEW
+      REAL AOLD,ANEW
       INTEGER I,J,K,IDUM,IOLD,INEW,I0,I1,JOLD,JNEW,LEN
       K = 0
       DO 200 J = 1,N
@@ -884,7 +884,7 @@ C
   290 CONTINUE
   299 RETURN
       END
-      SUBROUTINE CMUMPS_450(IP,LENL,LENH,W,WLEN,A,NVAL,VAL)
+      SUBROUTINE CMUMPS_450 (IP,LENL,LENH,W,WLEN,A,NVAL,VAL)
       IMPLICIT NONE
       INTEGER WLEN,NVAL
       INTEGER IP(*),LENL(*),LENH(*),W(*)
@@ -921,7 +921,7 @@ C
   11  IF (NVAL.GT.0) VAL = SPLIT((NVAL+1)/2)
       RETURN
       END
-      SUBROUTINE CMUMPS_451(N,NE,IP,IRN,A)
+      SUBROUTINE CMUMPS_451 (N,NE,IP,IRN,A)
       IMPLICIT NONE
       INTEGER N,NE
       INTEGER IP(N+1),IRN(NE)
@@ -1002,7 +1002,7 @@ C
   100 CONTINUE
       RETURN
       END
-      SUBROUTINE CMUMPS_452(M,N,NE,IP,IRN,A,IPERM,NUMX,
+      SUBROUTINE CMUMPS_452 (M,N,NE,IP,IRN,A,IPERM,NUMX,
      &           W,LEN,LENL,LENH,FC,IW,IW4,RLX,RINF)
       IMPLICIT NONE
       INTEGER M,N,NE,NUMX
@@ -1011,7 +1011,7 @@ C
       REAL A(NE),RLX,RINF
       INTEGER NUM,NVAL,WLEN,II,I,J,K,L,CNT,MOD,IDUM1,IDUM2,IDUM3
       REAL             BVAL,BMIN,BMAX
-      EXTERNAL CMUMPS_450,CMUMPS_453,CMUMPS_455
+      EXTERNAL SMUMPS_450 ,SMUMPS_453 ,SMUMPS_455
       DO 20 J = 1,N
         FC(J) = J
         LEN(J) = IP(J+1) - IP(J)
@@ -1022,7 +1022,7 @@ C
       CNT = 1
       MOD = 1
       NUMX = 0
-      CALL CMUMPS_453(CNT,MOD,M,N,IRN,NE,IP,LEN,FC,IW,NUMX,N,
+      CALL CMUMPS_453 (CNT,MOD,M,N,IRN,NE,IP,LEN,FC,IW,NUMX,N,
      &            IW4(1),IW4(N+1),IW4(2*N+1),IW4(2*N+M+1))
       NUM = NUMX
       IF (NUM.NE.N) THEN
@@ -1062,7 +1062,7 @@ C
           DO 80 IDUM2 = 1,NE
             BMIN = BVAL
             IF (BMAX-BMIN .LE. RLX) GO TO 1000
-            CALL CMUMPS_450(IP,LENL,LEN,W,WLEN,A,NVAL,BVAL)
+            CALL CMUMPS_450 (IP,LENL,LEN,W,WLEN,A,NVAL,BVAL)
             IF (NVAL.LE.1) GO TO 1000
             K = 1
             DO 70 IDUM3 = 1,N
@@ -1091,7 +1091,7 @@ C
         ELSE
           BMAX = BVAL
           IF (BMAX-BMIN .LE. RLX) GO TO 1000
-          CALL CMUMPS_450(IP,LEN,LENH,W,WLEN,A,NVAL,BVAL)
+          CALL CMUMPS_450 (IP,LEN,LENH,W,WLEN,A,NVAL,BVAL)
           IF (NVAL.EQ.0. OR. BVAL.EQ.BMIN) GO TO 1000
           K = 1
           DO 87 IDUM3 = 1,N
@@ -1112,11 +1112,11 @@ C
    88     MOD = 0
         ENDIF
         CNT = CNT + 1
-        CALL CMUMPS_453(CNT,MOD,M,N,IRN,NE,IP,LEN,FC,IW,NUM,NUMX,
+        CALL CMUMPS_453 (CNT,MOD,M,N,IRN,NE,IP,LEN,FC,IW,NUM,NUMX,
      &              IW4(1),IW4(N+1),IW4(2*N+1),IW4(2*N+M+1))
    90 CONTINUE 
  1000 IF (M.EQ.N .and. NUMX.EQ.N) GO TO 2000
-      CALL CMUMPS_455(M,N,IPERM,IW,W)
+      CALL CMUMPS_455 (M,N,IPERM,IW,W)
  2000 RETURN
       END
       SUBROUTINE CMUMPS_453
@@ -1213,7 +1213,7 @@ C
   110 CONTINUE
       RETURN
       END
-      SUBROUTINE CMUMPS_454(M,N,NE,IP,IRN,A,IPERM,NUM,
+      SUBROUTINE CMUMPS_454 (M,N,NE,IP,IRN,A,IPERM,NUM,
      &           JPERM,OUT,PR,Q,L,U,D,RINF) 
       IMPLICIT NONE
       INTEGER M,N,NE,NUM
@@ -1225,7 +1225,7 @@ C
       LOGICAL LORD
       REAL             ZERO
       PARAMETER (ZERO=0.0D+0)
-      EXTERNAL CMUMPS_445,CMUMPS_446,CMUMPS_447,CMUMPS_455
+      EXTERNAL SMUMPS_445, SMUMPS_446, SMUMPS_447, SMUMPS_455
       RLX = U(1)
       LORD = (JPERM(1).EQ.6)
       NUM = 0
@@ -1357,7 +1357,7 @@ C
           ELSE
             QLEN = QLEN + 1
             L(I) = QLEN
-            CALL CMUMPS_445(I,M,Q,D,L,2)
+            CALL CMUMPS_445 (I,M,Q,D,L,2)
           ENDIF
           JJ = IPERM(I)
           OUT(JJ) = K
@@ -1369,7 +1369,7 @@ C
             I = Q(1)
             IF (D(I).LT.RINF) DMIN = D(I)*(1+RLX)
             IF (DMIN.GE.CSP) GO TO 160
-  152       CALL CMUMPS_446(QLEN,M,Q,D,L,2)
+  152       CALL CMUMPS_446 (QLEN,M,Q,D,L,2)
             LOW = LOW - 1
             Q(LOW) = I
             L(I) = LOW
@@ -1429,7 +1429,7 @@ C
               D(I) = DNEW
               IF (DNEW.LE.DMIN) THEN
                 IF (L(I).NE.0) THEN
-                  CALL CMUMPS_447(L(I),QLEN,M,Q,D,L,2)
+                  CALL CMUMPS_447 (L(I),QLEN,M,Q,D,L,2)
                 ENDIF
                 LOW = LOW - 1
                 Q(LOW) = I
@@ -1439,7 +1439,7 @@ C
                   QLEN = QLEN + 1
                   L(I) = QLEN
                 ENDIF
-                CALL CMUMPS_445(I,M,Q,D,L,2)
+                CALL CMUMPS_445 (I,M,Q,D,L,2)
               ENDIF
               JJ = IPERM(I)
               OUT(JJ) = K
@@ -1495,7 +1495,7 @@ C
         IF (IPERM(I).EQ.0) U(I) = ZERO
  1201 CONTINUE
       IF (M.EQ.N .and. NUM.EQ.N) GO TO 2000
-      CALL CMUMPS_455(M,N,IPERM,L,JPERM)
+      CALL CMUMPS_455 (M,N,IPERM,L,JPERM)
  2000 RETURN
       END
       SUBROUTINE CMUMPS_457
@@ -1504,7 +1504,7 @@ C
       INTEGER LIRN,M,N,NUM
       INTEGER ARP(N),CV(M),IRN(LIRN),IP(N),IPERM(M),LENC(N),OUT(N),PR(N)
       INTEGER I,II,IN1,IN2,J,J1,JORD,K,KK
-      EXTERNAL CMUMPS_455
+      EXTERNAL SMUMPS_455
       DO 10 I = 1,M
         CV(I) = 0
         IPERM(I) = 0
@@ -1561,10 +1561,10 @@ C
    90   CONTINUE
  1000 CONTINUE
       IF (M.EQ.N .and. NUM.EQ.N) GO TO 2000
-      CALL CMUMPS_455(M,N,IPERM,CV,ARP)
+      CALL CMUMPS_455 (M,N,IPERM,CV,ARP)
  2000 RETURN
       END
-      SUBROUTINE CMUMPS_455(M,N,IPERM,RW,CW)
+      SUBROUTINE CMUMPS_455 (M,N,IPERM,RW,CW)
       IMPLICIT NONE
       INTEGER M,N
       INTEGER RW(M),CW(N),IPERM(M)
@@ -1596,7 +1596,7 @@ C
    40 CONTINUE
       RETURN
       END
-      SUBROUTINE CMUMPS_456(N,PERM,IW,INFO)
+      SUBROUTINE CMUMPS_456 (N,PERM,IW,INFO)
       IMPLICIT NONE
       INTEGER N,PERM(N),IW(N),INFO 
       INTEGER I,J

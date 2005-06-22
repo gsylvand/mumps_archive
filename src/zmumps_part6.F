@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       SUBROUTINE ZMUMPS_324(A, NFRONT, NPIV, NBROW, K59)
       IMPLICIT NONE
@@ -702,6 +702,7 @@ C
       ELSE
         NBTLKJ = MIN( KEEP(5), NASS )
       ENDIF
+      IW(IOLDPS+3) = MIN0(NASS,NBTLKJ)
       UUTEMP = UU
  50   CONTINUE
       CALL ZMUMPS_222(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
@@ -724,7 +725,7 @@ C
      *            KEEP)
          GOTO 50
       ENDIF
-      NPVW = NPVW + 1
+      NPVW = NPVW + PIVSIZ
       IF (NASS.LE.1) THEN
        CALL ZMUMPS_230(NFRONT,N,INODE,IW,LIW,A,LA,
      *                 IOLDPS,POSELT)
@@ -754,75 +755,231 @@ C
        ENDIF
       GO TO 50
  500  CONTINUE
+#if defined(PRINTPERM)
+      DO I = 1, IW(IOLDPS+1)
+         IF(ABS(IW(IOLDPS+5+I+NFRONT)) .NE. IW(IOLDPS+5+I)) THEN
+            WRITE(*,*) 'pb in IW',
+     *           IW(IOLDPS+5+I+NFRONT),IW(IOLDPS+5+I)
+            CALL ZMUMPS_ABORT()
+         ENDIF
+         WRITE(*,*) IW(IOLDPS+5+I)
+      ENDDO
+#endif
+#if defined(PRINTLD)
+      WRITE(*,*) '%FULLY SUMMED'
+      DO I = 1, IW(IOLDPS+1)
+         DO J = 1,I
+            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+5+J),
+     *           A(POSELT+J-1+NFRONT*(I-1))
+         ENDDO
+      ENDDO
+      WRITE(*,*) '%PARTIALLY SUMMED'
+      DO I = IW(IOLDPS+1)+1,NFRONT
+         DO J = 1,IW(IOLDPS+1)
+            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+5+J),
+     *           A(POSELT+J-1+NFRONT*(I-1))
+         ENDDO
+      ENDDO
+      WRITE(*,*) '%2x2 pivots'
+      DO I = 1, IW(IOLDPS+1)
+         IF(IW(IOLDPS+5+I+NFRONT) .LT. 0) THEN
+            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+6+I),
+     *           A(POSELT+I+NFRONT*(I-1))
+            WRITE(*,*) IW(IOLDPS+6+I),IW(IOLDPS+5+I),
+     *           A(POSELT+I+NFRONT*(I-1))
+         ENDIF
+      ENDDO
+      WRITE(*,*) '%FRONT END'
+#endif
       RETURN
       END SUBROUTINE ZMUMPS_140
       SUBROUTINE ZMUMPS_222 
      *   (NFRONT,NASS,N,INODE,IW,LIW,
      *    A,LA, INOPV,
-     *    NNEG, 
+     *    NNEG,
      *    IFLAG,IOLDPS,POSELT,UU, SEUIL,KEEP,PIVSIZ)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV,
      *        IOLDPS, POSELT, NNEG
-      INTEGER PIVSIZ
+      INTEGER PIVSIZ,LPIV
       COMPLEX*16 A(LA) 
       DOUBLE PRECISION UU, UULOC, SEUIL
       INTEGER IW(LIW)
       INTEGER KEEP(150)
-       include 'mpif.h'
+      include 'mpif.h'
+      INTEGER POSPV1,POSPV2,OFFDAG,APOSJ
+      INTEGER JMAX
+      DOUBLE PRECISION RMAX,AMAX,TMAX,SWOP,TOL
+      DOUBLE PRECISION DELTA,DETPIV,MAXPIV
+      COMPLEX*16 PIVOT
+      PARAMETER(TOL = 1.0D-20)
       INTEGER APOS, LDA
-      DOUBLE PRECISION ZERO, RMAX
+      DOUBLE PRECISION ZERO,ONE
       INTEGER NPIV,NASSW,IPIV
-      INTEGER NPIVP1,J1,JJ,J2,IDIAG
+      INTEGER NPIVP1,J1,JJ,J2,K
       INTRINSIC MAX
       DATA ZERO /0.0D0/
-        LDA   = NFRONT
-        UULOC = UU
-        PIVSIZ = 1
-        NPIV    = IW(IOLDPS+1)
-        NPIVP1  = NPIV + 1
-        NASSW   = IABS(IW(IOLDPS+3))
-        IF(INOPV .EQ. -1) THEN
-           APOS = POSELT + LDA*(NPIVP1-1) + NPIV
-           IDIAG = APOS
-           IF(ABS(A(APOS)).LT.SEUIL) THEN
-              IF(DBLE(A(APOS)) .GE. ZERO) THEN
-                 A(APOS) = SEUIL
-              ELSE
-                 A(APOS) = -SEUIL
-              ENDIF
-              KEEP(98) = KEEP(98)+1
-           ENDIF
-           GO TO 420
-        ENDIF
-        INOPV   = 0
-        DO 460 IPIV=NPIVP1,NASSW
-            APOS = POSELT + LDA*(IPIV-1) + NPIV
-            IDIAG = APOS + IPIV - NPIVP1
-            IF (UULOC.EQ.ZERO) THEN 
-              IF (ABS(A(APOS)).EQ.ZERO) GO TO 630
-              GO TO 420
+      DATA ONE /1.0D0/
+      LDA   = NFRONT
+      UULOC = UU
+      PIVSIZ = 1
+      NPIV    = IW(IOLDPS+1)
+      NPIVP1  = NPIV + 1
+      NASSW   = IABS(IW(IOLDPS+3))
+      IF(INOPV .EQ. -1) THEN
+         APOS = POSELT + LDA*NPIV + NPIV
+         POSPV1 = APOS
+         IF(ABS(A(APOS)).LT.SEUIL) THEN
+            IF(DBLE(A(APOS)) .GE. ZERO) THEN
+               A(APOS) = SEUIL
+            ELSE
+               A(APOS) = -SEUIL
             ENDIF
-            RMAX = ABS(A(IDIAG))
+            KEEP(98) = KEEP(98)+1
+         ENDIF
+         GO TO 420
+      ENDIF
+      INOPV   = 0
+      DO 460 IPIV=NPIVP1,NASSW
+         APOS = POSELT + LDA*(IPIV-1) + NPIV
+         POSPV1 = APOS + IPIV - NPIVP1
+         PIVOT = A(POSPV1)
+         IF (UULOC.EQ.ZERO) THEN 
+            IF (ABS(A(APOS)).EQ.ZERO) GO TO 630
+            GO TO 420
+         ENDIF
+         AMAX = ZERO
+         JMAX = 0
             J1 = APOS
-            J2 = IDIAG - 1
-            IF ( J1.LE.J2 ) THEN
-             DO JJ=J1,J2
-              RMAX = MAX(ABS(A(JJ)),RMAX)
-             ENDDO
-            END IF
-            J1 = IDIAG + LDA
-            J2 = NFRONT - IPIV 
-            DO JJ=1,J2
-              RMAX = MAX(ABS(A(J1)),RMAX)
-              J1 = J1 + LDA
+            J2 = POSPV1 - 1
+            DO JJ=J1,J2
+               IF(ABS(A(JJ)) .GT. AMAX) THEN
+                  AMAX = ABS(A(JJ))
+                  JMAX = IPIV - (POSPV1-JJ)
+               ENDIF
             ENDDO
-            IF (ABS(A(IDIAG)).LE. MAX(UULOC*RMAX, SEUIL)) GOTO 460
-            IF (IPIV.EQ.NPIVP1) GO TO 420
-            CALL ZMUMPS_319( A, LA, IW, LIW,
-     *                     IOLDPS, NPIVP1, IPIV, POSELT, NASS,
-     *                     LDA, NFRONT, 1 )
-            GOTO 420
+            J1 = POSPV1 + LDA
+            J2 = NASSW - IPIV
+            DO JJ=1,J2
+               IF(ABS(A(J1)) .GT. AMAX) THEN
+                  AMAX = MAX(ABS(A(J1)),AMAX)
+                  JMAX = IPIV + JJ
+               ENDIF
+               J1 = J1 + LDA
+            ENDDO
+            RMAX = ZERO
+            J2 = NFRONT - NASSW 
+            DO JJ=1,J2
+               RMAX = MAX(ABS(A(J1)),RMAX)
+               J1 = J1 + LDA
+            ENDDO
+#if 1
+            IF (MAX(AMAX,RMAX,ABS(PIVOT)).LE.TOL) THEN
+               IF(SEUIL .GT. EPSILON(SEUIL)) THEN
+                  IF(DBLE(PIVOT) .GE. ZERO) THEN
+                     A(POSPV1) = SEUIL
+                  ELSE
+                     A(POSPV1) = -SEUIL
+                  ENDIF
+                  PIVOT = A(POSPV1)
+                  WRITE(*,*) 'WARNING matrix may be singular'
+#if defined(check2x2)
+                  WRITE(*,*) 'AMAX,RMAX,ABS(PIVOT)',
+     *                 AMAX,RMAX,ABS(PIVOT)
+                  WRITE(*,*) 'IPIV,JMAX',
+     *                 IPIV,JMAX
+#endif
+                  KEEP(98) = KEEP(98)+1
+                  GO TO 415
+               ENDIF
+            END IF
+#endif
+            IF (MAX(AMAX,ABS(PIVOT)).LE.TOL) GO TO 460
+            IF (ABS(PIVOT).GT.UULOC*MAX(RMAX,AMAX)) THEN
+               A(POSPV1) = PIVOT
+               GO TO 415
+            END IF
+            IF (AMAX.LE.TOL) GO TO 460
+            IF (RMAX.LT.AMAX) THEN
+               J1 = APOS
+               J2 = POSPV1 - 1
+               DO JJ=J1,J2
+                  IF(POSPV1-JJ .NE. IPIV-JMAX) THEN
+                     RMAX = MAX(RMAX,ABS(A(JJ)))
+                  ENDIF
+               ENDDO
+               J1 = POSPV1 + LDA
+               J2 = NASS - IPIV
+               DO JJ=1,J2
+                  IF(IPIV+JJ .NE. JMAX) THEN
+                     RMAX = MAX(ABS(A(J1)),RMAX)
+                  ENDIF
+                  J1 = J1 + LDA
+               ENDDO
+           ENDIF
+           APOSJ = POSELT + (JMAX-1)*LDA + NPIV
+           POSPV2 = APOSJ + JMAX - NPIVP1
+           IF (IPIV.LT.JMAX) THEN
+              OFFDAG = APOSJ + IPIV - NPIVP1
+           ELSE
+              OFFDAG = APOS + JMAX - NPIVP1
+           END IF
+           TMAX = ZERO
+           IF(JMAX .LT. IPIV) THEN
+              JJ = POSPV2
+              DO K = 1, NFRONT-JMAX
+                 JJ = JJ+NFRONT
+                 IF (JMAX+K.NE.IPIV) THEN
+                    TMAX=MAX(TMAX,ABS(A(JJ)))
+                 ENDIF
+              ENDDO
+              DO K =  APOSJ, POSPV2-1
+                 TMAX = MAX(TMAX,ABS(A(K)))
+              ENDDO
+           ELSE
+              JJ = POSPV2
+              DO K = 1, NFRONT-JMAX
+                 JJ = JJ+NFRONT
+                 TMAX=MAX(TMAX,ABS(A(JJ)))
+              ENDDO
+              DO K =  APOSJ, POSPV2-1
+                 IF (K.NE.OFFDAG) THEN
+                    TMAX = MAX(TMAX,ABS(A(K)))
+                 ENDIF
+              ENDDO
+           ENDIF
+           DETPIV = A(POSPV1)*A(POSPV2) - AMAX*AMAX
+           MAXPIV = MAX(ABS(A(POSPV1)),ABS(A(POSPV2)))
+           IF (MAXPIV.EQ.ZERO) MAXPIV = ONE
+           IF (ABS(DETPIV)/MAXPIV.LE.TOL) GO TO 460
+           IF ((ABS(A(POSPV2))*RMAX+AMAX*TMAX)*UULOC.GT.
+     +          ABS(DETPIV)) GO TO 460
+           IF ((ABS(A(POSPV1))*TMAX+AMAX*RMAX)*UULOC.GT.
+     +          ABS(DETPIV)) GO TO 460
+#if defined(check2x2)
+#endif
+           PIVSIZ = 2
+           KEEP(103) = KEEP(103)+1
+ 415       CONTINUE
+           IF (PIVSIZ.EQ.2) THEN
+              LPIV = MIN(IPIV,JMAX)
+           ELSE
+              LPIV = IPIV              
+           ENDIF
+           DO K=1,PIVSIZ
+              IF (LPIV.EQ.NPIVP1) THEN
+                 GOTO 416
+              ENDIF
+              CALL ZMUMPS_319( A, LA, IW, LIW,
+     *             IOLDPS, NPIVP1, LPIV, POSELT, NASS,
+     *             LDA, NFRONT, 1 )
+ 416          LPIV = MAX(IPIV,JMAX)
+              NPIVP1 = NPIVP1+1
+           ENDDO
+           IF(PIVSIZ .EQ. 2) THEN
+              A(POSELT+(LDA+1)*NPIV+1) = DETPIV
+           ENDIF
+           GOTO 420
   460   CONTINUE
       IF (NASSW.EQ.NASS) THEN
        INOPV = 1
@@ -831,6 +988,7 @@ C
       ENDIF
       GO TO 420
   630 CONTINUE
+      PIVSIZ = 0
       IFLAG = -10
   420 CONTINUE
       RETURN
@@ -851,6 +1009,9 @@ C
       INTEGER NEL2,LPOS,NEL
       COMPLEX*16 ONE, ALPHA
       DOUBLE PRECISION  ZERO
+#if defined(PRINTLD)
+      COMPLEX*16 A11,A22,A12
+#endif
       INTEGER PIVSIZ,NPIV_NEW,OFFDAG_OLD,LPOS1,LPOS2,JJ
       INTEGER POSPV1,POSPV2,OFFDAG,IBEG,IEND,J2,K1,K2,IROW
       COMPLEX*16 SWOP,DETPIV,MULT1,MULT2
@@ -859,12 +1020,9 @@ C
       NPIV_NEW = NPIV + PIVSIZ
       NEL    = NFRONT - NPIV_NEW
       IFINB  = 0
-      IF (IW(IOLDPS+3).LE.0) THEN
-         IW(IOLDPS+3) = MIN0(NASS,LKJIB)
-      ENDIF
       JROW2 = IW(IOLDPS+3)
       NPBEG = IBEG_BLOCK
-      NEL2   = JROW2 - NPIV - PIVSIZ
+      NEL2   = JROW2 - NPIV_NEW
       IF (NEL2.EQ.0) THEN
         IF (JROW2.EQ.NASS) THEN
           IFINB        = -1
@@ -899,19 +1057,31 @@ C
             CALL ZGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
      &           A(K1POS), LDA, A(K1POS+1), LDA)
          ENDIF
+#if defined(PRINTLD)
+         A(APOS) = ONE/A(APOS)
+#endif
       ELSE
          POSPV1 = POSELT + NPIV*(NFRONT + 1)
          POSPV2 = POSPV1+NFRONT+1
          OFFDAG_OLD = POSPV2 - 1
          OFFDAG = POSPV1+1
          SWOP = A(POSPV2)
+#if defined(check2x2)
+#endif
          DETPIV = A(OFFDAG)
+#if defined(PRINTLD)
+         A11 = A(POSPV1)
+         A22 = A(POSPV2)
+         A12 = A(OFFDAG_OLD)
+#endif
          A(POSPV2) = A(POSPV1)/DETPIV
          A(POSPV1) = SWOP/DETPIV
          A(OFFDAG) = -A(OFFDAG_OLD)/DETPIV
          A(OFFDAG_OLD) = ZERO
-         LPOS1   = POSPV1 + LDA + 1
-         LPOS2   = POSPV2 + LDA + 1
+#if defined(check2x2)
+#endif
+         LPOS1   = POSPV2 + LDA - 1
+         LPOS2   = LPOS1+1
          CALL ZCOPY(NFRONT-NPIV_NEW, A(LPOS1), LDA, A(POSPV1+2), 1)
          CALL ZCOPY(NFRONT-NPIV_NEW, A(LPOS2), LDA, A(POSPV2+1), 1)
          JJ = POSPV2 + NFRONT-1
@@ -920,8 +1090,8 @@ C
          DO J2 = 1,NEL2
             K1 = JJ
             K2 = JJ+1
-            MULT1 = - (A(POSPV1)*A(K1)+A(POSPV1+1)*A(K2))
-            MULT2 = - (A(POSPV1+1)*A(K1)+A(POSPV2)*A(K2))
+            MULT1 = - (A(POSPV1)*A(K1)+A(OFFDAG)*A(K2))
+            MULT2 = - (A(OFFDAG)*A(K1)+A(POSPV2)*A(K2))
             K1 = POSPV1+2
             K2 = POSPV2+1
             DO IROW = IBEG,IEND
@@ -929,8 +1099,8 @@ C
                K1 = K1 + 1
                K2 = K2 + 1
             ENDDO
-            A(JJ) = MULT1
-            A(JJ+1) = MULT2
+            A(JJ) = -MULT1
+            A(JJ+1) = -MULT2
             IBEG = IBEG + NFRONT
             IEND = IEND + NFRONT + 1
             JJ = JJ+NFRONT
@@ -939,8 +1109,8 @@ C
          DO J2 = JROW2+1,NFRONT
             K1 = JJ
             K2 = JJ+1
-            MULT1 = - (A(POSPV1)*A(K1)+A(POSPV1+1)*A(K2))
-            MULT2 = - (A(POSPV1+1)*A(K1)+A(POSPV2)*A(K2))
+            MULT1 = - (A(POSPV1)*A(K1)+A(OFFDAG)*A(K2))
+            MULT2 = - (A(OFFDAG)*A(K1)+A(POSPV2)*A(K2))
             K1 = POSPV1+2
             K2 = POSPV2+1
             DO IROW = IBEG,IEND
@@ -948,12 +1118,17 @@ C
                K1 = K1 + 1
                K2 = K2 + 1
             ENDDO
-            A(JJ) = MULT1
-            A(JJ+1) = MULT2
+            A(JJ) = -MULT1
+            A(JJ+1) = -MULT2
             IBEG = IBEG + NFRONT
             IEND = IEND + NFRONT
             JJ = JJ+NFRONT
          ENDDO
+#if defined(PRINTLD)
+         A(POSPV2) = A22
+         A(POSPV1) = A11
+         A(OFFDAG) = A12
+#endif
       ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_226
@@ -983,7 +1158,11 @@ C
             A(LPOS) = VALPIV*A(LPOS)
             LPOS    = LPOS + NFRONT
           END DO
-  500   RETURN
+  500   CONTINUE
+#if defined(PRINTLD)
+        A(APOS) = ONE/A(APOS)
+#endif
+        RETURN
         END SUBROUTINE ZMUMPS_230
       SUBROUTINE ZMUMPS_234(IBEG_BLOCK,
      *    NFRONT,NASS,N,INODE,IW,LIW,A,LA,
@@ -1796,6 +1975,9 @@ C
       LOGICAL FLAG
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
+      INTEGER PIVI
+      INTEGER POSPV1,POSPV2,OFFDAG,J2,K1,K2,JJ,LPOS1
+      COMPLEX*16 MULT1,MULT2
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER STATUS( MPI_STATUS_SIZE )
@@ -1958,12 +2140,13 @@ C
       END IF
       ICT11 = IOLDPS+HS+NROW1+NPIV1 - 1
       DO 100 I = 1, NPIV
-        IF (IW(IPIV+I-1).EQ.I) GOTO 100
+         PIVI = ABS(IW(IPIV+I-1))
+         IF (PIVI.EQ.I) GOTO 100
         ISW = IW(ICT11+I)
-        IW(ICT11+I) = IW(ICT11+IW(IPIV+I-1))
-        IW(ICT11+IW(IPIV+I-1)) = ISW
+        IW(ICT11+I) = IW(ICT11+PIVI)
+        IW(ICT11+PIVI) = ISW
         IPOS = POSELT + NPIV1 + I - 1
-        KPOS = POSELT + NPIV1 + IW(IPIV+I-1) - 1
+        KPOS = POSELT + NPIV1 + PIVI - 1
         CALL ZSWAP(NROW1, A(IPOS), NCOL1, A(KPOS), NCOL1)
  100  CONTINUE
       ALLOCATE( UIP21K( NPIV * NROW1 ), stat = allocok )
@@ -1994,11 +2177,35 @@ C
       END DO
       LPOS = POSELT + NPIV1
       DPOS = POSBLOCFACTO
-      DO I = 1, NPIV
-        CALL ZSCAL( NROW1, A(DPOS), A( LPOS ), NCOL1 )
-        LPOS = LPOS + 1
-        DPOS = DPOS + NCOL + 1
-      END DO
+      I = 1
+      DO
+         IF(I .GT. NPIV) EXIT
+         IF(IW(IPIV+I-1) .GT. 0) THEN
+            CALL ZSCAL( NROW1, A(DPOS), A(LPOS), NCOL1 )
+            LPOS = LPOS + 1
+            DPOS = DPOS + NCOL + 1
+            I = I+1
+         ELSE
+            POSPV1 = DPOS
+            POSPV2 = DPOS+ NCOL + 1
+            OFFDAG = POSPV1+1
+#if defined(check2x2)
+#endif
+            LPOS1 = LPOS
+            DO J2 = 1,NROW1
+               K1 = JJ
+               K2 = JJ+1
+               MULT1 = A(POSPV1)*A(LPOS1)+A(OFFDAG)*A(LPOS1+1)
+               MULT2 = A(OFFDAG)*A(LPOS1)+A(POSPV2)*A(LPOS1+1)
+               A(LPOS1) = MULT1
+               A(LPOS1+1) = MULT2
+               LPOS1 = LPOS1 + NCOL1
+            ENDDO
+            LPOS = LPOS + 2
+            DPOS = POSPV2 + NCOL + 1
+            I = I+2
+         ENDIF
+      ENDDO
       LPOS2 = POSELT + NPIV1
       UPOS = POSBLOCFACTO+NPIV
       LPOS  = LPOS2 + NPIV
@@ -2202,8 +2409,11 @@ C
      *         ZMUMPS_44
       LOGICAL STATICMODE
       DOUBLE PRECISION SEUIL_LOC
+      INTEGER PIVSIZ,IWPOSPIV
+      COMPLEX*16 ONE
+      PARAMETER(ONE = 1.0D0)
       INOPV = 0
-      IF(KEEP(97) .NE. 0) THEN
+      IF(KEEP(97) .EQ. 0) THEN
          STATICMODE = .FALSE.
       ELSE
          STATICMODE = .TRUE.
@@ -2227,6 +2437,7 @@ C
       ELSE
         NBTLKJ = MIN( KEEP(5), NASS )
       ENDIF
+      IW(IOLDPS+3) = MIN0(NASS,NBTLKJ)
       ALLOCATE( IPIV( NASS ), stat = allocok )
       IF ( allocok .GT. 0 ) THEN
         WRITE(*,*) MYID,' : FACTO_NIV2 :failed to allocate ',NASS,
@@ -2240,7 +2451,7 @@ C
       CALL ZMUMPS_223(
      *                NFRONT,NASS,IBEGKJI, NASS, IPIV,
      *                N,INODE,IW,LIW,A,LA,NOFFW,INOPV,
-     *                IFLAG,IOLDPS,POSELT,UU, SEUIL_LOC,KEEP)
+     *                IFLAG,IOLDPS,POSELT,UU, SEUIL_LOC,KEEP,PIVSIZ)
       IF (IFLAG.LT.0) GOTO 490
          IF(INOPV.EQ. 1 .AND. STATICMODE) THEN
             INOPV = -1
@@ -2275,17 +2486,21 @@ C
      *            IOLDPS,POSELT,NBTLKJ,KEEP(4),KEEP)
          GOTO 50
       ENDIF
-      NPVW = NPVW + 1
+      NPVW = NPVW + PIVSIZ
       IF (NASS.LE.1) THEN
         IFINB = -1
-        IF (NASS == 1) A(POSELT)=1.0D0/A(POSELT)
+        IF (NASS == 1) A(POSELT)=ONE/A(POSELT)
       ELSE
          CALL ZMUMPS_227(IBEG_BLOCK,
      *             NASS, N,INODE,IW,LIW,A,LA,
      *             LDAFS, IOLDPS,POSELT,IFINB,
-     *             NBTLKJ,KEEP(4))
+     *             NBTLKJ,KEEP(4),PIVSIZ)
+         IF(PIVSIZ .EQ. 2) THEN
+            IWPOSPIV = IOLDPS+IW(IOLDPS+1)+6+IW(IOLDPS+5)
+            IW(IWPOSPIV+NFRONT) = -IW(IWPOSPIV+NFRONT)
+         ENDIF
       ENDIF
-      IW(IOLDPS+1) = IW(IOLDPS+1) + 1
+      IW(IOLDPS+1) = IW(IOLDPS+1) + PIVSIZ
        IF (IFINB.EQ.0) GOTO 50
        IF ((IFINB.EQ.1).OR.(IFINB.EQ.-1)) THEN
           LASTBL = (IFINB.EQ.-1) 
@@ -2322,30 +2537,39 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_141
       SUBROUTINE ZMUMPS_223( NFRONT, NASS,
-     *                   IBEGKJI, LPIV, TIPIV,
+     *                   IBEGKJI, NASS2, TIPIV,
      *                   N, INODE, IW, LIW,
      *                   A, LA, NNEG, 
      *                   INOPV, IFLAG,
      *                   IOLDPS, POSELT, UU, 
-     *                   SEUIL,KEEP)
+     *                   SEUIL,KEEP,PIVSIZ)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV
-      INTEGER LPIV, IBEGKJI, NNEG
-      INTEGER TIPIV( LPIV )
+      INTEGER NASS2, IBEGKJI, NNEG
+      INTEGER TIPIV( NASS2 )
+      INTEGER PIVSIZ,LPIV
       COMPLEX*16 A(LA) 
       DOUBLE PRECISION UU, UULOC, SEUIL
       INTEGER IW(LIW) 
       INTEGER   IOLDPS, POSELT
       INTEGER KEEP(150)
-       include 'mpif.h'
+      include 'mpif.h'
+      INTEGER POSPV1,POSPV2,OFFDAG,APOSJ
+      INTEGER JMAX
+      DOUBLE PRECISION RMAX,AMAX,TMAX,SWOP,TOL
+      DOUBLE PRECISION DELTA,DETPIV,MAXPIV
+      COMPLEX*16 PIVOT
+      PARAMETER(TOL = 1.0D-20)
       INTEGER APOS, LDAFS
-      DOUBLE PRECISION ZERO, RMAX
+      DOUBLE PRECISION ZERO,ONE
       INTEGER NPIV,NASSW,IPIV
-      INTEGER NPIVP1,J1,JJ,J2,IDIAG,ILOC
+      INTEGER NPIVP1,J1,JJ,J2,ILOC,K
       INTRINSIC MAX
       DATA ZERO /0.0D0/
+      DATA ONE /1.0D0/
         LDAFS = NASS
         UULOC = UU
+        PIVSIZ = 1
         NPIV    = IW(IOLDPS+1)
         NPIVP1  = NPIV + 1
         ILOC = NPIVP1 - IBEGKJI + 1
@@ -2353,7 +2577,7 @@ C
         NASSW   = IABS(IW(IOLDPS+3))
         IF(INOPV .EQ. -1) THEN
            APOS = POSELT + LDAFS*(NPIVP1-1) + NPIV
-           IDIAG = APOS
+           POSPV1 = APOS
            IF(ABS(A(APOS)).LT.SEUIL) THEN
               IF(DBLE(A(APOS)) .GE. ZERO) THEN
                  A(APOS) = SEUIL
@@ -2367,30 +2591,126 @@ C
         INOPV   = 0
         DO 460 IPIV=NPIVP1,NASSW
             APOS = POSELT + LDAFS*(IPIV-1) + NPIV
-            IDIAG = APOS + IPIV - NPIVP1
+            POSPV1 = APOS + IPIV - NPIVP1
+            PIVOT = A(POSPV1)
             IF (UULOC.EQ.ZERO) THEN 
               IF (ABS(A(APOS)).EQ.ZERO) GO TO 630
               GO TO 420
             ENDIF
-            RMAX = ABS(A(IDIAG))
+            AMAX = ZERO
+            JMAX = 0
             J1 = APOS
-            J2 = IDIAG - 1
+            J2 = POSPV1 - 1
             DO JJ=J1,J2
-              RMAX = MAX(ABS(A(JJ)),RMAX)
+               IF(ABS(A(JJ)) .GT. AMAX) THEN
+                  AMAX = ABS(A(JJ))
+                  JMAX = IPIV - (POSPV1-JJ)
+               ENDIF
             ENDDO
-            J1 = IDIAG + LDAFS
-            J2 = NASS - IPIV 
+            J1 = POSPV1 + LDAFS
+            J2 = NASSW - IPIV
             DO JJ=1,J2
-              RMAX = MAX(ABS(A(J1)),RMAX)
-              J1 = J1 + LDAFS
+               IF(ABS(A(J1)) .GT. AMAX) THEN
+                  AMAX = MAX(ABS(A(J1)),AMAX)
+                  JMAX = IPIV + JJ
+               ENDIF
+               J1 = J1 + LDAFS
             ENDDO
-            IF (ABS(A(IDIAG)).LE.MAX(UULOC*RMAX,SEUIL)) GOTO 460
-            IF (IPIV.EQ.NPIVP1) GO TO 420
-            TIPIV( ILOC ) = IPIV - IBEGKJI + 1
-            CALL ZMUMPS_319( A, LA, IW, LIW,
-     *                     IOLDPS, NPIVP1, IPIV, POSELT, NASS,
-     *                     LDAFS, NFRONT, 2 )
-            GOTO 420
+            RMAX = SEUIL/UULOC
+            J2 = NASS - NASSW 
+            DO JJ=1,J2
+               RMAX = MAX(ABS(A(J1)),RMAX)
+               J1 = J1 + LDAFS
+            ENDDO
+            IF (MAX(AMAX,ABS(PIVOT)).LE.TOL) GO TO 460
+            IF (ABS(PIVOT).GT. UULOC*MAX(RMAX,AMAX)
+     *           .AND. ABS(PIVOT).GT. SEUIL) THEN
+               GO TO 415
+            END IF
+            IF (AMAX.LE.TOL) GO TO 460
+            IF (RMAX.LT.AMAX) THEN
+               J1 = APOS
+               J2 = POSPV1 - 1
+               DO JJ=J1,J2
+                  IF(POSPV1-JJ .NE. IPIV-JMAX) THEN
+                     RMAX = MAX(RMAX,ABS(A(JJ)))
+                  ENDIF
+               ENDDO
+               J1 = POSPV1 + LDAFS
+               J2 = NASS - IPIV
+               DO JJ=1,J2
+                  IF(IPIV+JJ .NE. JMAX) THEN
+                     RMAX = MAX(ABS(A(J1)),RMAX)
+                  ENDIF
+                  J1 = J1 + LDAFS
+               ENDDO
+            ENDIF            
+            APOSJ = POSELT + (JMAX-1)*LDAFS + NPIV
+            POSPV2 = APOSJ + JMAX - NPIVP1
+            IF (IPIV.LT.JMAX) THEN
+               OFFDAG = APOSJ + IPIV - NPIVP1
+            ELSE
+               OFFDAG = APOS + JMAX - NPIVP1
+            END IF
+            TMAX = SEUIL/UULOC
+            IF(JMAX .LT. IPIV) THEN
+               JJ = POSPV2
+               DO K = 1, NASS-JMAX
+                  JJ = JJ+NASS
+                  IF (JMAX+K.NE.IPIV) THEN
+                     TMAX=MAX(TMAX,ABS(A(JJ)))
+                  ENDIF
+               ENDDO
+               DO K =  APOSJ, POSPV2-1
+                  TMAX = MAX(TMAX,ABS(A(K)))
+               ENDDO
+            ELSE
+               JJ = POSPV2
+               DO K = 1, NASS-JMAX
+                  JJ = JJ+NASS
+                  TMAX=MAX(TMAX,ABS(A(JJ)))
+               ENDDO
+               DO K =  APOSJ, POSPV2-1
+                  IF (K.NE.OFFDAG) THEN
+                     TMAX = MAX(TMAX,ABS(A(K)))
+                  ENDIF
+               ENDDO
+            ENDIF
+            DETPIV = A(POSPV1)*A(POSPV2) - AMAX*AMAX
+            MAXPIV = MAX(ABS(A(POSPV1)),ABS(A(POSPV2)))
+            IF (MAXPIV.EQ.ZERO) MAXPIV = ONE
+            IF (ABS(DETPIV)/MAXPIV.LE.TOL) GO TO 460
+            IF ((ABS(A(POSPV2))*RMAX+AMAX*TMAX)*UULOC.GT.
+     +           ABS(DETPIV)) GO TO 460
+            IF ((ABS(A(POSPV1))*TMAX+AMAX*RMAX)*UULOC.GT.
+     +           ABS(DETPIV)) GO TO 460
+#if defined(check2x2)
+#endif
+           PIVSIZ = 2
+           KEEP(105) = KEEP(105)+1
+ 415       CONTINUE
+           LPIV = IPIV
+           IF (PIVSIZ.EQ.2) THEN
+              LPIV = MIN(IPIV,JMAX)
+              TIPIV(ILOC) = -(LPIV - IBEGKJI + 1)
+              TIPIV(ILOC+1) = -(MAX(IPIV,JMAX) - IBEGKJI + 1)
+           ELSE
+              TIPIV(ILOC) = IPIV - IBEGKJI + 1
+           ENDIF
+           DO K=1,PIVSIZ
+              IF (LPIV.EQ.NPIVP1) THEN
+                 GOTO 416
+              ENDIF
+              CALL ZMUMPS_319( A, LA, IW, LIW,
+     *             IOLDPS, NPIVP1, LPIV, POSELT, NASS,
+     *             LDAFS, NFRONT, 2 )
+ 416          LPIV = MAX(IPIV,JMAX)
+              NPIVP1 = NPIVP1+1
+           ENDDO
+           IF(PIVSIZ .EQ. 2) THEN
+              A(POSELT+LDAFS*NPIV+NPIV+1) = DETPIV
+           ENDIF
+           GOTO 420
   460   CONTINUE
       IF (NASSW.EQ.NASS) THEN
        INOPV = 1
@@ -2483,7 +2803,7 @@ C
       SUBROUTINE ZMUMPS_227
      *     ( IBEG_BLOCK, NASS, N, INODE, IW, LIW,
      *     A, LA, LDAFS, 
-     *     IOLDPS,POSELT,IFINB,LKJIB,LKJIT)
+     *     IOLDPS,POSELT,IFINB,LKJIB,LKJIT,PIVSIZ)
       IMPLICIT NONE
       INTEGER NASS,N,LA,LIW,INODE,IFINB,LKJIB,LDAFS,
      &        NPBEG
@@ -2493,18 +2813,22 @@ C
       INTEGER APOS, IOLDPS, POSELT, K1POS, NCB1
       INTEGER LKJIT, IBEG_BLOCK
       INTEGER NPIV,JROW2
-      INTEGER NEL2,NPIVP1,LPOS
+      INTEGER NEL2,LPOS
       COMPLEX*16 ONE, ALPHA
-      PARAMETER(ONE=1.0D0, ALPHA=-1.0D0)
+      DOUBLE PRECISION  ZERO
+      INTEGER PIVSIZ,NPIV_NEW,OFFDAG_OLD,LPOS1,LPOS2,JJ
+      INTEGER POSPV1,POSPV2,OFFDAG,IBEG,IEND,J2,K1,K2,IROW
+      COMPLEX*16 SWOP,DETPIV,MULT1,MULT2
+      PARAMETER(ONE=1.0D0, ALPHA=-1.0D0, ZERO=0.0D0)
       NPIV   = IW(IOLDPS+1)
-      NPIVP1 = NPIV + 1
+      NPIV_NEW = NPIV + PIVSIZ
       IFINB  = 0
       IF (IW(IOLDPS+3).LE.0) THEN
          IW(IOLDPS+3) = MIN0(NASS,LKJIB)
       ENDIF
       JROW2 = IW(IOLDPS+3)
       NPBEG = IBEG_BLOCK
-      NEL2   = JROW2 - NPIVP1
+      NEL2   = JROW2 - NPIV_NEW
       IF (NEL2.EQ.0) THEN
         IF (JROW2.EQ.NASS) THEN
           IFINB        = -1
@@ -2512,19 +2836,78 @@ C
           IFINB        = 1
         ENDIF
       ENDIF
-      APOS   = POSELT + NPIV*(LDAFS + 1)
-      VALPIV = ONE/A(APOS)
-      A(APOS) = VALPIV
-      LPOS   = APOS + LDAFS
-      CALL ZCOPY(NASS-NPIVP1, A(LPOS), LDAFS, A(APOS+1), 1)
-      CALL ZMUMPS_ZSYR('U', NEL2, -VALPIV, A(LPOS), LDAFS, A(LPOS+1), 
-     &             LDAFS)
-      CALL ZSCAL(NASS-NPIVP1, VALPIV, A(LPOS), LDAFS)
-      IF (NEL2.GT.0) THEN
-           K1POS = LPOS + NEL2*LDAFS
-           NCB1  = NASS - JROW2
-           CALL ZGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
-     &          A(K1POS), LDAFS, A(K1POS+1), LDAFS)
+      IF(PIVSIZ .EQ. 1) THEN
+         APOS   = POSELT + NPIV*(LDAFS + 1)
+         VALPIV = ONE/A(APOS)
+         A(APOS) = VALPIV
+         LPOS   = APOS + LDAFS
+         CALL ZCOPY(NASS-NPIV_NEW, A(LPOS), LDAFS, A(APOS+1), 1)
+         CALL ZMUMPS_ZSYR('U', NEL2, -VALPIV, A(LPOS), LDAFS, A(LPOS+1), 
+     &        LDAFS)
+         CALL ZSCAL(NASS-NPIV_NEW, VALPIV, A(LPOS), LDAFS)
+         IF (NEL2.GT.0) THEN
+            K1POS = LPOS + NEL2*LDAFS
+            NCB1  = NASS - JROW2
+            CALL ZGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
+     &           A(K1POS), LDAFS, A(K1POS+1), LDAFS)
+         ENDIF
+      ELSE
+         POSPV1 = POSELT + NPIV*(LDAFS + 1)
+         POSPV2 = POSPV1+LDAFS+1
+         OFFDAG_OLD = POSPV2 - 1
+         OFFDAG = POSPV1+1
+         SWOP = A(POSPV2)
+         DETPIV = A(OFFDAG)
+         A(POSPV2) = A(POSPV1)/DETPIV
+         A(POSPV1) = SWOP/DETPIV
+         A(OFFDAG) = -A(OFFDAG_OLD)/DETPIV
+         A(OFFDAG_OLD) = ZERO
+#if defined(check2x2)
+#endif
+         LPOS1   = POSPV2 + LDAFS - 1
+         LPOS2   = LPOS1+1
+         CALL ZCOPY(NASS-NPIV_NEW, A(LPOS1), LDAFS, A(POSPV1+2), 1)
+         CALL ZCOPY(NASS-NPIV_NEW, A(LPOS2), LDAFS, A(POSPV2+1), 1)
+         JJ = POSPV2 + NASS-1
+         IBEG = JJ + 2
+         IEND = IBEG
+         DO J2 = 1,NEL2
+            K1 = JJ
+            K2 = JJ+1
+            MULT1 = - (A(POSPV1)*A(K1)+A(OFFDAG)*A(K2))
+            MULT2 = - (A(OFFDAG)*A(K1)+A(POSPV2)*A(K2))
+            K1 = POSPV1+2
+            K2 = POSPV2+1
+            DO IROW = IBEG,IEND
+               A(IROW) = A(IROW) + MULT1*A(K1) + MULT2*A(K2)
+               K1 = K1 + 1
+               K2 = K2 + 1
+            ENDDO
+            A(JJ) = -MULT1
+            A(JJ+1) = -MULT2
+            IBEG = IBEG + NASS
+            IEND = IEND + NASS + 1
+            JJ = JJ+NASS
+         ENDDO
+         IEND = IEND-1
+         DO J2 = JROW2+1,NASS
+            K1 = JJ
+            K2 = JJ+1
+            MULT1 = - (A(POSPV1)*A(K1)+A(POSPV1+1)*A(K2))
+            MULT2 = - (A(POSPV1+1)*A(K1)+A(POSPV2)*A(K2))
+            K1 = POSPV1+2
+            K2 = POSPV2+1
+            DO IROW = IBEG,IEND
+               A(IROW) = A(IROW) + MULT1*A(K1) + MULT2*A(K2)
+               K1 = K1 + 1
+               K2 = K2 + 1
+            ENDDO
+            A(JJ) = -MULT1
+            A(JJ+1) = -MULT2
+            IBEG = IBEG + NASS
+            IEND = IEND + NASS
+            JJ = JJ+NASS
+         ENDDO
       ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_227

@@ -1,12 +1,12 @@
 !
-!   THIS FILE IS PART OF SMUMPS VERSION 4.4.2
-!   This Version was built on Mon May 23 09:41:55 2005
+!   THIS FILE IS PART OF SMUMPS VERSION 4.5.0
+!   This Version was built on Fri Jul 22 15:57:28 2005
 !
 !  This version of SMUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV
-!  european project PARASOL (1996-1999). It has been partially supported
-!  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-!  Rhone-Alpes, and LBNL.
+!  European project PARASOL (1996-1999). 
+!  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+!  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 !
 !  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 !  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,9 +38,9 @@
 !
 !   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 !   S. Pralet (2005), Hybrid scheduling for the parallel solution
-!   of linear systems. Submitted to Parallel Computing.
+!   of linear systems. Accepted to Parallel Computing.
 !
-!     $Id: smumps_struc.h,v 1.49 2005/05/11 15:27:06 aguermou Exp $
+!     $Id: smumps_struc.h,v 1.50 2005/06/20 06:18:43 aguermou Exp $
       INCLUDE 'smumps_root.h'
       TYPE SMUMPS_STRUC
         SEQUENCE
@@ -230,4 +230,6 @@
          INTEGER MAX_SURF_MASTER
 !    For simulating parallel out-of-core stack.
          INTEGER, DIMENSION(:),POINTER ::CB_SON_SIZE
+!    MAX size of factor block on a processor (used for ooc)
+         INTEGER  MAX_SIZE_FACTOR
       END TYPE SMUMPS_STRUC

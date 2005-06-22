@@ -1,13 +1,13 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-   This Version was built on Mon May 23 09:41:55 2005
+   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+   This Version was built on Fri Jul 22 15:57:28 2005
 
   This version of MUMPS is provided to you free of charge. It is public
   domain, based on public domain software developed during the Esprit IV
-  european project PARASOL (1996-1999). It has been partially supported
-  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-  Rhone-Alpes, and LBNL.
+  European project PARASOL (1996-1999). 
+  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -39,7 +39,7 @@
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
    S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Submitted to Parallel Computing.
+   of linear systems. Accepted to Parallel Computing.
 
 */
 /* $Id: dmumps_orderings.h,v 1.2 2003/04/25 12:25:46 jylexcel Exp $ */

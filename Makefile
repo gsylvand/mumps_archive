@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.4.2
-# This Version was built on Mon May 23 09:41:55 2005
+# This file is part of MUMPS VERSION 4.5.0
+# This Version was built on Fri Jul 22 15:57:28 2005
 #
 #
 default: double
@@ -20,7 +20,7 @@ Makefile.inc:
 
 include Makefile.inc
 
-requiredobj: Makefile.inc $(LIBSEQNEEDED) ../lib/libpord.a
+requiredobj: Makefile.inc $(LIBSEQNEEDED) ./lib/libpord.a
 
 # dummy MPI library (sequential version)
 
@@ -28,7 +28,7 @@ libseqneeded:
 	(cd libseq; make)
 
 # Build the libpord.a library and copy it into ./lib
-../lib/libpord.a:
+./lib/libpord.a:
 	if [ "$(LPORDDIR)" != "" ] ; then \
 	cd src; cd $(LPORDDIR); make CC="$(CC)" CFLAGS="$(OPTC)" AR="$(AR)" ARFUNCT= RANLIB="$(RANLIB)"; fi;
 	if [ "$(LPORDDIR)" != "" ] ; then \

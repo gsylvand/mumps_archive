@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       SUBROUTINE ZMUMPS_448(ICNTL,CNTL)
       IMPLICIT NONE
@@ -70,14 +70,14 @@ C
       INTEGER JOB,M,N,NE,NUM,LIW,LDW
       INTEGER IP(N+1),IRN(NE),PERM(M),IW(LIW)
       INTEGER ICNTL(NICNTL),INFO(NINFO)
-      DOUBLE COMPLEX A(NE)
+      DOUBLE PRECISION A(NE)
       DOUBLE PRECISION DW(LDW),CNTL(NCNTL)
       INTEGER I,J,K,wARN1,WARN2,WARN4
       DOUBLE PRECISION FACT,ZERO,ONE,RINF
       PARAMETER (ZERO=0.0D+00,ONE=1.0D+0)
-      EXTERNAL ZMUMPS_457,ZMUMPS_444,ZMUMPS_451,ZMUMPS_452,ZMUMPS_454
+      EXTERNAL DMUMPS_457,DMUMPS_444,DMUMPS_451,DMUMPS_452,DMUMPS_454
       INTRINSIC ABS,LOG
-      RINF = CNTL(2)
+       RINF = CNTL(2)
       WARN1 = 0
       WARN2 = 0
       WARN4 = 0
@@ -370,32 +370,32 @@ C
         ENDIF
       ENDIF
    99 RETURN
- 9001 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2,
+ 9001 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2,
      &        ' because ',(A),' = ',I10)
- 9004 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2/
+ 9004 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2/
      &        '        LIW too small, must be at least ',I8)
- 9005 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2/
+ 9005 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2/
      &        '        LDW too small, must be at least ',I8)
- 9006 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2/
+ 9006 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2/
      &        '        Column ',I8,
      &        ' contains an entry with invalid row index ',I8)
- 9007 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2/
+ 9007 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2/
      &        '        Column ',I8,
      &        ' contains two or more entries with row index ',I8)
- 9008 FORMAT (' ****** Error in ZMUMPS_443. INFO(1) = ',I2/
+ 9008 FORMAT (' ****** Error in DMUMPS_443. INFO(1) = ',I2/
      &        '        CNTL(2) is negative or zero.')
- 9010 FORMAT (' ****** Warning from ZMUMPS_443. INFO(1) = ',I2)
+ 9010 FORMAT (' ****** Warning from DMUMPS_443. INFO(1) = ',I2)
  9011 FORMAT ('        - The matrix is structurally singular.')
  9012 FORMAT ('        - Some scaling factors may be too large.')
  9014 FORMAT ('        - CNTL(1) is negative and was treated as zero.')
- 9020 FORMAT (' ****** Input parameters for ZMUMPS_443:'/
+ 9020 FORMAT (' ****** Input parameters for DMUMPS_443:'/
      &        ' JOB =',I10/' M   =',I10/' N   =',I10/' NE  =',I10)
  9021 FORMAT (' IP(1:N+1)   = ',8I8/(15X,8I8))
  9022 FORMAT (' IRN(1:NE)   = ',8I8/(15X,8I8))
  9023 FORMAT (' A(1:NE)     = ',4(1PD14.4)/(15X,4(1PD14.4)))
  9024 FORMAT (' ICNTL(1:10) = ',8I8/(15X,2I8))
  9025 FORMAT (' CNTL(1:10)  = ',4(1PD14.4)/(15X,4(1PD14.4)))
- 9030 FORMAT (' ****** Output parameters for ZMUMPS_443:'/
+ 9030 FORMAT (' ****** Output parameters for DMUMPS_443:'/
      &        ' INFO(1:2)   = ',2I8)
  9031 FORMAT (' NUM         = ',I8)
  9032 FORMAT (' PERM(1:M)   = ',8I8/(15X,8I8))
@@ -403,11 +403,11 @@ C
  9034 FORMAT (' DW(M+1:M+N) = ',5(F11.3)/(15X,5(F11.3)))
       END
       SUBROUTINE ZMUMPS_444
-     &           (M,N,NE,IP,IRN,A,IPERM,NUM,JPERM,PR,Q,L,D,RINF) 
+     &(M,N,NE,IP,IRN,A,IPERM,NUM,JPERM,PR,Q,L,D,RINF) 
       IMPLICIT NONE
       INTEGER M,N,NE,NUM
       INTEGER IP(N+1),IRN(NE),IPERM(M),JPERM(N),PR(N),Q(M),L(M)
-      DOUBLE COMPLEX A(NE)
+      DOUBLE PRECISION A(NE)
       DOUBLE PRECISION D(M), RINF
       INTEGER I,II,J,JJ,JORD,Q0,QLEN,IDUM,JDUM,ISP,JSP,
      &        K,KK,KK1,KK2,I0,UP,LOW
@@ -415,7 +415,7 @@ C
       DOUBLE PRECISION ZERO,MINONE
       PARAMETER (ZERO=0.0D+0,MINONE=-1.0D+0)
       INTRINSIC ABS,MIN
-      EXTERNAL ZMUMPS_445,ZMUMPS_446,ZMUMPS_447,ZMUMPS_455
+      EXTERNAL DMUMPS_445,DMUMPS_446,DMUMPS_447,DMUMPS_455
       RLX = D(1)
       NUM = 0
       BV = RINF
@@ -785,10 +785,10 @@ C
       SUBROUTINE ZMUMPS_458(M,N,NE,IP,IRN,A,MODE,PERM,IW,INFO)
       IMPLICIT NONE
       INTEGER M,N,NE,MODE,INFO
-      DOUBLE COMPLEX A(NE)
+      DOUBLE PRECISION A(NE)
       INTEGER IP(N+1),IRN(NE),PERM(*),IW(*)
       INTEGER I, K
-      EXTERNAL ZMUMPS_456,ZMUMPS_449
+      EXTERNAL DMUMPS_456,DMUMPS_449
       INFO = 0
       IF (M.LE.0 .OR. N.LE.0) THEN
         INFO = -2
@@ -831,9 +831,9 @@ C
       SUBROUTINE ZMUMPS_449(M,N,NE,IP,IRN,A,PERM,IW,DEST)
       IMPLICIT NONE
       INTEGER M,N,NE
-      DOUBLE COMPLEX A(NE)
+      DOUBLE PRECISION A(NE)
       INTEGER IP(N+1),IRN(NE),PERM(N),IW(N),DEST(NE)
-      DOUBLE COMPLEX AOLD,ANEW
+      DOUBLE PRECISION AOLD,ANEW
       INTEGER I,J,K,IDUM,IOLD,INEW,I0,I1,JOLD,JNEW,LEN
       K = 0
       DO 200 J = 1,N
@@ -1011,7 +1011,7 @@ C
       DOUBLE PRECISION A(NE),RLX,RINF
       INTEGER NUM,NVAL,WLEN,II,I,J,K,L,CNT,MOD,IDUM1,IDUM2,IDUM3
       DOUBLE PRECISION BVAL,BMIN,BMAX
-      EXTERNAL ZMUMPS_450,ZMUMPS_453,ZMUMPS_455
+      EXTERNAL DMUMPS_450,DMUMPS_453,DMUMPS_455
       DO 20 J = 1,N
         FC(J) = J
         LEN(J) = IP(J+1) - IP(J)
@@ -1225,7 +1225,7 @@ C
       LOGICAL LORD
       DOUBLE PRECISION ZERO
       PARAMETER (ZERO=0.0D+0)
-      EXTERNAL ZMUMPS_445,ZMUMPS_446,ZMUMPS_447,ZMUMPS_455
+      EXTERNAL DMUMPS_445,DMUMPS_446,DMUMPS_447,DMUMPS_455
       RLX = U(1)
       LORD = (JPERM(1).EQ.6)
       NUM = 0
@@ -1504,7 +1504,7 @@ C
       INTEGER LIRN,M,N,NUM
       INTEGER ARP(N),CV(M),IRN(LIRN),IP(N),IPERM(M),LENC(N),OUT(N),PR(N)
       INTEGER I,II,IN1,IN2,J,J1,JORD,K,KK
-      EXTERNAL ZMUMPS_455
+      EXTERNAL DMUMPS_455
       DO 10 I = 1,M
         CV(I) = 0
         IPERM(I) = 0

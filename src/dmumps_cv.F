@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       module DMUMPS_CV
       implicit none
@@ -126,6 +126,8 @@ C
       DOUBLE PRECISION:: 
      *         maxwork,minwork,maxmem,minmem,workbalance,membalance
       DOUBLE PRECISION:: cost_root_node
+      DOUBLE PRECISION,dimension(:),allocatable:: work_per_proc
+      integer,dimension(:),allocatable::id_son
       logical::cont
       character (len=48):: err_rep,subname
       DOUBLE PRECISION peak
@@ -365,17 +367,9 @@ C
          mini=MINVAL(workload)
          if (maxi.lt.MINFLOPS) then
             accepted=.TRUE.
-         else if(cv_slavef.lt.48) then
-            if (maxi.le.DBLE(1.5)*mini) accepted=.TRUE.
-         else if(cv_slavef.lt.128) then
-            if (maxi.le.DBLE(1.5)*mini) accepted=.TRUE.
-         else if(cv_slavef.lt.256) then
-            if (maxi.le.DBLE(2)*mini) accepted=.TRUE.
-         else if(cv_slavef.lt.512) then
-            if (maxi.le.DBLE(3)*mini) accepted=.TRUE.
-         else if(cv_slavef.gt.512) then
-            if (maxi.le.DBLE(4)*mini) accepted=.TRUE.
-         end if
+         elseif(maxi.le.(DBLE(cv_keep(102))/DBLE(100))*mini)then
+            accepted=.TRUE.
+         endif
          if ((.NOT.accepted).AND.(alternative_criterion)) then
             mean=SUM(workload)/max(DBLE(cv_slavef),DBLE(1))
             stddev=DBLE(0)
@@ -2501,7 +2495,18 @@ C
       end do
       do i=1,cv_n
          if(cv_frere(i).eq.0) then
-            call DMUMPS_433(i,procindex,pctr,ierr)
+            if(.NOT.associated(cv_prop_map(i)%allowed)) then
+               call DMUMPS_434(i,ierr)
+               if(ierr.ne.0) then
+                  if(cv_lp.gt.0) 
+     *                 write(cv_lp,*)'PROPMAP_INIT signalled error to'
+     *                 ,subname
+                  istat = ierr
+                  return
+               end if
+            endif
+            cv_prop_map(i)%allowed%ind_proc = procindex
+            call DMUMPS_433(i,pctr,ierr)
             if(ierr.ne.0) then
             if(cv_lp.gt.0)write(cv_lp,*) 
      *           'PROPMAP signalled error to',subname
@@ -2509,7 +2514,7 @@ C
                return
             endif
             if((cv_keep(24).eq.16).OR.(cv_keep(24).eq.18)) then
-               call DMUMPS_517(i,procindex,pctr2,ierr)
+               call DMUMPS_517(i,pctr2,ierr)
                if(ierr.ne.0) then
                   if(cv_lp.gt.0)write(cv_lp,*) 
      *           'MOD_PROPMAP signalled error to',subname
@@ -3088,6 +3093,15 @@ C
      *        write(cv_lp,*)'memory allocation error in ',subname
          return
       end if
+      allocate(work_per_proc(cv_slavef),id_son(cv_slavef),STAT=allocok)
+      if (allocok.gt.0) then
+         cv_info(1) = cv_error_memalloc
+         cv_info(2) = 2*cv_slavef
+         istat = cv_error_memalloc
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'memory allocation error in ',subname
+         return
+      end if
       do i=1,cv_slavef
          cv_proc_workload(i)=DBLE(0)
          if(cv_constr_work) then
@@ -3107,10 +3121,9 @@ C
       return
       end subroutine DMUMPS_391
       recursive subroutine DMUMPS_517
-     *                    (inode,procindex,ctr,istat)
+     *                    (inode,ctr,istat)
       implicit none
       integer, intent(in)::inode,ctr
-      integer,dimension(cv_size_ind_proc),intent(in)::procindex    
       integer, intent(inout)::istat
       integer::j,k,in,in1,ierr,son,nmb_procs_inode,nmb_sons_inode,
      *           procs4son(cv_size_ind_proc),current,i
@@ -3132,7 +3145,6 @@ C
       if(cv_frere(inode).eq.cv_n+1) return 
       subname='MOD_PROPMAP'
       if(.NOT.associated(cv_prop_map(inode)%allowed)) return
-      cv_prop_map(inode)%allowed%ind_proc = procindex
       nmb_procs_inode = 0
       do j=1,cv_slavef
          if( DMUMPS_481(inode,j))then
@@ -3215,7 +3227,7 @@ C
       do while(in.gt.0)
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
-            procs4son = procindex
+            procs4son = cv_prop_map(inode)%allowed%ind_proc
          else
             do k=1,cv_size_ind_proc
                do j=0,cv_bitsize_of_int-1
@@ -3273,7 +3285,8 @@ C
          end if
          ierr=0
          in1=in
-         call DMUMPS_517(in1,procs4son,ctr-1,ierr)
+         cv_prop_map(in1)%allowed%ind_proc=procs4son
+         call DMUMPS_517(in1,ctr-1,ierr)
          if(ierr.ne.0) then
             if(cv_lp.gt.0) write(cv_lp,*)
      *           'Error reported in ',subname
@@ -3285,10 +3298,9 @@ C
       istat = 0 
       return
       end subroutine DMUMPS_517
-      recursive subroutine DMUMPS_433(inode,procindex,ctr,istat)
+      recursive subroutine DMUMPS_433(inode,ctr,istat)
       implicit none
       integer, intent(in)::inode,ctr
-      integer,dimension(cv_size_ind_proc),intent(in)::procindex    
       integer, intent(inout)::istat
       integer::j,k,in,in1,ierr,son,nmb_procs_inode,nmb_sons_inode,
      *           share,procs4son(cv_size_ind_proc),current,offset,
@@ -3303,7 +3315,9 @@ C
       real Y
       intrinsic random_number
       integer nmb_propmap_strict,share2,procsrest,current2
-      integer k69onid
+      integer k69onid,nb_free_procs,local_son_indice,nb_procs_for_sons
+      logical upper_round_off,are_sons_treated
+      DOUBLE PRECISION tmp_cost
       if (ctr.le.0) then
          istat = 0
          return
@@ -3311,17 +3325,6 @@ C
       istat= -1
       if(cv_frere(inode).eq.cv_n+1) return 
       subname='PROPMAP'
-      if(.NOT.associated(cv_prop_map(inode)%allowed)) then
-         call DMUMPS_434(inode,ierr)
-         if(ierr.ne.0) then
-            if(cv_lp.gt.0) 
-     *           write(cv_lp,*)'PROPMAP_INIT signalled error to'
-     *           ,subname
-            istat = ierr
-            return
-         end if
-      endif
-      cv_prop_map(inode)%allowed%ind_proc = procindex
       nmb_procs_inode = 0
       do j=1,cv_slavef
          if( DMUMPS_481(inode,j))
@@ -3391,12 +3394,20 @@ C
       endif
       in=son
       current = 1
+      local_son_indice=1
+      nb_procs_for_sons=0
+      upper_round_off=.FALSE.
+      are_sons_treated=.TRUE.
       do while(in.gt.0)
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
-            procs4son = procindex
+            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            are_sons_treated=.FALSE.
+            nb_procs_for_sons=nmb_procs_inode
          elseif(nmb_procs_inode .LE. cv_keep(83)) then
-            procs4son = procindex
+            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            are_sons_treated=.FALSE.
+            nb_procs_for_sons=nmb_procs_inode
          else
             do k=1,cv_size_ind_proc
                do j=0,cv_bitsize_of_int-1
@@ -3436,8 +3447,12 @@ C
             min_cand_needed = MAX(min_cand_needed, cv_keep(91))
             share= 
      *          max(1,NINT(relative_weight*DBLE(nmb_procs_inode)))
+            if(share.ge.relative_weight*DBLE(nmb_procs_inode))then
+               upper_round_off=.TRUE.
+            endif
             share=min(share,nmb_procs_inode)
             nmb_propmap_strict=share
+            nb_procs_for_sons=nb_procs_for_sons+nmb_propmap_strict
             offset=1
             do j=current,cv_slavef
                if(ke69 .gt.1) then
@@ -3490,6 +3505,118 @@ C
      *              'Error reported in ',subname
                return
             end if
+         endif
+         if(.NOT.associated(cv_prop_map(in)%allowed)) then
+            call DMUMPS_434(in,ierr)
+            if(ierr.ne.0) then
+               if(cv_lp.gt.0) 
+     *              write(cv_lp,*)'PROPMAP_INIT signalled error to'
+     *              ,subname
+               istat = ierr
+               return
+            end if
+         endif
+         cv_prop_map(in)%allowed%ind_proc = procs4son
+         if(.not.upper_round_off)then
+            if(local_son_indice.lt.cv_slavef)then
+               id_son(local_son_indice)=in
+               work_per_proc(local_son_indice)=cv_tcostw(in)/
+     $              DBLE(nmb_propmap_strict)
+               local_son_indice=local_son_indice+1
+               if(local_son_indice.eq.cv_slavef)then
+                  CALL DMUMPS_459(cv_slavef,id_son,
+     $                 work_per_proc)
+               endif
+            else
+               current2=cv_slavef
+               tmp_cost=cv_tcostw(in)/DBLE(nmb_propmap_strict)
+               do while(current2.ge.1)
+                  if(tmp_cost.lt.work_per_proc(current2))exit
+                  current2=current2-1
+               enddo
+               if(current2.ne.cv_slavef)then
+                  if(current2.eq.0)then
+                     current2=1
+                  endif
+                  do j=cv_slavef-1,current2,-1
+                     id_son(j+1)=id_son(j)
+                     work_per_proc(j+1)=work_per_proc(j)
+                  enddo
+                  id_son(current2)=in
+                  work_per_proc(current2)=tmp_cost
+               endif
+            endif
+         endif
+         upper_round_off=.FALSE.
+         in=cv_frere(in)
+      end do
+      if(are_sons_treated)then
+         if(nb_procs_for_sons.ne.nmb_procs_inode)then
+            do j=1,nmb_procs_inode-nb_procs_for_sons
+               procs4son=cv_prop_map(id_son(j))%allowed%ind_proc
+               do while(current.le.cv_slavef)
+                  if(ke69 .gt.1) then
+                     call DMUMPS_493(current-1,k69onid,ierr)
+                  else
+                     k69onid = current
+                  endif
+                  if(.NOT.DMUMPS_481(inode,k69onid)) then
+                     current=current+1
+                  else
+                     exit
+                  endif
+               enddo
+               call DMUMPS_482(procs4son,k69onid,ierr)
+               cv_prop_map(id_son(j))%allowed%ind_proc=procs4son
+            enddo
+         endif
+      endif
+      in=son
+      current = 1
+      do while(in.gt.0)
+         if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
+     &       (nmb_procs_inode.LT.4) ) then
+            procs4son = cv_prop_map(inode)%allowed%ind_proc
+         elseif(nmb_procs_inode .LE. cv_keep(83)) then
+            procs4son = cv_prop_map(inode)%allowed%ind_proc
+         else
+            procs4son = cv_prop_map(in)%allowed%ind_proc
+            in_tmp=in
+            nfront=cv_nfsiz(in_tmp)
+            npiv=0
+            in_tmp=in_tmp
+            do while(in_tmp.gt.0)
+               npiv=npiv+1
+               in_tmp=cv_fils(in_tmp)
+            end do
+            ncb=nfront-npiv
+            if (force_cand) then 
+               if (cv_keep(50) ==  0) then
+                  keep48_loc=0
+               else
+                  keep48_loc=3
+               endif
+               if (cv_keep(48).EQ.5) keep48_loc = 5
+               min_cand_needed=
+     *              DMUMPS_50
+     *              (cv_slavef, keep48_loc,cv_keep(10),
+     *              cv_keep(50),
+     *              nfront,ncb)
+               min_cand_needed=min(cv_slavef,min_cand_needed+1)
+            else
+               min_cand_needed = 0
+            endif
+            min_cand_needed = MAX(min_cand_needed, cv_keep(91))
+            if(costs_sons.gt.0) then
+               relative_weight=cv_tcostw(in)/costs_sons
+            else
+               relative_weight=DBLE(0)
+            endif
+            share= 
+     *          max(1,NINT(relative_weight*DBLE(nmb_procs_inode)))
+            share=min(share,nmb_procs_inode)
+            nmb_propmap_strict=share
+            offset=1
             share2=
      *          max(0,NINT(relative_weight*(loc_relax-DBLE(1))*
      *                                   DBLE(nmb_procs_inode)))
@@ -3498,9 +3625,10 @@ C
             procsrest=nmb_procs_inode - nmb_propmap_strict
             share2=min(share2,procsrest)
             CALL RANDOM_NUMBER(HARVEST=Y)
-            current2=current+INT(DBLE(Y)*DBLE(procsrest))
+            current2=1+INT(DBLE(Y)*DBLE(procsrest))
             if(current2.gt.cv_slavef) current2=MOD(current2,cv_slavef)
-            do j=current2,cv_slavef
+            nb_free_procs=0
+            do j=1,cv_slavef
                if(share2.le.0) exit
                if(ke69 .gt.1) then
                      call DMUMPS_493(j-1,k69onid,ierr)
@@ -3509,26 +3637,7 @@ C
                   endif
                if(( DMUMPS_481(inode,k69onid)).AND.
      *           (.NOT.DMUMPS_480(procs4son,k69onid))) then
-                  call DMUMPS_482(procs4son,k69onid,ierr)
-                  if(ierr.ne.0) then
-                     if(cv_lp.gt.0)write(cv_lp,*) 
-     *                 'BIT_SET signalled error to',subname
-                     istat = ierr
-                     return
-                  end if
-                  share2 = share2 - 1
-               end if
-            end do
-            if(share2.gt.0) then
-               do j=1,current2 - 1
-                  if(share2.le.0) exit
-                  if(ke69 .gt.1) then
-                     call DMUMPS_493(j-1,k69onid,ierr)
-                  else
-                     k69onid = j
-                  endif
-                  if(( DMUMPS_481(inode,k69onid)).AND.
-     *              (.NOT.DMUMPS_480(procs4son,k69onid))) then
+                  if(nb_free_procs.ge.current2)then
                      call DMUMPS_482(procs4son,k69onid,ierr)
                      if(ierr.ne.0) then
                         if(cv_lp.gt.0)write(cv_lp,*) 
@@ -3537,6 +3646,33 @@ C
                         return
                      end if
                      share2 = share2 - 1
+                  else
+                     nb_free_procs=nb_free_procs+1
+                  endif
+               end if
+            end do
+            if(share2.gt.0) then
+               do j=1,cv_slavef
+                  if(share2.le.0) exit
+                  if(ke69 .gt.1) then
+                     call DMUMPS_493(j-1,k69onid,ierr)
+                  else
+                     k69onid = j
+                  endif
+                  if(( DMUMPS_481(inode,k69onid)).AND.
+     *              (.NOT.DMUMPS_480(procs4son,k69onid))) then
+                     if(nb_free_procs.ge.current2)then
+                        call DMUMPS_482(procs4son,k69onid,ierr)
+                        if(ierr.ne.0) then
+                           if(cv_lp.gt.0)write(cv_lp,*) 
+     *                          'BIT_SET signalled error to',subname
+                           istat = ierr
+                           return
+                        end if
+                        share2 = share2 - 1
+                     else
+                        nb_free_procs=nb_free_procs+1
+                     endif
                   end if
                end do
             endif
@@ -3548,7 +3684,8 @@ C
          endif
          ierr=0
          in1=in
-         call DMUMPS_433(in1,procs4son,ctr-1,ierr)
+         cv_prop_map(in1)%allowed%ind_proc = procs4son
+         call DMUMPS_433(in1,ctr-1,ierr)
          if(ierr.ne.0) then
             if(cv_lp.gt.0) write(cv_lp,*)
      *         'Error reported in ',subname
@@ -4165,6 +4302,13 @@ C
      *    cv_ncostw,cv_ncostm,
      *    cv_layerworkload,cv_layermemused,
      *    STAT=ierr)
+      if(ierr.ne.0) then
+         if(cv_lp.gt.0) 
+     *        write(cv_lp,*)'Memory deallocation error in ',subname
+         istat = cv_error_memdeloc
+         return
+      end if
+      deallocate(work_per_proc,id_son,STAT=ierr)
       if(ierr.ne.0) then
          if(cv_lp.gt.0) 
      *        write(cv_lp,*)'Memory deallocation error in ',subname

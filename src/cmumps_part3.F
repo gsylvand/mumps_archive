@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       RECURSIVE SUBROUTINE CMUMPS_210( COMM_LOAD, ASS_IRECV,
      *  BUFR, LBUFR, LBUFR_BYTES,
@@ -3517,6 +3517,9 @@ C
 #endif
          ENDIF
       END IF
+#if ! defined(metis)
+      IF (IORD == 5) IORD = 0
+#endif
       IF (KEEP(1).LT.1) KEEP(1) = 1
       NEMIN = KEEP(1)
       IF (LDIAG.LE.2 .OR. MP.LE.0) GO TO 10
@@ -3550,7 +3553,7 @@ C
           RETURN
         END IF
       ELSE
-        IF ( LIW .LT.  4*N-4 ) THEN
+        IF ( LIW .LT.  4*N+4 ) THEN
           INFO(1)= -2002
           INFO(2) = LIW
           RETURN
@@ -3572,7 +3575,7 @@ C
      *              ELTPTR, ELTVAR, XNODEL, NODEL,
      *              PTRAR(1,2), 4*N+4, IW(L1))
         ENDIF
-        LLIW = NZ
+        LLIW = MAX(NZ,N)
         ALLOCATE( IW2(LLIW), stat = allocok )
         IF (allocok.GT.0) THEN
           INFO(1) = -7
@@ -3617,7 +3620,7 @@ C
          CALL CMUMPS_129(N, NZ, NELT, ELTPTR(NELT+1)-1, 
      *              ELTPTR, ELTVAR, XNODEL, NODEL,
      *              PTRAR(1,2), IW(L1))
-         LLIW = NZ
+         LLIW = MAX(NZ,N)
          ALLOCATE( IW2(LLIW), stat = allocok )
          IF (allocok.GT.0) THEN
            INFO(1) = -7
@@ -3681,7 +3684,6 @@ C
      *    IKEEP(1,2), IW(L1),
      *    IW(L2), NCMPA, ITEMP)
       ENDIF
-      DEALLOCATE(IW2)
 #if defined(OLDDFS)
       CALL CMUMPS_200(N, PTRAR, IW(L1), IKEEP, IKEEP(1,2),
      *     IKEEP(1,3),
@@ -3691,8 +3693,10 @@ C
      *     IKEEP(1,3),
      *     NFSIZ, PTRAR(1,2), 
      *     INFO(6), FILS, FRERE, PTRAR(1,3), NEMIN, 
-     *     IW(L2),  KEEP(60), KEEP(20), KEEP(38))
+     *     IW(L2),  KEEP(60), KEEP(20), KEEP(38),
+     *     IW2,KEEP(104))
 #endif
+      DEALLOCATE(IW2)
       IF (KEEP(60).NE.0) THEN
          IF (KEEP(60)==1) THEN
            IN = KEEP(20)
@@ -6477,9 +6481,15 @@ C
               JLOCROOT = root%NBLOCK * ( ( JPOSROOT - 1 ) /
      *                 ( root%NBLOCK * root%NPCOL ) )
      *               + MOD( JPOSROOT - 1, root%NBLOCK ) + 1
+              IF (KEEP(60).eq.0) THEN
               A( PTR_ROOT + ( JLOCROOT - 1 ) * LOCAL_M
      *      + ILOCROOT - 1 ) =  A( PTR_ROOT + (JLOCROOT - 1)
      *      * LOCAL_M + ILOCROOT - 1 ) + VAL
+              ELSE
+              root%SCHUR_POINTER(( JLOCROOT - 1 ) * root%SCHUR_LLD
+     *      + ILOCROOT ) = root%SCHUR_POINTER( (JLOCROOT - 1)
+     *      * root%SCHUR_LLD + ILOCROOT) + VAL
+              ENDIF
             END DO
           END DO
           DEALLOCATE( BUFI )

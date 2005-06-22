@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
 #if defined(try_null_space)
       SUBROUTINE ZMUMPS_295
@@ -3596,7 +3596,7 @@ C
       SUBROUTINE ZMUMPS_247(null_basis_col,root,
      * N, A, LA, IW, LIW, W, LWC,
      * IWCB,LIWW,NULL,NULLSOL,NA, LNA, NE_STEPS, W2, MTYPE, ICNTL,
-     * STEP, FRERE,FILS, PTRIST,IW1,LIW1,
+     * STEP, FRERE,FILS, PTRIST, PTRFAC, IW1,LIW1,
      * PROCNODE_STEPS, SLAVEF,
      * INFO, KEEP, COMM, COMM_NODES, MYID,
      * MYID_NODES, BUFR, LBUFR, LBUFR_BYTES, 
@@ -3609,6 +3609,7 @@ C
       INTEGER ICNTL(40),INFO(40), KEEP(150)
       INTEGER IW(LIW),IW1(LIW1),NA(LNA),NE_STEPS(KEEP(28)),IWCB(LIWW)
       INTEGER STEP(N), FRERE(KEEP(28)), FILS(N), PTRIST(KEEP(28))
+      INTEGER PTRFAC(KEEP(28))
       COMPLEX*16    A(LA), W(LWC), NULL(N),
      *        NULLSOL(*), W2(N)
       INTEGER SLAVEF, COMM, COMM_NODES, MYID, MYID_NODES
@@ -3743,7 +3744,7 @@ C
           end if
          END IF
         CALL ZMUMPS_249(N, A, LA, IW, LIW, W(1), LWC_LOC, NULL,
-     *              NULLSOL,
+     *              N, 1, NULLSOL,
      *              IW1(PTRICB),IW1(PTRACB),IWCB,LIWW,
      *              IW1(POOLSS),W2,
      *              NE_STEPS, NA, LNA, STEP, FRERE,FILS,
@@ -3781,11 +3782,11 @@ C
 #endif
         END IF
         CALL ZMUMPS_249(N, A, LA, IW, LIW, W(1), LWC_LOC, NULL,
-     *              NULLSOL,
+     *              N, 1, NULLSOL,
      *              IW1(PTRICB),IW1(PTRACB),IWCB,LIWW,
      *              IW1(POOLSS),W2,
      *              NE_STEPS, NA, LNA, STEP, FRERE,FILS,
-     *              IW1(IPOOL),LPOOL,PTRIST,MYLEAF,INFO,
+     *              IW1(IPOOL),LPOOL,PTRIST,PTRFAC,MYLEAF,INFO,
      *              PROCNODE_STEPS, SLAVEF, COMM_NODES, MYID_NODES,
      *              BUFR, LBUFR, LBUFR_BYTES, KEEP, W( IPT_NULL_ROOT ),
      *              MTYPE, 
@@ -5458,7 +5459,7 @@ C
 #if(SP_DEBUG >=1)
       IF(K .NE. N22+1) THEN
          WRITE(*,*) 'K NE N22+1',K,N22+1
-         CALL ABORT()
+         CALL ZMUMPS_ABORT()
       ENDIF
 #endif
       DO I=N2+1,NCMP
@@ -5561,7 +5562,7 @@ C
 #if(SP_DEBUG >=1)
       IF(K .NE. N22+1) THEN
          WRITE(*,*) 'K NE N22+1',K,N22+1
-         CALL ABORT()
+         CALL ZMUMPS_ABORT()
       ENDIF
 #endif
       DO I=N2+1,NCMP
@@ -5823,7 +5824,7 @@ C
       PARAMETER (JOB_DEF = 5, DONE = -1,
      *     SUM = 1, PROD = 2, STRUCT=1, MA47=2, MAGNITUDE=3,
      *     VRAI = .TRUE., FAUX = .FALSE.)
-      MAX_CARD_DIAG = .FALSE.
+      MAX_CARD_DIAG = .TRUE.
       NUM1 = 0
       NUM2 = 0
       NUMTOT = 0
@@ -5863,7 +5864,7 @@ C
             WRITE(*,*) CUR_EL,'in structural kernel'
             IF(CPERM(CUR_EL) .NE. -CUR_EL) THEN
                WRITE(*,*) 'pb ker cur_el cperm',CUR_EL,CPERM(CUR_EL)
-               CALL ABORT()
+               CALL ZMUMPS_ABORT()
             ENDIF
 #endif
             MARKED(CUR_EL) = -1
@@ -5952,12 +5953,12 @@ C
                      WRITE(*,*) 
      *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
      *                   CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL ABORT()
+                     CALL ZMUMPS_ABORT()
                   ENDIF
                ENDDO
                IF(PIV_OUT(NUM2+1) .NE. -1) THEN
                   WRITE(*,*) 'PB : NUM2,PIV_OUT',NUM2,'/',PIV_OUT
-                  CALL ABORT()
+                  CALL ZMUMPS_ABORT()
                ENDIF
 #endif
                NUM2 = NUM2+1
@@ -5969,12 +5970,12 @@ C
                      WRITE(*,*) 
      *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
      *                   CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL ABORT()
+                     CALL ZMUMPS_ABORT()
                   ENDIF
                ENDDO
                IF(PIV_OUT(NUM2+1) .NE. -1) THEN
                   WRITE(*,*) 'PB : NUM2'
-                  CALL ABORT()
+                  CALL ZMUMPS_ABORT()
                ENDIF
 #endif
                NUM2 = NUM2+1
@@ -6042,12 +6043,12 @@ C
                      WRITE(*,*) 
      *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
      *                    CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL ABORT()
+                     CALL ZMUMPS_ABORT()
                   ENDIF
                ENDDO
                IF(PIV_OUT(NUM2+1) .NE. -1) THEN
                   WRITE(*,*) 'PB : NUM2'
-                  CALL ABORT()
+                  CALL ZMUMPS_ABORT()
                ENDIF
 #endif
                NUM2 = NUM2+1
@@ -6059,12 +6060,12 @@ C
                      WRITE(*,*) 
      *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
      *                    CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL ABORT()
+                     CALL ZMUMPS_ABORT()
                   ENDIF
                ENDDO
                IF(PIV_OUT(NUM2+1) .NE. -1) THEN
                   WRITE(*,*) 'PB : NUM2'
-                  CALL ABORT()
+                  CALL ZMUMPS_ABORT()
                ENDIF
 #endif
                NUM2 = NUM2+1
@@ -6130,7 +6131,7 @@ C
 #if defined(check_LDLT_preprocess)
          IF(B .EQ. 0.0D0) THEN
             WRITE(*,*) 'ERROR in ZMUMPS_UPDATE_INVERSE'
-            CALL ABORT()
+            CALL ZMUMPS_ABORT()
          ENDIF
 #endif
          ZMUMPS_UPDATE_INVERSE = A/B
@@ -6148,12 +6149,6 @@ C
       INTEGER I,INTER,MERGE
       INTEGER STRUCT,MA47,MAGNITUDE
       PARAMETER(STRUCT=0,MA47=1,MAGNITUDE=2)
-#if 0
-      WRITE(*,*) 'CUR_EL,CUR_EL_PATH,L1,L2,N',
-     *     CUR_EL,CUR_EL_PATH,L1,L2,N
-      WRITE(*,*) 'SET1',SET1(1:L1)
-      WRITE(*,*) 'SET2',SET2(1:L2)
-#endif
       IF(T .EQ. STRUCT) THEN
          IF(.NOT. FLAGON) THEN
             DO I=1,L1

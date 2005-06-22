@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,7 +38,7 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       SUBROUTINE DMUMPS_301( id)
       USE DMUMPS_BUFFER
@@ -77,7 +77,7 @@ C
       DOUBLE PRECISION, DIMENSION(:), POINTER :: CNTL
       INTEGER, DIMENSION (:), POINTER :: KEEP,ICNTL,INFO
       INTEGER, DIMENSION (:), POINTER :: IS
-      DOUBLE PRECISION, DIMENSION(:),POINTER::COLSCA,ROWSCA,S
+      DOUBLE PRECISION, DIMENSION(:),POINTER::S
       DOUBLE PRECISION, DIMENSION(:),POINTER::   RINFOG
       type scaling_data_t
         SEQUENCE
@@ -113,8 +113,6 @@ C
       S    =>id%S
       ICNTL=>id%ICNTL
       INFO =>id%INFO
-      COLSCA =>id%COLSCA
-      ROWSCA =>id%ROWSCA
       RINFOG =>id%RINFOG
 #if defined(V_T)
       CALL VTCLASSDEF( 'Soln driver',soln_drive_class,ierr)
@@ -511,14 +509,14 @@ C
             DO K =1, NBRHS_EFF 
              KDEC = (K-1) * LD_RHS + IBEG - 1
              DO I = 1, N
-              id%RHS(KDEC+I) = id%RHS(KDEC+I) * ROWSCA(I)
+              id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%ROWSCA(I)
              END DO
             ENDDO
           ELSE
             DO K =1, NBRHS_EFF 
              KDEC = (K-1) * LD_RHS + IBEG - 1
              DO I = 1, N
-              id%RHS(KDEC+I) = id%RHS(KDEC+I) * COLSCA(I)
+              id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%COLSCA(I)
              END DO
             ENDDO
           ENDIF
@@ -527,12 +525,12 @@ C
           IF (MTYPE .eq. 1) THEN
             DO IZ=1,NZ_THIS_BLOCK
               I=IRHS_SPARSE_COPY(IZ)
-              RHS_SPARSE_COPY(IZ)=id%RHS_SPARSE(KDEC+IZ-1)*ROWSCA(I)
+              RHS_SPARSE_COPY(IZ)=id%RHS_SPARSE(KDEC+IZ-1)*id%ROWSCA(I)
             ENDDO
           ELSE
             DO IZ=1,NZ_THIS_BLOCK
               I=IRHS_SPARSE_COPY(IZ)
-              RHS_SPARSE_COPY(IZ)=id%RHS_SPARSE(KDEC+IZ-1)*COLSCA(I)
+              RHS_SPARSE_COPY(IZ)=id%RHS_SPARSE(KDEC+IZ-1)*id%COLSCA(I)
             ENDDO
           ENDIF
          ENDIF
@@ -690,14 +688,14 @@ C
              DO K= 1, NBRHS_EFF
               KDEC = (K-1) * LD_RHS + IBEG - 1
               DO I = 1, N
-                id%RHS(KDEC+ I) = id%RHS(KDEC+ I) * COLSCA(I)
+                id%RHS(KDEC+ I) = id%RHS(KDEC+ I) * id%COLSCA(I)
               END DO
              END DO
           ELSE
              DO K= 1, NBRHS_EFF
               KDEC = (K-1) * LD_RHS + IBEG - 1
               DO I = 1, N
-                id%RHS(KDEC+I) = id%RHS(KDEC+I) * ROWSCA(I)
+                id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%ROWSCA(I)
               END DO
              END DO
           ENDIF
@@ -990,11 +988,11 @@ C
           IF ( LSCAL ) THEN
             IF ( SOLVET .EQ. 1 ) THEN
               DO K = 1, N
-                Y( K ) = Y( K ) * ROWSCA( K )
+                Y( K ) = Y( K ) * id%ROWSCA( K )
               END DO
             ELSE
               DO K = 1, N
-                Y( K ) = Y( K ) * COLSCA( K )
+                Y( K ) = Y( K ) * id%COLSCA( K )
               END DO
             END IF
           END IF
@@ -1050,11 +1048,11 @@ C
           IF (LSCAL) THEN
             IF (SOLVET .EQ. 1) THEN
                DO K = 1, N
-                 Y(K) = Y(K) * COLSCA(K)
+                 Y(K) = Y(K) * id%COLSCA(K)
                END DO
             ELSE
                DO K = 1, N
-                 Y(K) = Y(K) * ROWSCA(K)
+                 Y(K) = Y(K) * id%ROWSCA(K)
                END DO
             ENDIF
           END IF
@@ -1544,7 +1542,7 @@ C
                   IPOS= IPOS+1
                   IPOS= IPOS+1+IW( PTRIST(STEP(INODE)) + 5 )
               END IF
-              IF (MTYPE.eq.1) THEN
+              IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
               ELSE
                    J1=IPOS+1
@@ -1655,7 +1653,7 @@ C
                   IPOS= IPOS+1
                   IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 )
               END IF
-              IF (MTYPE.eq.1) THEN
+              IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
               ELSE
                    J1=IPOS+1
@@ -1722,7 +1720,7 @@ C
                   IPOS= IPOS+1
                   IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 )
               END IF
-              IF (MTYPE.eq.1) THEN
+              IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
               ELSE
                    J1=IPOS+1
@@ -1852,6 +1850,8 @@ C
       IF ( INFO( 1 ) .LT. 0 .OR. NBFIN .EQ. 0 ) GOTO 260
       GOTO 50
   260 CONTINUE
+      CALL DMUMPS_150( MYID,COMM,BUFR,
+     *                            LBUFR,LBUFR_BYTES )
       RETURN
       END SUBROUTINE DMUMPS_248
       RECURSIVE SUBROUTINE DMUMPS_323
@@ -2134,7 +2134,7 @@ C
         NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
         IPOS = IPOS + 1 + NSLAVES
       END IF
-      IF ( MTYPE .EQ. 1 .OR. KEEP(50) .NE.0 ) THEN
+      IF ( MTYPE .EQ. 1 .OR. KEEP(50) .NE. 0 ) THEN
         J1 = IPOS + 1
         J2 = IPOS + LIELL
         J3 = IPOS + NPIV
@@ -2280,40 +2280,50 @@ C
   150   CONTINUE
       ELSE
         APOS1 = APOS
-        DO 155 JJ = J1, J3
-          J = IW( JJ )
-          IFR = IFR + 1
+        JJ = J1
+        DO 
+           IF(JJ .GT. J3) EXIT
+           J = IW(JJ)
+           IFR = IFR + 1
 #if defined(check2x2)
-             IF(ABS(IW(JJ+LIELL).NE.J) THEN
-                WRITE(*,*) '2x2 pb 1 in solve'
-                CALL DMUMPS_ABORT()
-             ENDIF
+           IF(ABS(IW(JJ+LIELL)).NE.J) THEN
+              WRITE(*,*) '2x2 pb 1 in solve IW(JJ+LIELL),J',
+     *             IW(JJ+LIELL),J
+              CALL DMUMPS_ABORT()
+           ENDIF
 #endif
-          IF(IW(JJ+LIELL) .GT. 0) THEN
-             DO K=1, NRHS
-                RHS( J, K ) = WCB( IFR+(K-1)*NPIV ) * A( APOS1 )
-             END DO
-             APOS1 = APOS1 + NPIV + 1
-          ELSE
-             J22 = IW(JJ+1)
-             APOS2 = APOS1+NPIV+1
+           IF(IW(JJ+LIELL) .GT. 0) THEN
+              DO K=1, NRHS
+                 RHS( J, K ) = WCB( IFR+(K-1)*NPIV ) * A( APOS1 )
+              END DO
+              APOS1 = APOS1 + NPIV + 1
+              JJ = JJ+1
+           ELSE
+              J22 = IW(JJ+1)
+              APOS2 = APOS1+NPIV+1
 #if defined(check2x2)
-             IF(J22 .LE. 0) THEN
-                WRITE(*,*) '2x2 pb 2 in solve'
-                CALL DMUMPS_ABORT()
-             ENDIF
+              IF(J22 .LE. 0) THEN
+                 WRITE(*,*) '2x2 pb 2 in solve'
+                 CALL DMUMPS_ABORT()
+              ENDIF
+              IF(IW(JJ+1+LIELL).LE. 0) THEN
+                 WRITE(*,*) '2x2 pb 3 in solve'
+                 CALL DMUMPS_ABORT()
+              ENDIF
 #endif
-             DO K=1, NRHS
-                POSWCB1 =  IFR+(K-1)*NPIV
-                POSWCB2 = POSWCB1+1
-                RHS(J,K) = WCB(POSWCB1)*A(APOS1)
-     *               + WCB(POSWCB2)*A(APOS1+1)
-                RHS(J22,K) = WCB(POSWCB1)*A(APOS1+1)
-     *               + WCB(POSWCB2)*A(APOS2)
-             END DO
-             APOS1 = APOS2 + NPIV + 1
-          ENDIF
-  155   CONTINUE
+              DO K=1, NRHS
+                 POSWCB1 = IFR+(K-1)*NPIV
+                 POSWCB2 = POSWCB1+1
+                 RHS(J,K) = WCB(POSWCB1)*A(APOS1)
+     *                + WCB(POSWCB2)*A(APOS1+1)
+                 RHS(J22,K) = WCB(POSWCB1)*A(APOS1+1)
+     *                + WCB(POSWCB2)*A(APOS2)
+              END DO
+              APOS1 = APOS2 + NPIV + 1
+              JJ = JJ+2
+              IFR = IFR+1
+           ENDIF
+        ENDDO
       END IF
       IN = INODE
       DO WHILE ( IN .GT. 0 )
@@ -2540,7 +2550,7 @@ C
       INTEGER IPOS,IPOSCB,LIELL,NELIM,IFR,JJ,I
       INTEGER J1,J2,J,IST,NCB,NBFINF
       INTEGER NBLEAF,INODE,NBROOT,NROOT,NBFILS
-      INTEGER IN,IF,LONG,IFRR
+      INTEGER IN,IF,LONG,IFRR,POOL_FIRST_POS,TMP
       INTEGER III,IIPOOL,MYLEAFE
       INTEGER IISSAR
       INTEGER NSLAVES
@@ -2612,7 +2622,7 @@ C
         LIELL = IW(IPOS+3)
         NPIV  = LIELL
         IPOS =  PTRIST(STEP(INODE)) + 5
-        IF ( MTYPE .EQ. 1 .and. KEEP(50) == 0) THEN
+        IF ( MTYPE .EQ. 1 .AND. KEEP(50) .EQ. 0) THEN
           J1   = IPOS + LIELL + 1
           J2   = IPOS + LIELL + NPIV
         ELSE
@@ -2647,11 +2657,12 @@ C
         DO I = 0, SLAVEF - 1
           DEJA_SEND( I ) = .FALSE.
         END DO
+        POOL_FIRST_POS=IIPOOL
         DO I = 1, NBFILS
           IF (DMUMPS_275(STEP(IF),PROCNODE_STEPS,SLAVEF)
      *       .EQ. MYID) THEN
-            IPOOL(IIPOOL) = IF
-            IIPOOL = IIPOOL + 1
+             IPOOL(IIPOOL) = IF
+             IIPOOL = IIPOOL + 1
           ELSE
             PROCDEST = DMUMPS_275(STEP(IF),PROCNODE_STEPS,
      *                 SLAVEF)
@@ -2687,6 +2698,11 @@ C
           ENDIF
           IF = FRERE(STEP(IF))
         ENDDO
+        DO I=1,(IIPOOL-POOL_FIRST_POS)/2
+           TMP=IPOOL(POOL_FIRST_POS+I-1)
+           IPOOL(POOL_FIRST_POS+I-1)=IPOOL(IIPOOL-I)
+           IPOOL(IIPOOL-I)=TMP
+        ENDDO
         GOTO 50
       END IF
       IF ( DMUMPS_283( STEP(INODE), PROCNODE_STEPS,
@@ -2706,7 +2722,7 @@ C
       IPOS = IPOS + 1 + NSLAVES
       IFRR = 0
       LONG = 0
-      IF ( MTYPE .eq. 1 .OR. KEEP(50) .NE. 0 ) THEN
+      IF ( MTYPE .EQ. 1 .OR. KEEP(50) .NE. 0 ) THEN
         J1 = IPOS + 1
         J2 = IPOS + NPIV
       ELSE
@@ -2734,7 +2750,7 @@ C
       PTRACB(STEP( INODE )) = POSWCB  + 1
       IWCB( PTRICB(STEP( INODE ))     ) = LIELL
       IWCB( PTRICB(STEP( INODE )) + 1 ) = 1
-      IF ( MTYPE .eq. 1 .AND. KEEP(50)==0 ) THEN
+      IF ( MTYPE.EQ.1 .AND. KEEP(50).EQ.0 ) THEN
          POSINDICES = IPOS + LIELL + 1
       ELSE
          POSINDICES = IPOS + 1
@@ -2751,7 +2767,7 @@ C
         ENDDO
       END DO
       IF ( LIELL .GT. NPIV ) THEN
-        IF ( MTYPE .eq. 1 .AND. KEEP(50)==0 ) THEN
+        IF ( MTYPE .EQ. 1 .AND. KEEP(50).EQ.0 ) THEN
           J1 = IPOS + LIELL + NPIV + 1
           J2 = IPOS + 2 * LIELL
         ELSE
@@ -2882,7 +2898,7 @@ C
           END IF
         END IF
       END IF
-      IF ( MTYPE .eq. 1 .AND. KEEP(50)==0) THEN
+      IF ( MTYPE .EQ. 1 .AND. KEEP(50).EQ.0) THEN
         J1 = IPOS + LIELL + 1
       ELSE
         J1 = IPOS + 1
@@ -2913,17 +2929,13 @@ C
       DO i = 0, SLAVEF - 1
         DEJA_SEND( i ) = .FALSE.
       END DO
-      IF ( MTYPE .eq. 1 ) THEN
-         POSINDICES = IPOS + LIELL + 1
-      ELSE
-         POSINDICES = IPOS + 1
-      END IF
+      POOL_FIRST_POS=IIPOOL
       DO 190 I = 1, NBFILS
         IF (DMUMPS_275(STEP(IF),PROCNODE_STEPS,
      *      SLAVEF) .EQ. MYID) THEN
-          IPOOL(IIPOOL) = IF
-          IIPOOL = IIPOOL + 1
-          IF = FRERE(STEP(IF))
+           IPOOL(IIPOOL) = IF
+           IIPOOL = IIPOOL + 1
+           IF = FRERE(STEP(IF))
         ELSE
           PROCDEST = DMUMPS_275(STEP(IF),PROCNODE_STEPS,SLAVEF)
           IF (.not. DEJA_SEND( PROCDEST ))  THEN
@@ -2958,6 +2970,11 @@ C
           IF = FRERE(STEP(IF))
         ENDIF
   190 CONTINUE
+      DO I=1,(IIPOOL-POOL_FIRST_POS)/2
+         TMP=IPOOL(POOL_FIRST_POS+I-1)
+         IPOOL(POOL_FIRST_POS+I-1)=IPOOL(IIPOOL-I)
+         IPOOL(IIPOOL-I)=TMP
+      ENDDO
       IWCB(PTRICB(STEP(INODE))+1) = IWCB(PTRICB(STEP(INODE))+1)-1
       CALL DMUMPS_151(NRHS,N, KEEP(28), IWCB, LIWW, W, LWC,
      *     POSWCB,POSIWCB,PTRICB,PTRACB)
@@ -2979,7 +2996,7 @@ C
       APOS = PTRFAC(IW(IPOS))
       NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
       IPOS = IPOS + 1 + NSLAVES
-      IF ( MTYPE .eq. 1 .OR. KEEP(50).NE.0 ) THEN
+      IF ( MTYPE .EQ. 1 .OR. KEEP(50).NE.0 ) THEN
         J1 = IPOS + 1
         J2 = IPOS + NPIV
       ELSE
@@ -3004,7 +3021,7 @@ C
         ENDDO
   240 CONTINUE
       IF (LIELL .GT. NPIV) THEN
-        IF ( MTYPE .eq. 1 .AND. KEEP(50)==0 ) THEN
+        IF ( MTYPE .EQ. 1 .AND. KEEP(50).EQ.0 ) THEN
           J1 = IPOS + LIELL + NPIV + 1
           J2 = IPOS + 2 * LIELL
         ELSE
@@ -3019,7 +3036,7 @@ C
           ENDDO
   250   CONTINUE
         NCB = LIELL - NPIV
-        IF ( MTYPE .EQ. 1 ) THEN
+        IF ( MTYPE .EQ. 1) THEN
           IST = APOS + NPIV
           IF ( NRHS == 1 ) THEN
             CALL DGEMV( 'T', NCB, NPIV, ALPHA, A(IST), LIELL,
@@ -3045,7 +3062,7 @@ C
           END IF
         END IF
       ENDIF
-      IF ( MTYPE .eq. 1 ) THEN
+      IF ( MTYPE .EQ. 1) THEN
         IF (NRHS == 1) THEN
             CALL DTRSV('L', 'T', 'N', NPIV, A(APOS), LIELL,
      *               W(1), 1)
@@ -3068,7 +3085,7 @@ C
         END IF
       END IF
       IFR = 0
-      IF ( MTYPE .eq. 1 .AND. KEEP(50)==0 ) THEN
+      IF ( MTYPE .EQ. 1 .AND. KEEP(50).EQ.0 ) THEN
         J1 = IPOS + LIELL + 1
       ELSE
         J1 = IPOS + 1
@@ -3097,7 +3114,7 @@ C
       IF = -IN
       NBFILS = NE_STEPS(STEP(INODE))
       DO 300 I = 1, NBFILS
-        POOLSS(POSII) = IF
+        POOLSS((POSII-I+1)+NBFILS-I) = IF
         POSII = POSII + 1
         IF = FRERE(STEP(IF))
   300 CONTINUE
@@ -3105,7 +3122,10 @@ C
   330 CONTINUE
       CALL DMUMPS_242(DUMMY, 1, MPI_INTEGER, MYID, COMM, TERREUR,
      * SLAVEF)
-  340 RETURN
+  340 CONTINUE
+      CALL DMUMPS_150( MYID,COMM,BUFR,
+     *                            LBUFR,LBUFR_BYTES )
+      RETURN
       END SUBROUTINE DMUMPS_249
       RECURSIVE SUBROUTINE DMUMPS_41(
      *     BLOQ, FLAG,

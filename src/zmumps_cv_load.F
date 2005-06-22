@@ -1,12 +1,12 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.4.2
-C   This Version was built on Mon May 23 09:41:55 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
+C   This Version was built on Fri Jul 22 15:57:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  european project PARASOL (1996-1999). It has been partially supported
-C  by the European Community, and by CERFACS, ENSEEIHT-IRIT, INRIA
-C  Rhone-Alpes, and LBNL.
+C  European project PARASOL (1996-1999). 
+C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
+C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -38,11 +38,11 @@ C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Submitted to Parallel Computing.
+C   of linear systems. Accepted to Parallel Computing.
 C
       MODULE ZMUMPS_LOAD
       implicit none
-      PRIVATE
+!      PRIVATE
       PUBLIC :: ZMUMPS_188, ZMUMPS_185,
      *       ZMUMPS_189,
      *       ZMUMPS_184, ZMUMPS_190,
@@ -57,8 +57,7 @@ C
      *       ZMUMPS_520,
      *       ZMUMPS_513,
      *       ZMUMPS_514, ZMUMPS_512
-     *       ,ZMUMPS_533
-     *       ,ZMUMPS_FORCE_5,
+     *       ,ZMUMPS_533,
      $       CLEAN_POOL_MEM_INFO,COMPUTE_MAX_MEM,
      $       CHECK_MEM_CONST_FOR_POOL,ZMUMPS_554,
      $       ZMUMPS_553,
@@ -67,81 +66,101 @@ C
      *       ,ZMUMPS_LOAD_UPDATE_MD_INFO
 #endif
       DOUBLE PRECISION, DIMENSION(:),
-     *       ALLOCATABLE, SAVE :: LOAD_FLOPS
-      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: BUF_LOAD_RECV
-      INTEGER, SAVE :: LBUF_LOAD_RECV, LBUF_LOAD_RECV_BYTES
-      INTEGER, SAVE :: K50, K69, K35
-      LOGICAL, SAVE :: BDC_MEM, BDC_POOL, BDC_SBTR, BDC_POOL_MNG,
+     *       ALLOCATABLE, SAVE, PRIVATE :: LOAD_FLOPS
+      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PRIVATE :: BUF_LOAD_RECV
+      INTEGER, SAVE, PRIVATE :: LBUF_LOAD_RECV, LBUF_LOAD_RECV_BYTES
+      INTEGER, SAVE, PRIVATE :: K50, K69, K35
+      LOGICAL, SAVE, PRIVATE :: BDC_MEM, BDC_POOL, BDC_SBTR, 
+     $     BDC_POOL_MNG,
      $     BDC_M2_MEM,BDC_M2_FLOPS,BDC_MD,REMOVE_NODE_FLAG,
      $     REMOVE_NODE_FLAG_MEM
-      DOUBLE PRECISION, SAVE :: REMOVE_NODE_COST,REMOVE_NODE_COST_MEM
-      INTEGER, SAVE :: SBTR_WHICH_M
+      DOUBLE PRECISION, SAVE, PRIVATE :: REMOVE_NODE_COST,
+     $     REMOVE_NODE_COST_MEM
+      INTEGER, SAVE, PRIVATE :: SBTR_WHICH_M
       DOUBLE PRECISION, DIMENSION(:),
-     *       ALLOCATABLE, TARGET, SAVE :: WLOAD
+     *       ALLOCATABLE, TARGET, SAVE, PRIVATE :: WLOAD
 #if defined(OLD_LOAD_MECHANISM)
 #if defined (CHECK_COHERENCE) 
-      INTEGER, SAVE :: NB_LEVEL2
-      LOGICAL AMI_CHOSEN,IS_DISPLAYED
+      INTEGER, SAVE, PRIVATE :: NB_LEVEL2
+      LOGICAL, PRIVATE :: AMI_CHOSEN,IS_DISPLAYED
 #endif
 #endif
 #if ! defined(OLD_LOAD_MECHANISM)
-      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: FUTURE_NIV2
-      DOUBLE PRECISION, SAVE :: DELTA_LOAD, DELTA_MEM
+      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PRIVATE :: FUTURE_NIV2
+      DOUBLE PRECISION, SAVE, PRIVATE :: DELTA_LOAD, DELTA_MEM
 #else
-      DOUBLE PRECISION, SAVE :: LAST_LOAD_SENT, DM_LAST_MEM_SENT
+      DOUBLE PRECISION, SAVE, PRIVATE :: LAST_LOAD_SENT, 
+     $           DM_LAST_MEM_SENT
 #endif
-      INTEGER, SAVE :: CHECK_MEM
-      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, TARGET :: IDWLOAD
-      DOUBLE PRECISION, SAVE :: COST_SUBTREE
-      DOUBLE PRECISION, SAVE :: ALPHA
-      DOUBLE PRECISION, SAVE :: BETA
-      INTEGER, SAVE :: MYID, NPROCS, COMM_LD
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE :: POOL_MEM
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE :: SBTR_MEM
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE :: SBTR_CUR
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE :: NB_SON
-      DOUBLE PRECISION, SAVE :: SBTR_CUR_LOCAL
-      DOUBLE PRECISION, SAVE :: PEAK_SBTR_CUR_LOCAL
-      DOUBLE PRECISION, SAVE :: MAX_PEAK_STK
-      DOUBLE PRECISION, SAVE :: POOL_LAST_COST_SENT
-      DOUBLE PRECISION, SAVE :: MIN_DIFF
+      INTEGER, SAVE, PRIVATE :: CHECK_MEM
+      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, TARGET, PRIVATE :: 
+     $          IDWLOAD
+      DOUBLE PRECISION, SAVE, PRIVATE :: COST_SUBTREE
+      DOUBLE PRECISION, SAVE, PRIVATE :: ALPHA
+      DOUBLE PRECISION, SAVE, PRIVATE :: BETA
+      INTEGER, SAVE, PRIVATE :: MYID, NPROCS, COMM_LD
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE, 
+     $           PRIVATE :: POOL_MEM
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, PRIVATE, 
+     $           SAVE :: SBTR_MEM
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, 
+     $           PRIVATE, SAVE :: SBTR_CUR
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, 
+     $           PRIVATE, SAVE :: NB_SON
+      DOUBLE PRECISION, 
+     $           PRIVATE, SAVE :: SBTR_CUR_LOCAL
+      DOUBLE PRECISION, 
+     $           PRIVATE, SAVE :: PEAK_SBTR_CUR_LOCAL
+      DOUBLE PRECISION, 
+     $           PRIVATE, SAVE :: MAX_PEAK_STK
+      DOUBLE PRECISION, SAVE, 
+     $           PRIVATE :: POOL_LAST_COST_SENT
+      DOUBLE PRECISION, SAVE, 
+     $           PRIVATE :: MIN_DIFF
       INTEGER, SAVE :: POS_ID,POS_MEM
       INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: CB_COST_ID
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE :: CB_COST_MEM
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE, SAVE
+     $           :: CB_COST_MEM
       PUBLIC :: CB_COST_ID, CB_COST_MEM,POS_MEM,POS_ID
-      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::MD_MEM,LU_USAGE,
+      INTEGER, DIMENSION(:), ALLOCATABLE, SAVE,
+     $        PRIVATE::MD_MEM,LU_USAGE,
      $                       TAB_MAXS
       INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::MEM_SUBTREE
-      INTEGER NB_SUBTREES,NIV1_FLAG
-      INTEGER INDICE_SBTR,INDICE_SBTR_ARRAY
-      INTEGER INSIDE_SUBTREE
+      INTEGER  :: NB_SUBTREES,NIV1_FLAG
+      INTEGER, PRIVATE  :: INDICE_SBTR,INDICE_SBTR_ARRAY
+      INTEGER,SAVE :: INSIDE_SUBTREE
       PUBLIC :: NB_SUBTREES,MEM_SUBTREE,INSIDE_SUBTREE,NIV1_FLAG
-      DOUBLE PRECISION, SAVE :: DM_SUMLU,
+      DOUBLE PRECISION, SAVE, PRIVATE :: DM_SUMLU,
      *                   DM_THRES_MEM
       DOUBLE PRECISION, DIMENSION(:),
-     *   ALLOCATABLE, SAVE :: DM_MEM
-      INTEGER, SAVE :: POOL_SIZE,ID_MAX_M2
-      DOUBLE PRECISION, SAVE :: MAX_M2,TMP_M2
-      INTEGER, DIMENSION(:),ALLOCATABLE,SAVE:: POOL_NIV2
-      DOUBLE PRECISION, DIMENSION(:),ALLOCATABLE,SAVE:: POOL_NIV2_COST,
-     $     NIV2
-      DOUBLE PRECISION, SAVE ::      CHK_LD
-      INTEGER, DIMENSION(:),POINTER, SAVE :: KEEP_LOAD, PROCNODE_LOAD,
-     *                                       FILS_LOAD, STEP_LOAD,
-     *                                       FRERE_LOAD, ND_LOAD,
-     $                                       NE_LOAD,STEP_TO_NIV2_LOAD
-      INTEGER, DIMENSION(:,:),POINTER, SAVE :: CAND_LOAD
-      INTEGER, DIMENSION(:),POINTER, SAVE :: MY_FIRST_LEAF,MY_NB_LEAF,
-     $     MY_ROOT_SBTR
-      INTEGER, DIMENSION(:),ALLOCATABLE,SAVE::SBTR_FIRST_POS_IN_POOL
-      DOUBLE PRECISION, DIMENSION(:),ALLOCATABLE,SAVE::SBTR_PEAK_ARRAY,
+     *   ALLOCATABLE, SAVE , PRIVATE:: DM_MEM
+      INTEGER, SAVE, PRIVATE :: POOL_SIZE,ID_MAX_M2
+      DOUBLE PRECISION, SAVE, PRIVATE :: MAX_M2,TMP_M2
+      INTEGER, DIMENSION(:),ALLOCATABLE,SAVE, PRIVATE:: POOL_NIV2
+      DOUBLE PRECISION, DIMENSION(:),ALLOCATABLE,SAVE, 
+     $      PRIVATE :: POOL_NIV2_COST, NIV2
+      DOUBLE PRECISION, SAVE, PRIVATE  ::      CHK_LD
+      INTEGER, DIMENSION(:),POINTER, SAVE, PRIVATE  :: 
+     $         KEEP_LOAD, PROCNODE_LOAD, STEP_TO_NIV2_LOAD
+       INTEGER, DIMENSION(:),POINTER, SAVE :: 
+     *         FILS_LOAD, STEP_LOAD,
+     *         FRERE_LOAD, ND_LOAD,
+     $         NE_LOAD
+      INTEGER, DIMENSION(:,:),POINTER, SAVE, PRIVATE :: CAND_LOAD
+      INTEGER, DIMENSION(:),POINTER, SAVE, 
+     $         PRIVATE :: MY_FIRST_LEAF,MY_NB_LEAF, MY_ROOT_SBTR
+      INTEGER, DIMENSION(:),ALLOCATABLE,SAVE, 
+     $         PRIVATE ::SBTR_FIRST_POS_IN_POOL
+      DOUBLE PRECISION, DIMENSION(:),ALLOCATABLE,SAVE, 
+     $         PRIVATE ::SBTR_PEAK_ARRAY,
      $     SBTR_CUR_ARRAY
-      INTEGER, SAVE :: N_LOAD
+      INTEGER, SAVE, 
+     $         PRIVATE :: N_LOAD
       DOUBLE PRECISION,DIMENSION(:),POINTER, SAVE :: COST_TRAV
       INTEGER, DIMENSION(:),POINTER, SAVE :: DEPTH_FIRST_LOAD
       PUBLIC :: DEPTH_FIRST_LOAD,COST_TRAV, FILS_LOAD,STEP_LOAD,
      $     FRERE_LOAD, ND_LOAD,NE_LOAD
-      INTEGER, SAVE :: ROOT_CURRENT_SUBTREE,CURRENT_BEST,
+      INTEGER, SAVE     :: ROOT_CURRENT_SUBTREE,CURRENT_BEST,
      $     SECOND_CURRENT_BEST
       PUBLIC :: ROOT_CURRENT_SUBTREE,CURRENT_BEST,
      $     SECOND_CURRENT_BEST
@@ -281,59 +300,33 @@ C
       ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_499
-      SUBROUTINE ZMUMPS_185( COMM_LD_ARG,
-     *                            SYM_ARG, KEEP, NSTEPS,
-     *                            MEM_DISTRIB,SIZE_COMM_LD,
-     *                            INFO 
-     *                            ,MEM_SUB,NB_SUB
-#if ! defined(OLD_LOAD_MECHANISM)
-     *                            ,FUTURE_NIV2_ARG
-#endif
-     *  ,FILS,ND,PROCNODE,STEP,NE,N,FRERE
-     $    ,MEMORY_MD,la,MAX_SURF_MASTER,DEPTH_FIRST,SIZE_DEPTH_FIRST,
-     $     COST_TRAV_ARG,CANDIDATES,STEP_TO_NIV2,
-     $     MY_FIRST_LEAF_ARG,MY_NB_LEAF_ARG,MY_ROOT_SBTR_ARG
-     $)
+      SUBROUTINE ZMUMPS_185( id )
       USE ZMUMPS_BUFFER
       IMPLICIT NONE
-      INTEGER COMM_LD_ARG, NSTEPS,
-     *        INFO(40), SYM_ARG
-      INTEGER SIZE_COMM_LD
-      INTEGER, DIMENSION(0:SIZE_COMM_LD - 1) :: MEM_DISTRIB
-      INTEGER N,SIZE_DEPTH_FIRST
-      INTEGER, DIMENSION (:), TARGET :: KEEP
-      INTEGER, DIMENSION (NSTEPS), TARGET :: FRERE, NE,
-     *                        PROCNODE, ND
-      INTEGER, DIMENSION (N), TARGET :: FILS, STEP
-      INTEGER, DIMENSION (SIZE_DEPTH_FIRST), TARGET :: DEPTH_FIRST
-      DOUBLE PRECISION, DIMENSION(SIZE_DEPTH_FIRST), TARGET ::
-     $     COST_TRAV_ARG
-      INTEGER, DIMENSION(SIZE_COMM_LD+1, MAX(1,KEEP(56))),TARGET ::
-     $     CANDIDATES
-      INTEGER, DIMENSION(KEEP(71)), TARGET :: STEP_TO_NIV2
-      INTEGER NB_SUB,MEM_SUB(MAX(1,NB_SUB))
-      INTEGER, DIMENSION (MAX(1,NB_SUB)), TARGET :: MY_FIRST_LEAF_ARG,
-     $     MY_NB_LEAF_ARG,MY_ROOT_SBTR_ARG
-#if ! defined(OLD_LOAD_MECHANISM)
-      INTEGER  FUTURE_NIV2_ARG(SIZE_COMM_LD)
-#endif
+      INCLUDE 'zmumps_struc.h'
+      TYPE(ZMUMPS_STRUC), TARGET, intent(INOUT) :: id
       INTEGER K34_LOC,K35_LOC
       INTEGER allocok, IERR, I, BUF_LOAD_SIZE
       INTEGER MAX_SBTR
       DOUBLE PRECISION ZERO
+      INTEGER,DIMENSION(:),POINTER:: KEEP
       PARAMETER( ZERO=0.0 )
       INTEGER MEMORY_MD,la,WHAT,MAX_SURF_MASTER
-      STEP_TO_NIV2_LOAD=>STEP_TO_NIV2
-      CAND_LOAD=>CANDIDATES
-      ND_LOAD=>ND
-      KEEP_LOAD=>KEEP
-      FILS_LOAD=>FILS
-      FRERE_LOAD=>FRERE
-      PROCNODE_LOAD=>PROCNODE
-      STEP_LOAD=>STEP
-      NE_LOAD=>NE
-      N_LOAD=N
+      STEP_TO_NIV2_LOAD=>id%ISTEP_TO_INIV2
+      CAND_LOAD=>id%CANDIDATES
+      ND_LOAD=>id%ND_STEPS
+      KEEP_LOAD=>id%KEEP
+      KEEP     =>id%KEEP
+      FILS_LOAD=>id%FILS
+      FRERE_LOAD=>id%FRERE_STEPS
+      PROCNODE_LOAD=>id%PROCNODE_STEPS
+      STEP_LOAD=>id%STEP
+      NE_LOAD=>id%NE_STEPS
+      N_LOAD=id%N
       ROOT_CURRENT_SUBTREE=-9999
+      MEMORY_MD=id%MEMORY_MD
+      la=id%MAXS
+      MAX_SURF_MASTER=id%MAX_SURF_MASTER
       K69  = KEEP(69)
       IF ( KEEP(47) .le. 0 .OR. KEEP(47) .gt. 4 ) THEN
         write(*,*) "Internal error 1 in ZMUMPS_185"
@@ -368,28 +361,28 @@ C
       ENDIF
       BDC_POOL_MNG = ((KEEP(81) == 1).AND.(KEEP(47) >= 2))
       IF(KEEP(76).EQ.4)THEN
-         DEPTH_FIRST_LOAD=>DEPTH_FIRST
+         DEPTH_FIRST_LOAD=>id%DEPTH_FIRST
       ENDIF
       IF(KEEP(76).EQ.5)THEN
-         COST_TRAV=>COST_TRAV_ARG
+         COST_TRAV=>id%COST_TRAV
       ENDIF
       IF (BDC_M2_MEM.OR.BDC_M2_FLOPS) THEN
-         ALLOCATE(NIV2(SIZE_COMM_LD), NB_SON(KEEP(28)),
+         ALLOCATE(NIV2(id%NSLAVES), NB_SON(KEEP(28)),
      $            POOL_NIV2(100),POOL_NIV2_COST(100),
      $            stat=allocok)
-         NB_SON=NE
+         NB_SON=id%NE_STEPS
          NIV2=0
          IF (allocok > 0) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = SIZE_COMM_LD + KEEP(28) + 200
+           id%INFO(1) = -13
+           id%INFO(2) = id%NSLAVES + KEEP(28) + 200
            RETURN
          ENDIF
       ENDIF
-      K50      = SYM_ARG
-      COMM_LD = COMM_LD_ARG
+      K50      = id%SYM
+      COMM_LD = id%COMM_LOAD
       CALL MPI_COMM_RANK( COMM_LD, MYID, IERR )
-      NPROCS = SIZE_COMM_LD
+      NPROCS = id%NSLAVES
       DM_SUMLU=ZERO
       POOL_SIZE=0
       IF(BDC_MD)THEN
@@ -397,16 +390,16 @@ C
          ALLOCATE( MD_MEM( 0: NPROCS - 1 ), stat=allocok )
          IF ( allocok .gt. 0 ) THEN
             WRITE(*,*) 'PB allocation in ZMUMPS_185'
-            INFO(1) = -13
-            INFO(2) = NPROCS
+            id%INFO(1) = -13
+            id%INFO(2) = NPROCS
             RETURN
          END IF
          IF ( ALLOCATED(TAB_MAXS) ) DEALLOCATE(TAB_MAXS)
          ALLOCATE( TAB_MAXS( 0: NPROCS - 1 ), stat=allocok )
          IF ( allocok .gt. 0 ) THEN
             WRITE(*,*) 'PB allocation in ZMUMPS_185'
-            INFO(1) = -13
-            INFO(2) = NPROCS
+            id%INFO(1) = -13
+            id%INFO(2) = NPROCS
             RETURN
          END IF
          TAB_MAXS=0
@@ -414,20 +407,20 @@ C
          ALLOCATE( LU_USAGE( 0: NPROCS - 1 ), stat=allocok )
          IF ( allocok .gt. 0 ) THEN
             WRITE(*,*) 'PB allocation in ZMUMPS_185'
-            INFO(1) = -13
-            INFO(2) = NPROCS
+            id%INFO(1) = -13
+            id%INFO(2) = NPROCS
             RETURN
          END IF
          LU_USAGE=DBLE(0)
          MD_MEM=DBLE(0)
       ENDIF
       IF((KEEP(81).EQ.2).OR.(KEEP(81).EQ.3))THEN
-         ALLOCATE(CB_COST_MEM(2*2000*SIZE_COMM_LD), 
+         ALLOCATE(CB_COST_MEM(2*2000*id%NSLAVES), 
      $            stat=allocok)
          IF (allocok > 0) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = SIZE_COMM_LD 
+           id%INFO(1) = -13
+           id%INFO(2) = id%NSLAVES 
            RETURN
          ENDIF
          CB_COST_MEM=DBLE(0)
@@ -435,8 +428,8 @@ C
      $            stat=allocok)
          IF (allocok > 0) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = SIZE_COMM_LD 
+           id%INFO(1) = -13
+           id%INFO(2) = id%NSLAVES 
            RETURN
          ENDIF
          CB_COST_ID=0
@@ -447,12 +440,12 @@ C
       ALLOCATE(FUTURE_NIV2(NPROCS), stat=allocok)
       IF (allocok > 0 ) THEN
          WRITE(*,*) 'PB allocation in ZMUMPS_185'
-         INFO(1) = -13
-         INFO(2) = NPROCS
+         id%INFO(1) = -13
+         id%INFO(2) = NPROCS
          RETURN
       ENDIF
       DO I = 1, NPROCS
-        FUTURE_NIV2(I) = FUTURE_NIV2_ARG(I)
+        FUTURE_NIV2(I) = id%FUTURE_NIV2(I)
         IF(BDC_MD)THEN
            IF(FUTURE_NIV2(I).EQ.0)THEN
               MD_MEM(I-1)=999999999
@@ -471,26 +464,26 @@ C
 #endif
 #endif
       IF(BDC_SBTR.OR.BDC_POOL_MNG)THEN
-         NB_SUBTREES=NB_SUB
+         NB_SUBTREES=id%NBSA_LOCAL
          IF (ALLOCATED(MEM_SUBTREE)) DEALLOCATE(MEM_SUBTREE)
-         ALLOCATE(MEM_SUBTREE(NB_SUB),stat=allocok)
-         DO I=1,NB_SUB
-            MEM_SUBTREE(I)=MEM_SUB(I)
+         ALLOCATE(MEM_SUBTREE(id%NBSA_LOCAL),stat=allocok)
+         DO I=1,id%NBSA_LOCAL
+            MEM_SUBTREE(I)=id%MEM_SUBTREE(I)
          ENDDO
-         MY_FIRST_LEAF=>MY_FIRST_LEAF_ARG
-         MY_NB_LEAF=>MY_NB_LEAF_ARG
-         MY_ROOT_SBTR=>MY_ROOT_SBTR_ARG
+         MY_FIRST_LEAF=>id%MY_FIRST_LEAF
+         MY_NB_LEAF=>id%MY_NB_LEAF
+         MY_ROOT_SBTR=>id%MY_ROOT_SBTR
          IF (ALLOCATED(SBTR_FIRST_POS_IN_POOL))
      $        DEALLOCATE(SBTR_FIRST_POS_IN_POOL)
-         ALLOCATE(SBTR_FIRST_POS_IN_POOL(NB_SUB),stat=allocok)
+         ALLOCATE(SBTR_FIRST_POS_IN_POOL(id%NBSA_LOCAL),stat=allocok)
          INSIDE_SUBTREE=0
          PEAK_SBTR_CUR_LOCAL = DBLE(0)
          SBTR_CUR_LOCAL      = DBLE(0)
          IF (ALLOCATED(SBTR_PEAK_ARRAY)) DEALLOCATE(SBTR_PEAK_ARRAY)
-         ALLOCATE(SBTR_PEAK_ARRAY(NB_SUB),stat=allocok)
+         ALLOCATE(SBTR_PEAK_ARRAY(id%NBSA_LOCAL),stat=allocok)
          SBTR_PEAK_ARRAY=DBLE(0)
          IF (ALLOCATED(SBTR_CUR_ARRAY)) DEALLOCATE(SBTR_CUR_ARRAY)
-         ALLOCATE(SBTR_CUR_ARRAY(NB_SUB),stat=allocok)
+         ALLOCATE(SBTR_CUR_ARRAY(id%NBSA_LOCAL),stat=allocok)
          SBTR_CUR_ARRAY=DBLE(0)
          INDICE_SBTR_ARRAY=1
          NIV1_FLAG=0
@@ -500,24 +493,24 @@ C
       ALLOCATE( LOAD_FLOPS( 0: NPROCS - 1 ), stat=allocok )
       IF ( allocok .gt. 0 ) THEN
          WRITE(*,*) 'PB allocation in ZMUMPS_185'
-         INFO(1) = -13
-         INFO(2) = NPROCS
+         id%INFO(1) = -13
+         id%INFO(2) = NPROCS
          RETURN
       END IF
       IF ( ALLOCATED(WLOAD) ) DEALLOCATE( WLOAD )
       ALLOCATE( WLOAD( NPROCS ), stat=allocok )
       IF ( allocok .gt. 0 ) THEN
          WRITE(*,*) 'PB allocation in ZMUMPS_185'
-         INFO(1) = -13
-         INFO(2) = NPROCS
+         id%INFO(1) = -13
+         id%INFO(2) = NPROCS
          RETURN
       END IF
       IF ( ALLOCATED(IDWLOAD) ) DEALLOCATE( IDWLOAD )
       ALLOCATE( IDWLOAD( NPROCS ), stat=allocok )
       IF ( allocok .gt. 0 ) THEN
          WRITE(*,*) 'PB allocation in ZMUMPS_185'
-         INFO(1) = -13
-         INFO(2) = NPROCS
+         id%INFO(1) = -13
+         id%INFO(2) = NPROCS
          RETURN
       END IF
       IF ( BDC_MEM ) THEN
@@ -525,8 +518,8 @@ C
         ALLOCATE( DM_MEM( 0:NPROCS-1 ), stat=allocok )
         IF ( allocok .gt. 0 ) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = NPROCS
+           id%INFO(1) = -13
+           id%INFO(2) = NPROCS
            RETURN
         END IF
       END IF
@@ -535,8 +528,8 @@ C
         ALLOCATE( POOL_MEM(0: NPROCS -1), stat=allocok)
         IF ( allocok .gt. 0 ) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = NPROCS
+           id%INFO(1) = -13
+           id%INFO(2) = NPROCS
            RETURN
         END IF
         POOL_MEM = DBLE(0) ! Array instruction
@@ -547,16 +540,16 @@ C
         ALLOCATE( SBTR_MEM(0: NPROCS -1), stat=allocok)
         IF ( allocok .gt. 0 ) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = NPROCS
+           id%INFO(1) = -13
+           id%INFO(2) = NPROCS
            RETURN
         END IF
         IF ( ALLOCATED(SBTR_CUR) ) DEALLOCATE(SBTR_CUR)
         ALLOCATE( SBTR_CUR(0: NPROCS -1), stat=allocok)
         IF ( allocok .gt. 0 ) THEN
            WRITE(*,*) 'PB allocation in ZMUMPS_185'
-           INFO(1) = -13
-           INFO(2) = NPROCS
+           id%INFO(1) = -13
+           id%INFO(2) = NPROCS
            RETURN
         END IF
         SBTR_CUR = DBLE(0) ! Array instruction
@@ -578,15 +571,15 @@ C
       ALLOCATE( BUF_LOAD_RECV( LBUF_LOAD_RECV), stat=allocok)
       IF ( allocok > 0 ) THEN
         WRITE(*,*) 'PB allocation in ZMUMPS_185'
-        INFO(1) = -13
-        INFO(2) = LBUF_LOAD_RECV
+        id%INFO(1) = -13
+        id%INFO(2) = LBUF_LOAD_RECV
         RETURN
       ENDIF 
       BUF_LOAD_SIZE = BUF_LOAD_SIZE * 20
       CALL ZMUMPS_54( BUF_LOAD_SIZE, IERR )
       IF ( IERR .LT. 0 ) THEN
-         INFO(1) = -13
-         INFO(2) = BUF_LOAD_SIZE
+         id%INFO(1) = -13
+         id%INFO(2) = BUF_LOAD_SIZE
          RETURN
       END IF
       DO I = 0, NPROCS - 1
@@ -608,8 +601,8 @@ C
       IF(BDC_MD)THEN
          MAX_SBTR=DBLE(0)
          IF(BDC_SBTR)THEN
-            DO I=1,NB_SUB
-               MAX_SBTR=MAX(MEM_SUB(I),MAX_SBTR)
+            DO I=1,id%NBSA_LOCAL
+               MAX_SBTR=MAX(id%MEM_SUBTREE(I),MAX_SBTR)
             ENDDO
          ENDIF
          MD_MEM(MYID)=MEMORY_MD
@@ -1022,6 +1015,9 @@ C
          DEALLOCATE(SBTR_CUR_ARRAY)
       ENDIF
       CALL ZMUMPS_58( IERR )
+      CALL ZMUMPS_150( MYID, COMM_LD,
+     *     BUF_LOAD_RECV, LBUF_LOAD_RECV,
+     *     LBUF_LOAD_RECV_BYTES )
       DEALLOCATE(BUF_LOAD_RECV)
       END SUBROUTINE ZMUMPS_183
 #if defined (LAMPORT_)
@@ -2441,1789 +2437,6 @@ C
              CALL ZMUMPS_ABORT()
            ENDIF
       END SUBROUTINE ZMUMPS_504
-      SUBROUTINE ZMUMPS_SET_PARTI_FLOP_IRR_O
-     &      (SLAVEF,KEEP,PROCS,MEM_DISTRIB,NCB,NFRONT,
-     $       NSLAVES_NODE,TAB_POS,
-     $       SLAVES_LIST,SIZE_SLAVES_LIST,MYID)
-      IMPLICIT NONE
-      INTEGER, intent(in) :: KEEP(150),SIZE_SLAVES_LIST
-      INTEGER, intent(in) :: SLAVEF, NFRONT, NCB,MYID
-      INTEGER, intent(in) :: PROCS(SLAVEF+1)
-      INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1)
-      INTEGER, intent(out):: SLAVES_LIST(SIZE_SLAVES_LIST)
-      INTEGER, intent(out):: TAB_POS(SLAVEF+2)
-      INTEGER, intent(out):: NSLAVES_NODE
-      INTEGER NUMBER_OF_PROCS,K47,K10, K48, K50,K83,K69
-      INTEGER J, NSLAVES, NSLAVES_REAL, ISLAVE
-      INTEGER KMIN, KMAX, BLSIZE, NPIV,
-     *        KMINSURF, NSLAVES_max
-      DOUBLE PRECISION WK_MASTER, WK_SLAVE
-      DOUBLE PRECISION  ZMUMPS_45
-      EXTERNAL ZMUMPS_45
-      INTEGER OTHERS,CHOSEN,SMALL_SET,ACC
-      DOUBLE PRECISION SOMME,AFFECTED,DELTA,A,B,C,MASTER_WORK
-      INTEGER ADDITIONNAL_ROWS,BLOCK_SIZE,I,X,REF,POS,NELIM
-      LOGICAL force_cand,SMP
-      INTEGER BANDE_K10
-      DOUBLE PRECISION TEMP(SLAVEF),SUB(SLAVEF),PEAK,TOTAL_COST,
-     $     MAX_MEM_ALLOW,MAX_FLOPS_ALLOW
-      INTEGER TEMP_ID(SLAVEF),NB_ROWS(SLAVEF),M2(SLAVEF),
-     $     NB_ROWS_SMP(SLAVEF)!,MIN_GRAN
-      INTEGER NSLAVES_REF
-      EXTERNAL MPI_WTIME,ZMUMPS_442
-      INTEGER ZMUMPS_442
-      INTEGER POS_MIN_LOAD,SIZE_MY_SMP,WHAT
-      DOUBLE PRECISION MIN_LOAD,MAX_LOAD,TEMP_MAX_LOAD
-      DOUBLE PRECISION MPI_WTIME
-      DOUBLE PRECISION BUF_SIZE,MEM_SIZE(SLAVEF),NELIM_MEM_SIZE
-      K10=ABS(KEEP(10))
-      TEMP_MAX_LOAD=DBLE(0)
-      K50=KEEP(50)
-      K48=KEEP(48)
-      K47=KEEP(47)
-      K83=KEEP(83)
-      K69=KEEP(69)
-      SMP=(K69.NE.0)
-      IF ( KEEP(24) == 0 .OR. KEEP(24) == 1 ) THEN
-        force_cand = .FALSE.
-      ELSE
-        force_cand = (mod(KEEP(24),2).eq.0)
-      END IF
-      KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-      NELIM=NFRONT-NCB
-         KMAX=K10/NCB
-         IF(FORCE_CAND)THEN
-           DO I=1,PROCS(SLAVEF+1)
-              WLOAD(I)=LOAD_FLOPS(PROCS(I))
-              IDWLOAD(I)=PROCS(I)
-           ENDDO
-           NUMBER_OF_PROCS=PROCS(SLAVEF+1)
-            OTHERS=NUMBER_OF_PROCS
-         ELSE
-            NUMBER_OF_PROCS=SLAVEF
-            WLOAD(1:SLAVEF) = LOAD_FLOPS(0:NUMBER_OF_PROCS-1)
-            DO I=1,NUMBER_OF_PROCS
-               IDWLOAD(I) = I - 1
-            ENDDO
-            OTHERS=NUMBER_OF_PROCS-1
-         ENDIF
-         NB_ROWS=0
-         CALL ZMUMPS_558(NUMBER_OF_PROCS, WLOAD, IDWLOAD)
-         IF(K50.EQ.0)THEN
-            TOTAL_COST=DBLE( NELIM * NCB ) +
-     *           DBLE(NCB*NELIM)*DBLE(2*NFRONT-NELIM-1)
-         ELSE
-            TOTAL_COST=DBLE( NELIM * NCB ) *
-     *           DBLE(NFRONT+1)
-         ENDIF
-         CALL ZMUMPS_511(NFRONT,NELIM,NELIM,K50,
-     $        2,MASTER_WORK)
-         SOMME=0
-         J=1
-         IF(FORCE_CAND.AND.(NUMBER_OF_PROCS.GT.K83))THEN
-            MASTER_WORK=DBLE(KEEP(88))*MASTER_WORK/DBLE(100)
-         ENDIF
-         IF(FORCE_CAND.AND.(NUMBER_OF_PROCS.LE.K83))THEN
-            MASTER_WORK=DBLE(KEEP(87))*MASTER_WORK/DBLE(100)
-         ENDIF
-         NSLAVES_REF=INT(TOTAL_COST/MASTER_WORK)+1
-         NSLAVES_REF=MIN(NSLAVES_REF,NUMBER_OF_PROCS)
-        DO I=1,NUMBER_OF_PROCS
-           IF((IDWLOAD(I).NE.MYID))THEN
-              TEMP_ID(J)=IDWLOAD(I)
-              TEMP(J)=WLOAD(I)
-              IF(BDC_M2_FLOPS)THEN
-                 TEMP(J)=TEMP(J)+NIV2(TEMP_ID(J)+1)
-              ENDIF
-              J=J+1
-           ENDIF
-        ENDDO               
-        NUMBER_OF_PROCS=J-1
-        CALL ZMUMPS_558(NUMBER_OF_PROCS, TEMP, TEMP_ID)
-         SOMME=0
-         DO I=1,OTHERS
-            SOMME=SOMME+TEMP(OTHERS)-TEMP(I)
-         ENDDO
-         SIZE_MY_SMP=OTHERS
-         MIN_LOAD=TEMP(1)
-         POS_MIN_LOAD=1
-         IF(.NOT.SMP) MAX_LOAD=TEMP(OTHERS)
-         IF(SMP)THEN
-            J=1
-            DO I=1,OTHERS
-               IF(MEM_DISTRIB(TEMP_ID(I)).EQ.1)THEN
-                  WLOAD(J)=TEMP(I)
-                  IDWLOAD(J)=TEMP_ID(I)
-                  J=J+1
-               ENDIF
-            ENDDO
-            MAX_LOAD=WLOAD(J-1)
-            SIZE_MY_SMP=J-1
-            DO I=1,OTHERS
-               IF(MEM_DISTRIB(TEMP_ID(I)).NE.1)THEN
-                  WLOAD(J)=TEMP(I)
-                  IDWLOAD(J)=TEMP_ID(I)
-                  J=J+1
-               ENDIF
-            ENDDO
-            TEMP=WLOAD
-            TEMP_ID=IDWLOAD
-         ENDIF
-        IF(BDC_MD)THEN
-         BUF_SIZE=K10
-         DO I=1,NUMBER_OF_PROCS
-            A=DBLE(INT(MD_MEM(TEMP_ID(I))/
-     $           DBLE(NELIM)))
-            A=A*DBLE(NFRONT)
-            IF(K50.EQ.0)THEN
-               B=DBLE((INT(DBLE(NCB)/DBLE(NUMBER_OF_PROCS))+1)*
-     $              NFRONT)
-            ELSE
-               WHAT = 5 
-               x=OTHERS
-               CALL ZMUMPS_503(
-     &              WHAT, KEEP, NCB, NFRONT, x,
-     &              J, B )
-               B=B+DBLE(J*NELIM)
-            ENDIF
-            NELIM_MEM_SIZE=A+B
-            MEM_SIZE(I)=NELIM_MEM_SIZE
-            MEM_SIZE(I)=MIN(MEM_SIZE(I),
-     $           TAB_MAXS(TEMP_ID(I))-DM_MEM(TEMP_ID(I))-
-     $           LU_USAGE(TEMP_ID(I)))
-             IF(MEM_SIZE(I).LT.0)THEN
-                MEM_SIZE(I)=0
-             ENDIF
-          ENDDO
-       ENDIF
-         IF(TOTAL_COST.GE.SOMME) THEN
-            MAX_LOAD=MAX(MAX_LOAD,TEMP(OTHERS))
-            AFFECTED=0
-            CHOSEN=0
-            ACC=0
-            DO I=1,OTHERS
-               IF(K50.EQ.0)THEN
-                  X=INT(K10/(NCB+1))-1
-                  BANDE_K10=X*NFRONT
-               ELSE
-                  A=1
-                  B=DBLE(ACC+2)
-                  C=DBLE(-K10+ACC+NELIM)
-                  DELTA=(B*B)-(4*A*C)
-                  x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                  IF(X.GT.NCB-ACC) X=NCB-ACC
-                  BANDE_K10=x*(NELIM+ACC+x)
-               ENDIF
-               MAX_MEM_ALLOW=BANDE_K10
-               IF(BDC_MD)THEN
-                  MAX_MEM_ALLOW=MIN(MEM_SIZE(I),DBLE(BANDE_K10))
-                  MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-               ENDIF
-               IF(K50.EQ.0)THEN
-                  KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                  KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                  x=INT((MAX_LOAD-TEMP(I))/
-     $                 (NELIM*(2*NFRONT-NELIM)))
-                  IF(x.GT.KMAX)THEN
-                     x=KMAX
-                  ELSE
-                     IF(X.LT.KMIN)THEN
-                        X=0
-                     ENDIF
-                  ENDIF
-                  IF((ACC+X).GT.NCB) X=NCB-ACC
-               ENDIF
-               IF(K50.NE.0)THEN
-                  A=1
-                  B=ACC+NELIM
-                  C=DBLE(-MAX_MEM_ALLOW)
-                  DELTA=((B*B)-(4*A*C))
-                  KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                  KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                  A=DBLE(NELIM)
-                  B=DBLE(NELIM*(NELIM+2*ACC+1))
-                  C=-(MAX_LOAD-TEMP(I))
-                  DELTA=(B*B-(4*A*C))
-                  x=INT((-B+SQRT(DELTA))/(2*A))
-                  IF(X.LT.0) THEN
-                    WRITE(*,*)MYID,
-     *    ': Internal error 1 in ZMUMPS_518'
-                    CALL ZMUMPS_ABORT()
-                  ENDIF
-                  IF(x.GT.KMAX)THEN
-                     x=KMAX
-                  ELSE
-                     IF(X.LT.KMIN)THEN
-                        X=0
-                     ENDIF                    
-                  ENDIF
-                  IF((ACC+X).GT.NCB) X=NCB-ACC
-               ENDIF
-               NB_ROWS(I)=X
-               IF(SMP)THEN
-                  IF(MIN_LOAD.GT.TEMP(I))THEN
-                     MIN_LOAD=TEMP(I)
-                     POS_MIN_LOAD=I
-                  ENDIF
-               ENDIF
-               CHOSEN=CHOSEN+1
-               ACC=ACC+X
-               IF(NCB-ACC.LT.KMIN) GOTO 111
-               IF(NCB.EQ.ACC) GOTO 111
-            ENDDO
- 111        CONTINUE
-             IF((ACC.GT.NCB))THEN
-                X=0
-                DO I=1,OTHERS
-                  X=X+NB_ROWS(I)
-                ENDDO
-                WRITE(*,*)MYID,
-     *    ': Internal error 2 in ZMUMPS_518'
-                CALL ZMUMPS_ABORT()
-              ENDIF
-              IF((NCB.NE.ACC))THEN
-                 IF(K50.NE.0)THEN
-                    IF(CHOSEN.NE.0)THEN
-                       ADDITIONNAL_ROWS=NCB-ACC
-                       SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                      (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                       SOMME=SOMME/NUMBER_OF_PROCS
-                       NB_ROWS=0
-                       ACC=0
-                       IF(SMP)THEN
-                          MIN_LOAD=TEMP(1)
-                          POS_MIN_LOAD=1
-                       ENDIF
-                       CHOSEN=0
-                       DO I=1,OTHERS
-                          A=1
-                          B=DBLE(ACC+2)
-                          C=DBLE(-K10+ACC+NELIM)
-                          DELTA=(B*B)-(4*A*C)
-                          x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                          IF(X.GT.NCB-ACC) X=NCB-ACC
-                          BANDE_K10=x*(NELIM+ACC+x)
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                             A=1
-                             B=ACC+NELIM
-                             C=DBLE(-MAX_MEM_ALLOW)
-                             DELTA=((B*B)-(4*A*C))
-                             KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                          KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                          A=DBLE(NELIM)
-                          B=DBLE(NELIM*(NELIM+2*ACC+1))
-                          C=-(MAX_LOAD-TEMP(I)+SOMME)
-                          DELTA=(B*B-(4*A*C))
-                          x=INT((-B+SQRT(DELTA))/(2*A))
-                          IF(X.LT.0) THEN
-                             WRITE(*,*)MYID,
-     *            ': Internal error 3 in ZMUMPS_518'
-                             CALL ZMUMPS_ABORT()
-                          ENDIF
-                          IF(x.GT.KMAX)THEN
-                             x=KMAX
-                          ELSE
-                             IF(X.LT.KMIN)THEN
-                                X=0
-                             ENDIF
-                          ENDIF
-                          IF((ACC+X).GT.NCB) X=NCB-ACC
-                          NB_ROWS(I)=X
-                          CHOSEN=CHOSEN+1
-                          ACC=ACC+X
-                          IF(SMP)THEN
-                             IF(MIN_LOAD.GT.TEMP(I))THEN
-                                MIN_LOAD=TEMP(I)
-                                POS_MIN_LOAD=I
-                             ENDIF
-                          ENDIF
-                          IF(NCB.EQ.ACC) GOTO 098
-                          IF(NCB-ACC.LT.KMIN) GOTO 098
-                       ENDDO
- 098                   CONTINUE
-                       IF(ACC.NE.NCB)THEN
-                          ADDITIONNAL_ROWS=NCB-ACC
-                          SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                         (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                          SOMME=SOMME/NUMBER_OF_PROCS
-                          IF(SMP)THEN
-                             MIN_LOAD=TEMP(1)
-                             POS_MIN_LOAD=1
-                          ENDIF
-                          NB_ROWS=0
-                          ACC=0
-                          CHOSEN=0
-                          DO I=1,OTHERS
-                             A=1
-                             B=DBLE(ACC+2)
-                             C=DBLE(-K10+ACC+NELIM)
-                             DELTA=(B*B)-(4*A*C)
-                             x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                             IF(X.GT.NCB-ACC) X=NCB-ACC
-                             BANDE_K10=x*(NELIM+ACC+x)
-                             MAX_MEM_ALLOW=BANDE_K10
-                             IF(BDC_MD)THEN
-                                MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                               TAB_MAXS(TEMP_ID(I))-
-     $                               INT(DM_MEM(TEMP_ID(I)))-
-     $                               LU_USAGE(TEMP_ID(I)))
-                                MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                               MAX_MEM_ALLOW)
-                             ENDIF
-                             A=1
-                             B=ACC+NELIM
-                             C=DBLE(-MAX_MEM_ALLOW)
-                             DELTA=((B*B)-(4*A*C))
-                             KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                             A=DBLE(NELIM)
-                             B=DBLE(NELIM*(NELIM+2*ACC+1))
-                             C=-(MAX_LOAD-TEMP(I)+SOMME)
-                             DELTA=(B*B-(4*A*C))
-                             x=INT((-B+SQRT(DELTA))/(2*A))
-                             IF(X.LT.0) THEN
-                                WRITE(*,*)MYID,
-     *    ': Internal error 4 in ZMUMPS_518'
-                                CALL ZMUMPS_ABORT()
-                             ENDIF
-                             IF(x.GT.KMAX)THEN
-                                x=KMAX
-                             ELSE
-                                IF(X.LT.MAX(KMIN,KMAX))THEN
-                                    X=MIN(KMIN,KMAX)
-                                ENDIF
-                             ENDIF
-                             IF((ACC+X).GT.NCB) X=NCB-ACC
-                             NB_ROWS(I)=X
-                             CHOSEN=CHOSEN+1
-                             IF(SMP)THEN
-                                IF(MIN_LOAD.GT.TEMP(I))THEN
-                                   MIN_LOAD=TEMP(I)
-                                   POS_MIN_LOAD=I
-                                ENDIF
-                             ENDIF
-                             ACC=ACC+X
-                             IF(NCB.EQ.ACC) GOTO 475
-                             IF(NCB-ACC.LT.KMIN) GOTO 475
-                          ENDDO
- 475                      CONTINUE
-                       ENDIF
-                       IF(ACC.NE.NCB)THEN
-                          ACC=0
-                          CHOSEN=0
-                          IF(SMP)THEN
-                             MIN_LOAD=TEMP(1)
-                             POS_MIN_LOAD=1
-                          ENDIF
-                          DO I=1,OTHERS
-                             A=1
-                             B=DBLE(ACC+2)
-                             C=DBLE(-K10+ACC+NELIM)
-                             DELTA=(B*B)-(4*A*C)
-                             x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                             IF(X.GT.NCB-ACC) X=NCB-ACC
-                             BANDE_K10=x*(NELIM+ACC+x)
-                             MAX_MEM_ALLOW=BANDE_K10
-                             IF(BDC_MD)THEN
-                                MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                               TAB_MAXS(TEMP_ID(I))-
-     $                               INT(DM_MEM(TEMP_ID(I)))-
-     $                               LU_USAGE(TEMP_ID(I)))
-                                MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                               MAX_MEM_ALLOW)
-                             ENDIF
-                             A=1
-                             B=ACC+NELIM
-                             C=DBLE(-MAX_MEM_ALLOW)
-                             DELTA=((B*B)-(4*A*C))
-                             KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                             KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                             X=KMAX-NB_ROWS(I)
-                             IF((ACC+NB_ROWS(I)+X).GT.NCB)
-     $                            X=NCB-(ACC+NB_ROWS(I))
-                             NB_ROWS(I)=NB_ROWS(I)+X
-                             ACC=ACC+NB_ROWS(I)
-                             IF(SMP)THEN
-                                IF(MIN_LOAD.GT.TEMP(I))THEN
-                                   MIN_LOAD=TEMP(I)
-                                   POS_MIN_LOAD=I
-                                ENDIF
-                             ENDIF
-                             CHOSEN=CHOSEN+1
-                             IF(NCB.EQ.ACC) GOTO 068
-                             IF(NCB-ACC.LT.KMIN) GOTO 068
-                          ENDDO
- 068                      CONTINUE
-                          IF(ACC.LT.NCB)THEN
-                             ADDITIONNAL_ROWS=NCB-ACC
-                             SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                            (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                             SOMME=SOMME/NUMBER_OF_PROCS
-                             ACC=0
-                             DO I=1,CHOSEN
-                                A=DBLE(NELIM)
-                                B=DBLE(NELIM*
-     $                               (NELIM+2*(ACC+NB_ROWS(I))+1))
-                                C=-(SOMME)
-                                DELTA=(B*B-(4*A*C))
-                                x=INT((-B+SQRT(DELTA))/(2*A))
-                                IF(X.LT.0) THEN
-                                   WRITE(*,*)MYID,
-     *    ': Internal error 5 in ZMUMPS_518'
-                                   CALL ZMUMPS_ABORT()
-                                ENDIF
-                                IF((ACC+X+NB_ROWS(I)).GT.NCB)THEN
-                                   NB_ROWS(I)=NCB-ACC
-                                ELSE
-                                   NB_ROWS(I)=NB_ROWS(I)+X
-                                ENDIF
-                                ACC=ACC+NB_ROWS(I)
-                                IF(NCB.EQ.ACC) THEN
-                                   CHOSEN=I
-                                   GOTO 333
-                                ENDIF
-                                IF(NCB-ACC.LT.KMIN) THEN
-                                   CHOSEN=I
-                                   GOTO 006
-                                ENDIF
-                             ENDDO
- 006                         CONTINUE
-                             DO I=1,CHOSEN
-                                NB_ROWS(I)=NB_ROWS(I)+1
-                                ACC=ACC+1
-                                IF(ACC.EQ.NCB)GOTO 333
-                             ENDDO
-                             IF(ACC.LT.NCB)THEN
-                                IF(.NOT.SMP)THEN
-                                   NB_ROWS(1)=NB_ROWS(1)+NCB-ACC
-                                ELSE
-                                   NB_ROWS(POS_MIN_LOAD)=
-     $                                  NB_ROWS(POS_MIN_LOAD)+NCB-ACC
-                                ENDIF
-                             ENDIF
-                          ENDIF
-                       ENDIF
-                       GOTO 333
-                    ELSE
-                        AFFECTED=TOTAL_COST/DBLE(NUMBER_OF_PROCS)
-                        CHOSEN=0
-                        ACC=0
-                        IF(SMP)THEN
-                           MIN_LOAD=TEMP(1)
-                           POS_MIN_LOAD=1
-                        ENDIF
-                        DO I=1,OTHERS
-                           A=1
-                           B=DBLE(ACC+2)
-                           C=DBLE(-K10+ACC+NELIM)
-                           DELTA=(B*B)-(4*A*C)
-                           x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                           IF(X.GT.NCB-ACC) X=NCB-ACC
-                           BANDE_K10=x*(NELIM+ACC+x)
-                           MAX_MEM_ALLOW=BANDE_K10
-                           IF(BDC_MD)THEN
-                              MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                             DBLE(BANDE_K10))
-                              MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                             MAX_MEM_ALLOW)
-                           ENDIF
-                           A=1
-                           B=ACC+NELIM
-                           C=DBLE(-MAX_MEM_ALLOW)
-                           DELTA=((B*B)-(4*A*C))
-                           KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                           KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                           A=DBLE(NELIM)
-                           B=DBLE(NELIM*(NELIM+2*ACC+1))
-                           C=-AFFECTED
-                           DELTA=(B*B-(4*A*C))
-                           x=INT((-B+SQRT(DELTA))/(2*A))
-                           IF(X.LT.0) THEN
-                              WRITE(*,*)MYID,
-     *    ': Internal error 7 in ZMUMPS_518'
-                              CALL ZMUMPS_ABORT()
-                           ENDIF
-                           IF(X.GT.KMAX)THEN
-                              X=KMAX
-                           ELSE
-                              IF(X.LT.MIN(KMIN,KMAX))THEN
-                                 X=MIN(KMIN,KMAX)
-                              ENDIF
-                           ENDIF
-                           IF((ACC+X).GT.NCB) X=NCB-ACC
-                           NB_ROWS(I)=X
-                           CHOSEN=CHOSEN+1
-                           IF(SMP)THEN
-                              IF(MIN_LOAD.GT.TEMP(I))THEN
-                                 MIN_LOAD=TEMP(I)
-                                 POS_MIN_LOAD=I
-                              ENDIF
-                           ENDIF
-                           ACC=ACC+X
-                           IF(NCB-ACC.LT.KMIN) GOTO 002
-                           IF(NCB.EQ.ACC) GOTO 002
-                        ENDDO
- 002                    CONTINUE
-                        IF(ACC.LT.NCB)THEN
-                          DO I=1,CHOSEN
-                             NB_ROWS(I)=NB_ROWS(I)+1
-                             ACC=ACC+1
-                             IF(ACC.EQ.NCB)GOTO 333
-                          ENDDO
-                          IF(ACC.LT.NCB)THEN
-                             IF(.NOT.SMP)THEN
-                                NB_ROWS(1)=NB_ROWS(1)+NCB-ACC
-                             ELSE
-                                NB_ROWS(POS_MIN_LOAD)=
-     $                               NB_ROWS(POS_MIN_LOAD)+NCB-ACC
-                             ENDIF
-                          ENDIF
-                       ENDIF
-                       GOTO 333
-                    ENDIF
-                 ENDIF
-                 ADDITIONNAL_ROWS=NCB-ACC
-                 DO I=CHOSEN,1,-1
-                    IF(INT(DBLE(ADDITIONNAL_ROWS)/DBLE(I))
-     $                   .NE.0)THEN
-                       GOTO 222 
-                    ENDIF
-                 ENDDO
- 222             CONTINUE
-                 X=INT(DBLE(ADDITIONNAL_ROWS)/DBLE(I))
-                 ACC=0
-                 DO J=1,I
-                     AFFECTED=INT(K10/(NCB+1))-1
-                     BANDE_K10=AFFECTED*NFRONT
-                     MAX_MEM_ALLOW=BANDE_K10
-                     IF(BDC_MD)THEN
-                        MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                       DBLE(BANDE_K10))
-                        MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                     ENDIF
-                        KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                     KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                     IF(NB_ROWS(J).LT.KMAX)THEN
-                        IF((NB_ROWS(J)+X).GT.KMAX)THEN
-                           ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                          (KMAX-NB_ROWS(J))
-                           NB_ROWS(J)=KMAX
-                           ACC=ACC+1
-                        ELSE
-                           IF((NB_ROWS(J)+X).GT.KMIN)THEN
-                              ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                              NB_ROWS(J)=NB_ROWS(J)+X
-                           ELSE
-                              ACC=ACC+1
-                           ENDIF
-                        ENDIF
-                     ENDIF
-                     IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                  ENDDO 
-                  IF(ADDITIONNAL_ROWS.NE.0) THEN
-                     IF(CHOSEN.NE.ACC)THEN
-                        X=INT(DBLE(ADDITIONNAL_ROWS)/
-     $                       DBLE(CHOSEN-ACC))
-                        X=MAX(X,1)
-                        DO I=1,CHOSEN
-                           J=INT(K10/(NCB+1))-1
-                           BANDE_K10=J*NFRONT
-                           MAX_MEM_ALLOW=BANDE_K10
-                           IF(BDC_MD)THEN
-                              MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                             DBLE(BANDE_K10))
-                              MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                             MAX_MEM_ALLOW)
-                           ENDIF
-                              KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                           KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                           IF(NB_ROWS(J).LT.KMAX)THEN
-                              IF((NB_ROWS(I)+X).GT.KMAX)THEN
-                                 ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                                (KMAX-NB_ROWS(I))
-                                 NB_ROWS(I)=KMAX
-                              ELSE
-                                 IF((NB_ROWS(I)+X).GT.
-     $                                KMIN)THEN
-                                    ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                                    NB_ROWS(I)=NB_ROWS(I)+X
-                                 ENDIF
-                              ENDIF
-                           ENDIF
-                           IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                        ENDDO 
-                     ENDIF
-                     DO I=1,CHOSEN
-                        X=INT(K10/(NCB+1))-1
-                        BANDE_K10=X*NFRONT
-                        MAX_MEM_ALLOW=BANDE_K10
-                        IF(BDC_MD)THEN
-                           MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                          DBLE(BANDE_K10))
-                           MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                        ENDIF
-                           KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                        IF(KMAX-NB_ROWS(I).LT.ADDITIONNAL_ROWS)THEN
-                           ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                          (KMAX-NB_ROWS(I))
-                           NB_ROWS(I)=KMAX
-                        ELSE
-                           IF((NB_ROWS(I)+X).GT.KMIN)THEN
-                              NB_ROWS(I)=NB_ROWS(I)+ADDITIONNAL_ROWS
-                              ADDITIONNAL_ROWS=0
-                           ENDIF
-                        ENDIF
-                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                     ENDDO
-                     DO I=1,CHOSEN
-                        X=INT(K10/(NCB+1))-1
-                        BANDE_K10=X*NFRONT
-                        MAX_MEM_ALLOW=BANDE_K10
-                        IF(BDC_MD)THEN
-                           MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                          DBLE(BANDE_K10))
-                           MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                        ENDIF
-                        KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                        IF((NB_ROWS(I)).LT.KMIN)THEN
-                           IF((NB_ROWS(I).NE.0).AND.
-     $                          (KMIN.LT.KMAX))THEN
-                              WRITE(*,*)MYID,
-     *    ': Internal error 8 in ZMUMPS_518'
-                              CALL ZMUMPS_ABORT()
-                           ENDIF
-                           NB_ROWS(I)=MIN(KMIN,KMAX)
-                           ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                          MIN(KMIN,KMAX)
-                        ENDIF
-                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                     ENDDO
-                     X=INT(DBLE(ADDITIONNAL_ROWS)/DBLE(CHOSEN))
-                     X=MAX(X,1)
-                     DO J=1,CHOSEN
-                        AFFECTED=INT(K10/(NCB+1))-1
-                        BANDE_K10=AFFECTED*NFRONT
-                        MAX_MEM_ALLOW=BANDE_K10
-                        IF(BDC_MD)THEN
-                           MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                          DBLE(BANDE_K10))
-                           MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                        ENDIF
-                        KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                        KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                        IF(NB_ROWS(J).LT.KMAX)THEN
-                           IF((NB_ROWS(J)+X).GT.KMAX)THEN
-                              ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                             (KMAX-NB_ROWS(J))
-                              NB_ROWS(J)=KMAX
-                              ACC=ACC+1
-                           ELSE
-                              ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                              NB_ROWS(J)=NB_ROWS(J)+X
-                           ENDIF
-                        ENDIF
-                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                     ENDDO
-                     DO I=1,CHOSEN
-                        X=INT(K10/(NCB+1))-1
-                        BANDE_K10=X*NFRONT
-                        MAX_MEM_ALLOW=BANDE_K10
-                        IF(BDC_MD)THEN
-                           MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                          TAB_MAXS(TEMP_ID(I))-
-     $                          INT(DM_MEM(TEMP_ID(I)))-
-     $                          LU_USAGE(TEMP_ID(I)))
-                           MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                        ENDIF
-                        KMAX=INT(MAX_MEM_ALLOW/(NFRONT))
-                        IF(KMAX-NB_ROWS(I).LT.ADDITIONNAL_ROWS)THEN
-                           ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                          (KMAX-NB_ROWS(I))
-                           NB_ROWS(I)=KMAX
-                        ELSE
-                           NB_ROWS(I)=NB_ROWS(I)+ADDITIONNAL_ROWS
-                           ADDITIONNAL_ROWS=0
-                        ENDIF
-                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                     ENDDO
-                     X=INT(DBLE(ADDITIONNAL_ROWS)/DBLE(CHOSEN))
-                     X=MAX(X,1)
-                     DO I=1,CHOSEN
-                        ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                        NB_ROWS(I)=NB_ROWS(I)+X
-                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 333
-                     ENDDO
-                     IF(.NOT.SMP)THEN
-                        NB_ROWS(1)=NB_ROWS(1)+ADDITIONNAL_ROWS
-                     ELSE
-                        NB_ROWS(POS_MIN_LOAD)=
-     $                       NB_ROWS(POS_MIN_LOAD)+ADDITIONNAL_ROWS
-                     ENDIF
-                  ENDIF
-               ENDIF
- 333           CONTINUE
-               IF(NB_ROWS(CHOSEN).EQ.0) CHOSEN=CHOSEN-1
-               GOTO 890
-            ELSE
-               IF(((NUMBER_OF_PROCS.GT.K83).AND.force_cand).OR.
-     $              (.NOT.force_cand))THEN
-               IF(.NOT.SMP)THEN
-                  DO I=OTHERS,1,-1
-                     SOMME=0
-                     DO J=1,I
-                        SOMME=SOMME+TEMP(J)
-                     ENDDO
-                     SOMME=(DBLE(I)*TEMP(I))-SOMME
-                     IF(TOTAL_COST.GE.SOMME) GOTO 444
-                  ENDDO
- 444              CONTINUE
-                  REF=I
-                  DO J=1,I
-                     IF(TEMP(J).EQ.TEMP(I)) THEN
-                        SMALL_SET=J
-                        GOTO 123
-                     ENDIF
-                  ENDDO
- 123              CONTINUE
-                  MAX_LOAD=TEMP(SMALL_SET)
-               ELSE
-                  X=SIZE_MY_SMP
- 450              CONTINUE
-                  SOMME=0
-                  DO J=1,X
-                     SOMME=SOMME+(TEMP(X)-TEMP(J))
-                  ENDDO
-                  IF(SOMME.GT.TOTAL_COST)THEN
-                     X=X-1
-                     GOTO 450
-                  ELSE
-                     IF(X.LT.SIZE_MY_SMP) THEN
-                        REF=X
-                        DO J=1,X
-                           IF(TEMP(J).EQ.TEMP(X)) THEN
-                              SMALL_SET=J
-                              GOTO 124
-                           ENDIF
-                        ENDDO
- 124                    CONTINUE
-                        MAX_LOAD=TEMP(SMALL_SET)
-                     ELSE
-                        X=SIZE_MY_SMP
-                        J=X+1
-                        MAX_LOAD=TEMP(SIZE_MY_SMP)
-                        AFFECTED=MAX_LOAD
-                        DO I=X+1,OTHERS
-                           IF(TEMP(I).GT.MAX_LOAD)THEN
-                              SOMME=SOMME+((I-1)*(TEMP(I)-MAX_LOAD))
-                              AFFECTED=MAX_LOAD
-                              MAX_LOAD=TEMP(I)
-                           ELSE
-                              SOMME=SOMME+(MAX_LOAD-TEMP(I))
-                           ENDIF
-                           IF(SOMME.GT.TOTAL_COST)THEN
-                              REF=I-1
-                              SMALL_SET=I-1
-                              MAX_LOAD=AFFECTED
-                              GOTO 323
-                           ENDIF
-                        ENDDO
-                     ENDIF
-                  ENDIF
-               ENDIF
- 323           CONTINUE
-               AFFECTED=0
-               CHOSEN=0
-               ACC=0
-               DO I=1,SMALL_SET
-                  IF(K50.EQ.0)THEN
-                     X=INT(K10/(NCB+1))-1
-                     BANDE_K10=X*NFRONT
-                  ELSE
-                     A=1
-                     B=DBLE(ACC+2)
-                     C=DBLE(-K10+ACC+NELIM)
-                     DELTA=(B*B)-(4*A*C)
-                     x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                     IF(X.GT.NCB-ACC) X=NCB-ACC
-                     BANDE_K10=x*(NELIM+ACC+x)
-                  ENDIF
-                  MAX_MEM_ALLOW=BANDE_K10
-                  IF(BDC_MD)THEN
-                     MAX_MEM_ALLOW=MIN(MEM_SIZE(I),DBLE(BANDE_K10))
-                     MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                  ENDIF
-                  IF(K50.EQ.0)THEN
-                     KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                     KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                     x=INT((MAX_LOAD-TEMP(I))/
-     $                    (NELIM*(2*NFRONT-NELIM)))
-                     IF(x.GT.KMAX)THEN
-                        x=KMAX
-                     ELSE
-                        IF(X.LT.KMIN)THEN
-                           X=0
-                        ENDIF                        
-                     ENDIF
-                     IF((ACC+X).GT.NCB) X=NCB-ACC
-                  ENDIF
-                  IF(K50.NE.0)THEN
-                        A=1
-                        B=ACC+NELIM
-                        C=DBLE(-MAX_MEM_ALLOW)
-                        DELTA=((B*B)-(4*A*C))
-                        KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                     KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                     A=DBLE(NELIM)
-                     B=DBLE(NELIM*(NELIM+2*ACC+1))
-                     C=-(MAX_LOAD-TEMP(I))
-                     DELTA=(B*B-(4*A*C))
-                     x=INT((-B+SQRT(DELTA))/(2*A))
-                     IF(X.LT.0) THEN
-                        WRITE(*,*)MYID,
-     *    ': Internal error 9 in ZMUMPS_518'
-                        CALL ZMUMPS_ABORT()
-                     ENDIF
-                     IF(x.GT.KMAX)THEN
-                        x=KMAX
-                     ELSE
-                        IF(X.LT.KMIN)THEN
-                           X=0
-                        ENDIF
-                     ENDIF
-                     IF((ACC+X).GT.NCB) X=NCB-ACC
-                  ENDIF                  
-                  NB_ROWS(I)=X
-                  ACC=ACC+X
-                  CHOSEN=CHOSEN+1
-                  IF(SMP)THEN
-                     IF(MIN_LOAD.GT.TEMP(I))THEN
-                        MIN_LOAD=TEMP(I)
-                        POS_MIN_LOAD=I
-                     ENDIF
-                  ENDIF
-                  IF(NCB-ACC.LT.KMIN) GOTO 888
-                  IF(NCB.EQ.ACC) GOTO 888
-                  IF(ACC.GT.NCB) THEN
-                    WRITE(*,*)MYID,
-     *    ': Internal error 10 in ZMUMPS_518'
-                    CALL ZMUMPS_ABORT()
-                  ENDIF
-               ENDDO
- 888           CONTINUE
-               SOMME=0
-               X=NFRONT-NCB
-               IF((ACC.GT.NCB))THEN
-                  WRITE(*,*)MYID,
-     *       ': Internal error 11 in ZMUMPS_518'
-                  CALL ZMUMPS_ABORT()
-               ENDIF
-               IF((ACC.LT.NCB))THEN
-                  IF(K50.NE.0)THEN
-                     IF(SMALL_SET.LT.OTHERS)THEN
-                       SMALL_SET=REF+1
-                       MAX_LOAD=MAX(MAX_LOAD,TEMP(SMALL_SET))
-                       REF=SMALL_SET
-                       NB_ROWS=0
-                       GOTO 323
-                     ELSE
-                        ADDITIONNAL_ROWS=NCB-ACC
-                        SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                       (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                        SOMME=SOMME/NUMBER_OF_PROCS
-                        NB_ROWS=0
-                        ACC=0
-                        CHOSEN=0
-                        IF(SMP)THEN
-                           MIN_LOAD=TEMP(1)
-                           POS_MIN_LOAD=1
-                        ENDIF
-                        DO I=1,OTHERS
-                           A=1
-                           B=DBLE(ACC+2)
-                           C=DBLE(-K10+ACC+NELIM)
-                           DELTA=(B*B)-(4*A*C)
-                           x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                           IF(X.GT.NCB-ACC) X=NCB-ACC
-                           BANDE_K10=x*(NELIM+ACC+x)
-                           MAX_MEM_ALLOW=BANDE_K10
-                           IF(BDC_MD)THEN
-                              MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                             DBLE(BANDE_K10))
-                              MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                             MAX_MEM_ALLOW)
-                           ENDIF
-                           A=1
-                           B=ACC+NELIM
-                           C=DBLE(-MAX_MEM_ALLOW)
-                           DELTA=((B*B)-(4*A*C))
-                           KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                           KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                           A=DBLE(NELIM)
-                           B=DBLE(NELIM*(NELIM+2*ACC+1))
-                           C=-(MAX_LOAD-TEMP(I)+SOMME)
-                           DELTA=(B*B-(4*A*C))
-                           x=INT((-B+SQRT(DELTA))/(2*A))
-                           IF(X.LT.0) THEN
-                              WRITE(*,*)MYID,
-     *    ': Internal error 12 in ZMUMPS_518'
-                              CALL ZMUMPS_ABORT()
-                           ENDIF
-                           IF(x.GT.KMAX)THEN
-                              x=KMAX
-                           ELSE
-                              IF(X.LT.MIN(KMIN,KMAX))THEN
-                                 X=MIN(KMAX,KMIN)
-                              ENDIF
-                           ENDIF
-                           IF((ACC+X).GT.NCB) X=NCB-ACC
-                           NB_ROWS(I)=X
-                           IF(SMP)THEN
-                              IF(MIN_LOAD.GT.TEMP(I))THEN
-                                 MIN_LOAD=TEMP(I)
-                                 POS_MIN_LOAD=I
-                              ENDIF
-                           ENDIF
-                           CHOSEN=CHOSEN+1
-                           ACC=ACC+X
-                           IF(NCB.EQ.ACC) GOTO 666
-                           IF(NCB-ACC.LT.KMIN) GOTO 488
-                        ENDDO
- 488                    CONTINUE
-                        ADDITIONNAL_ROWS=NCB-ACC
-                        SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                       (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                        SOMME=SOMME/NUMBER_OF_PROCS
-                        NB_ROWS=0
-                        ACC=0
-                        CHOSEN=0
-                        IF(SMP)THEN
-                           MIN_LOAD=TEMP(1)
-                           POS_MIN_LOAD=1
-                        ENDIF
-                        DO I=1,OTHERS
-                           A=1
-                           B=DBLE(ACC+2)
-                           C=DBLE(-K10+ACC+NELIM)
-                           DELTA=(B*B)-(4*A*C)
-                           x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                           IF(X.GT.NCB-ACC) X=NCB-ACC
-                           BANDE_K10=x*(NELIM+ACC+x)
-                           MAX_MEM_ALLOW=BANDE_K10
-                           IF(BDC_MD)THEN
-                              MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                             TAB_MAXS(TEMP_ID(I))-
-     $                             INT(DM_MEM(TEMP_ID(I)))-
-     $                             LU_USAGE(TEMP_ID(I)))
-                              MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                             MAX_MEM_ALLOW)
-                           ENDIF
-                           A=1
-                           B=ACC+NELIM
-                           C=DBLE(-MAX_MEM_ALLOW)
-                           DELTA=((B*B)-(4*A*C))
-                           KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                           KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                           A=DBLE(NELIM)
-                           B=DBLE(NELIM*(NELIM+2*ACC+1))
-                           C=-(MAX_LOAD-TEMP(I)+SOMME)
-                           DELTA=(B*B-(4*A*C))
-                           x=INT((-B+SQRT(DELTA))/(2*A))
-                           IF(X.LT.0) THEN
-                              WRITE(*,*)MYID,
-     *    ': Internal error 13 in ZMUMPS_518'
-                              CALL ZMUMPS_ABORT()
-                           ENDIF
-                           IF(x.GT.KMAX)THEN
-                              x=KMAX
-                           ELSE
-                              IF(X.LT.KMIN)THEN
-                                 X=KMIN
-                              ENDIF
-                           ENDIF
-                           IF((ACC+X).GT.NCB) X=NCB-ACC
-                           NB_ROWS(I)=X
-                           IF(SMP)THEN
-                              IF(MIN_LOAD.GT.TEMP(I))THEN
-                                 MIN_LOAD=TEMP(I)
-                                 POS_MIN_LOAD=I
-                              ENDIF
-                           ENDIF
-                           CHOSEN=CHOSEN+1
-                           ACC=ACC+X
-                           IF(NCB.EQ.ACC) GOTO 666
-                           IF(NCB-ACC.LT.KMIN) GOTO 477
-                        ENDDO
- 477                    CONTINUE
-                        IF(ACC.NE.NCB)THEN
-                           ACC=0
-                           CHOSEN=0
-                           IF(SMP)THEN
-                              MIN_LOAD=TEMP(1)
-                              POS_MIN_LOAD=1
-                           ENDIF
-                           DO I=1,OTHERS
-                              A=1
-                              B=DBLE(ACC+2)
-                              C=DBLE(-K10+ACC+NELIM)
-                              DELTA=(B*B)-(4*A*C)
-                              x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                              IF(X.GT.NCB-ACC) X=NCB-ACC
-                              BANDE_K10=x*(NELIM+ACC+x)
-                              MAX_MEM_ALLOW=BANDE_K10
-                              IF(BDC_MD)THEN
-                                 MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                                TAB_MAXS(TEMP_ID(I))-
-     $                                INT(DM_MEM(TEMP_ID(I)))-
-     $                                LU_USAGE(TEMP_ID(I)))
-                                 MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                                MAX_MEM_ALLOW)
-                              ENDIF
-                              A=1
-                              B=ACC+NELIM
-                              C=DBLE(-MAX_MEM_ALLOW)
-                              DELTA=((B*B)-(4*A*C))
-                              KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                              KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                              X=KMAX-NB_ROWS(I)
-                              IF((ACC+NB_ROWS(I)+X).GT.NCB)
-     $                             X=NCB-(ACC+NB_ROWS(I))
-                              NB_ROWS(I)=NB_ROWS(I)+X
-                              ACC=ACC+NB_ROWS(I)
-                              IF(SMP)THEN
-                                 IF(MIN_LOAD.GT.TEMP(I))THEN
-                                    MIN_LOAD=TEMP(I)
-                                    POS_MIN_LOAD=I
-                                 ENDIF
-                              ENDIF
-                              CHOSEN=CHOSEN+1
-                              IF(NCB.EQ.ACC) GOTO 666
-                              IF(NCB-ACC.LT.KMIN) GOTO 834
-                           ENDDO
- 834                       CONTINUE
-                        ENDIF
-                        IF(ACC.NE.NCB)THEN
-                           ADDITIONNAL_ROWS=NCB-ACC
-                           SOMME=DBLE(NELIM)*
-     $                          DBLE(ADDITIONNAL_ROWS)*
-     $                          (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
-                           SOMME=SOMME/NUMBER_OF_PROCS
-                           ACC=0
-                           DO I=1,CHOSEN
-                              A=DBLE(NELIM)
-                              B=DBLE(NELIM*(NELIM+2*
-     $                             (ACC+NB_ROWS(I))+1))
-                              C=-(SOMME)
-                              DELTA=(B*B-(4*A*C))
-                              x=INT((-B+SQRT(DELTA))/(2*A))
-                              IF(X.LT.0) THEN
-                                 WRITE(*,*)MYID,
-     *    ': Internal error 14 in ZMUMPS_518'
-                                 CALL ZMUMPS_ABORT()
-                              ENDIF
-                              IF((ACC+X+NB_ROWS(I)).GT.NCB)THEN
-                                 NB_ROWS(I)=NCB-ACC
-                              ELSE
-                                 NB_ROWS(I)=NB_ROWS(I)+X
-                              ENDIF
-                              ACC=ACC+NB_ROWS(I)
-                              IF(NCB.EQ.ACC) THEN
-                                 CHOSEN=I
-                                 GOTO 666
-                              ENDIF
-                              IF(NCB-ACC.LT.KMIN) THEN
-                                 CHOSEN=I
-                                 GOTO 007
-                              ENDIF
-                           ENDDO
- 007                       CONTINUE
-                           DO I=1,CHOSEN
-                              NB_ROWS(I)=NB_ROWS(I)+1
-                              ACC=ACC+1
-                              IF(ACC.EQ.NCB)GOTO 666
-                           ENDDO
-                           IF(ACC.LT.NCB)THEN
-                              IF(SMP)THEN
-                                 NB_ROWS(1)=NB_ROWS(1)+NCB-ACC
-                              ELSE
-                                 NB_ROWS(POS_MIN_LOAD)=
-     $                                NB_ROWS(POS_MIN_LOAD)+NCB-ACC
-                              ENDIF
-                           ENDIF
-                        ENDIF
-                        GOTO 666
-                     ENDIF
-                 ENDIF
-                 ADDITIONNAL_ROWS=NCB-ACC
-                 I=CHOSEN+1
-                 DO WHILE ((ADDITIONNAL_ROWS.NE.0)
-     *                .AND.(I.LE.NUMBER_OF_PROCS))
-                    IF(SMP.AND.(TEMP(I).LE.MAX_LOAD))THEN
-                       AFFECTED=INT(K10/(NCB+1))-1
-                       BANDE_K10=AFFECTED*NFRONT
-                       MAX_MEM_ALLOW=BANDE_K10
-                       IF(BDC_MD)THEN
-                          MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                         DBLE(BANDE_K10))
-                          MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                       ENDIF
-                       KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                       AFFECTED=INT((MAX_LOAD-TEMP(I))/
-     $                      (NELIM*(2*NFRONT-NELIM)))
-                       IF(AFFECTED.GT.ADDITIONNAL_ROWS)THEN
-                          AFFECTED=ADDITIONNAL_ROWS
-                       ENDIF
-                       IF(NB_ROWS(I).LT.KMAX)THEN
-                          IF((AFFECTED+NB_ROWS(I)).GT.KMAX)THEN
-                             AFFECTED=KMAX-NB_ROWS(I)
-                          ELSE
-                             IF((AFFECTED+NB_ROWS(I)).LT.
-     $                            KMIN)THEN
-                                AFFECTED=0
-                             ENDIF
-                          ENDIF
-                          NB_ROWS(I)=NB_ROWS(I)+AFFECTED
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
-                       ENDIF
-                       GOTO 629
-                    ELSE IF(SMP.AND.(TEMP(I).GT.MAX_LOAD))THEN
-                       MAX_LOAD=TEMP(I)
-                    ENDIF
-                    J=1
-                    X=INT(ADDITIONNAL_ROWS/(I-1))
-                    IF((X.EQ.0).AND.(ADDITIONNAL_ROWS.NE.0))THEN
-                       X=0
-                       DO WHILE ((J.LT.I).AND.(ADDITIONNAL_ROWS.GT.0))
-                          IF((NB_ROWS(J)+1).LT.
-     $                          MIN(KMAX,KMIN))THEN
-                             IF((MIN(KMAX,KMIN)-
-     $                            NB_ROWS(J)).LE.
-     $                            ADDITIONNAL_ROWS)THEN
-                                ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                               (MIN(KMAX,KMIN)-
-     $                               NB_ROWS(J))
-                                NB_ROWS(J)=MIN(KMAX,KMIN)
-     $                               -NB_ROWS(J)
-                             ELSE
-                                X=1
-                             ENDIF
-                          ELSE
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-1
-                             NB_ROWS(J)=NB_ROWS(J)+1
-                          ENDIF
-                          J=J+1
-                       ENDDO
-                       IF((ADDITIONNAL_ROWS.NE.0).AND.(X.NE.1))THEN
-                          WRITE(*,*)MYID,':problem 15 in 
-     *     ZMUMPS_518',ADDITIONNAL_ROWS,I-1,J
-                         CALL ZMUMPS_ABORT()
-                       ENDIF
-                       GOTO 629
-                    ENDIF
-                    IF((TEMP(POS_MIN_LOAD)+DBLE(NELIM*
-     $                   (NB_ROWS(POS_MIN_LOAD)+x)+
-     $                   (NB_ROWS(POS_MIN_LOAD)+x)*NELIM*
-     $                   (2*NFRONT-NELIM-1))).LE.
-     $                   TEMP(I))THEN
-                       DO WHILE ((ADDITIONNAL_ROWS.NE.0)
-     *                      .AND.(J.LT.I))
-                          AFFECTED=INT(K10/(NCB+1))-1
-                          BANDE_K10=AFFECTED*NFRONT
-                          AFFECTED=X
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                          KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                          IF(AFFECTED.GT.ADDITIONNAL_ROWS)THEN
-                             AFFECTED=ADDITIONNAL_ROWS
-                          ENDIF
-                          IF(NB_ROWS(J).LT.KMAX)THEN
-                             IF((AFFECTED+NB_ROWS(J)).GT.KMAX)THEN
-                                AFFECTED=KMAX-NB_ROWS(J)
-                             ELSE
-                                IF((AFFECTED+NB_ROWS(J)).LT.
-     $                               KMIN)THEN
-                                   AFFECTED=0
-                                ENDIF
-                             ENDIF
-                             NB_ROWS(J)=NB_ROWS(J)+AFFECTED
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
-                          ENDIF
-                          J=J+1
-                       ENDDO
-                    ELSE
-                       DO WHILE ((ADDITIONNAL_ROWS.NE.0)
-     *                      .AND.(J.LE.I))
-                          AFFECTED=INT(K10/(NCB+1))-1
-                          BANDE_K10=AFFECTED*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                             KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=INT((TEMP(I)-TEMP(J))/
-     $                    (NELIM*(2*NFRONT-NELIM)))
-                          IF(AFFECTED.NE.0)THEN
-                             AFFECTED=AFFECTED-NB_ROWS(J)
-                             IF(AFFECTED.LT.0)THEN
-                                WRITE(*,*)MYID,
-     *    ': Internal error 16 in ZMUMPS_518'
-                                CALL ZMUMPS_ABORT()
-                             ENDIF
-                          ENDIF
-                          IF(AFFECTED.GT.ADDITIONNAL_ROWS)THEN
-                             AFFECTED=ADDITIONNAL_ROWS
-                          ENDIF
-                          IF(NB_ROWS(J).LT.KMAX)THEN
-                             IF((AFFECTED+NB_ROWS(J)).GT.KMAX)THEN
-                                AFFECTED=KMAX-NB_ROWS(J)
-                             ELSE
-                                IF((AFFECTED+NB_ROWS(J)).LT.
-     $                               KMIN)THEN
-                                   AFFECTED=0
-                                ENDIF
-                             ENDIF
-                             NB_ROWS(J)=NB_ROWS(J)+AFFECTED
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
-                          ENDIF
-                          J=J+1
-                       ENDDO
-                    ENDIF
- 629                CONTINUE
-                    I=I+1
-                 ENDDO
-                 CHOSEN=I-1
-                 IF((CHOSEN.EQ.NUMBER_OF_PROCS-1).AND.
-     $                 (ADDITIONNAL_ROWS.NE.0))THEN
-                    DO I=1,CHOSEN
-                       IF(NB_ROWS(I)+1.GE.KMIN)THEN
-                          NB_ROWS(I)=NB_ROWS(I)+1
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-1
-                       ENDIF
-                       IF(ADDITIONNAL_ROWS.EQ.0) GOTO 048
-                    ENDDO
- 048                CONTINUE
-                 ENDIF
-                 IF((ADDITIONNAL_ROWS.NE.0))THEN
-                    IF(CHOSEN.LT.NUMBER_OF_PROCS)THEN
-                       I=CHOSEN+1
-                    ELSE
-                       IF(CHOSEN.NE.NUMBER_OF_PROCS)THEN
-                          WRITE(*,*)MYID,
-     *    ': Internal error 17 in ZMUMPS_518'
-                          CALL ZMUMPS_ABORT()
-                       ENDIF
-                       I=CHOSEN
-                    ENDIF
-                    DO WHILE ((ADDITIONNAL_ROWS.NE.0)
-     *                   .AND.(I.LE.NUMBER_OF_PROCS))
-                       IF(SMP.AND.(TEMP(I).LE.MAX_LOAD))THEN
-                          AFFECTED=INT(K10/(NCB+1))-1
-                          BANDE_K10=AFFECTED*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                          KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=INT((MAX_LOAD-TEMP(I))/
-     $                         (NELIM*(2*NFRONT-NELIM)))
-                          IF(AFFECTED.GT.ADDITIONNAL_ROWS)THEN
-                             AFFECTED=ADDITIONNAL_ROWS
-                          ENDIF
-                          IF(NB_ROWS(I).LT.KMAX)THEN
-                             IF((AFFECTED+NB_ROWS(I)).GT.KMAX)THEN
-                                AFFECTED=KMAX-NB_ROWS(I)
-                             ELSE
-                                IF((AFFECTED+NB_ROWS(I)).LT.
-     $                               KMIN)THEN
-                                   AFFECTED=0
-                                ENDIF
-                             ENDIF
-                             NB_ROWS(I)=NB_ROWS(I)+AFFECTED
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
-                          ENDIF
-                          IF(I.NE.NUMBER_OF_PROCS) GOTO 624
-                       ELSE IF(SMP.AND.(TEMP(I).GT.MAX_LOAD))THEN
-                          MAX_LOAD=TEMP(I)
-                       ENDIF
-                       X=INT(ADDITIONNAL_ROWS/I-1)
-                       X=MAX(X,1)
-                       IF((TEMP(POS_MIN_LOAD)+(DBLE(NELIM*
-     $                      (NB_ROWS(POS_MIN_LOAD)+x))+DBLE(
-     $                      (NB_ROWS(POS_MIN_LOAD)+x)*NELIM)*DBLE(
-     $                      (2*NFRONT-NELIM-1)))).LE.MAX_LOAD)THEN
-                          AFFECTED=X
-                          POS=1
-                       ELSE
-                          POS=0
-                       ENDIF
-                       J=1
-                       DO WHILE ((ADDITIONNAL_ROWS.NE.0)
-     *                      .AND.(J.LE.I))
-                          X=INT(K10/(NCB+1))-1
-                          BANDE_K10=X*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                          KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          IF(POS.EQ.0)THEN
-                             AFFECTED=(DBLE(NELIM * NB_ROWS(J))
-     $                            +DBLE(NB_ROWS(J)*NELIM)*
-     $                            DBLE(2*NFRONT-NELIM-1))
-                             x=INT((MAX_LOAD-(TEMP(J)+AFFECTED))/
-     $                            (NELIM*(2*NFRONT-NELIM)))
-                          ELSE
-                             X=INT(AFFECTED)
-                          ENDIF
-                          IF(x.GT.ADDITIONNAL_ROWS)THEN
-                             x=ADDITIONNAL_ROWS
-                          ENDIF
-                          IF(NB_ROWS(J).LT.KMAX)THEN
-                             IF((x+NB_ROWS(J)).GT.KMAX)THEN
-                                x=KMAX-NB_ROWS(J)
-                             ELSE
-                                IF((NB_ROWS(J)+x).LT.
-     $                               KMIN)THEN
-                                   x=0
-                                ENDIF
-                             ENDIF
-                             NB_ROWS(J)=NB_ROWS(J)+x
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-x
-                          ENDIF
-                          J=J+1
-                       ENDDO
- 624                   CONTINUE
-                       I=I+1
-                    ENDDO
-                    CHOSEN=I-1
-                    IF(ADDITIONNAL_ROWS.NE.0)THEN
-                       ACC=1
-                       DO I=1,CHOSEN
-                          X=INT(K10/(NCB+1))-1
-                          BANDE_K10=X*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                             KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=(DBLE(NELIM * NB_ROWS(I))
-     $                    +DBLE(NB_ROWS(I)*NELIM)*
-     $                    DBLE(2*NFRONT-NELIM-1))
-                          x=INT((MAX_LOAD-
-     $                         (TEMP(I)+AFFECTED))/
-     $                         (NELIM*(2*NFRONT-NELIM)))
-                          IF(x.GT.ADDITIONNAL_ROWS)THEN
-                             x=ADDITIONNAL_ROWS
-                          ENDIF
-                          IF(NB_ROWS(I).LT.KMAX)THEN
-                             IF((x+NB_ROWS(I)).GE.KMAX)THEN
-                                ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                               (KMAX-NB_ROWS(I))
-                                NB_ROWS(I)=KMAX
-                             ELSE
-                                IF((X+NB_ROWS(I)).GE.
-     $                               KMIN)THEN
-                                   NB_ROWS(I)=NB_ROWS(I)+x
-                                   ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                                   ACC=ACC+1
-                                ENDIF
-                             ENDIF
-                          ENDIF
-                          IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
-                       ENDDO
-                       IF(CHOSEN.LT.NUMBER_OF_PROCS)THEN
-                          CHOSEN=CHOSEN+1
-                       ENDIF
-                       X=INT(ADDITIONNAL_ROWS/ACC)
-                       X=MAX(X,1)
-                       ACC=0
-                       DO I=1,CHOSEN
-                          J=INT(K10/(NCB+1))-1
-                          BANDE_K10=J*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                            DBLE(BANDE_K10))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                          KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          IF(NB_ROWS(I).LT.KMAX)THEN
-                             IF((x+NB_ROWS(I)).GE.KMAX)THEN
-                                ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                               (KMAX-NB_ROWS(I))
-                                NB_ROWS(I)=KMAX
-                             ELSE
-                                IF((X+NB_ROWS(I)).GE.
-     $                            KMIN)THEN
-                                   NB_ROWS(I)=NB_ROWS(I)+x
-                                   ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                                   ACC=ACC+1
-                                ENDIF
-                             ENDIF
-                          ENDIF
-                          IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
-                       ENDDO
-                       IF(ACC.GT.0)THEN
-                          DO I=1,CHOSEN
-                             X=INT(K10/(NCB+1))-1
-                             BANDE_K10=X*NFRONT
-                             MAX_MEM_ALLOW=BANDE_K10
-                             IF(BDC_MD)THEN
-                                MAX_MEM_ALLOW=MIN(MEM_SIZE(I),
-     $                               DBLE(BANDE_K10))
-                                MAX_MEM_ALLOW=MAX(DBLE(0),
-     $                               MAX_MEM_ALLOW)
-                             ENDIF
-                             KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                             IF(KMAX-NB_ROWS(I).LT.
-     $                            ADDITIONNAL_ROWS)THEN
-                                ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                               (KMAX-NB_ROWS(I))
-                                NB_ROWS(I)=KMAX
-                             ELSE
-                                IF(NB_ROWS(I).EQ.0)THEN
-                                   IF(MIN(KMIN,KMAX).LT.
-     $                                  ADDITIONNAL_ROWS)THEN
-                                      NB_ROWS(I)=MIN(KMIN,KMAX)
-                                      ADDITIONNAL_ROWS=
-     $                                     ADDITIONNAL_ROWS-
-     $                                     MIN(KMIN,KMAX)
-                                   ENDIF
-                                ELSE
-                                   NB_ROWS(I)=NB_ROWS(I)+
-     $                                  ADDITIONNAL_ROWS
-                                   ADDITIONNAL_ROWS=0
-                                ENDIF
-                             ENDIF
-                             IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
-                          ENDDO
-                       ENDIF
-                       DO I=1,CHOSEN
-                          X=INT(K10/(NCB+1))-1
-                          BANDE_K10=X*NFRONT
-                          MAX_MEM_ALLOW=BANDE_K10
-                          IF(BDC_MD)THEN
-                             MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                            TAB_MAXS(TEMP_ID(I))-
-     $                            INT(DM_MEM(TEMP_ID(I)))-
-     $                            LU_USAGE(TEMP_ID(I)))
-                             MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                          ENDIF
-                          KMAX=INT(MAX_MEM_ALLOW/(NFRONT))
-                          IF(KMAX-NB_ROWS(I).LT.ADDITIONNAL_ROWS)THEN
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                            (KMAX-NB_ROWS(I))
-                             NB_ROWS(I)=KMAX
-                          ELSE
-                             NB_ROWS(I)=NB_ROWS(I)+ADDITIONNAL_ROWS
-                             ADDITIONNAL_ROWS=0
-                          ENDIF
-                          IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
-                       ENDDO
-                       X=INT(ADDITIONNAL_ROWS/CHOSEN)
-                       X=MAX(X,1)
-                       DO I=1,CHOSEN
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                          NB_ROWS(I)=NB_ROWS(I)+X
-                          IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
-                       ENDDO
-                       NB_ROWS(1)=NB_ROWS(1)+ADDITIONNAL_ROWS
-                    ENDIF
-                 ENDIF
- 049             CONTINUE
-              ENDIF
- 666          CONTINUE
-              SOMME=0
-              X=0
-              POS=0
-              DO I=1,CHOSEN
-                 X=X+NB_ROWS(I)
-                 SOMME=SOMME+ DBLE(NB_ROWS(I))
-              ENDDO
-              GOTO 890
-           ELSE
-              ACC=0
-              CHOSEN=0
-              X=1
-              DO I=1,OTHERS
-              ENDDO
-              DO I=2,OTHERS 
-                 IF(TEMP(I).EQ.TEMP(1))THEN
-                    X=X+1
-                 ELSE 
-                    GOTO 329
-                 ENDIF
-              ENDDO
- 329          CONTINUE
-              AFFECTED=TOTAL_COST/DBLE(X)
-              TEMP_MAX_LOAD=DBLE(0)
-              DO I=1,OTHERS
-                 IF(K50.EQ.0)THEN
-                    X=INT(K10/(NCB+1))-1
-                    BANDE_K10=X*NFRONT
-                 ELSE
-                    A=1
-                    B=DBLE(ACC+2)
-                    C=DBLE(-K10+ACC+NELIM)
-                    DELTA=(B*B)-(4*A*C)
-                    x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                    IF(X.GT.NCB-ACC) X=NCB-ACC
-                    BANDE_K10=x*(NELIM+ACC+x)
-                 ENDIF
-                 MAX_MEM_ALLOW=BANDE_K10
-                 IF(BDC_MD)THEN
-                    MAX_MEM_ALLOW=MIN(MEM_SIZE(I),DBLE(BANDE_K10))
-                    MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                 ENDIF
-                 IF(K50.EQ.0)THEN
-                       KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                    KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                    IF(AFFECTED+TEMP(I).GT.MAX_LOAD)THEN
-                       SOMME=MAX_LOAD-TEMP(I)
-                    ELSE
-                       SOMME=AFFECTED
-                    ENDIF
-                    x=INT(SOMME/
-     $                   (NELIM*(2*NFRONT-NELIM)))
-                    IF(x.GT.KMAX)THEN
-                       x=KMAX
-                    ELSE
-                       IF(X.LT.KMIN)THEN
-                          X=MIN(KMIN,KMAX)
-                       ENDIF
-                    ENDIF
-                    IF((ACC+X).GT.NCB) X=NCB-ACC
-                 ENDIF
-                 IF(K50.NE.0)THEN
-                       A=1
-                       B=ACC+NELIM
-                       C=DBLE(-MAX_MEM_ALLOW)
-                       DELTA=((B*B)-(4*A*C))
-                       KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                    KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                    A=DBLE(NELIM)
-                    B=DBLE(NELIM*(NELIM+2*ACC+1))
-                    IF(AFFECTED+TEMP(I).GT.MAX_LOAD)THEN
-                       C=-(MAX_LOAD-TEMP(I))
-                    ELSE
-                       C=-AFFECTED
-                    ENDIF
-                    DELTA=(B*B-(4*A*C))
-                    x=INT((-B+SQRT(DELTA))/(2*A))
-                    IF(X.LT.0) THEN
-                       WRITE(*,*)MYID,
-     *    ': Internal error 18 in ZMUMPS_518'
-                       CALL ZMUMPS_ABORT()
-                    ENDIF
-                    IF(x.GT.KMAX)THEN
-                       x=KMAX
-                    ELSE
-                       IF(X.LT.MIN(KMIN,KMAX))THEN
-                          X=MIN(KMIN,KMAX)
-                       ENDIF
-                    ENDIF
-                    IF((ACC+X).GT.NCB) X=NCB-ACC
-                 ENDIF
-                 TEMP_MAX_LOAD=MAX(TEMP_MAX_LOAD,TEMP(I))
-                 NB_ROWS(I)=X
-                 CHOSEN=CHOSEN+1
-                 ACC=ACC+X
-                 IF(ACC.EQ.NCB) GOTO 889
-              ENDDO
- 541          CONTINUE
-              IF(ACC.LT.NCB)THEN
-                 IF(K50.EQ.0)THEN
-                    ADDITIONNAL_ROWS=NCB-ACC
-                    DO J=1,CHOSEN
-                       AFFECTED=INT(K10/(NCB+1))-1
-                       BANDE_K10=AFFECTED*NFRONT
-                       MAX_MEM_ALLOW=BANDE_K10
-                       IF(BDC_MD)THEN
-                          MAX_MEM_ALLOW=MIN(MEM_SIZE(J),
-     $                         DBLE(BANDE_K10))
-                          MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                       ENDIF
-                       KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                       KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                       IF((NB_ROWS(J)).LT.KMAX)THEN
-                          IF(ADDITIONNAL_ROWS.GT.(KMAX-NB_ROWS(J)))THEN
-                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                            (KMAX-NB_ROWS(J))
-                             NB_ROWS(J)=KMAX
-                          ELSE
-                             NB_ROWS(J)=NB_ROWS(J)+ADDITIONNAL_ROWS
-                             ADDITIONNAL_ROWS=0
-                          ENDIF
-                       ENDIF
-                       IF(ADDITIONNAL_ROWS.EQ.0)GOTO 889
-                    ENDDO 
-                    X=INT(ADDITIONNAL_ROWS/CHOSEN)
-                    X=MAX(X,1)
-                    DO J=1,CHOSEN
-                       AFFECTED=INT(K10/(NCB+1))-1
-                       BANDE_K10=AFFECTED*NFRONT
-                       MAX_MEM_ALLOW=BANDE_K10
-                       IF(BDC_MD)THEN
-                          MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                         TAB_MAXS(TEMP_ID(J))-
-     $                         INT(DM_MEM(TEMP_ID(J)))-
-     $                         LU_USAGE(TEMP_ID(J)))
-                          MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                       ENDIF
-                       KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                       KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                       IF((NB_ROWS(J)+X).GT.KMAX)THEN
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                         (KMAX-NB_ROWS(J))
-                          NB_ROWS(J)=KMAX
-                       ELSE
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
-                          NB_ROWS(J)=NB_ROWS(J)+X
-                       ENDIF
-                       IF(ADDITIONNAL_ROWS.EQ.0)GOTO 889
-                    ENDDO 
-                    DO I=1,CHOSEN
-                       X=INT(K10/(NCB+1))-1
-                       BANDE_K10=X*NFRONT
-                       MAX_MEM_ALLOW=BANDE_K10
-                       IF(BDC_MD)THEN
-                          MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                         TAB_MAXS(TEMP_ID(I))-
-     $                         INT(DM_MEM(TEMP_ID(I)))-
-     $                         LU_USAGE(TEMP_ID(I)))
-                          MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                       ENDIF
-                       KMAX=INT(MAX_MEM_ALLOW/(NFRONT))
-                       IF(KMAX-NB_ROWS(I).LT.ADDITIONNAL_ROWS)THEN
-                          ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
-     $                         (KMAX-NB_ROWS(I))
-                          NB_ROWS(I)=KMAX
-                       ELSE
-                          NB_ROWS(I)=NB_ROWS(I)+ADDITIONNAL_ROWS
-                          ADDITIONNAL_ROWS=0
-                       ENDIF
-                       IF(ADDITIONNAL_ROWS.EQ.0)GOTO 889
-                    ENDDO
-                 ELSE
-                    ACC=0
-                    CHOSEN=0
-                    DO I=1,OTHERS
-                       A=1
-                       B=DBLE(ACC+2)
-                       C=DBLE(-K10+ACC+NELIM)
-                       DELTA=(B*B)-(4*A*C)
-                       x=INT((-B+SQRT(DELTA))/DBLE(2*A))
-                       IF(X.GT.NCB-ACC) X=NCB-ACC
-                       BANDE_K10=x*(NELIM+ACC+x)
-                       MAX_MEM_ALLOW=BANDE_K10
-                       IF(BDC_MD)THEN
-                          MAX_MEM_ALLOW=MIN(BANDE_K10,
-     $                         TAB_MAXS(TEMP_ID(I))-
-     $                         INT(DM_MEM(TEMP_ID(I)))-
-     $                         LU_USAGE(TEMP_ID(I)))
-                          MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
-                       ENDIF
-                       A=1
-                       B=ACC+NELIM
-                       C=DBLE(-MAX_MEM_ALLOW)
-                       DELTA=((B*B)-(4*A*C))
-                       KMAX=INT((-B+SQRT(DELTA))/(2*A))
-                       KMIN=ZMUMPS_442(K10,K50,KMAX,NCB)
-                       X=KMAX-NB_ROWS(I)
-                       IF((ACC+NB_ROWS(I)+X).GT.NCB)
-     $                            X=NCB-(ACC+NB_ROWS(I))
-                       NB_ROWS(I)=NB_ROWS(I)+X
-                       ACC=ACC+NB_ROWS(I)
-                       CHOSEN=CHOSEN+1
-                       IF(NCB.EQ.ACC) GOTO 889
-                       IF(NCB-ACC.LT.KMIN) THEN
-                          ADDITIONNAL_ROWS=NCB-ACC
-                          GOTO 993
-                       ENDIF
-                    ENDDO
-                    ADDITIONNAL_ROWS=NCB-ACC
-                 ENDIF
- 993             CONTINUE
-                 NB_ROWS(1)=NB_ROWS(1)+ADDITIONNAL_ROWS
-              ENDIF
-           ENDIF
-           ENDIF
- 889       CONTINUE
-           MAX_LOAD=TEMP_MAX_LOAD
- 890       CONTINUE
-           J=CHOSEN
-           X=0
-           IF(BDC_MD)THEN
-              DO I=J,1,-1
-                 IF(NB_ROWS(I).EQ.0)THEN
-                    IF(X.EQ.1)THEN
-                       IF((.NOT.SMP).OR.(SMP.AND.(TEMP(I).NE.
-     $                      MAX_LOAD)))THEN
-                          IF((INT(MIN(MD_MEM(TEMP_ID(I)),
-     $                         TAB_MAXS(TEMP_ID(I))-
-     $                         INT(DM_MEM(TEMP_ID(I)))-
-     $                         LU_USAGE(TEMP_ID(I)))/NFRONT).GT.0))THEN
-                             WRITE(*,*)MYID,
-     *    ': Internal error 19 in ZMUMPS_518'
-                               CALL ZMUMPS_ABORT()
-                            ENDIF
-                         ENDIF
-                      ENDIF
-                      CHOSEN=CHOSEN-1
-                    ELSE 
-                       IF(NB_ROWS(I).GT.0)THEN
-                          X=1
-                       ELSE
-                          WRITE(*,*)MYID,
-     *    ': Internal error 20 in ZMUMPS_518'
-                          CALL ZMUMPS_ABORT()
-                       ENDIF
-                    ENDIF
-                 ENDDO
-              ENDIF
-           NSLAVES_NODE=CHOSEN
-           TAB_POS(NSLAVES_NODE+1)= NCB+1
-           TAB_POS(SLAVEF+2) = CHOSEN
-           POS=1
-           x=1
-           DO I=1,J
-              IF(NB_ROWS(I).NE.0)THEN
-                 SLAVES_LIST(X)=TEMP_ID(I)
-                 TAB_POS(X)=POS
-                 POS=POS+NB_ROWS(I) 
-                 IF(NB_ROWS(I).LE.0)THEN
-                    WRITE(*,*)MYID,
-     *    ': Internal error 21 in ZMUMPS_518'
-                    CALL ZMUMPS_ABORT()
-                 ENDIF
-                 X=X+1
-               ENDIF
-           ENDDO
-           DO I=CHOSEN+1,NUMBER_OF_PROCS
-              SLAVES_LIST(I)=TEMP_ID(I)
-           ENDDO
-           IF(POS.NE.(NCB+1))THEN
-              WRITE(*,*)MYID,
-     *    ': Internal error 22 in ZMUMPS_518'
-              CALL ZMUMPS_ABORT()
-           ENDIF
-      END SUBROUTINE ZMUMPS_SET_PARTI_FLOP_IRR_O
       SUBROUTINE ZMUMPS_518
      &      (NCBSON_MAX,SLAVEF,KEEP,PROCS,MEM_DISTRIB,NCB,NFRONT,
      $       NSLAVES_NODE,TAB_POS,
@@ -4320,7 +2533,7 @@ C
          IF(FORCE_CAND.AND.(NUMBER_OF_PROCS.LE.K83))THEN
             MASTER_WORK=DBLE(KEEP(87))*MASTER_WORK/DBLE(100)
          ENDIF
-         IF(MASTER_WORK.EQ.DBLE(0))THEN
+         IF(MASTER_WORK.LT.DBLE(1))THEN
             MASTER_WORK=DBLE(1)
          ENDIF
          NSLAVES_REF=INT(TOTAL_COST/MASTER_WORK)+1
@@ -4393,8 +2606,8 @@ C
                x=OTHERS
                CALL ZMUMPS_503(
      &              WHAT, KEEP, NCB, NFRONT, x,
-     &              J, B )
-               B=B+DBLE(J*NELIM)
+     &              J, X )
+               B=DBLE(X)+DBLE(J*NELIM)
             ENDIF
             NELIM_MEM_SIZE=A+B
             MEM_SIZE(I)=NELIM_MEM_SIZE
@@ -6817,13 +5030,6 @@ C
       FCT_COST=DBLE((INT((NFR-NELIM)/NSLAVES)+1)*NELIM)
       MEM_COST=DBLE((INT((NFR-NELIM)/NSLAVES)+1)*NFR)
       END SUBROUTINE ZMUMPS_540
-      SUBROUTINE ZMUMPS_FORCE_5(KEEP)
-      IMPLICIT NONE
-      INTEGER KEEP(150)
-      KEEP(48)=5
-      KEEP(69)=0
-      KEEP(83)=-9999
-      END SUBROUTINE ZMUMPS_FORCE_5
       SUBROUTINE CLEAN_POOL_MEM_INFO(INODE)
       IMPLICIT NONE
       INTEGER INODE

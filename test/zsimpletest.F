@@ -1,5 +1,5 @@
-C This file is part of ZMUMPS VERSION 4.5.0
-C This Version was built on Fri Jul 22 15:57:28 2005
+C This file is part of ZMUMPS VERSION 4.5.2
+C This Version was built on Fri Sep 9 16:03:33 2005
 C
 C
       PROGRAM ZMUMPS_TEST

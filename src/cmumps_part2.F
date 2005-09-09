@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -4086,7 +4086,7 @@ C
       INTEGER, ALLOCATABLE, DIMENSION(:) :: IW
       REAL, ALLOCATABLE, DIMENSION(:) :: S2
       TARGET :: S2
-      INTEGER LS2
+      INTEGER LS2,LSC
       INTEGER ICNTL64(10), INFO64(10)
       INTEGER ICNTL_SYM_MWM(10),INFO_SYM_MWM(10)
       REAL CNTL64(10)
@@ -4103,7 +4103,6 @@ C
       INTEGER,POINTER,DIMENSION(:) :: MARKED
       INTEGER,POINTER,DIMENSION(:) :: FLAG
       INTEGER,POINTER,DIMENSION(:) :: PIV_OUT
-      REAL,POINTER,DIMENSION(:) :: WEIGHT
       REAL THEMIN, THEMAX, COLNORM
       REAL ZERO,TWO,ONE
       PARAMETER(ZERO = 0.0E0,TWO = 2.0E0,ONE = 1.0E0)
@@ -4125,7 +4124,6 @@ C
          ENDIF
       ELSE IF(id%KEEP(52) .EQ. 7) THEN
          SCALINGLOC = .TRUE.
-         IF(.not.ASSOCIATED(id%A)) SCALINGLOC = .FALSE.
          IF(K50 .NE. 2) THEN
             IF( MTRANS .NE. 5 .AND. MTRANS .NE. 6 
      *           .AND. MTRANS .NE. 7) THEN
@@ -4182,11 +4180,11 @@ C
       IF (ICNTL(4).EQ.4) ICNTL64(4) = 1
       ICNTL64(5) = -1
       IF (PROK) THEN
-         WRITE(MPRINT,'(A)')
+         WRITE(MPRINT,'(A,I3)')
      *     'Compute maximum matching (Maximum Transversal):',
      *        MTRANSLOC
          IF (MTRANSLOC.EQ.1)
-     *   WRITE(MPRINT,'(A,I3,A)')' ... ICNTL(6)=',MTRANSLOC
+     *   WRITE(MPRINT,'(A,I3)')' ... ICNTL(6)=',MTRANSLOC
          IF (MTRANSLOC.EQ.2)
      *   WRITE(MPRINT,'(A,I3,A)')
      *     ' ... ICNTL(6)=',MTRANSLOC,': BOTTLENECK THESIS'
@@ -4218,11 +4216,11 @@ C
       ALLOCATE(IW(LIWG), stat=allocok)
       IF (allocok .GT. 0 ) GOTO 410
       IF (MTRANSLOC.EQ.1) THEN
-       LDWMIN = 2
+       LDWMIN = N+3
       ENDIF
-      IF (MTRANSLOC.EQ.2) LDWMIN = N+NZTOT
-      IF (MTRANSLOC.EQ.3) LDWMIN = NZTOT+1
-      IF (MTRANSLOC.EQ.4) LDWMIN = 2*N + NZTOT
+      IF (MTRANSLOC.EQ.2) LDWMIN = MAX(N+NZTOT,N+3)
+      IF (MTRANSLOC.EQ.3) LDWMIN = MAX(NZTOT+1,N+3)
+      IF (MTRANSLOC.EQ.4) LDWMIN = 2*N + MAX(NZTOT,N+3)
       IF (MTRANSLOC.EQ.5) LDWMIN = 3*N + NZTOT
       IF (MTRANSLOC.EQ.6) LDWMIN = 4*N + NZTOT
       LDW   = LDWMIN
@@ -4665,7 +4663,11 @@ C
                GOTO 390
             ELSE
                IF(id%KEEP(95) .EQ. 0) THEN
+                 IF(SCALINGLOC) THEN
                   id%KEEP(95) = 3
+                 ELSE
+                  id%KEEP(95) = 2   
+                 ENDIF
                ENDIF
                IF(MTRANS .EQ. 7) MTRANS = 5
             ENDIF
@@ -4677,7 +4679,7 @@ C
      *        MTRANS .EQ. 7) THEN
             ICNTL_SYM_MWM(1) = 0
             ICNTL_SYM_MWM(2) = 1
-         ELSE IF(MTRANS .EQ. 3 .OR. MTRANS .EQ. 4) THEN
+         ELSE IF(MTRANS .EQ. 4) THEN
             ICNTL_SYM_MWM(1) = 2
             ICNTL_SYM_MWM(2) = 1
          ELSE
@@ -4688,13 +4690,13 @@ C
          FLAG => id%IS1(3*N+1:4*N)
          PIV_OUT => id%IS1(4*N+1:5*N)
          IF(MTRANSLOC .LT. 4) THEN
-            WEIGHT => S2(1:LDW)
+            LSC = 1
          ELSE
-            WEIGHT => S2(2*N+1:3*N+2)
+            LSC = 2*N
          ENDIF
          CALL CMUMPS_551(
-     *        N, NZREAL, IW(IP), IW(IRNW), S2, PERM, ZERODIAG,
-     *        ICNTL_SYM_MWM, WEIGHT, MARKED,FLAG,
+     *        N, NZREAL, IW(IP), IW(IRNW), S2(1),LSC, PERM, ZERODIAG,
+     *        ICNTL_SYM_MWM, S2(LSC+1),MARKED,FLAG,
      *        PIV_OUT, INFO_SYM_MWM)
          IF(INFO_SYM_MWM(1) .NE. 0) THEN
             WRITE(*,*) '** Error in CMUMPS_203'
@@ -9341,7 +9343,7 @@ C
                   A(K) = DW(2*M+N+I) * A(K)
  65            CONTINUE
  66         CONTINUE
-            CALL CMUMPS_451(N,NE,IP,IW(3*N+2*M+1),DW(2*M+N+1))
+            CALL CMUMPS_451(N,NE,IP,IW(3*N+2*M+1),A)
             DO 176 J = 1,N
                IF (IP(J).NE.IP(J+1)) THEN
                   FACT = A(IP(J))
@@ -9373,7 +9375,7 @@ C
      &           DW(1),DW(M+1),RINF)
          ENDIF
          IF (JOB.EQ.6) THEN
-            CALL CMUMPS_454(M,N,NE,IP,A,DW(2*M+N+1),PERM,NUM,
+            CALL CMUMPS_454(M,N,NE,IP,IW(3*N+2*M+1),A,PERM,NUM,
      &           IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
      &           DW(1),DW(M+1),RINF)
          ENDIF

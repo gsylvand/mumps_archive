@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -762,14 +762,12 @@ C
 #endif
       DM_SUMLU = DM_SUMLU + DBLE(NEW_LU)
       CHECK_MEM = CHECK_MEM + INC_MEM
-#if ! defined(IGNORE_COPY)
       IF ( MEM_VALUE .NE. CHECK_MEM ) THEN
          WRITE(*,*)MYID,
      *   ':Problem with increments in ZMUMPS_471',
      *   CHECK_MEM, MEM_VALUE, INC_MEM
          CALL ZMUMPS_ABORT()
       ENDIF
-#endif
 #if ! defined(OLD_LOAD_MECHANISM)
       IF (PROCESS_BANDE) THEN
          RETURN
@@ -1840,7 +1838,7 @@ C
          ENDIF
       ELSE 
          IF(INODE.EQ.MY_ROOT_SBTR(INDICE_SBTR-1))THEN
-         WHAT = 3
+            WHAT = 3
             COST=-SBTR_PEAK_ARRAY(INDICE_SBTR_ARRAY-1)
             IF(ABS(COST).GE.DM_THRES_MEM)THEN
  112           CONTINUE

@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.5.0
-# This Version was built on Fri Jul 22 15:57:28 2005
+# This file is part of MUMPS VERSION 4.5.2
+# This Version was built on Fri Sep 9 16:03:33 2005
 #
 #
 .PHONY: double simple cmplx cmplx16

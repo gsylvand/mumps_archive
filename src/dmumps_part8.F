@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -366,11 +366,13 @@ C
         ENDIF
         IF ( I_AM_SLAVE ) THEN
           LIW_PASSED=MAX(1,LIW)
-          CALL DMUMPS_535( MTYPE, id%ISOL_LOC,
-     *             id%LSOL_LOC, id%PTLUST_S(1), id%KEEP(1),
-     *             id%IS(1), LIW_PASSED,id%MYID_NODES,
-     *             id%N, id%STEP, id%PROCNODE_STEPS,
-     *             id%NSLAVES, scaling_data, LSCAL )
+          IF (KEEP(89) .GT. 0) THEN
+            CALL DMUMPS_535( MTYPE, id%ISOL_LOC(1),
+     *               id%LSOL_LOC, id%PTLUST_S(1), id%KEEP(1),
+     *               id%IS(1), LIW_PASSED,id%MYID_NODES,
+     *               id%N, id%STEP(1), id%PROCNODE_STEPS(1),
+     *               id%NSLAVES, scaling_data, LSCAL )
+          ENDIF
           IF (id%MYID.NE.MASTER .AND. LSCAL) THEN
             IF (MTYPE == 1) THEN
               DEALLOCATE(id%COLSCA)
@@ -669,13 +671,16 @@ C
       ELSE
         IF ( I_AM_SLAVE ) THEN
          LIW_PASSED = MAX( LIW, 1 )
-         CALL DMUMPS_532(id%NSLAVES, id%N, id%MYID,
+         IF ( KEEP(89) .GT. 0 ) THEN
+           CALL DMUMPS_532(id%NSLAVES,
+     *          id%N, id%MYID,
      *          MTYPE, RHSSOL, NBRHS_EFF,
-     *          id%ISOL_LOC,
-     *          id%SOL_LOC, BEG_RHS, id%LSOL_LOC,
+     *          id%ISOL_LOC(1),
+     *          id%SOL_LOC(1), BEG_RHS, id%LSOL_LOC,
      *          id%PTLUST_S(1), id%PROCNODE_STEPS(1), id%KEEP(1),
      *          IS(1), LIW_PASSED,
      *          id%STEP(1), scaling_data, LSCAL )
+         ENDIF
         ENDIF
       ENDIF
 #if defined(V_T)

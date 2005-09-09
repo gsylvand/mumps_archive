@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -5781,13 +5781,13 @@ C
       RETURN
       END SUBROUTINE SMUMPS_547
       SUBROUTINE SMUMPS_551(
-     *     N, NE, IP, IRN, SCALING, CPERM, DIAG,
-     *     ICNTL, WEIGHT, MARKED,FLAG,
+     *     N, NE, IP, IRN, SCALING,LSC,CPERM, DIAG,
+     *     ICNTL, WEIGHT,MARKED,FLAG,
      *     PIV_OUT, INFO)
       IMPLICIT NONE
-      INTEGER N, NE, ICNTL(10), INFO(10)
+      INTEGER N, NE, ICNTL(10), INFO(10),LSC,LWEIGHT
       INTEGER CPERM(N),PIV_OUT(N),IP(N+1),IRN(NE), DIAG(N)
-      REAL SCALING(2*N),WEIGHT(N+2)
+      REAL SCALING(LSC),WEIGHT(N+2)
       INTEGER MARKED(N),FLAG(N)
       INTEGER NUM1,NUM2,NUMTOT,PATH_LENGTH,NLAST
       INTEGER I,J,K,L,CUR_EL,CUR_EL_PATH,CUR_EL_PATH_NEXT,BEST_BEG
@@ -5818,12 +5818,14 @@ C
 #if defined(PATH_STATS)
       INTEGER PATH_STATS(N)
 #endif
-      LOGICAL VRAI,FAUX,MAX_CARD_DIAG
+      LOGICAL VRAI,FAUX,MAX_CARD_DIAG,USE_SCALING
       INTEGER JOB_DEF,DONE
       INTEGER SUM,PROD,STRUCT,MA47,MAGNITUDE
+      INTEGER ONE
       PARAMETER (JOB_DEF = 5, DONE = -1,
      *     SUM = 1, PROD = 2, STRUCT=1, MA47=2, MAGNITUDE=3,
      *     VRAI = .TRUE., FAUX = .FALSE.)
+      PARAMETER(ONE = 1.0E0)
       MAX_CARD_DIAG = .TRUE.
       NUM1 = 0
       NUM2 = 0
@@ -5832,6 +5834,12 @@ C
       INFO = 0      
       MARKED = 1
       FLAG = 0
+      VAL = ONE
+      IF(LSC .GT. 1) THEN
+         USE_SCALING = .TRUE.
+      ELSE
+         USE_SCALING = .FALSE.
+      ENDIF
       TUP = ICNTL(2)
       IF(ICNTL(2) .GT. 2 .OR. ICNTL(2) .LE. 0) THEN
          WRITE(*,*)
@@ -5886,7 +5894,9 @@ C
          L2 = IP(CUR_EL_PATH+1)-IP(CUR_EL_PATH)
          PTR_SET1 = IP(CUR_EL)
          PTR_SET2 = IP(CUR_EL_PATH)
-         VAL = -SCALING(CUR_EL_PATH) - SCALING(CUR_EL+N)
+         IF(USE_SCALING) THEN
+            VAL = -SCALING(CUR_EL_PATH) - SCALING(CUR_EL+N)
+         ENDIF
          CUR_VAL = SMUMPS_METRIC2x2(
      *        CUR_EL,CUR_EL_PATH,
      *        IRN(PTR_SET1),IRN(PTR_SET2),
@@ -5910,8 +5920,10 @@ C
             L2 = IP(CUR_EL_PATH_NEXT+1)-IP(CUR_EL_PATH_NEXT)
             PTR_SET1 = IP(CUR_EL_PATH)
             PTR_SET2 = IP(CUR_EL_PATH_NEXT)
-            VAL = -SCALING(CUR_EL_PATH_NEXT) 
-     *           - SCALING(CUR_EL_PATH+N)
+            IF(USE_SCALING) THEN
+               VAL = -SCALING(CUR_EL_PATH_NEXT) 
+     *              - SCALING(CUR_EL_PATH+N)
+            ENDIF
             CUR_VAL = SMUMPS_METRIC2x2(
      *           CUR_EL_PATH,CUR_EL_PATH_NEXT,
      *           IRN(PTR_SET1),IRN(PTR_SET2),

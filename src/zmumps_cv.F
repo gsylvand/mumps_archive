@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -3094,6 +3094,8 @@ C
          return
       end if
       allocate(work_per_proc(cv_slavef),id_son(cv_slavef),STAT=allocok)
+      work_per_proc(1:cv_slavef)=0
+      id_son(1:cv_slavef)=0
       if (allocok.gt.0) then
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 2*cv_slavef
@@ -3404,10 +3406,12 @@ C
             procs4son = cv_prop_map(inode)%allowed%ind_proc
             are_sons_treated=.FALSE.
             nb_procs_for_sons=nmb_procs_inode
+            nmb_propmap_strict=nmb_procs_inode
          elseif(nmb_procs_inode .LE. cv_keep(83)) then
             procs4son = cv_prop_map(inode)%allowed%ind_proc
             are_sons_treated=.FALSE.
             nb_procs_for_sons=nmb_procs_inode
+            nmb_propmap_strict=nmb_procs_inode
          else
             do k=1,cv_size_ind_proc
                do j=0,cv_bitsize_of_int-1
@@ -3505,6 +3509,37 @@ C
      *              'Error reported in ',subname
                return
             end if
+            if(.not.upper_round_off)then
+               if(local_son_indice.lt.cv_slavef)then
+                  id_son(local_son_indice)=in
+                  work_per_proc(local_son_indice)=cv_tcostw(in)/
+     $                 DBLE(nmb_propmap_strict)
+                  local_son_indice=local_son_indice+1
+                  if(local_son_indice.eq.cv_slavef)then
+                     CALL ZMUMPS_459(cv_slavef,id_son,
+     $                    work_per_proc)
+                  endif
+               else
+                  current2=cv_slavef
+                  tmp_cost=cv_tcostw(in)/DBLE(nmb_propmap_strict)
+                  do while(current2.ge.1)
+                     if(tmp_cost.lt.work_per_proc(current2))exit
+                     current2=current2-1
+                  enddo
+                  if(current2.ne.cv_slavef)then
+                     if(current2.eq.0)then
+                        current2=1
+                     endif
+                     do j=cv_slavef-1,current2,-1
+                        id_son(j+1)=id_son(j)
+                        work_per_proc(j+1)=work_per_proc(j)
+                     enddo
+                     id_son(current2)=in
+                     work_per_proc(current2)=tmp_cost
+                  endif
+               endif
+            endif
+            upper_round_off=.FALSE.
          endif
          if(.NOT.associated(cv_prop_map(in)%allowed)) then
             call ZMUMPS_434(in,ierr)
@@ -3517,37 +3552,6 @@ C
             end if
          endif
          cv_prop_map(in)%allowed%ind_proc = procs4son
-         if(.not.upper_round_off)then
-            if(local_son_indice.lt.cv_slavef)then
-               id_son(local_son_indice)=in
-               work_per_proc(local_son_indice)=cv_tcostw(in)/
-     $              DBLE(nmb_propmap_strict)
-               local_son_indice=local_son_indice+1
-               if(local_son_indice.eq.cv_slavef)then
-                  CALL ZMUMPS_459(cv_slavef,id_son,
-     $                 work_per_proc)
-               endif
-            else
-               current2=cv_slavef
-               tmp_cost=cv_tcostw(in)/DBLE(nmb_propmap_strict)
-               do while(current2.ge.1)
-                  if(tmp_cost.lt.work_per_proc(current2))exit
-                  current2=current2-1
-               enddo
-               if(current2.ne.cv_slavef)then
-                  if(current2.eq.0)then
-                     current2=1
-                  endif
-                  do j=cv_slavef-1,current2,-1
-                     id_son(j+1)=id_son(j)
-                     work_per_proc(j+1)=work_per_proc(j)
-                  enddo
-                  id_son(current2)=in
-                  work_per_proc(current2)=tmp_cost
-               endif
-            endif
-         endif
-         upper_round_off=.FALSE.
          in=cv_frere(in)
       end do
       if(are_sons_treated)then

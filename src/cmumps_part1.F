@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -3520,7 +3520,7 @@ C
       RETURN
       END SUBROUTINE CMUMPS_264
       SUBROUTINE CMUMPS_265( COMM_LOAD, ASS_IRECV, 
-     *   BUFR, LBUFR,
+     *   MSGLEN, BUFR, LBUFR,
      *   LBUFR_BYTES, PROCNODE_STEPS,
      *   SLAVEF, IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, POSFAC,
      *   N, IW, LIW, A, LA, NIRBDU, PTRIST, PTLUST_S, PTRFAC, PTRAST,
@@ -3537,7 +3537,7 @@ C
       TYPE (CMUMPS_ROOT_STRUC) :: root
       INTEGER ICNTL( 40 ), KEEP( 150 )
       INTEGER LBUFR, LBUFR_BYTES
-      INTEGER COMM_LOAD, ASS_IRECV
+      INTEGER COMM_LOAD, ASS_IRECV, MSGLEN
       INTEGER BUFR( LBUFR )
       INTEGER N, SLAVEF, IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, LIW, LA
       INTEGER POSFAC, NBFIN
@@ -3579,6 +3579,7 @@ C
       LOGICAL SAME_PROC
       LOGICAL SLAVE_NODE
       LOGICAL BLOCKING, SET_IRECV, MESSAGE_RECEIVED
+      INTEGER ISHIFT_BUFR, LBUFR_LOC, LBUFR_BYTES_LOC
       POSITION = 0
       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
      *                 MPI_INTEGER, COMM, IERR )
@@ -3588,15 +3589,44 @@ C
      *                 MPI_INTEGER, COMM, IERR )
       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, LROW, 1,
      *                 MPI_INTEGER, COMM, IERR )
-      SLAVE_NODE = CMUMPS_275( STEP(INODE),
-     *             PROCNODE_STEPS, SLAVEF ) .NE. MYID
+      MASTER     = CMUMPS_275(STEP(INODE),PROCNODE_STEPS,SLAVEF)
+      SLAVE_NODE = MASTER .NE. MYID
+      IF (SLAVE_NODE .AND. PTRIST(STEP(INODE)) ==0) THEN
+        ISHIFT_BUFR     = ( MSGLEN + KEEP(34) ) / KEEP(34)
+        LBUFR_LOC       = LBUFR - ISHIFT_BUFR + 1
+        LBUFR_BYTES_LOC = LBUFR_LOC * KEEP(34)
+        DO WHILE ( PTRIST( STEP(INODE) ) .EQ. 0 )
+          MASTER = CMUMPS_275(STEP(INODE),PROCNODE_STEPS,SLAVEF)
+          BLOCKING = .TRUE.
+          SET_IRECV = .FALSE.
+          MESSAGE_RECEIVED = .FALSE.
+          CALL CMUMPS_329( COMM_LOAD, ASS_IRECV,
+     *     BLOCKING, SET_IRECV, MESSAGE_RECEIVED,
+     *     MASTER, MAITRE_DESC_BANDE,
+     *     STATUS, 
+     *     BUFR(ISHIFT_BUFR), LBUFR_LOC, LBUFR_BYTES_LOC,
+     *     PROCNODE_STEPS, POSFAC,
+     *     IWPOS, IWPOSCB, IPTRLU,
+     *     LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, 
+     *     PTRIST, PTLUST_S, PTRFAC,
+     *     PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
+     *     IFLAG, IERROR, COMM,
+     *     NBPROCFILS, IPOOL, LPOOL, LEAF,
+     *     NBFIN, MYID, SLAVEF,
+     *
+     *     root, OPASSW, OPELIW, ITLOC, FILS, 
+     *     PTRARW, PTRAIW,
+     *     INTARR, DBLARR, ICNTL, KEEP, ND, FRERE_STEPS,
+     *     LPTRAR, NELT, FRTPTR, FRTELT, 
+     *     ISTEP_TO_INIV2, TAB_POS_IN_PERE )
+          IF (IFLAG.LT.0) RETURN
+        END DO
+      ENDIF
       IF ( SLAVE_NODE ) THEN
          LREQI = LROW + NBROW
       ELSE
          LREQI = NBROW
       END IF
-      IF ((.NOT.SLAVE_NODE).OR.(SLAVE_NODE.AND.
-     $     (PTRIST(STEP(INODE)).NE.0))) THEN
          LREQA = LROW
          IF ( LRLU .LT. LREQA .OR. IWPOS + LREQI
      $        - 1 .GT. IWPOSCB ) THEN
@@ -3631,10 +3661,8 @@ C
          POSCONTRIB = POSFAC
          POSFAC = POSFAC + LREQA
          KEEP(67) = MIN(LRLUS, KEEP(67))
-#if ! defined(IGNORE_COPY)
          CALL CMUMPS_471(.FALSE.,.FALSE.,
      *        LA-LRLUS,0,LREQA,KEEP,LRLU)
-#endif
          IF  ( SLAVE_NODE ) THEN
             IROW   = IWPOS
             INDCOL = IWPOS + NBROW
@@ -3750,181 +3778,12 @@ C
                ENDIF
             ENDIF
          END IF
+         IWPOS = IWPOS - LREQI
          LRLU = LRLU + LREQA
          LRLUS = LRLUS + LREQA
          POSFAC = POSFAC - LREQA
-#if ! defined(IGNORE_COPY)
          CALL CMUMPS_471(.FALSE.,.FALSE.,
      *        LA-LRLUS,0,-LREQA,KEEP,LRLU)
-#endif
-         IWPOS = IWPOS - LREQI
-      ELSE
-         LREQA = LROW * NBROW
-      IF ( LRLU .LT. LREQA .OR. IWPOS + LREQI - 1 .GT. IWPOSCB ) THEN
-        IF ( LRLUS .LT. LREQA ) THEN
-          IFLAG = -9
-          IERROR = LREQA - LRLUS
-          CALL CMUMPS_44( MYID, SLAVEF, COMM )
-          RETURN
-        END IF
-        CALL CMUMPS_94(N, KEEP(28), IW, LIW, A, LA,
-     *       NIRBDU, LRLU, IPTRLU,
-     *       IWPOS, IWPOSCB, PTRIST, PTRAST,
-     *       STEP, PIMASTER, PAMASTER, ITLOC)
-        COMP = COMP+1
-        IF ( LRLU .NE. LRLUS ) THEN
-             WRITE(*,*) 'PB compress ass..process_contrib'
-             WRITE(*,*) 'LRLU,LRLUS=',LRLU,LRLUS
-             IFLAG = -9
-             IERROR = LREQA - LRLUS
-             CALL CMUMPS_44( MYID, SLAVEF, COMM )
-             RETURN
-        END IF
-        IF ( IWPOS + LREQI - 1 .GT. IWPOSCB ) THEN
-          IFLAG  = -8
-          IERROR = IWPOS + LREQI - 1 - IWPOSCB
-          CALL CMUMPS_44( MYID, SLAVEF, COMM )
-          RETURN
-        END IF
-      END IF
-      LRLU  = LRLU - LREQA
-      LRLUS = LRLUS - LREQA
-      POSCONTRIB = POSFAC
-      POSFAC = POSFAC + LREQA
-      KEEP(67) = MIN(LRLUS, KEEP(67))
-#if ! defined(IGNORE_COPY)
-      CALL CMUMPS_471(.FALSE.,.FALSE.,
-     *                           LA-LRLUS,0,LREQA,KEEP,LRLU)
-#endif
-      IF  ( SLAVE_NODE ) THEN
-         IROW   = IWPOS
-         INDCOL = IWPOS + NBROW
-      ELSE
-         IROW   = IWPOS
-         INDCOL = -1
-      END IF
-      IWPOS = IWPOS + LREQI
-      IF ( SLAVE_NODE ) THEN
-         CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                 IW( INDCOL ), LROW, MPI_INTEGER,
-     *                 COMM, IERR )
-      END IF
-      DO I = 1, NBROW
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   IW( IROW + I - 1 ), 1, MPI_INTEGER,
-     *                   COMM, IERR )
-      END DO
-      DO I = 1, NBROW
-        IF (KEEP(50).ne.0) THEN
-          CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   ROW_LENGTH, 1, MPI_INTEGER,
-     *                   COMM, IERR )
-        ELSE
-          ROW_LENGTH=LROW
-        ENDIF
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     *                   A( POSCONTRIB + ( I - 1 ) * LROW ),
-     *                   ROW_LENGTH,
-     *                   MPI_COMPLEX,
-     *                   COMM, IERR )
-      END DO
-      IF ( SLAVE_NODE ) THEN
-        DO WHILE ( PTRIST( STEP(INODE) ) .EQ. 0 )
-          MASTER = CMUMPS_275(STEP(INODE),PROCNODE_STEPS,SLAVEF)
-          BLOCKING = .TRUE.
-          SET_IRECV = .FALSE.
-          MESSAGE_RECEIVED = .FALSE.
-          CALL CMUMPS_329( COMM_LOAD, ASS_IRECV,
-     *     BLOCKING, SET_IRECV, MESSAGE_RECEIVED,
-     *     MASTER, MAITRE_DESC_BANDE,
-     *     STATUS, 
-     *     BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
-     *     IWPOS, IWPOSCB, IPTRLU,
-     *     LRLU, LRLUS, N, IW, LIW, A, LA, NIRBDU, 
-     *     PTRIST, PTLUST_S, PTRFAC,
-     *     PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
-     *     IFLAG, IERROR, COMM,
-     *     NBPROCFILS, IPOOL, LPOOL, LEAF,
-     *     NBFIN, MYID, SLAVEF,
-     *
-     *     root, OPASSW, OPELIW, ITLOC, FILS, 
-     *     PTRARW, PTRAIW,
-     *     INTARR, DBLARR, ICNTL, KEEP, ND, FRERE_STEPS,
-     *     LPTRAR, NELT, FRTPTR, FRTELT, 
-     *     ISTEP_TO_INIV2, TAB_POS_IN_PERE )
-          IF (IFLAG.LT.0) RETURN
-        END DO
-        NBPROCFILS(STEP(INODE))=NBPROCFILS(STEP(INODE))-1
-        IF ( KEEP(55) .eq. 0 ) THEN
-          CALL CMUMPS_539
-     *    (N, INODE, IW, LIW, A, LA,
-     *    NBROW, LROW,
-     *    OPASSW, OPELIW, STEP, PTRIST, PTRAST, ITLOC,
-     *    FILS, PTRARW, PTRAIW, INTARR, DBLARR, ICNTL, KEEP, MYID )
-        ELSE
-          CALL CMUMPS_123(
-     *    NELT, FRTPTR, FRTELT,
-     *    N, INODE, IW, LIW, A, LA,
-     *    NBROW, LROW,
-     *    OPASSW, OPELIW, STEP, PTRIST, PTRAST, ITLOC,
-     *    FILS, PTRARW, PTRAIW, INTARR, DBLARR, ICNTL, KEEP, MYID )
-        ENDIF
-        CALL CMUMPS_40(N, INODE, IW, LIW, A, LA,
-     *  NBROW, LROW, IW( IROW ), IW( INDCOL ), A( POSCONTRIB ),
-     *  OPASSW, OPELIW, STEP, PTRIST, PTRAST, ITLOC,
-     *  FILS, ICNTL, KEEP, MYID )
-        CALL CMUMPS_531
-     *  (N, INODE, IW, LIW,
-     *  NBROW, STEP, PTRIST, ITLOC, KEEP)
-      ELSE
-        NBPROCFILS(STEP(INODE)) = NBPROCFILS(STEP(INODE)) - 1
-        NBPROCFILS(STEP(ISON))  = NBPROCFILS(STEP(ISON)) - 1
-        CALL CMUMPS_39(N, INODE, IW, LIW, A, LA,
-     *  ISON, NBROW, LROW, IW( IROW ),
-     *  A(POSCONTRIB), PTLUST_S, PTRAST,
-     *  STEP, PIMASTER, OPASSW,
-     *  IWPOSCB, MYID, KEEP)
-        IF ( NBPROCFILS(STEP(ISON)) .EQ. 0) THEN
-          ISTCHK = PIMASTER(STEP(ISON))
-          SAME_PROC= ISTCHK .LT. IWPOSCB
-          IF (SAME_PROC) THEN
-            CALL CMUMPS_530(N, ISON, INODE, IWPOSCB,
-     *         PIMASTER, PTLUST_S, IW, LIW, STEP, KEEP)
-          ENDIF
-          IF (SAME_PROC) THEN
-                 ISTCHK = PTRIST(STEP(ISON))
-                 PTRIST(STEP( ISON) ) = -99999999
-          ELSE
-                 PIMASTER(STEP( ISON )) = -99999999
-          ENDIF
-          CALL CMUMPS_152(.FALSE., MYID, N, ISTCHK,
-     *       PAMASTER(STEP(ISON)),
-     *       IW, LIW, NIRBDU, LRLU, LRLUS, IPTRLU, IWPOSCB,
-     *       LA, KEEP
-     *       )
-        ENDIF
-        IF ( NBPROCFILS(STEP(INODE)) .EQ. 0 ) THEN
-         CALL CMUMPS_507( N, IPOOL, LPOOL,
-     *          PROCNODE_STEPS,
-     *          SLAVEF, KEEP(28), KEEP(76), KEEP(80),
-     *          KEEP(47), STEP, INODE+N )
-         IF (KEEP(47) .GE. 3) THEN
-           CALL CMUMPS_500(
-     $          IPOOL, LPOOL, 
-     *          PROCNODE_STEPS, KEEP, SLAVEF, COMM_LOAD,
-     *          MYID, STEP, N, ND, FILS )
-         ENDIF
-        ENDIF
-      END IF
-      LRLU = LRLU + LREQA
-      LRLUS = LRLUS + LREQA
-      POSFAC = POSFAC - LREQA
-#if ! defined(IGNORE_COPY)
-      CALL CMUMPS_471(.FALSE.,.FALSE.,
-     *                           LA-LRLUS,0,-LREQA,KEEP,LRLU)
-#endif
-      IWPOS = IWPOS - LREQI
-      ENDIF
       RETURN
       END SUBROUTINE CMUMPS_265
       SUBROUTINE CMUMPS_143( N, INODE, IW, LIW, A, LA,

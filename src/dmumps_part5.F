@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -245,7 +245,7 @@ C
       IORD = ICNTL(7)
       IF (PROK) WRITE( MP, 220 )
       IF (PROKG.AND.(MPG .NE. MP)) WRITE( MPG, 220 )
- 220  FORMAT( /' DMUMPS Version 4.4.3 -- Jun 2005' )
+ 220  FORMAT( /' DMUMPS Version 4.5.2 -- September 2005' )
       IF ( PROK ) THEN
         IF ( KEEP(50) .eq. 0 ) THEN
           WRITE(MP, '(A)') 'L U Solver for unsymmetric matrices'
@@ -479,6 +479,7 @@ C
          ENDIF
          IF(KEEP(95) .EQ. 3) THEN
             KEEP(23) = 5
+            KEEP(52) = -2
          ELSE IF(KEEP(95) .EQ. 2 .AND. 
      *         (KEEP(23) .EQ. 0 .OR. KEEP(23) .EQ. 7) ) THEN
             IF( ASSOCIATED(id%A) ) THEN
@@ -3367,7 +3368,12 @@ C
       IW(IOLDPS + 3) = NPIV
       CALL DMUMPS_93(MYID,N,IOLDPS,TYPE, IW, LIW, 
      *    A, LA, POSFAC, LRLU, LRLUS, 
-     *    IWPOS, PTRAST, PTRFAC, STEP, KEEP, SSARBR,INODE)
+     *    IWPOS, PTRAST, PTRFAC, STEP, KEEP, SSARBR,INODE,IERR)
+      IF(IERR.LT.0)THEN
+         IFLAG=IERR
+         IERROR=0
+         GOTO 600
+      ENDIF
  500  CONTINUE
       RETURN
   220 CONTINUE
@@ -3863,7 +3869,7 @@ C
      *                      100000 )
         PERLU          = KEEP( 12 )
         IF (KEEP(48)==5) THEN
-           IF((KEEP(50).EQ.1).OR.(CNTL(1).EQ.0))THEN
+           IF((KEEP(50).EQ.1).OR.(CNTL(1).EQ.0.0D0))THEN
               KEEP(10) = INT( DMUMPS_LBUFR_BYTES / KEEP(35) )
               KEEP(10) = KEEP(10) + INT( 2.0D0 *
      *             DBLE(MAX(PERLU,0))*KEEP(10)/100.0D0)
@@ -3895,6 +3901,8 @@ C
         IF(id%KEEP(48).EQ.4)THEN
            DMUMPS_LBUFR_BYTES=DMUMPS_LBUFR_BYTES*5
         ENDIF
+        DMUMPS_LBUFR_BYTES = DMUMPS_LBUFR_BYTES +
+     *        (6 + id%NSLAVES - 2 + 2 * KEEP(127))
         IF (id%NSLAVES.EQ.2) THEN
          DMUMPS_LBUF = INT( 1.01D0 * KEEP( 43 ) *KEEP( 35 )  )
         ELSE

@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF ZMUMPS VERSION 4.5.0
-!   This Version was built on Fri Jul 22 15:57:28 2005
+!   THIS FILE IS PART OF ZMUMPS VERSION 4.5.2
+!   This Version was built on Fri Sep  9 16:03:33 2005
 !
 !  This version of ZMUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV
@@ -40,7 +40,7 @@
 !   S. Pralet (2005), Hybrid scheduling for the parallel solution
 !   of linear systems. Accepted to Parallel Computing.
 !
-!     $Id: zmumps_struc.h,v 1.50 2005/06/20 06:18:43 aguermou Exp $
+!     $Id: zmumps_struc.h,v 1.53 2005/08/28 10:26:32 aguermou Exp $
       INCLUDE 'zmumps_root.h'
       TYPE ZMUMPS_STRUC
         SEQUENCE
@@ -232,4 +232,14 @@
          INTEGER, DIMENSION(:),POINTER ::CB_SON_SIZE
 !    MAX size of factor block on a processor (used for ooc)
          INTEGER  MAX_SIZE_FACTOR
+!    OOC management data that must persist from factorization to solve.
+         INTEGER, DIMENSION(:),   POINTER :: OOC_INODE_SEQUENCE
+         INTEGER, DIMENSION(:),   POINTER :: OOC_NUM_FILE
+         INTEGER, DIMENSION(:),   POINTER :: OOC_POS_IN_FILE
+         INTEGER, DIMENSION(:),   POINTER :: OOC_SIZE_OF_BLOCK
+         INTEGER OOC_MAX_NB_NODES_FOR_ZONE,OOC_TOTAL_NB_NODES
+         INTEGER OOC_NB_FILES
+         CHARACTER,DIMENSION(:,:), POINTER :: OOC_FILE_NAMES  
+         INTEGER,DIMENSION(:), POINTER :: OOC_FILE_NAME_LENGTH
+         CHARACTER(LEN=150) ZMUMPS_OOC_TMPDIR,ZMUMPS_OOC_PREFIX
       END TYPE ZMUMPS_STRUC

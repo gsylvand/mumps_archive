@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.0
-C   This Version was built on Fri Jul 22 15:57:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
+C   This Version was built on Fri Sep  9 16:03:33 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -776,7 +776,12 @@ C
        IW(IOLDPS + 3) = NPIV
       CALL DMUMPS_93(MYID,N,IOLDPS,TYPE_SON,IW,LIW,
      *    A, LA, POSFAC, LRLU, LRLUS,
-     *    IWPOS, PTRAST,PTRFAC,STEP,  KEEP, .FALSE.,INODE)
+     *    IWPOS, PTRAST,PTRFAC,STEP,  KEEP, .FALSE.,INODE,IERR)
+      IF(IERR.LT.0)THEN
+         IFLAG=IERR
+         IERROR=0
+         RETURN
+      ENDIF
       ELSE 
         ISON = INODE
         PDEST_MASTER_ISON = DMUMPS_275(STEP(ISON),

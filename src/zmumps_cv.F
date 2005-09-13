@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.2
-C   This Version was built on Fri Sep  9 16:03:33 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.3
+C   This Version was built on Tue Sep 13 14:45:37 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -3094,8 +3094,6 @@ C
          return
       end if
       allocate(work_per_proc(cv_slavef),id_son(cv_slavef),STAT=allocok)
-      work_per_proc(1:cv_slavef)=0
-      id_son(1:cv_slavef)=0
       if (allocok.gt.0) then
          cv_info(1) = cv_error_memalloc
          cv_info(2) = 2*cv_slavef
@@ -3317,7 +3315,8 @@ C
       real Y
       intrinsic random_number
       integer nmb_propmap_strict,share2,procsrest,current2
-      integer k69onid,nb_free_procs,local_son_indice,nb_procs_for_sons
+      integer k69onid,nb_free_procs,local_son_indice,nb_procs_for_sons,
+     $     ptr_upper_ro_procs
       logical upper_round_off,are_sons_treated
       DOUBLE PRECISION tmp_cost
       if (ctr.le.0) then
@@ -3343,6 +3342,9 @@ C
          istat = 0
          return  
       endif
+      ptr_upper_ro_procs=1
+      work_per_proc(1:cv_slavef)=0
+      id_son(1:cv_slavef)=0
       nmb_sons_inode = 0
       costs_sons = DBLE(0)
       force_cand=(mod(cv_keep(24),2).eq.0)
@@ -3573,6 +3575,7 @@ C
                call ZMUMPS_482(procs4son,k69onid,ierr)
                cv_prop_map(id_son(j))%allowed%ind_proc=procs4son
             enddo
+            ptr_upper_ro_procs=min(j,nmb_procs_inode-nb_procs_for_sons)
          endif
       endif
       in=son
@@ -3619,6 +3622,14 @@ C
             share= 
      *          max(1,NINT(relative_weight*DBLE(nmb_procs_inode)))
             share=min(share,nmb_procs_inode)
+            if(share.lt.relative_weight*DBLE(nmb_procs_inode))then
+               do j=1,ptr_upper_ro_procs
+                  if(id_son(j).eq.in)then
+                     share=share+1
+                     exit
+                  endif
+               enddo
+            endif
             nmb_propmap_strict=share
             offset=1
             share2=

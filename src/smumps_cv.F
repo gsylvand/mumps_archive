@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.3
-C   This Version was built on Tue Sep 13 14:45:37 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
+C   This Version was built on Wed Sep 28 15:22:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -62,11 +62,6 @@ C
       integer, save ::ke69,nb_arch_nodes
       logical,dimension(:),allocatable,save :: allowed_nodes
       integer,dimension(:),allocatable,save :: score
-      contains
-      subroutine SMUMPS_369(n,slavef,icntl,info,
-     *                        ne,nfsiz,frere,fils,keep,
-     *                        procnode,ssarbr,nbsa,peak,istat)
-      implicit none
       type nodelist
          integer::nodenumber
          type(nodelist),pointer::next
@@ -83,12 +78,9 @@ C
          DOUBLE PRECISION:: ncostw_oldinode,ncostm_oldinode,
      *                      tcostw_oldinode,tcostm_oldinode
       end type splitting_data
-      type procsallowed
+      type procs4node_t
          integer, dimension(:), pointer :: ind_proc    
-      end type procsallowed
-      type procs4node
-         type(procsallowed),pointer :: allowed
-      end type procs4node
+      end type procs4node_t
       DOUBLE PRECISION, pointer, dimension(:) ::
      *      cv_proc_workload,
      *      cv_proc_maxwork,
@@ -114,7 +106,12 @@ C
       DOUBLE PRECISION,dimension(:),pointer:: cv_ncostw,
      * cv_tcostw,cv_ncostm,cv_tcostm,cv_layerworkload,cv_layermemused
      * ,cv_layerl0_sorted_costw
-      type(procs4node),dimension(:),pointer :: cv_prop_map
+      type(procs4node_t),dimension(:),pointer :: cv_prop_map
+      contains
+      subroutine SMUMPS_369(n,slavef,icntl,info,
+     *                        ne,nfsiz,frere,fils,keep,
+     *                        procnode,ssarbr,nbsa,peak,istat)
+      implicit none
       integer,intent(in)::n,slavef
       integer, intent(inout),TARGET:: ne(n),nfsiz(n),
      *         procnode(n),ssarbr(n),frere(n),fils(n),keep(150),
@@ -697,12 +694,11 @@ C
       integer pos1,pos2
       SMUMPS_481=.FALSE.
       if((procnumber.lt.1).or.(procnumber.gt.cv_slavef)) return
-      if(.not.associated(cv_prop_map(inode)%allowed)) return
-      if(.not.associated(cv_prop_map(inode)%allowed%ind_proc)) return
+      if(.not.associated(cv_prop_map(inode)%ind_proc)) return
       pos1 = (procnumber-1)/cv_bitsize_of_int +1
       pos2 = mod(procnumber-1,cv_bitsize_of_int)
       SMUMPS_481=btest
-     *               (cv_prop_map(inode)%allowed%ind_proc(pos1),pos2)
+     *               (cv_prop_map(inode)%ind_proc(pos1),pos2)
       return
       end function SMUMPS_481
       subroutine SMUMPS_482(procs4node,procnumber,istat)
@@ -2245,7 +2241,7 @@ C
       cv_last_splitting%tcostw_oldinode=cv_d_invalid
       cv_last_splitting%tcostm_oldinode=cv_d_invalid
       do i=1,cv_n
-         nullify(cv_prop_map(i)%allowed)
+         nullify(cv_prop_map(i)%ind_proc)
       end do
       istat=0
       return
@@ -2495,7 +2491,7 @@ C
       end do
       do i=1,cv_n
          if(cv_frere(i).eq.0) then
-            if(.NOT.associated(cv_prop_map(i)%allowed)) then
+            if(.NOT.associated(cv_prop_map(i)%ind_proc)) then
                call SMUMPS_434(i,ierr)
                if(ierr.ne.0) then
                   if(cv_lp.gt.0) 
@@ -2505,7 +2501,7 @@ C
                   return
                end if
             endif
-            cv_prop_map(i)%allowed%ind_proc = procindex
+            cv_prop_map(i)%ind_proc = procindex
             call SMUMPS_433(i,pctr,ierr)
             if(ierr.ne.0) then
             if(cv_lp.gt.0)write(cv_lp,*) 
@@ -3144,7 +3140,7 @@ C
       istat= -1
       if(cv_frere(inode).eq.cv_n+1) return 
       subname='MOD_PROPMAP'
-      if(.NOT.associated(cv_prop_map(inode)%allowed)) return
+      if(.NOT.associated(cv_prop_map(inode)%ind_proc)) return
       nmb_procs_inode = 0
       do j=1,cv_slavef
          if( SMUMPS_481(inode,j))then
@@ -3227,7 +3223,7 @@ C
       do while(in.gt.0)
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
-            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            procs4son = cv_prop_map(inode)%ind_proc
          else
             do k=1,cv_size_ind_proc
                do j=0,cv_bitsize_of_int-1
@@ -3285,7 +3281,7 @@ C
          end if
          ierr=0
          in1=in
-         cv_prop_map(in1)%allowed%ind_proc=procs4son
+         cv_prop_map(in1)%ind_proc=procs4son
          call SMUMPS_517(in1,ctr-1,ierr)
          if(ierr.ne.0) then
             if(cv_lp.gt.0) write(cv_lp,*)
@@ -3405,12 +3401,12 @@ C
       do while(in.gt.0)
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
-            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            procs4son = cv_prop_map(inode)%ind_proc
             are_sons_treated=.FALSE.
             nb_procs_for_sons=nmb_procs_inode
             nmb_propmap_strict=nmb_procs_inode
          elseif(nmb_procs_inode .LE. cv_keep(83)) then
-            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            procs4son = cv_prop_map(inode)%ind_proc
             are_sons_treated=.FALSE.
             nb_procs_for_sons=nmb_procs_inode
             nmb_propmap_strict=nmb_procs_inode
@@ -3543,7 +3539,7 @@ C
             endif
             upper_round_off=.FALSE.
          endif
-         if(.NOT.associated(cv_prop_map(in)%allowed)) then
+         if(.NOT.associated(cv_prop_map(in)%ind_proc)) then
             call SMUMPS_434(in,ierr)
             if(ierr.ne.0) then
                if(cv_lp.gt.0) 
@@ -3553,13 +3549,13 @@ C
                return
             end if
          endif
-         cv_prop_map(in)%allowed%ind_proc = procs4son
+         cv_prop_map(in)%ind_proc = procs4son
          in=cv_frere(in)
       end do
       if(are_sons_treated)then
          if(nb_procs_for_sons.ne.nmb_procs_inode)then
             do j=1,nmb_procs_inode-nb_procs_for_sons
-               procs4son=cv_prop_map(id_son(j))%allowed%ind_proc
+               procs4son=cv_prop_map(id_son(j))%ind_proc
                do while(current.le.cv_slavef)
                   if(ke69 .gt.1) then
                      call SMUMPS_493(current-1,k69onid,ierr)
@@ -3573,7 +3569,7 @@ C
                   endif
                enddo
                call SMUMPS_482(procs4son,k69onid,ierr)
-               cv_prop_map(id_son(j))%allowed%ind_proc=procs4son
+               cv_prop_map(id_son(j))%ind_proc=procs4son
             enddo
             ptr_upper_ro_procs=min(j,nmb_procs_inode-nb_procs_for_sons)
          endif
@@ -3583,11 +3579,11 @@ C
       do while(in.gt.0)
          if( (nmb_sons_inode.ge.nmb_procs_inode).AND. 
      &       (nmb_procs_inode.LT.4) ) then
-            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            procs4son = cv_prop_map(inode)%ind_proc
          elseif(nmb_procs_inode .LE. cv_keep(83)) then
-            procs4son = cv_prop_map(inode)%allowed%ind_proc
+            procs4son = cv_prop_map(inode)%ind_proc
          else
-            procs4son = cv_prop_map(in)%allowed%ind_proc
+            procs4son = cv_prop_map(in)%ind_proc
             in_tmp=in
             nfront=cv_nfsiz(in_tmp)
             npiv=0
@@ -3699,7 +3695,7 @@ C
          endif
          ierr=0
          in1=in
-         cv_prop_map(in1)%allowed%ind_proc = procs4son
+         cv_prop_map(in1)%ind_proc = procs4son
          call SMUMPS_433(in1,ctr-1,ierr)
          if(ierr.ne.0) then
             if(cv_lp.gt.0) write(cv_lp,*)
@@ -3721,26 +3717,13 @@ C
       istat = -1
       if(cv_frere(inode).eq.cv_n+1) return 
       subname='PROPMAP_INIT'
-      if(.not.associated(cv_prop_map(inode)%allowed)) then
-         allocate(cv_prop_map(inode)%allowed,STAT=allocok)
-         if (allocok.gt.0) then
-            cv_info(1) = cv_error_memalloc
-            cv_info(2) = 1
-            istat = cv_error_memalloc
-            if(cv_lp.gt.0) 
-     *           write(cv_lp,*)
-     *           'memory allocation error in ',subname
-            return
-         end if
-         nullify(cv_prop_map(inode)%allowed%ind_proc)
-      end if
       if(.not.associated(
-     *     cv_prop_map(inode)%allowed%ind_proc)) then
-         allocate(cv_prop_map(inode)%allowed%ind_proc
+     *     cv_prop_map(inode)%ind_proc)) then
+         allocate(cv_prop_map(inode)%ind_proc
      *        (cv_size_ind_proc),STAT=allocok)
          if (allocok.gt.0) then
             cv_info(1) = cv_error_memalloc
-            cv_info(2) = 1
+            cv_info(2) = cv_size_ind_proc
             istat = cv_error_memalloc
             if(cv_lp.gt.0) 
      *           write(cv_lp,*)
@@ -3750,8 +3733,8 @@ C
       end if
       do k=1,cv_size_ind_proc
          do j=0,cv_bitsize_of_int-1
-            cv_prop_map(inode)%allowed%ind_proc(k)=
-     *         ibclr(cv_prop_map(inode)%allowed%ind_proc(k),j)
+            cv_prop_map(inode)%ind_proc(k)=
+     *         ibclr(cv_prop_map(inode)%ind_proc(k),j)
          end do
       end do
       istat = 0
@@ -3764,26 +3747,15 @@ C
       character (len=48):: subname
       subname='PROPMAP_TERM'
       istat =-1
-      if(associated(cv_prop_map(inode)%allowed)) then
-         if(associated(cv_prop_map(inode)%allowed%ind_proc)) then
-            deallocate(cv_prop_map(inode)%allowed%ind_proc,
-     *                 STAT=ierr)
-            if(ierr.ne.0) then
-               if(cv_lp.gt.0) 
-     *              write(cv_lp,*)'Memory deallocation error in ',
-     *              subname
+      if(associated(cv_prop_map(inode)%ind_proc)) then
+        deallocate(cv_prop_map(inode)%ind_proc, STAT=ierr)
+        if(ierr.ne.0) then
+           if(cv_lp.gt.0) 
+     *         write(cv_lp,*)'Memory deallocation error in ', subname
                istat = cv_error_memdeloc
                return
-            end if
-         endif
-         deallocate(cv_prop_map(inode)%allowed,STAT=ierr)
-         if(ierr.ne.0) then
-            if(cv_lp.gt.0) 
-     *              write(cv_lp,*)'Memory deallocation error in ',
-     *              subname
-            istat = cv_error_memdeloc
-            return
-         end if
+        endif
+        nullify(cv_prop_map(inode)%ind_proc)
       end if
       istat =0
       return
@@ -3814,13 +3786,13 @@ C
       istat= -1
       subname='PROPMAP4SPLIT'
       if((cv_frere(inode).eq.cv_n+1).OR.(cv_frere(ifather).eq.cv_n+1)
-     *     .OR.(.NOT.associated(cv_prop_map(inode)%allowed))) then
+     *     .OR.(.NOT.associated(cv_prop_map(inode)%ind_proc))) then
          if(cv_lp.gt.0) 
      *        write(cv_lp,*)'tototo signalled error to'
      *        ,subname
          return
       endif
-      if(.NOT.associated(cv_prop_map(ifather)%allowed)) then
+      if(.NOT.associated(cv_prop_map(ifather)%ind_proc)) then
          call SMUMPS_434(ifather,ierr)
          if(ierr.ne.0) then
             if(cv_lp.gt.0) 
@@ -3830,8 +3802,8 @@ C
             return
          end if
       endif
-      cv_prop_map(ifather)%allowed%ind_proc = 
-     *                    cv_prop_map(inode)%allowed%ind_proc 
+      cv_prop_map(ifather)%ind_proc = 
+     *                    cv_prop_map(inode)%ind_proc 
       istat=0
       return
       end subroutine SMUMPS_437

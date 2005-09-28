@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.3
-C   This Version was built on Tue Sep 13 14:45:37 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
+C   This Version was built on Wed Sep 28 15:22:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -3060,330 +3060,305 @@ C
       NBTOP       = POOL(LPOOL - 1)
       INSUBTREE   = POOL(LPOOL - 2)
       IF ( KEEP(76) > 6 .OR. KEEP(76) < 0 ) THEN
-        WRITE(*,*) "Error 2 in DMUMPS_509: unknown strategy"
-        CALL DMUMPS_ABORT()
+         WRITE(*,*) "Error 2 in DMUMPS_509: unknown strategy"
+         CALL DMUMPS_ABORT()
       ENDIF
       ATOMIC_SUBTREE =  ( KEEP(76) == 1 .OR. KEEP(76) == 3)
       IF ( DMUMPS_508(POOL, LPOOL) ) THEN
-        WRITE(*,*) "Error 1 in DMUMPS_509"
-        CALL DMUMPS_ABORT()
+         WRITE(*,*) "Error 1 in DMUMPS_509"
+         CALL DMUMPS_ABORT()
       ENDIF
       IF ( .NOT. ATOMIC_SUBTREE ) THEN
-        LEFT = (NBTOP == 0)
-        IF(.NOT.LEFT)THEN
-           IF((KEEP(76).EQ.4).OR.(KEEP(76).EQ.5))THEN
-              IF(NBINSUBTREE.EQ.0)THEN
-                 LEFT=.FALSE.
-              ELSE
-                 IF ( POOL(NBINSUBTREE) < 0 ) THEN
-                    I = -POOL(NBINSUBTREE)
-                 ELSE IF ( POOL(NBINSUBTREE) > N ) THEN
-                    I = POOL(NBINSUBTREE) - N
-                 ELSE
-                    I = POOL(NBINSUBTREE)
-                 ENDIF
-                 IF ( POOL(LPOOL-2-NBTOP) < 0 ) THEN
-                    J = -POOL(LPOOL-2-NBTOP)
-                 ELSE IF ( POOL(LPOOL-2-NBTOP) > N ) THEN
-                    J = POOL(LPOOL-2-NBTOP) - N
-                 ELSE
-                    J = POOL(LPOOL-2-NBTOP)
-                 ENDIF
-                 IF(KEEP(76).EQ.4)THEN
-                    IF(DEPTH_FIRST_LOAD(STEP(J)).GE.
-     $                   DEPTH_FIRST_LOAD(STEP(I)))THEN
-                       LEFT=.TRUE.
-                    ELSE
-                       LEFT=.FALSE.
-                    ENDIF
-                 ENDIF
-                 IF(KEEP(76).EQ.5)THEN
-                    IF(COST_TRAV(STEP(J)).LE.
-     $                   COST_TRAV(STEP(I)))THEN
-                       LEFT=.TRUE.
-                    ELSE
-                       LEFT=.FALSE.
-                    ENDIF
-                 ENDIF
-              ENDIF           
-           ENDIF
-        ENDIF
+         LEFT = (NBTOP == 0)
+         IF(.NOT.LEFT)THEN
+            IF((KEEP(76).EQ.4).OR.(KEEP(76).EQ.5))THEN
+               IF(NBINSUBTREE.EQ.0)THEN
+                  LEFT=.FALSE.
+               ELSE
+                  IF ( POOL(NBINSUBTREE) < 0 ) THEN
+                     I = -POOL(NBINSUBTREE)
+                  ELSE IF ( POOL(NBINSUBTREE) > N ) THEN
+                     I = POOL(NBINSUBTREE) - N
+                  ELSE
+                     I = POOL(NBINSUBTREE)
+                  ENDIF
+                  IF ( POOL(LPOOL-2-NBTOP) < 0 ) THEN
+                     J = -POOL(LPOOL-2-NBTOP)
+                  ELSE IF ( POOL(LPOOL-2-NBTOP) > N ) THEN
+                     J = POOL(LPOOL-2-NBTOP) - N
+                  ELSE
+                     J = POOL(LPOOL-2-NBTOP)
+                  ENDIF
+                  IF(KEEP(76).EQ.4)THEN
+                     IF(DEPTH_FIRST_LOAD(STEP(J)).GE.
+     $                    DEPTH_FIRST_LOAD(STEP(I)))THEN
+                        LEFT=.TRUE.
+                     ELSE
+                        LEFT=.FALSE.
+                     ENDIF
+                  ENDIF
+                  IF(KEEP(76).EQ.5)THEN
+                     IF(COST_TRAV(STEP(J)).LE.
+     $                    COST_TRAV(STEP(I)))THEN
+                        LEFT=.TRUE.
+                     ELSE
+                        LEFT=.FALSE.
+                     ENDIF
+                  ENDIF
+               ENDIF           
+            ENDIF
+         ENDIF
       ELSE
-        IF ( INSUBTREE == 1 ) THEN
-          IF (NBINSUBTREE == 0) THEN
-            WRITE(*,*) "Error 3 in DMUMPS_509"
-            CALL DMUMPS_ABORT()
-          ENDIF
-          LEFT = .TRUE.
-        ELSE
-          LEFT = ( NBTOP == 0)
-        ENDIF
+         IF ( INSUBTREE == 1 ) THEN
+            IF (NBINSUBTREE == 0) THEN
+               WRITE(*,*) "Error 3 in DMUMPS_509"
+               CALL DMUMPS_ABORT()
+            ENDIF
+            LEFT = .TRUE.
+         ELSE
+            LEFT = ( NBTOP == 0)
+         ENDIF
       ENDIF
  222  CONTINUE
       IF ( LEFT ) THEN
-        INODE = POOL( NBINSUBTREE )
-        NBINSUBTREE = NBINSUBTREE - 1
-        IF ( INODE < 0 ) THEN
-          INODE_EFF = -INODE
-        ELSE IF ( INODE > N ) THEN
-          INODE_EFF = INODE - N
-        ELSE
-          INODE_EFF = INODE
-        ENDIF
-        IF ( DMUMPS_167( STEP(INODE_EFF), PROCNODE, SLAVEF) ) THEN
-           IF((KEEP(47).GE.2.AND.KEEP(81).EQ.1).AND.
-     *        (INSUBTREE.EQ.0))THEN
-              CALL DMUMPS_513(.TRUE.)
-           ENDIF
-           INSUBTREE = 1
-        ELSE IF ( DMUMPS_283( STEP(INODE_EFF), PROCNODE,
-     *              SLAVEF)) THEN
-           IF((KEEP(47).GE.2.AND.KEEP(81).EQ.1).AND.
-     *        (INSUBTREE.EQ.1))THEN
-              CALL DMUMPS_513(.FALSE.)
-           ENDIF
-           INSUBTREE = 0
-        END IF
+         INODE = POOL( NBINSUBTREE )
+         IF(KEEP(81).EQ.2)THEN
+#if ! defined(NOT_ATM_POOL_SPECIAL)
+            IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+#endif
+               CALL DMUMPS_561(INODE,POOL,LPOOL,N,
+     $              STEP,KEEP,PROCNODE,SLAVEF,MYID,SBTR_FLAG,
+     $              PROC_FLAG,MIN_PROC)
+               IF(.NOT.SBTR_FLAG)THEN
+                  WRITE(*,*)MYID,': ca a change pour moi'
+                  LEFT=.FALSE.
+                  GOTO 222
+               ENDIF
+#if ! defined(NOT_ATM_POOL_SPECIAL)
+            ENDIF
+#endif
+         ELSEIF(KEEP(81).EQ.3)THEN
+#if ! defined(NOT_ATM_POOL_SPECIAL)
+            IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+#endif
+               NODE_TO_EXTRACT=INODE
+               FLAG_MEM=.FALSE.
+               CALL CHECK_MEM_CONST_FOR_POOL(FLAG_MEM)
+               IF(FLAG_MEM)THEN
+                  CALL DMUMPS_561(INODE,POOL,LPOOL,N,
+     $                 STEP,KEEP,PROCNODE,SLAVEF,MYID,SBTR_FLAG,
+     $                 PROC_FLAG,MIN_PROC)
+                  IF(.NOT.SBTR_FLAG)THEN
+                     LEFT=.FALSE.
+                     GOTO 222
+                  ENDIF
+               ENDIF
+#if ! defined(NOT_ATM_POOL_SPECIAL)
+            ENDIF
+#endif
+         ENDIF
+         NBINSUBTREE = NBINSUBTREE - 1
+         IF ( INODE < 0 ) THEN
+            INODE_EFF = -INODE
+         ELSE IF ( INODE > N ) THEN
+            INODE_EFF = INODE - N
+         ELSE
+            INODE_EFF = INODE
+         ENDIF
+         IF ( DMUMPS_167( STEP(INODE_EFF), PROCNODE, SLAVEF) ) THEN
+            IF((KEEP(47).GE.2.AND.KEEP(81).EQ.1).AND.
+     *           (INSUBTREE.EQ.0))THEN
+               CALL DMUMPS_513(.TRUE.)
+            ENDIF
+            INSUBTREE = 1
+         ELSE IF ( DMUMPS_283( STEP(INODE_EFF), PROCNODE,
+     *           SLAVEF)) THEN
+            IF((KEEP(47).GE.2.AND.KEEP(81).EQ.1).AND.
+     *           (INSUBTREE.EQ.1))THEN
+               CALL DMUMPS_513(.FALSE.)
+            ENDIF
+            INSUBTREE = 0
+         END IF
       ELSE
-        IF (NBTOP < 1 ) THEN
-          WRITE(*,*) "Error 5 in DMUMPS_509", NBTOP
-          CALL DMUMPS_ABORT()
-        ENDIF
-        INODE = POOL( LPOOL - 2 - NBTOP )
-        IF(KEEP(81).EQ.1)THEN
-           CALL DMUMPS_520
-     &      (INODE,UPPER,SLAVEF,KEEP,STEP,POOL,LPOOL,PROCNODE,N)
-           IF(UPPER)THEN
-              GOTO 666
-           ELSE
-              NBINSUBTREE=NBINSUBTREE-1
-              IF ( DMUMPS_167( STEP(INODE), PROCNODE,
-     *             SLAVEF) ) THEN
-                 INSUBTREE = 1
-              ELSE IF ( DMUMPS_283( STEP(INODE), PROCNODE,
-     *                SLAVEF)) THEN
-                 INSUBTREE = 0
-              ENDIF
-              GOTO 777
-           ENDIF
-        ENDIF
-        IF(KEEP(81).EQ.2)THEN
-           SBTR_FLAG=.FALSE.
-           PROC_FLAG=.FALSE.
-           CALL DMUMPS_552(INODE,POOL,LPOOL,N,STEP,KEEP,
-     $     PROCNODE,SLAVEF,MYID,SBTR_FLAG,PROC_FLAG,MIN_PROC)
-           IF(SBTR_FLAG)THEN
-              LEFT=.TRUE.
-              GOTO 222
-           ENDIF
-           IF(.NOT.PROC_FLAG)THEN
-              NODE_TO_EXTRACT=INODE
-              IF((INODE.GE.0).AND.(INODE.LE.N))THEN
-                 CALL DMUMPS_553(MIN_PROC,POOL,
-     $                LPOOL,INODE)
-                 IF(DMUMPS_167(STEP(INODE),PROCNODE,
-     *                SLAVEF))THEN
-                    WRITE(*,*)MYID,': Extracting from a subtree
-     $                   for helping',MIN_PROC
-                    LEFT=.TRUE.
-                    GOTO 222
-                 ELSE
-                    IF(NODE_TO_EXTRACT.NE.INODE)THEN
-                       WRITE(*,*)MYID,': Extracting from top
-     $                      inode=',inode,'for helping',MIN_PROC
-                    ENDIF
-                    CALL CLEAN_POOL_MEM_INFO(INODE)
-                 ENDIF
-              ENDIF
-              DO I=1,NBTOP
-                 IF (POOL(LPOOL-2-I).EQ.INODE)THEN
-                    GOTO 452
-                 ENDIF
-              ENDDO
- 452          CONTINUE
-              POS_TO_EXTRACT=I
-              DO I=POS_TO_EXTRACT,NBTOP-1
-                 POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
-              ENDDO
-           ENDIF
-        ELSE
+         IF (NBTOP < 1 ) THEN
+            WRITE(*,*) "Error 5 in DMUMPS_509", NBTOP
+            CALL DMUMPS_ABORT()
+         ENDIF
+         INODE = POOL( LPOOL - 2 - NBTOP )
+         IF(KEEP(81).EQ.1)THEN
+            CALL DMUMPS_520
+     &           (INODE,UPPER,SLAVEF,KEEP,STEP,POOL,LPOOL,PROCNODE,N)
+            IF(UPPER)THEN
+               GOTO 666
+            ELSE
+               NBINSUBTREE=NBINSUBTREE-1
+               IF ( DMUMPS_167( STEP(INODE), PROCNODE,
+     *              SLAVEF) ) THEN
+                  INSUBTREE = 1
+               ELSE IF ( DMUMPS_283( STEP(INODE), PROCNODE,
+     *                 SLAVEF)) THEN
+                  INSUBTREE = 0
+               ENDIF
+               GOTO 777
+            ENDIF
+         ENDIF
+         IF(KEEP(81).EQ.2)THEN
+            CALL DMUMPS_561(INODE,POOL,LPOOL,N,STEP,KEEP,
+     $           PROCNODE,SLAVEF,MYID,SBTR_FLAG,PROC_FLAG,MIN_PROC)
+            IF(SBTR_FLAG)THEN
+               LEFT=.TRUE.
+               GOTO 222
+            ENDIF
+         ELSE
 #if defined(POOL_EXTRACT_MNG)
-           IF(KEEP(76).EQ.4)THEN
+            IF(KEEP(76).EQ.4)THEN
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+               IF((INODE.GE.0).AND.(INODE.LE.N))THEN
 #endif                 
-                 POS_TO_EXTRACT=-1
-                 NODE_TO_EXTRACT=-1
-                 DO I=NBTOP,1,-1
-                    IF(NODE_TO_EXTRACT.LT.0)THEN
-                       POS_TO_EXTRACT=I
+                  POS_TO_EXTRACT=-1
+                  NODE_TO_EXTRACT=-1
+                  DO I=NBTOP,1,-1
+                     IF(NODE_TO_EXTRACT.LT.0)THEN
+                        POS_TO_EXTRACT=I
 #if defined(NOT_ATM_POOL_SPECIAL)
-                       INODE_EFF = POOL(LPOOL-2-I)
-                       IF ( POOL(LPOOL-2-I) < 0 ) THEN
-                          NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
-                       ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
-                          NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
-                       ELSE
-                          NODE_TO_EXTRACT = POOL(LPOOL-2-I)
-                       ENDIF
+                        INODE_EFF = POOL(LPOOL-2-I)
+                        IF ( POOL(LPOOL-2-I) < 0 ) THEN
+                           NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
+                        ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
+                           NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
+                        ELSE
+                           NODE_TO_EXTRACT = POOL(LPOOL-2-I)
+                        ENDIF
 #else
-                       NODE_TO_EXTRACT=POOL(LPOOL-2-I)
+                        NODE_TO_EXTRACT=POOL(LPOOL-2-I)
 #endif
-                    ELSE
-                       IF(DEPTH_FIRST_LOAD(STEP(POOL(LPOOL-2-I))).LT.
-     $                   DEPTH_FIRST_LOAD(STEP(NODE_TO_EXTRACT)))THEN
-                          POS_TO_EXTRACT=I
+                     ELSE
+                        IF(DEPTH_FIRST_LOAD(STEP(POOL(LPOOL-2-I))).LT.
+     $                       DEPTH_FIRST_LOAD(STEP(NODE_TO_EXTRACT)))
+     $                       THEN
+                           POS_TO_EXTRACT=I
 #if defined(NOT_ATM_POOL_SPECIAL)
-                          INODE_EFF = POOL(LPOOL-2-I)
-                          IF ( POOL(LPOOL-2-I) < 0 ) THEN
-                             NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
-                          ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
-                             NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
-                          ELSE
-                             NODE_TO_EXTRACT = POOL(LPOOL-2-I)
-                          ENDIF
+                           INODE_EFF = POOL(LPOOL-2-I)
+                           IF ( POOL(LPOOL-2-I) < 0 ) THEN
+                              NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
+                           ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
+                              NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
+                           ELSE
+                              NODE_TO_EXTRACT = POOL(LPOOL-2-I)
+                           ENDIF
 #else
-                          NODE_TO_EXTRACT=POOL(LPOOL-2-I)
+                           NODE_TO_EXTRACT=POOL(LPOOL-2-I)
 #endif
-                       ENDIF
-                    ENDIF
-                 ENDDO
+                        ENDIF
+                     ENDIF
+                  ENDDO
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-                 INODE = NODE_TO_EXTRACT
+                  INODE = NODE_TO_EXTRACT
 #else
-                 INODE = INODE_EFF
+                  INODE = INODE_EFF
 #endif
-                 DO I=POS_TO_EXTRACT,NBTOP
-                    IF(I.NE.NBTOP)THEN
-                       POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
-                    ENDIF
-                 ENDDO
+                  DO I=POS_TO_EXTRACT,NBTOP
+                     IF(I.NE.NBTOP)THEN
+                        POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
+                     ENDIF
+                  ENDDO
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              ENDIF
+               ENDIF
 #endif
-           ENDIF
-           IF(KEEP(76).EQ.5)THEN
+            ENDIF
+            IF(KEEP(76).EQ.5)THEN
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+               IF((INODE.GE.0).AND.(INODE.LE.N))THEN
 #endif
-                 POS_TO_EXTRACT=-1
-                 NODE_TO_EXTRACT=-1
-                 DO I=NBTOP,1,-1
-                    IF(NODE_TO_EXTRACT.LT.0)THEN
-                       POS_TO_EXTRACT=I
+                  POS_TO_EXTRACT=-1
+                  NODE_TO_EXTRACT=-1
+                  DO I=NBTOP,1,-1
+                     IF(NODE_TO_EXTRACT.LT.0)THEN
+                        POS_TO_EXTRACT=I
 #if defined(NOT_ATM_POOL_SPECIAL)
-                       INODE_EFF = POOL(LPOOL-2-I)
-                       IF ( POOL(LPOOL-2-I) < 0 ) THEN
-                          NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
-                       ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
-                          NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
-                       ELSE
-                          NODE_TO_EXTRACT = POOL(LPOOL-2-I)
-                       ENDIF
+                        INODE_EFF = POOL(LPOOL-2-I)
+                        IF ( POOL(LPOOL-2-I) < 0 ) THEN
+                           NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
+                        ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
+                           NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
+                        ELSE
+                           NODE_TO_EXTRACT = POOL(LPOOL-2-I)
+                        ENDIF
 #else
-                       NODE_TO_EXTRACT=POOL(LPOOL-2-I)
+                        NODE_TO_EXTRACT=POOL(LPOOL-2-I)
 #endif
-                    ELSE
-                       IF(COST_TRAV(STEP(POOL(LPOOL-2-I))).GT.
-     $                      COST_TRAV(STEP(NODE_TO_EXTRACT)))THEN
-                          POS_TO_EXTRACT=I
+                     ELSE
+                        IF(COST_TRAV(STEP(POOL(LPOOL-2-I))).GT.
+     $                       COST_TRAV(STEP(NODE_TO_EXTRACT)))THEN
+                           POS_TO_EXTRACT=I
 #if defined(NOT_ATM_POOL_SPECIAL)
-                          INODE_EFF = POOL(LPOOL-2-I)
-                          IF ( POOL(LPOOL-2-I) < 0 ) THEN
-                             NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
-                          ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
-                             NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
-                          ELSE
-                             NODE_TO_EXTRACT = POOL(LPOOL-2-I)
-                          ENDIF
+                           INODE_EFF = POOL(LPOOL-2-I)
+                           IF ( POOL(LPOOL-2-I) < 0 ) THEN
+                              NODE_TO_EXTRACT=-POOL(LPOOL-2-I)
+                           ELSE IF ( POOL(LPOOL-2-I) > N ) THEN
+                              NODE_TO_EXTRACT = POOL(LPOOL-2-I) - N
+                           ELSE
+                              NODE_TO_EXTRACT = POOL(LPOOL-2-I)
+                           ENDIF
 #else
-                          NODE_TO_EXTRACT=POOL(LPOOL-2-I)
+                           NODE_TO_EXTRACT=POOL(LPOOL-2-I)
 #endif
-                       ENDIF
-                    ENDIF
-                 ENDDO
+                        ENDIF
+                     ENDIF
+                  ENDDO
 #if ! defined(NOT_ATM_POOL_SPECIAL)              
-                 INODE = NODE_TO_EXTRACT
+                  INODE = NODE_TO_EXTRACT
 #else
-                 INODE = INODE_EFF
+                  INODE = INODE_EFF
 #endif
-                 DO I=POS_TO_EXTRACT,NBTOP
-                    IF(I.NE.NBTOP)THEN
-                       POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
-                    ENDIF
-                 ENDDO
+                  DO I=POS_TO_EXTRACT,NBTOP
+                     IF(I.NE.NBTOP)THEN
+                        POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
+                     ENDIF
+                  ENDDO
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              ENDIF
+               ENDIF
 #endif
-           ENDIF
+            ENDIF
 #endif
-           IF(KEEP(81).EQ.3)THEN
+            IF(KEEP(81).EQ.3)THEN
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+               IF((INODE.GE.0).AND.(INODE.LE.N))THEN
 #endif
-                 NODE_TO_EXTRACT=INODE
-                 FLAG_MEM=.FALSE.
-                 CALL CHECK_MEM_CONST_FOR_POOL(FLAG_MEM)
-                 IF(FLAG_MEM)THEN
-                    SBTR_FLAG=.FALSE.
-                    PROC_FLAG=.FALSE.
-                    CALL DMUMPS_552(INODE,POOL,LPOOL,N,STEP,
-     $                   KEEP,PROCNODE,SLAVEF,MYID,SBTR_FLAG,PROC_FLAG
-     $                   ,MIN_PROC)
-                    IF(SBTR_FLAG)THEN
-                       LEFT=.TRUE.
-                       GOTO 222
-                    ENDIF
-                    IF(.NOT.PROC_FLAG)THEN
-                       CALL DMUMPS_553(MIN_PROC,POOL,
-     $                      LPOOL,INODE)
-                       IF(DMUMPS_167(STEP(INODE),PROCNODE,
-     *                      SLAVEF))THEN
-                          WRITE(*,*)MYID,': Extracting from a subtree
-     $                         for helping',MIN_PROC
-                          LEFT=.TRUE.
-                          GOTO 222
-                       ELSE
-                          IF(NODE_TO_EXTRACT.NE.INODE)THEN
-                             WRITE(*,*)MYID,': Extracting from top
-     $                            inode=',inode,'for helping',MIN_PROC
-                          ENDIF
-                          CALL CLEAN_POOL_MEM_INFO(INODE)
-                       ENDIF
-                       DO I=1,NBTOP
-                          IF (POOL(LPOOL-2-I).EQ.INODE)THEN
-                             GOTO 453
-                          ENDIF
-                       ENDDO
- 453                   CONTINUE
-                       POS_TO_EXTRACT=I
-                       DO I=POS_TO_EXTRACT,NBTOP-1
-                          POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
-                       ENDDO
-                    ENDIF
-                 ELSE
-                    CALL CLEAN_POOL_MEM_INFO(INODE)
-                 ENDIF
+                  NODE_TO_EXTRACT=INODE
+                  FLAG_MEM=.FALSE.
+                  CALL CHECK_MEM_CONST_FOR_POOL(FLAG_MEM)
+                  IF(FLAG_MEM)THEN
+                     CALL DMUMPS_561(INODE,POOL,LPOOL,N,
+     $                    STEP,KEEP,PROCNODE,SLAVEF,MYID,SBTR_FLAG,
+     $                    PROC_FLAG,MIN_PROC)
+                     IF(SBTR_FLAG)THEN
+                        LEFT=.TRUE.
+                        GOTO 222
+                     ENDIF
+                  ELSE
+                     CALL CLEAN_POOL_MEM_INFO(INODE)
+                  ENDIF
 #if ! defined(NOT_ATM_POOL_SPECIAL)
-              ENDIF
+               ENDIF
 #endif
-           ENDIF
-        ENDIF
- 666    CONTINUE
-        NBTOP = NBTOP - 1
-        IF((INODE.GT.0).AND.(INODE.LE.N))THEN
-           IF ((( KEEP(80) == 2 .OR. KEEP(80)==3 ) .AND.
-     *          ( KEEP(47) == 4 ))) THEN
-              CALL DMUMPS_514(INODE,2)
-           ENDIF
-        ENDIF
-        IF ( INODE < 0 ) THEN
-          INODE_EFF = -INODE
-        ELSE IF ( INODE > N ) THEN
-          INODE_EFF = INODE - N
-        ELSE
-          INODE_EFF = INODE
-        ENDIF
+            ENDIF
+         ENDIF
+ 666     CONTINUE
+         NBTOP = NBTOP - 1
+         IF((INODE.GT.0).AND.(INODE.LE.N))THEN
+            IF ((( KEEP(80) == 2 .OR. KEEP(80)==3 ) .AND.
+     *           ( KEEP(47) == 4 ))) THEN
+               CALL DMUMPS_514(INODE,2)
+            ENDIF
+         ENDIF
+         IF ( INODE < 0 ) THEN
+            INODE_EFF = -INODE
+         ELSE IF ( INODE > N ) THEN
+            INODE_EFF = INODE - N
+         ELSE
+            INODE_EFF = INODE
+         ENDIF
       END IF
  777  CONTINUE
       POOL(LPOOL)     = NBINSUBTREE 
@@ -3396,7 +3371,7 @@ C
       USE DMUMPS_LOAD
       IMPLICIT NONE
       INTEGER INODE,LPOOL,N,MYID,SLAVEF,PROC,MIN_PROC
-      INTEGER POOL(LPOOL),KEEP(150),STEP(KEEP(28)),PROCNODE(KEEP(28))
+      INTEGER POOL(LPOOL),KEEP(150),STEP(N),PROCNODE(KEEP(28))
       INTEGER DMUMPS_275
       EXTERNAL DMUMPS_275
       LOGICAL SBTR,FLAG_SAME_PROC
@@ -3450,11 +3425,62 @@ C
                POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
             ENDIF
          ENDDO
+         POOL(LPOOL-2-NBTOP)=INODE
          CALL CLEAN_POOL_MEM_INFO(INODE)
 #if ! defined(NOT_ATM_POOL_SPECIAL)
       ENDIF
 #endif
       END SUBROUTINE DMUMPS_552
+      SUBROUTINE DMUMPS_561(INODE,POOL,LPOOL,N,STEP,KEEP,
+     $     PROCNODE,SLAVEF,MYID,SBTR_FLAG,PROC_FLAG,MIN_PROC)
+      USE DMUMPS_LOAD
+      IMPLICIT NONE
+      INTEGER INODE,LPOOL,N,SLAVEF,MYID,MIN_PROC
+      INTEGER POOL(LPOOL),KEEP(150),PROCNODE(KEEP(28)),STEP(N)
+      LOGICAL SBTR_FLAG,PROC_FLAG
+      EXTERNAL DMUMPS_167
+      LOGICAL DMUMPS_167
+      INTEGER NODE_TO_EXTRACT,I,POS_TO_EXTRACT,NBTOP
+      NBTOP= POOL(LPOOL - 1)
+      SBTR_FLAG=.FALSE.
+      PROC_FLAG=.FALSE.
+      CALL DMUMPS_552(INODE,POOL,LPOOL,N,STEP,KEEP,
+     $     PROCNODE,SLAVEF,MYID,SBTR_FLAG,PROC_FLAG,MIN_PROC)
+      IF(SBTR_FLAG)THEN
+         RETURN
+      ENDIF
+      IF(.NOT.PROC_FLAG)THEN
+         NODE_TO_EXTRACT=INODE
+         IF((INODE.GE.0).AND.(INODE.LE.N))THEN
+            CALL DMUMPS_553(MIN_PROC,POOL,
+     $           LPOOL,INODE)
+            IF(DMUMPS_167(STEP(INODE),PROCNODE,
+     *           SLAVEF))THEN
+               WRITE(*,*)MYID,': Extracting from a subtree
+     $              for helping',MIN_PROC
+               SBTR_FLAG=.TRUE.
+               RETURN
+            ELSE
+               IF(NODE_TO_EXTRACT.NE.INODE)THEN
+                  WRITE(*,*)MYID,': Extracting from top
+     $                 inode=',inode,'for helping',MIN_PROC
+               ENDIF
+               CALL CLEAN_POOL_MEM_INFO(INODE)
+            ENDIF
+         ENDIF
+         DO I=1,NBTOP
+            IF (POOL(LPOOL-2-I).EQ.INODE)THEN
+               GOTO 452
+            ENDIF
+         ENDDO
+ 452     CONTINUE
+         POS_TO_EXTRACT=I
+         DO I=POS_TO_EXTRACT,NBTOP-1
+            POOL(LPOOL-2-I)=POOL(LPOOL-2-I-1)
+         ENDDO
+         POOL(LPOOL-2-NBTOP)=INODE
+      ENDIF
+      END SUBROUTINE DMUMPS_561
       SUBROUTINE DMUMPS_128(N, NELT, ELTPTR, ELTVAR, LIW,
      *            IKEEP, PTRAR,
      *            IORD, NFSIZ, FILS, FRERE, 

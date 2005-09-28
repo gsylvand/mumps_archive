@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.3
-C   This Version was built on Tue Sep 13 14:45:37 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
+C   This Version was built on Wed Sep 28 15:22:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -245,7 +245,7 @@ C
       IORD = ICNTL(7)
       IF (PROK) WRITE( MP, 220 )
       IF (PROKG.AND.(MPG .NE. MP)) WRITE( MPG, 220 )
- 220  FORMAT( /' DMUMPS Version 4.5.3 -- September 2005' )
+ 220  FORMAT( /' DMUMPS Version 4.5.4 -- September 2005' )
       IF ( PROK ) THEN
         IF ( KEEP(50) .eq. 0 ) THEN
           WRITE(MP, '(A)') 'L U Solver for unsymmetric matrices'

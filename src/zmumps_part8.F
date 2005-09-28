@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.3
-C   This Version was built on Tue Sep 13 14:45:37 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
+C   This Version was built on Wed Sep 28 15:22:28 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -87,7 +87,7 @@ C
       type (scaling_data_t) :: scaling_data
       DOUBLE PRECISION ARRET
       COMPLEX*16 DUMMY(1)
-      INTEGER IDUMMY(1)
+      INTEGER IDUMMY(1), JDUMMY(1)
       INTEGER allocok, PERLU
       INTEGER NBRHS, NBRHS_EFF, BEG_RHS, END_RHS, 
      &        IBEG, LD_RHS, KDEC, MINLWC, NBRHSMIN, 
@@ -658,7 +658,7 @@ C
         IF ( .NOT.I_AM_SLAVE ) THEN
         CALL ZMUMPS_521(id%NSLAVES,id%N, id%MYID, id%COMM,
      *          MTYPE, RHSSOL, id%RHS(IBEG), LD_RHS, NBRHS_EFF,
-     *          id%PTLUST_S(1), id%KEEP(1), id%PROCNODE_STEPS(1),
+     *          JDUMMY, id%KEEP(1), id%PROCNODE_STEPS(1),
      *          IDUMMY, 1,
      *          id%STEP(1), id%BUFR(1), id%LBUFR, id%LBUFR_BYTES)
         ELSE
@@ -1039,13 +1039,13 @@ C
         IF ( .NOT. I_AM_SLAVE ) THEN
         CALL ZMUMPS_521(id%NSLAVES,id%N, id%MYID, id%COMM,
      *          MTYPE, RHSSOL, Y, LD_RHS, NBRHS_EFF,
-     *          id%PTLUST_S(1), id%KEEP, id%PROCNODE_STEPS(1),
+     *          JDUMMY, id%KEEP(1), id%PROCNODE_STEPS(1),
      *          IDUMMY, 1,
      *          id%STEP(1), id%BUFR(1), id%LBUFR, id%LBUFR_BYTES)
         ELSE
         CALL ZMUMPS_521(id%NSLAVES,id%N, id%MYID, id%COMM,
      *          MTYPE, RHSSOL, Y, LD_RHS, NBRHS_EFF,
-     *          id%PTLUST_S(1), id%KEEP, id%PROCNODE_STEPS(1),
+     *          id%PTLUST_S(1), id%KEEP(1), id%PROCNODE_STEPS(1),
      *          IS(1), LIW_PASSED,
      *          id%STEP(1), id%BUFR(1), id%LBUFR, id%LBUFR_BYTES)
         ENDIF
@@ -2914,7 +2914,8 @@ C
           RHSSOL(JJ, K) = W(PTRACB(STEP(INODE))+I-1+(K-1)*LIELL)
         ENDDO
   150 CONTINUE
-  160 IN = INODE
+  160 CONTINUE
+      IN = INODE
   170 IN = FILS(IN)
       IF (IN .GT. 0) GOTO 170
       IF (IN .EQ. 0) THEN
@@ -2996,8 +2997,8 @@ C
       LIELL = IW(IPOS-2)+IW(IPOS+1)
       IPOS = IPOS + 1
       NPIV = IW(IPOS)
-      IF (NPIV .EQ. 0) GOTO 280
       IPOS = IPOS + 1
+      IF (NPIV .EQ. 0) GOTO 280
       APOS = PTRFAC(IW(IPOS))
       NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
       IPOS = IPOS + 1 + NSLAVES
@@ -3102,7 +3103,8 @@ C
           RHSSOL(JJ,K) = W(I+(K-1)*LIELL)
         ENDDO
       ENDDO
-  280 IN = INODE
+  280 CONTINUE
+      IN = INODE
   290 IN = FILS(IN)
       IF (IN .GT. 0) GOTO 290
       IF (IN .EQ. 0) THEN

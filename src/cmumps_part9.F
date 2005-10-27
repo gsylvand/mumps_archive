@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -1240,6 +1240,7 @@ C
         L(K) = 0
    15 CONTINUE
       DO 30 J = 1,N
+         IF (IP(J+1)-IP(J) .GT. N/10 .AND. N.GT.50) GO TO 30
         DO 20 K = IP(J),IP(J+1)-1
           I = IRN(K)
           IF (A(K).GT.U(I)) GO TO 20
@@ -1587,12 +1588,12 @@ C
         IF (CW(J).NE.0) GO TO 30
         K = K + 1
         I = RW(K)
-        IPERM(I) = J
+        IPERM(I) = -J
    30 CONTINUE
       DO 40 J = N+1,M
         K = K + 1
         I = RW(K)
-        IPERM(I) = J
+        IPERM(I) = -J
    40 CONTINUE
       RETURN
       END

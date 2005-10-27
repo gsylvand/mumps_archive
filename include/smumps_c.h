@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-   This Version was built on Wed Sep 28 15:22:28 2005
+   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+   This Version was built on Thu Oct 27 10:41:20 2005
 
   This version of MUMPS is provided to you free of charge. It is public
   domain, based on public domain software developed during the Esprit IV
@@ -42,7 +42,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/* $Id: smumps_c.h,v 1.21 2005/04/18 10:58:44 jylexcel Exp $ */
+/* $Id: smumps_c.h,v 1.23 2005/10/13 09:51:11 jylexcel Exp $ */
 /* Mostly written in march 2002 (JYL) */
 
 #if ( ! defined SMUMPS_C_H )
@@ -65,6 +65,10 @@ typedef struct
     F_INT icntl[40];
     F_DOUBLE2 cntl[5];
     F_INT n;
+   
+		F_INT nz_alloc; /* used in matlab interface to decide if
+											 we free + malloc when we have large variation */
+
     /* Assembled entry */
     F_INT nz; F_INT *irn; F_INT *jcn; F_DOUBLE *a;
     /* Distributed entry */
@@ -101,50 +105,50 @@ typedef struct
 
 
 #if defined(UPPER)
-  #define smumps_f77_ SMUMPS_F77
-  #define smumps_affect_mapping_ SMUMPS_AFFECT_MAPPING
-  #define smumps_affect_nullspace_ SMUMPS_AFFECT_NULLSPACE
-  #define smumps_affect_colsca_ SMUMPS_AFFECT_COLSCA
-  #define smumps_affect_rowsca_ SMUMPS_AFFECT_ROWSCA 
-  #define smumps_affect_uns_perm_     SMUMPS_AFFECT_UNS_PERM
-  #define smumps_affect_sym_perm_     SMUMPS_AFFECT_SYM_PERM
-  #define smumps_nullify_c_mapping_   SMUMPS_NULLIFY_C_MAPPING
-  #define smumps_nullify_c_nullspace_ SMUMPS_NULLIFY_C_NULLSPACE
-  #define smumps_nullify_c_sym_perm_  SMUMPS_NULLIFY_C_SYM_PERM
-  #define smumps_nullify_c_uns_perm_  SMUMPS_NULLIFY_C_UNS_PERM
-  #define smumps_nullify_c_colsca_    SMUMPS_NULLIFY_C_COLSCA
-  #define smumps_nullify_c_rowsca_    SMUMPS_NULLIFY_C_ROWSCA
+#define smumps_f77_ SMUMPS_F77
+#define smumps_affect_mapping_ SMUMPS_AFFECT_MAPPING
+#define smumps_affect_nullspace_ SMUMPS_AFFECT_NULLSPACE
+#define smumps_affect_colsca_ SMUMPS_AFFECT_COLSCA
+#define smumps_affect_rowsca_ SMUMPS_AFFECT_ROWSCA 
+#define smumps_affect_uns_perm_     SMUMPS_AFFECT_UNS_PERM
+#define smumps_affect_sym_perm_     SMUMPS_AFFECT_SYM_PERM
+#define smumps_nullify_c_mapping_   SMUMPS_NULLIFY_C_MAPPING
+#define smumps_nullify_c_nullspace_ SMUMPS_NULLIFY_C_NULLSPACE
+#define smumps_nullify_c_sym_perm_  SMUMPS_NULLIFY_C_SYM_PERM
+#define smumps_nullify_c_uns_perm_  SMUMPS_NULLIFY_C_UNS_PERM
+#define smumps_nullify_c_colsca_    SMUMPS_NULLIFY_C_COLSCA
+#define smumps_nullify_c_rowsca_    SMUMPS_NULLIFY_C_ROWSCA
 #elif defined(Add__)
-  #define smumps_f77_ smumps_f77__
-  #define smumps_affect_mapping_ smumps_affect_mapping__
-  #define smumps_affect_nullspace_ smumps_affect_nullspace__
-  #define smumps_affect_colsca_ smumps_affect_colsca__
-  #define smumps_affect_rowsca_ smumps_affect_rowsca__
-  #define smumps_affect_uns_perm_     smumps_affect_uns_perm__     
-  #define smumps_affect_sym_perm_     smumps_affect_sym_perm__     
-  #define smumps_nullify_c_mapping_   smumps_nullify_c_mapping__    
-  #define smumps_nullify_c_nullspace_ smumps_nullify_c_nullspace__  
-  #define smumps_nullify_c_sym_perm_  smumps_nullify_c_sym_perm__   
-  #define smumps_nullify_c_uns_perm_  smumps_nullify_c_uns_perm__   
-  #define smumps_nullify_c_colsca_    smumps_nullify_c_colsca__     
-  #define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca__    
+#define smumps_f77_ smumps_f77__
+#define smumps_affect_mapping_ smumps_affect_mapping__
+#define smumps_affect_nullspace_ smumps_affect_nullspace__
+#define smumps_affect_colsca_ smumps_affect_colsca__
+#define smumps_affect_rowsca_ smumps_affect_rowsca__
+#define smumps_affect_uns_perm_     smumps_affect_uns_perm__     
+#define smumps_affect_sym_perm_     smumps_affect_sym_perm__     
+#define smumps_nullify_c_mapping_   smumps_nullify_c_mapping__    
+#define smumps_nullify_c_nullspace_ smumps_nullify_c_nullspace__  
+#define smumps_nullify_c_sym_perm_  smumps_nullify_c_sym_perm__   
+#define smumps_nullify_c_uns_perm_  smumps_nullify_c_uns_perm__   
+#define smumps_nullify_c_colsca_    smumps_nullify_c_colsca__     
+#define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca__    
 #elif defined(Add_)
 /* Default. Nothing to do */
 #else
 /* Name without underscore is used */
-  #define smumps_f77_ smumps_f77
-  #define smumps_affect_mapping_ smumps_affect_mapping
-  #define smumps_affect_nullspace_ smumps_affect_nullspace
-  #define smumps_affect_colsca_ smumps_affect_colsca
-  #define smumps_affect_rowsca_ smumps_affect_rowsca
-  #define smumps_affect_uns_perm_     smumps_affect_uns_perm     
-  #define smumps_affect_sym_perm_     smumps_affect_sym_perm     
-  #define smumps_nullify_c_mapping_   smumps_nullify_c_mapping    
-  #define smumps_nullify_c_nullspace_ smumps_nullify_c_nullspace  
-  #define smumps_nullify_c_sym_perm_  smumps_nullify_c_sym_perm   
-  #define smumps_nullify_c_uns_perm_  smumps_nullify_c_uns_perm   
-  #define smumps_nullify_c_colsca_    smumps_nullify_c_colsca     
-  #define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca
+#define smumps_f77_ smumps_f77
+#define smumps_affect_mapping_ smumps_affect_mapping
+#define smumps_affect_nullspace_ smumps_affect_nullspace
+#define smumps_affect_colsca_ smumps_affect_colsca
+#define smumps_affect_rowsca_ smumps_affect_rowsca
+#define smumps_affect_uns_perm_     smumps_affect_uns_perm     
+#define smumps_affect_sym_perm_     smumps_affect_sym_perm     
+#define smumps_nullify_c_mapping_   smumps_nullify_c_mapping    
+#define smumps_nullify_c_nullspace_ smumps_nullify_c_nullspace  
+#define smumps_nullify_c_sym_perm_  smumps_nullify_c_sym_perm   
+#define smumps_nullify_c_uns_perm_  smumps_nullify_c_uns_perm   
+#define smumps_nullify_c_colsca_    smumps_nullify_c_colsca     
+#define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca
 #endif
 
 void smumps_c(SMUMPS_STRUC_C * smumps_par);

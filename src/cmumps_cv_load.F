@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -145,7 +145,7 @@ C
        INTEGER, DIMENSION(:),POINTER, SAVE :: 
      *         FILS_LOAD, STEP_LOAD,
      *         FRERE_LOAD, ND_LOAD,
-     $         NE_LOAD
+     $         NE_LOAD,DAD_LOAD
       INTEGER, DIMENSION(:,:),POINTER, SAVE, PRIVATE :: CAND_LOAD
       INTEGER, DIMENSION(:),POINTER, SAVE, 
      $         PRIVATE :: MY_FIRST_LEAF,MY_NB_LEAF, MY_ROOT_SBTR
@@ -159,7 +159,7 @@ C
       DOUBLE PRECISION,DIMENSION(:),POINTER, SAVE :: COST_TRAV
       INTEGER, DIMENSION(:),POINTER, SAVE :: DEPTH_FIRST_LOAD
       PUBLIC :: DEPTH_FIRST_LOAD,COST_TRAV, FILS_LOAD,STEP_LOAD,
-     $     FRERE_LOAD, ND_LOAD,NE_LOAD
+     $     FRERE_LOAD, ND_LOAD,NE_LOAD,DAD_LOAD
       INTEGER, SAVE     :: ROOT_CURRENT_SUBTREE,CURRENT_BEST,
      $     SECOND_CURRENT_BEST
       PUBLIC :: ROOT_CURRENT_SUBTREE,CURRENT_BEST,
@@ -319,6 +319,7 @@ C
       KEEP     =>id%KEEP
       FILS_LOAD=>id%FILS
       FRERE_LOAD=>id%FRERE_STEPS
+      DAD_LOAD=>id%DAD_STEPS
       PROCNODE_LOAD=>id%PROCNODE_STEPS
       STEP_LOAD=>id%STEP
       NE_LOAD=>id%NE_STEPS
@@ -1007,6 +1008,7 @@ C
       NULLIFY(NE_LOAD)
       NULLIFY(CAND_LOAD)
       NULLIFY(STEP_TO_NIV2_LOAD)
+      NULLIFY(DAD_LOAD)
       IF (BDC_SBTR.OR.BDC_POOL_MNG) THEN
          DEALLOCATE(MEM_SUBTREE)
          DEALLOCATE(SBTR_PEAK_ARRAY)
@@ -4698,15 +4700,11 @@ C
          GOTO 10
       ENDIF
       NCB=ND_LOAD(STEP_LOAD(INODE))-NELIM
-      FATHER_NODE = INODE
       WHAT=5
- 222  CONTINUE
-      FATHER_NODE=FRERE(STEP(FATHER_NODE))
-      IF (FATHER_NODE.GT.0) GOTO 222
+      FATHER_NODE=DAD_LOAD(STEP_LOAD(INODE))
       IF (FATHER_NODE.EQ.0) THEN
          RETURN
       ENDIF
-      FATHER_NODE = - FATHER_NODE
       IF((FRERE(STEP(FATHER_NODE)).EQ.0).AND.
      $     (FATHER_NODE.EQ.KEEP(38)))THEN
          RETURN 
@@ -5305,14 +5303,7 @@ C
      $     ((NBINSUBTREE.NE.0)))THEN
          DO J=INDICE_SBTR,NB_SUBTREES
             NODE=MY_ROOT_SBTR(J) 
-            I = NODE
-            I=FRERE_LOAD(STEP_LOAD(I))
- 100        CONTINUE
-            IF ( I > 0 ) THEN
-               I = FRERE_LOAD(STEP_LOAD(I))
-               GOTO 100
-            ENDIF
-            FATHER=-I
+            FATHER=DAD_LOAD(STEP_LOAD(NODE))
             I=FATHER
  110        CONTINUE
             IF ( I > 0 ) THEN
@@ -5383,14 +5374,7 @@ C
 #else
          NODE=POOL(LPOOL-2-J)
 #endif
-         I = NODE
-         I=FRERE_LOAD(STEP_LOAD(I))
- 10      CONTINUE
-         IF ( I > 0 ) THEN
-            I = FRERE_LOAD(STEP_LOAD(I))
-            GOTO 10
-         ENDIF
-         FATHER=-I
+         FATHER=DAD_LOAD(STEP_LOAD(NODE))
          I=FATHER
  11      CONTINUE
          IF ( I > 0 ) THEN

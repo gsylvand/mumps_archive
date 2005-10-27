@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -1905,6 +1905,7 @@ C
       INTEGER IERR
       INTEGER K,I,L1,L2,IWFR,NCMPA,LLIW, IN, IFSON
       INTEGER NEMIN, MPRINT, LP, MP, LDIAG, ITEMP, symmetry
+      INTEGER MedDens, NBQD, AvgDens
       LOGICAL PROK
       INTEGER NBBUCK
       INTEGER, DIMENSION(:), ALLOCATABLE :: HEAD
@@ -1919,7 +1920,7 @@ C
       INTEGER MTRANS, COMPRESS,NCMP,IERROR,J,JPERM,NCST,NLOCKED,P11,
      *     K1,K2,P1,P2
       INTEGER TOTEL
-      LOGICAL IDENT,V1,V2
+      LOGICAL IDENT,V1,V2, REBUILTG
       EXTERNAL DMUMPS_197, DMUMPS_198, 
      *         DMUMPS_199, DMUMPS_351,
      *         DMUMPS_557, DMUMPS_201
@@ -1927,9 +1928,9 @@ C
       EXTERNAL DMUMPS_200
 #endif
       EXTERNAL DMUMPS_547, DMUMPS_550,
-     *     DMUMPS_EXPAND_NV_PE, DMUMPS_UPDATE_NV,
+     *     DMUMPS_565, DMUMPS_566,
      *     DMUMPS_549,DMUMPS_556
-#if(SP_DEBUG >= 1)
+#if(SP_DEBUG >= 3)
       INTERFACE
          SUBROUTINE DMUMPS_547(
      *        N,NZ, IRN, ICN, PERM,
@@ -1947,16 +1948,16 @@ C
          INTEGER N11,N22,N,NCMP
          INTEGER PIV(N),PERM(N),IPERM(N)
          END SUBROUTINE DMUMPS_550
-         SUBROUTINE DMUMPS_EXPAND_NV_PE(N,NCMP,N11,N22,PIV,
+         SUBROUTINE DMUMPS_565(N,NCMP,N11,N22,PIV,
      *        PE,NV,PE_EXP,NV_EXP)
          INTEGER N11,N22,N,NCMP
          INTEGER PIV(N),NV(N),PE(N),NV_EXP(N),PE_EXP(N)
-         END SUBROUTINE DMUMPS_EXPAND_NV_PE
-         SUBROUTINE DMUMPS_UPDATE_NV(N,LIW,IPE,IW,N11,N22,PIV,
+         END SUBROUTINE DMUMPS_565
+         SUBROUTINE DMUMPS_566(N,LIW,IPE,IW,N11,N22,PIV,
      *        PE,NV,WORK)
          INTEGER N11,N22,N,LIW
          INTEGER PIV(N),NV(N),PE(N),IPE(N+1),IW(LIW),WORK(N)
-         END SUBROUTINE DMUMPS_UPDATE_NV
+         END SUBROUTINE DMUMPS_566
          SUBROUTINE DMUMPS_549(N,PE,PERM,NFILS,WORK)
          INTEGER N
          INTEGER PE(N),PERM(N),NFILS(N),WORK(N)
@@ -1978,11 +1979,15 @@ C
          INFO( 2 ) = LIW
          RETURN
       ENDIF
+      LLIW = LIW - 2*N - 1
+      L1 = LLIW + 1
+      L2 = L1 + N
       MPRINT= ICNTL(3)
       PROK  = (MPRINT.GT.0)
       LP    = ICNTL(1)
       MP    = ICNTL(3)
       LDIAG = ICNTL(4)
+      REBUILTG = .FALSE.
       IF (KEEP(1).LT.1) KEEP(1) = 1
       NEMIN = KEEP(1)
       IF (LDIAG.GT.2 .AND. MP.GT.0) THEN
@@ -1996,30 +2001,51 @@ C
         WRITE (MP,99997) (IKEEP(I,1),I=1,K)
        ENDIF
       ENDIF
+          CALL DMUMPS_351(N,NZ,IRN, ICN, IW(1), LLIW, 
+     *         IW(L2), PTRAR(1,2),
+     *         PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
+     *         INFO(1), INFO(2), ICNTL, symmetry, 
+     *         SYM, MedDens, NBQD, AvgDens)
+          INFO(8) = symmetry
+          NCMP    = N   ! default value if no compress
+          IF(NBQD .GT. 0) THEN
+             IF( KEEP(50) .EQ. 2 .AND. ICNTL(12) .LE. 1 ) THEN
+                IF(KEEP(95) .NE. 1) THEN
+                   IF ( PROK ) 
+     *                  WRITE( MPRINT,*) 
+     *                  'Compressed/constrained ordering set OFF'
+                   KEEP(95) = 1   
+                ENDIF
+             ENDIF
+          ENDIF
       IF ( (IORD.GT.1) .AND. (KEEP(60).NE.0) ) THEN
        IORD = 0    ! AMD based ordering is used
       ENDIF 
       IF (IORD.EQ.7) 
-     *     CALL DMUMPS_423( N, SYM, NSLAVES, IORD)
+     *     CALL DMUMPS_423( N, SYM, NSLAVES, IORD, 
+     *                       symmetry,MedDens, NBQD, AvgDens)
 #if ! defined(metis)
       IF ( IORD .EQ. 5 ) THEN
         IF (PROK) WRITE(MP,*)
      *  'WARNING: METIS not available. Ordering set to default.'
-        CALL DMUMPS_423( N, SYM, NSLAVES, IORD)
+        CALL DMUMPS_423( N, SYM, NSLAVES, IORD,
+     *                       symmetry,MedDens, NBQD, AvgDens)
       END IF
 #endif
 #if ! defined(pord)
       IF ( IORD .EQ. 4 ) THEN
         IF (PROK) WRITE(MP,*)
      *  'WARNING: PORD not available. Ordering set to default.'
-        CALL DMUMPS_423( N, SYM, NSLAVES, IORD)
+        CALL DMUMPS_423( N, SYM, NSLAVES, IORD,
+     *                       symmetry,MedDens, NBQD, AvgDens)
       END IF
 #endif
 #if ! defined(scotch)
       IF ( IORD .EQ. 3 ) THEN
         IF (PROK) WRITE(MP,*)
      *  'WARNING: SCOTCH not available. Ordering set to default.'
-        CALL DMUMPS_423( N, SYM, NSLAVES, IORD)
+        CALL DMUMPS_423( N, SYM, NSLAVES, IORD,
+     *                       symmetry,MedDens, NBQD, AvgDens)
       END IF
 #endif
       IF(SYM .EQ. 2) THEN
@@ -2054,9 +2080,6 @@ C
 #if(SP_DEBUG >= 2)
       WRITE(*,*) 'ICNTL(12),MTRANS,COMPRESS',KEEP(95),MTRANS,COMPRESS
 #endif
-        LLIW = LIW - 2*N - 1
-      L1 = LLIW + 1
-      L2 = L1 + N
       IF ((IORD.NE.1) .AND. (IORD.NE.5)) THEN
           IF(COMPRESS .EQ. 2) THEN
 #if(SP_DEBUG >= 2)
@@ -2079,11 +2102,12 @@ C
      *            IW(L1), FILS, IWFR,
      *            IERROR, KEEP, ICNTL)
              symmetry = 1.0D0
-          ELSE
+          ELSE IF (REBUILTG) THEN
              CALL DMUMPS_351
      *            (N,NZ,IRN, ICN, IW(1), LLIW, IW(L2), PTRAR(1,2), 
      *            PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114), 
-     *            INFO(1), INFO(2), ICNTL, symmetry, SYM)
+     *            INFO(1), INFO(2), ICNTL, symmetry, SYM,
+     *            MedDens, NBQD, AvgDens)
              INFO(8) = symmetry
              NCMP = N
           ENDIF
@@ -2113,6 +2137,7 @@ C
                    IF (MP.GT.0 .AND. ICNTL(4).GE.2)
      *                  WRITE(MP,'(/A)')
      *                  ' WARNING input matrix data modified'
+                   REBUILTG = .TRUE.
                    GOTO 100
                 ELSE
                    KEEP(23) = 0
@@ -2287,11 +2312,12 @@ C
      *              IW(L1), FILS, IWFR,
      *              IERROR, KEEP, ICNTL)
                symmetry = 1.0D0
-            ELSE
+            ELSE IF (REBUILTG) THEN
                CALL DMUMPS_351
      *              (N,NZ,IRN, ICN, IW(1), LLIW, IW(L2), PTRAR(1,2), 
      *              PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114), 
-     *              INFO(1), INFO(2), ICNTL, symmetry, SYM)
+     *              INFO(1), INFO(2), ICNTL, symmetry, SYM,
+     *              MedDens, NBQD, AvgDens)
                INFO(8) = symmetry
                NCMP = N
             ENDIF
@@ -2321,6 +2347,7 @@ C
                      IF (MP.GT.0 .AND. ICNTL(4).GE.2)
      *                    WRITE(MP,'(/A)')
      *                    ' WARNING input matrix data modified'
+                     REBUILTG = .TRUE.
                      GOTO 200
                   ELSE
                      KEEP(23) = 0
@@ -2379,26 +2406,29 @@ C
             ENDIF
          ENDIF
          DO K=1,N
-            IW(K) = 0
+            PTRAR(K,1) = 0
          ENDDO
          DO K=1,N
             IF ((IKEEP(K,1).LE.0).OR.(IKEEP(K,1).GT.N)) 
      *           GO TO 40
-            IF (IW(IKEEP(K,1)).EQ.1) THEN
+            IF (PTRAR(IKEEP(K,1),1).EQ.1) THEN
                GOTO 40
             ELSE
-               IW(IKEEP(K,1)) = 1
+               PTRAR(IKEEP(K,1),1) = 1
             ENDIF
          ENDDO
       ENDIF
        IF (IORD.EQ.1 .OR. IORD.EQ.5 .OR. COMPRESS.EQ.-1) THEN
           COMPRESS = 0
         IF (KEEP(106)==1) THEN
+        IF (IORD.NE.1) THEN ! GNEW already done
           CALL DMUMPS_351(N,NZ,IRN, ICN, IW(1), LLIW, 
      *         IW(L2), PTRAR(1,2),
      *         PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
-     *         INFO(1), INFO(2), ICNTL, symmetry, SYM)
+     *         INFO(1), INFO(2), ICNTL, symmetry, SYM,
+     *         MedDens, NBQD, AvgDens)
           INFO(8) = symmetry
+        ENDIF
 #if defined(GRIDTLSE)
           IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
      *         (KEEP(23) .EQ. 7 ) ) THEN
@@ -2464,7 +2494,7 @@ C
      *    (N, IW(L2), IW(L1), IKEEP(1,1), IKEEP(1,2), IKEEP(1,3),
      *     NFSIZ, PTRAR, INFO(6), FILS, FRERE, 
      *     PTRAR(1,3), NEMIN, PTRAR(1,4), KEEP(60),
-     *     KEEP(20),KEEP(38),PTRAR(1,2),KEEP(104))
+     *     KEEP(20),KEEP(38),PTRAR(1,2),KEEP(104),IW(1))
 #endif
       IF (KEEP(60).NE.0)  THEN
          IF (KEEP(60)==1) THEN
@@ -2492,7 +2522,7 @@ C
      *  PTRAR(1,3), INFO(6),
      *  INFO(5), KEEP(2), KEEP(50), INFO(20), KEEP(101))
       IF ( KEEP(53) .NE. 0 ) THEN
-        CALL DMUMPS_209( N, FRERE, FILS, NFSIZ )
+        CALL DMUMPS_209( N, FRERE, FILS, NFSIZ, KEEP(20) )
       END IF
       IF (  (KEEP(48) == 4 .AND. KEEP(10).GT.0)
      *     .OR.
@@ -3557,26 +3587,29 @@ C
       END SUBROUTINE DMUMPS_200
 #else
       SUBROUTINE DMUMPS_557(N, IPE, NV, IPS, NE, NA, NFSIZ,
-     *                  NODE, NSTEPS,
-     *                  FILS, FRERE, ND, NEMIN, SUBORD, KEEP60, 
-     *                  KEEP20, KEEP38, NAMALG,NAMALGMAX)
+     *               NODE, NSTEPS,
+     *               FILS, FRERE, ND, NEMIN, SUBORD, KEEP60, 
+     *               KEEP20, KEEP38, NAMALG,NAMALGMAX,
+     *               CUMUL)
       INTEGER N, NSTEPS, KEEP60
       INTEGER ND(N), NFSIZ(N)
       INTEGER IPE(N), FILS(N), FRERE(N), SUBORD(N)
       INTEGER NV(N), IPS(N), NE(N), NA(N), NODE(N)
       INTEGER NEMIN
-      INTEGER NAMALG(N),NAMALGMAX
+      INTEGER NAMALG(N),NAMALGMAX, CUMUL(N)
+      DOUBLE PRECISION ACCU
       INTEGER I,IF,IS,NR,NR1,INS,INL,INB,INF,INFS,INSW
       INTEGER K,L,ISON,IN,IFSON,INO
       INTEGER INOS,IB,IL,INT
       INTEGER IPERM
-#if defined(AMALGTOFATHER)
+#if ! defined(NOAMALGTOFATHER)
       INTEGER DADI
       LOGICAL AMALG_TO_father_OK
 #endif
       DO 10 I=1,N
-        IPS(I) = 0
-        NE(I) = 0
+        CUMUL(I)= 0
+        IPS(I)  = 0
+        NE(I)   = 0
         NODE(I) = 0
         SUBORD(I) = 0
         NAMALG(I) = 0
@@ -3623,7 +3656,7 @@ C
        GO TO 1000
       ENDIF
       INB = FRERE(INS)
-#if defined(AMALGTOFATHER)
+#if ! defined(NOAMALGTOFATHER)
       IF (NODE(INB).GE.NODE(INS)) THEN
 #else
       IF (NV(INB).GE.NV(INS)) THEN
@@ -3677,7 +3710,7 @@ C
           IL = IL - 1
           NA(IL) = 0
    70   CONTINUE
-#if defined(AMALGTOFATHER)
+#if ! defined(NOAMALGTOFATHER)
         DADI = -IPE(I)  ! IPE was saved
         IF ( (DADI.NE.0) .AND.
      *      (
@@ -3685,23 +3718,35 @@ C
      *       ( (KEEP20.NE.DADI).AND.(KEEP38.NE.DADI) )
      *      ) 
      *     ) THEN
+           ACCU = 
+     &     ( DBLE(20000)*
+     &       DBLE( (NODE(I)+1)*(NV(DADI)-NV(I)+NODE(I)+1) )
+     &     ) /
+     &          DBLE ( (NV(DADI)+NODE(I)+1)*
+     &              (NV(DADI)+NODE(I)+1) ) 
+           ACCU = ACCU + CUMUL(I) + CUMUL(DADI)
            AMALG_TO_father_OK = ( (NODE(I)+1.LE.NEMIN).OR.
      &         (NODE(DADI)+1.LE.NEMIN) )
            AMALG_TO_father_OK = ( AMALG_TO_father_OK .AND.
      &       ( 2*(NODE(I)+1)*(NV(DADI)-NV(I)+NODE(I)+1).LT.
-     &    ((NV(DADI)+NODE(I)+1)*
-     &    (NV(DADI)+NODE(I)+1)*NEMIN/100)) )
+     &      ((NV(DADI)+NODE(I)+1)*
+     &      (NV(DADI)+NODE(I)+1)*NEMIN/100)) )
+           AMALG_TO_father_OK = ( AMALG_TO_father_OK .AND.
+     &     ( ACCU .LE. DBLE(NEMIN*100) )
+     &                           )
 #if 1
            AMALG_TO_father_OK = (AMALG_TO_father_OK 
      *          .AND. NAMALG(I).LT.NAMALGMAX
      &          .AND. NAMALG(DADI).LT.NAMALGMAX)
            IF (AMALG_TO_father_OK) THEN
               NAMALG(DADI) = NAMALG(DADI) +  NAMALG(I) + 1
+              CUMUL(DADI)  = NINT(ACCU) 
            ELSE 
               AMALG_TO_father_OK = (AMALG_TO_father_OK .OR. 
      &                       ( NODE(I)-NV(I).EQ.NV(DADI)) )
               IF (AMALG_TO_father_OK) THEN
                 NAMALG(DADI) = NAMALG(DADI) +  NAMALG(I) 
+                CUMUL(DADI)  = NINT(ACCU) 
               ENDIF
            ENDIF
 #endif
@@ -3766,7 +3811,7 @@ C
           IPERM = IPERM + 1
           GO TO 777
   778   IF (NA(IS).LE.0) GO TO 110
-#if ! defined(AMALGTOFATHER)
+#if defined(NOAMALGTOFATHER)
         IF (   (KEEP60.NE.0).AND.
      &         (NE(IS).EQ.ND(IS)) ) GOTO 110
         IF (ND(IS-1)-NE(IS-1).EQ.ND(IS)) THEN
@@ -4099,7 +4144,7 @@ C
       INTEGER,POINTER,DIMENSION(:) :: MARKED
       INTEGER,POINTER,DIMENSION(:) :: FLAG
       INTEGER,POINTER,DIMENSION(:) :: PIV_OUT
-      DOUBLE PRECISION THEMIN, THEMAX, COLNORM
+      DOUBLE PRECISION THEMIN, THEMAX, COLNORM,MAXDBL
       DOUBLE PRECISION ZERO,TWO,ONE
       PARAMETER(ZERO = 0.0D0,TWO = 2.0D0,ONE = 1.0D0)
       MPRINT = ICNTL(3)
@@ -4180,19 +4225,19 @@ C
      *     'Compute maximum matching (Maximum Transversal):',
      *        MTRANSLOC
          IF (MTRANSLOC.EQ.1)
-     *   WRITE(MPRINT,'(A,I3)')' ... ICNTL(6)=',MTRANSLOC
+     *   WRITE(MPRINT,'(A,I3)')' ... JOB =',MTRANSLOC
          IF (MTRANSLOC.EQ.2)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANSLOC,': BOTTLENECK THESIS'
+     *     ' ... JOB =',MTRANSLOC,': BOTTLENECK THESIS'
          IF (MTRANSLOC.EQ.3)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANSLOC,': BOTTLENECK SIMAX'
+     *     ' ... JOB =',MTRANSLOC,': BOTTLENECK SIMAX'
          IF (MTRANSLOC.EQ.4)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANSLOC,': MAXIMIZE SUM DIAGIONAL'
+     *     ' ... JOB =',MTRANSLOC,': MAXIMIZE SUM DIAGIONAL'
          IF (MTRANSLOC.EQ.5 .OR. MTRANSLOC.EQ.6)
      *   WRITE(MPRINT,'(A,I3,A)')
-     *     ' ... ICNTL(6)=',MTRANSLOC,
+     *     ' ... JOB =',MTRANSLOC,
      *     ': MAXIMIZE PRODUCT DIAGONAL AND SCALE'
       ENDIF
       id%INFOG(23) = MTRANSLOC
@@ -4255,13 +4300,15 @@ C
                   IW(PLENR+I-1) = IW(PLENR+I-1) + 1
                   NZREAL = NZREAL + 1
                ELSE
-                  ZERODIAG(I) = K
-                  IF(ASSOCIATED(id%A)) THEN
-                     IF(id%A(K) .EQ. 0.0D0) THEN
-                        RZ_DIAG = RZ_DIAG + 1
+                  IF(ZERODIAG(I) .EQ. 0) THEN
+                     ZERODIAG(I) = K
+                     IF(ASSOCIATED(id%A)) THEN
+                        IF(ABS(id%A(K)) .EQ. DBLE(0.0D0)) THEN
+                           RZ_DIAG = RZ_DIAG + 1
+                        ENDIF
                      ENDIF
+                     NZER_DIAG = NZER_DIAG - 1                     
                   ENDIF
-                  NZER_DIAG = NZER_DIAG - 1
                ENDIF
             ENDIF
          ENDDO
@@ -4269,12 +4316,14 @@ C
          WRITE(*,*) 'NZER_DIAG,RZ_DIAG,TOTZER',NZER_DIAG,RZ_DIAG,
      *        NZER_DIAG+RZ_DIAG
 #endif
-         DO I =1, N
-            IF(ZERODIAG(I) .EQ. 0) THEN
-               IW(PLENR+I-1) = IW(PLENR+I-1) + 1
-               NZREAL = NZREAL + 1
-            ENDIF
-         ENDDO
+         IF(MTRANSLOC .GE. 4) THEN
+            DO I =1, N
+               IF(ZERODIAG(I) .EQ. 0) THEN
+                  IW(PLENR+I-1) = IW(PLENR+I-1) + 1
+                  NZREAL = NZREAL + 1
+               ENDIF
+            ENDDO
+         ENDIF
       ENDIF
       IW(IP)   = 1
       DO 20 J=1,N
@@ -4334,13 +4383,6 @@ C
                      IW(IRNW+JPOS-1) = J
                      IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
                   ENDIF
-               ENDIF
-            ENDDO
-            DO I =1,N
-               IF(ZERODIAG(I) .EQ. 0) THEN
-                  JPOS            = IW(PLENR+I-1)
-                  IW(IRNW+JPOS-1) = I
-                  IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
                ENDIF
             ENDDO
          ELSE
@@ -4429,45 +4471,21 @@ C
                   IW(PLENR+I-1)   = IW(PLENR+I-1) + 1
                ENDIF
             ENDDO
-            CNTL64(2) = (LOG(THEMAX/THEMIN))*DBLE(N)**2 + DBLE(N)
+            CNTL64(2) = (LOG(THEMAX/THEMIN))*(DBLE(N))
+     *           - LOG(THEMAX) + ONE
          ENDIF
       ENDIF
       DUPPLI = .FALSE.
-      DO 50 I =1, N
-         PERM(I) = 0
- 50   CONTINUE
-      DO 55 J=1,N
-         DO 60 K=IW(IP+J-1), IW(IP+J) - 1
-            I = IW(IRNW+K-1)
-            IF (PERM(I).EQ.J) THEN
-               DUPPLI=.TRUE.
-               GOTO 65
-            ELSE
-               PERM(I) = J
-            ENDIF
- 60      CONTINUE
- 55   CONTINUE
- 65   IF (DUPPLI) THEN
-         IF (PROK) THEN
-            WRITE (MPRINT,'(A)')
-     *           ' Max. trans. not used : dupplicates in input matrix'
-         ENDIF
-         IF (MP.GT.0 .AND. ICNTL(4).GE.2) THEN
-            WRITE(MP,'(A)')
-     *     ' *** WARNING during Numerical Max. transversal',
-     *     ' *** Col permutation not computed because of',
-     *     ' *** duplicate entries in the input matrix'
-            IF(id%KEEP(52) .EQ. -2) THEN
-               WRITE(MP,'(A)')
-     *     ' *** WARNING scaling not computed because of',
-     *     ' *** duplicate entries in the input matrix'
-            ENDIF
-         ENDIF
-         MTRANS=0
-         id%KEEP(95) = 1
-         id%KEEP(52) = 0
-         GOTO 390
+      I = NZREAL
+      FLAG => id%IS1(3*N+1:4*N)
+      IF(MTRANSLOC.NE.1) THEN
+         CALL DMUMPS_563(N,NZREAL,IW(IP),IW(IRNW),S2,
+     *        PERM,FLAG)
+      ELSE
+         CALL DMUMPS_562(N,NZREAL,IW(IP),IW(IRNW),
+     *        PERM,FLAG)
       ENDIF
+      IF(NZREAL .NE. I) DUPPLI = .TRUE.
       LS2 = NZTOT
       IF ( MTRANSLOC .EQ. 1 ) THEN
          LS2 = 1
@@ -4488,8 +4506,8 @@ C
      *        WRITE(MP,'(A,I5)')
      *        ' WARNING in DMUMPS_443 INFO(1)=',INFO64(1)
       ENDIF
+      KER_SIZE = 0
       IF(K50 .EQ. 2) THEN
-         KER_SIZE = 0
          DO I=1,N
             IF(ZERODIAG(I) .EQ. 0) THEN
                IF(PERM(I) .EQ. I) THEN
@@ -4501,6 +4519,7 @@ C
          ENDDO
       ENDIF
       IF (NUMNZ.LT.N) GO TO 400
+      IF(KER_SIZE .GT. 0) GOTO 400
       IF(K50 .EQ. 0) THEN
          IDENT = .TRUE.
          IF(MTRANS .EQ. 0) GOTO 102
@@ -4559,9 +4578,24 @@ C
             ENDIF
             id%KEEP(52) = -2
             id%KEEP(74) = 1
+            MAXDBL = LOG(HUGE(MAXDBL))
+            DO J=1,N
+               IF(S2(RSPOS+J) .GT. MAXDBL) THEN
+                  S2(RSPOS+J) = ZERO
+               ENDIF
+               IF(S2(CSPOS+J) .GT. MAXDBL) THEN
+                  S2(CSPOS+J)= ZERO
+               ENDIF
+            ENDDO
             DO 105 J=1,N
-               id%ROWSCA(J)            = DBLE(EXP(S2(RSPOS+J)))
+               id%ROWSCA(J) = DBLE(EXP(S2(RSPOS+J)))
+               IF(id%ROWSCA(J) .EQ. ZERO) THEN
+                  id%ROWSCA(J) = ONE
+               ENDIF
                id%COLSCA(IW(PLENR+J-1))= DBLE(EXP(S2(CSPOS+J)))
+               IF(id%COLSCA(J) .EQ. ZERO) THEN
+                  id%COLSCA(J) = ONE
+               ENDIF
  105        CONTINUE
          ENDIF
       ELSE
@@ -4598,10 +4632,30 @@ C
             ENDIF
             id%KEEP(52) = -2
             id%KEEP(74) = 1
+#if 0
+            J = 5000
+            I = 1
+            DO 
+               IF(PERM(J) .EQ. 5000) EXIT
+               J = PERM(J)
+               I = I+1
+            ENDDO
+            WRITE(*,*) 'cycle 5000 lenght = ',I
+#endif
+            MAXDBL = LOG(HUGE(MAXDBL))
+            DO J=1,N
+               IF(S2(RSPOS+J)+S2(CSPOS+J) .GT. MAXDBL) THEN
+                  S2(RSPOS+J) = ZERO
+                  S2(CSPOS+J)= ZERO
+               ENDIF
+            ENDDO
             DO J=1,N
                IF(PERM(J) .GT. 0) THEN
                   id%ROWSCA(J) = 
      *                 DBLE(EXP((S2(RSPOS+J)+S2(CSPOS+J))/TWO))
+                  IF(id%ROWSCA(J) .EQ. ZERO) THEN
+                     id%ROWSCA(J) = ONE
+                  ENDIF
                   id%COLSCA(J)= id%ROWSCA(J)
 #if (SP_DEBUG >= 3)
                   WRITE(*,*) 'J,ROWSCA(J)',J,id%ROWSCA(J)
@@ -4612,7 +4666,6 @@ C
                I = STR_KER(JPOS)
                COLNORM = ZERO
                DO J = IW(IP+I-1),IW(IP+J) - 1
-                  K = IW(IRNW+J-1)
                   COLNORM = MAX(COLNORM,S2(J))
                ENDDO
                COLNORM = EXP(COLNORM) 
@@ -4635,19 +4688,54 @@ C
             ENDDO
             COLNORM = SQRT(EPSILON(COLNORM))
             DO K = 1,N
-               IF(PERM(K) .GT. 0) THEN
+               IF(PERM(K) .GT. 0 .AND. .NOT. DUPPLI) THEN
                   IF( ABS(S2(K)) .LT. (ONE-COLNORM)
      *                 .OR. ABS(S2(K)) .GT. (ONE+COLNORM) ) THEN
-                     WRITE(*,*) 'pb 1 K,S2(K)',K,S2(K)
+                     WRITE(*,*) 'pb 1 K,S2(K),PERM(K),PERM(PERM(K))',
+     *                   K,S2(K),PERM(K),PERM(PERM(K))
+                     WRITE(*,*) 'id%ROWSCA(K),id%ROWSCA(PERM(K))',
+     *                           id%ROWSCA(K),id%ROWSCA(PERM(K)),
+     *                           'id%COLSCA(K),id%COLSCA(PERM(K))',
+     *                            id%COLSCA(K),id%COLSCA(PERM(K)) 
                      CALL DMUMPS_ABORT()
                   ENDIF
                ELSE
                   IF( ABS(S2(K)) .GT. (ONE+COLNORM) ) THEN
-                     WRITE(*,*) 'pb 2 K,S2(K)',K,S2(K)
+                     WRITE(*,*) 'pb 2 K,S2(K),PERM(K)',K,S2(K),PERM(K)
                      CALL DMUMPS_ABORT()
                   ENDIF
                ENDIF
             ENDDO
+            IF(DUPPLI) THEN
+               S2 = ZERO
+               DO K=1,NZ
+                  I=id%IRN(K)
+                  J=id%JCN(K)
+                  IF(I .EQ. PERM(J)) THEN
+                     S2(I) = S2(I) + 
+     *                    ABS(id%ROWSCA(I)*id%A(K)*id%COLSCA(J))
+                     IF(I.NE. J) THEN
+                        S2(J) = S2(J) + 
+     *                       ABS(id%ROWSCA(I)*id%A(K)*id%COLSCA(J))
+                     ENDIF
+                  ENDIF
+               ENDDO
+               COLNORM = SQRT(EPSILON(COLNORM))
+               DO K = 1,N
+                  IF(PERM(K) .GT. 0) THEN
+                     IF( ABS(S2(K)) .LT. (ONE-COLNORM)
+     *                    .OR. ABS(S2(K)) .GT. (ONE+COLNORM) ) THEN
+                        WRITE(*,*) 'pb 3 K,S2(K),PERM(K),PERM(PERM(K))',
+     *                       K,S2(K),PERM(K),PERM(PERM(K))
+                        WRITE(*,*) 'id%ROWSCA(K),id%ROWSCA(PERM(K))',
+     *                       id%ROWSCA(K),id%ROWSCA(PERM(K)),
+     *                       'id%COLSCA(K),id%COLSCA(PERM(K))',
+     *                       id%COLSCA(K),id%COLSCA(PERM(K)) 
+                        CALL DMUMPS_ABORT()
+                     ENDIF
+                  ENDIF
+               ENDDO
+            ENDIF
             WRITE(*,*) 'scaling factors OK'
 #endif
          ENDIF
@@ -4717,7 +4805,7 @@ C
          id%KEEP(95) = 1 
          IF (PROK) THEN
            WRITE (MPRINT,'(A)')
-     *  ' ... Column permutation is identity matrix'
+     *  ' ... Column permutation not used'
          ENDIF
       ENDIF
       GO TO 500
@@ -6171,9 +6259,10 @@ C
      * (N,NZ, IRN, ICN, IW, LW, IPE, LEN,
      * IQ, FLAG, IWFR,
      * NRORM, NIORM, IFLAG,IERROR, ICNTL, 
-     * symmetry, SYM)
+     * symmetry, SYM, MedDens, NBQD, AvgDens)
       INTEGER N,NZ,LW,IFLAG,IERROR,NRORM,NIORM,IWFR
       INTEGER symmetry, SYM
+      INTEGER MedDens, NBQD, AvgDens
       INTEGER ICNTL(40)
       INTEGER  IRN(NZ), ICN(NZ) 
       INTEGER LEN(N)
@@ -6182,7 +6271,7 @@ C
       INTEGER IQ(N)
       INTEGER MP, MPG
       INTEGER I,K,J,N1,LAST,NDUP,K1,K2,L
-      INTEGER NBERR
+      INTEGER NBERR, THRESH
       INTEGER NZOFFA, NDIAGA
       DOUBLE PRECISION RSYM
       INTRINSIC NINT
@@ -6335,6 +6424,33 @@ C
       ELSE
        symmetry = 100
       ENDIF
+      AvgDens = NINT(DBLE(IWFR-1)/DBLE(N))
+      THRESH  = AvgDens*50 - AvgDens/10 + 1
+      NBQD    = 0
+      IF (N.GT.2) THEN
+        IQ(1:N) = 0
+        DO I= 1, N
+          K = MAX(LEN(I),1)
+          IQ(K) = IQ(K) + 1
+          IF (K.GT.THRESH) NBQD = NBQD+1
+        ENDDO
+        K = 0
+        MedDens = 0
+        DO WHILE (K .LT. (N/2))
+         MedDens = MedDens + 1
+         K       = K+IQ(MedDens)
+        ENDDO
+      ELSE
+        MedDens = AvgDens
+      ENDIF
+         IF (MPG .GT. 0)
+     &  write(MPG,'(A,3I5)') 
+     &  ' Density: NBdense, Average, Median   =',
+     &  NBQD, AvgDens, MedDens
+        IF (MP.GT.0 .AND. MPG.NE.MP)
+     &  write(MP,'(A,3I5)') 
+     &  ' Density: NBdense, Average, Median   =',
+     &  NBQD, AvgDens, MedDens
       RETURN
 99999 FORMAT (/'*** Warning message from analysis routine ***')
       END SUBROUTINE DMUMPS_351
@@ -6949,14 +7065,12 @@ C
       INTEGER P, P1, P2, P3, PDST, PEND, PJ, PME, PME1, PME2, PN, PSRC
       INTRINSIC MAX, MIN, MOD
       LOGICAL COMPRESS
-      RELDEN = DBLE(0)
       IF (THRESH.GT.0) THEN 
          THRESM  = MIN(N,THRESH)
          DO I=1,N
-             RELDEN = RELDEN + DBLE(LEN(I))
              THRESM = MAX(THRESM, LEN(I))
           ENDDO
-          RELDEN = RELDEN/DBLE(N)
+           RELDEN = DBLE(PFREE-1)/DBLE(N)
          THRESM =  INT(RELDEN)*10 + (THRESM-INT(RELDEN))/10 + 1
       ELSE
          THRESM = TOTEL
@@ -9029,38 +9143,58 @@ C
       PFREE = MAXMEM
       RETURN
       END SUBROUTINE DMUMPS_422 
-      SUBROUTINE DMUMPS_423(N, SYM, NPROCS, IORD)
+      SUBROUTINE DMUMPS_423(N, SYM, NPROCS, IORD,
+     *                       symmetry,MedDens, NBQD, AvgDens)
       IMPLICIT NONE
       INTEGER N, NPROCS, IORD, SYM
+      INTEGER symmetry,MedDens, NBQD, AvgDens
+      INTEGER MAXQD
       INTEGER SMALLSYM, SMALLUNS
       PARAMETER (SMALLUNS=5000, SMALLSYM=10000)
+      MAXQD = 2
       IF (SYM.NE.0) THEN
-       IF ( N.LE.SMALLSYM ) THEN 
-         IORD = 0
-       ELSE
-#if  defined(scotch)
-        IORD = 3
-#elif  defined(metis)
-        IORD = 5
+         IF ( N.LE.SMALLSYM ) THEN 
+            IF (NBQD.GE.MAXQD) THEN
+               IORD = 6         ! QAMD
+            ELSE
+               IORD = 2         ! AMF
+            ENDIF
+         ELSE
+            IF ((NPROCS.EQ.1).AND.(MedDens.LT.9)) THEN
+               IF (NBQD.GE.MAXQD) THEN
+                  IORD = 6      ! QAMD
+                  RETURN
+               ENDIF
+            ENDIF
+#if  defined(metis)
+            IORD = 5
 #else
-        IF (NPROCS.LE.4) THEN
+            IF (NPROCS.LE.4) THEN
 #if defined(pord)
-         IORD = 4
+               IORD = 4
 #else
-         IORD = 6
+               IORD = 6
 #endif
-        ELSE
-         IORD = 6
-        ENDIF
+            ELSE
+               IORD = 6
+            ENDIF
 #endif
-       ENDIF
+         ENDIF
       ELSE
        IF ( N.LE.SMALLUNS ) THEN
-         IORD = 0
+         IF (NBQD.GE.MAXQD) THEN
+          IORD = 6  ! QAMD
+         ELSE
+          IORD = 2   ! AMF
+         ENDIF
        ELSE
-#if  defined(scotch)
-        IORD = 3
-#elif  defined(metis)
+        IF ((NPROCS.EQ.1).AND.(MedDens.LT.9)) THEN
+          IF (NBQD.GE.MAXQD) THEN
+            IORD = 6   ! QAMD
+            RETURN
+          ENDIF
+        ENDIF
+#if  defined(metis)
         IORD = 5
 #else
         IF (NPROCS.LE.4) THEN
@@ -9142,11 +9276,12 @@ C
       DOUBLE PRECISION A(LA)
       DOUBLE PRECISION DW(LDW),CNTL(NCNTL)
       INTEGER I,J,K,WARN1,WARN2,WARN4
-      DOUBLE PRECISION FACT,ZERO,ONE,RINF
+      DOUBLE PRECISION FACT,ZERO,ONE,RINF,RINF2
       PARAMETER (ZERO=0.0D+00,ONE=1.0D+0)
       EXTERNAL DMUMPS_457,DMUMPS_444,DMUMPS_451,DMUMPS_452,DMUMPS_454
       INTRINSIC ABS,LOG
-       RINF = CNTL(2)
+      RINF = CNTL(2)
+      RINF2 = HUGE(RINF2)
       WARN1 = 0
       WARN2 = 0
       WARN4 = 0
@@ -9258,7 +9393,7 @@ C
       IF (JOB.EQ.2) THEN
          DW(1) = MAX(ZERO,CNTL(1))
          CALL DMUMPS_444(M,N,NE,IP,IRN,A,PERM,NUM,
-     &        IW(1),IW(N+1),IW(2*N+1),IW(2*N+M+1),DW,RINF)
+     &        IW(1),IW(N+1),IW(2*N+1),IW(2*N+M+1),DW,RINF2)
          GO TO 90
       ENDIF
       IF (JOB.EQ.3) THEN
@@ -9269,7 +9404,7 @@ C
          FACT = MAX(ZERO,CNTL(1))
          CALL DMUMPS_452(M,N,NE,IP,IW(1),A,PERM,NUM,IW(NE+1),
      &        IW(NE+N+1),IW(NE+2*N+1),IW(NE+3*N+1),IW(NE+4*N+1),
-     &        IW(NE+5*N+1),IW(NE+5*N+M+1),FACT,RINF)
+     &        IW(NE+5*N+1),IW(NE+5*N+M+1),FACT,RINF2)
          GO TO 90
       ENDIF
       IF (JOB.EQ.4) THEN
@@ -9286,7 +9421,7 @@ C
          IW(1) = JOB
          CALL DMUMPS_454(M,N,NE,IP,IRN,A,PERM,NUM,
      &        IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
-     &        DW(1),DW(M+1),RINF)
+     &        DW(1),DW(M+1),RINF2)
          GO TO 90
       ENDIF
       IF (JOB.EQ.5 .or. JOB.EQ.6) THEN
@@ -9303,7 +9438,7 @@ C
                      IF (A(K).NE.ZERO) THEN
                         A(K) = FACT - LOG(A(K))
                      ELSE
-                        A(K) = RINF/N
+                        A(K) = FACT + RINF
                      ENDIF
  70               CONTINUE
                ELSE
@@ -9353,7 +9488,7 @@ C
                      IF (A(K).NE.ZERO) THEN
                         A(K) = FACT - LOG(A(K))
                      ELSE
-                        A(K) = RINF/N
+                        A(K) = FACT + RINF
                      ENDIF
  170              CONTINUE
                ELSE
@@ -9368,12 +9503,12 @@ C
          IF (JOB.EQ.5) THEN
             CALL DMUMPS_454(M,N,NE,IP,IRN,A,PERM,NUM,
      &           IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
-     &           DW(1),DW(M+1),RINF)
+     &           DW(1),DW(M+1),RINF2)
          ENDIF
          IF (JOB.EQ.6) THEN
             CALL DMUMPS_454(M,N,NE,IP,IW(3*N+2*M+1),A,PERM,NUM,
      &           IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
-     &           DW(1),DW(M+1),RINF)
+     &           DW(1),DW(M+1),RINF2)
          ENDIF
          IF (JOB.EQ.6) THEN
             DO 79 I = 1,M
@@ -9391,7 +9526,7 @@ C
                ENDIF
  80         CONTINUE
          ENDIF
-         FACT = 0.5*LOG(RINF)
+         FACT = 0.5*LOG(RINF2)
          DO 86 I = 1,M
             IF (DW(I).LT.FACT) GO TO 86
             WARN2 = 2
@@ -9468,6 +9603,63 @@ C
  9033 FORMAT (' DW(1:M)     = ',5(F11.3)/(15X,5(F11.3)))
  9034 FORMAT (' DW(M+1:M+N) = ',5(F11.3)/(15X,5(F11.3)))
       END SUBROUTINE DMUMPS_559
+      SUBROUTINE DMUMPS_563(N,NZ,IP,IRN,A,FLAG,POSI)
+      IMPLICIT NONE
+      INTEGER N,NZ
+      INTEGER IP(N+1),IRN(NZ)
+      DOUBLE PRECISION A(NZ)
+      INTEGER WR_POS,BEG_COL,ROW,COL,K,SV_POS
+      INTEGER FLAG(N), POSI(N)
+      INTEGER ierr
+      FLAG = 0
+      WR_POS = 1
+      DO COL=1,N
+         BEG_COL = WR_POS
+         DO K=IP(COL),IP(COL+1)-1
+            ROW = IRN(K)
+            IF(FLAG(ROW) .NE. COL) THEN
+               IRN(WR_POS) = ROW
+               A(WR_POS) = A(K)
+               FLAG(ROW) = COL
+               POSI(ROW) = WR_POS
+               WR_POS = WR_POS+1
+            ELSE
+               SV_POS = POSI(ROW)
+               A(SV_POS) = A(SV_POS) + A(K)
+            ENDIF
+         ENDDO
+         IP(COL) = BEG_COL
+      ENDDO
+      IP(N+1) = WR_POS
+      NZ = WR_POS-1
+      RETURN
+      END SUBROUTINE DMUMPS_563
+      SUBROUTINE DMUMPS_562(N,NZ,IP,IRN,FLAG,POSI)
+      IMPLICIT NONE
+      INTEGER N,NZ
+      INTEGER IP(N+1),IRN(NZ)
+      INTEGER WR_POS,BEG_COL,ROW,COL,K,SV_POS
+      INTEGER FLAG(N), POSI(N)
+      INTEGER ierr
+      FLAG = 0
+      WR_POS = 1
+      DO COL=1,N
+         BEG_COL = WR_POS
+         DO K=IP(COL),IP(COL+1)-1
+            ROW = IRN(K)
+            IF(FLAG(ROW) .NE. COL) THEN
+               IRN(WR_POS) = ROW
+               FLAG(ROW) = COL
+               POSI(ROW) = WR_POS
+               WR_POS = WR_POS+1
+            ENDIF
+         ENDDO
+         IP(COL) = BEG_COL
+      ENDDO
+      IP(N+1) = WR_POS
+      NZ = WR_POS-1
+      RETURN
+      END SUBROUTINE DMUMPS_562
       SUBROUTINE DMUMPS_534( N,FRERE, FILS,
      *     NA,NE,ND,PERM,SYM,INFO,LP,K47,K81,
      *     PROCNODE,SLAVEF,PEAK
@@ -9487,6 +9679,10 @@ C
      $     MY_SIZE,MY_LEAF
       INTEGER, ALLOCATABLE, DIMENSION (:) ::      DEPTH_FIRST
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION (:) :: COST_TRAV
+       INTEGER DUMMY_DAD(1), DUMMY_DAD_LENGTH
+       PARAMETER (DUMMY_DAD_LENGTH=1)
+       LOGICAL USE_DAD
+       PARAMETER (USE_DAD=.FALSE.)
       IF (N.EQ.1) THEN
         NBROOT = 1
         NBLEAF = 1 
@@ -9584,7 +9780,9 @@ C
          RETURN
       ENDIF
       CALL DMUMPS_363(N,FRERE, STEP, FILS,
-     *     NEW_NA,LNA,NE,ND,NSTEPS,PERM,SYM,INFO,LP,K47_LOC,K81_LOC,0,
+     *     NEW_NA,LNA,NE,ND,
+     *     DUMMY_DAD, DUMMY_DAD_LENGTH, USE_DAD,
+     *     NSTEPS,PERM,SYM,INFO,LP,K47_LOC,K81_LOC,0,
      *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK,SBTR_WHICH_M
      $     ,1,1,DEPTH_FIRST,COST_TRAV,MY_LEAF,MY_SIZE,MY_ROOT
      *)
@@ -9610,16 +9808,19 @@ C
       RETURN
       END SUBROUTINE DMUMPS_534
       SUBROUTINE DMUMPS_363(N,FRERE, STEP, FILS,
-     *     NA,LNA,NE,ND,NSTEPS,PERM,SYM,INFO,LP,K47,K81,K76,
+     *     NA,LNA,NE,ND, DAD, LDAD, USE_DAD,
+     *     NSTEPS,PERM,SYM,INFO,LP,K47,K81,K76,
      *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK
      $     ,SBTR_WHICH_M,SIZE_DEPTH_FIRST,SIZE_COST_TRAV,
      $     DEPTH_FIRST_TRAV,COST_TRAV,MY_FIRST_LEAF,
      $     MY_NB_LEAF,MY_ROOT_SBTR
      $     )
       IMPLICIT NONE
-      INTEGER N,PERM,SYM, NSTEPS, LNA, LP, SIZE_MEM_SBTR
+      INTEGER N,PERM,SYM, NSTEPS, LNA, LP, SIZE_MEM_SBTR,LDAD
       INTEGER FRERE(NSTEPS), FILS(N), STEP(N)
       INTEGER NA(LNA), NE(NSTEPS), ND(NSTEPS),K47,K81,K76
+      INTEGER DAD(LDAD)
+      LOGICAL USE_DAD
       INTEGER INFO(40)
       INTEGER SLAVEF,PROCNODE(NSTEPS)
       INTEGER MEM_SUBTREE(SIZE_MEM_SBTR,SLAVEF),SBTR_WHICH_M
@@ -9842,15 +10043,19 @@ C
         ELSE
           FACT(STEP(INODE))=FACT(STEP(INODE))+NFR*NELIM
         ENDIF
-        IN = INODE
- 113    IN = FRERE(STEP(IN))
-        IF (IN.GT.0) GO TO 113
-        IF (IN.EQ.0) THEN
+        IF (USE_DAD) THEN
+          IFATH = DAD( STEP(INODE) )
+        ELSE
+          IN = INODE
+ 113      IN = FRERE(IN)
+          IF (IN.GT.0) GO TO 113
+          IFATH = -IN
+        ENDIF
+        IF (IFATH.EQ.0) THEN
            NBROOT = NBROOT - 1
            IF (NBROOT.EQ.0) GOTO 116
            GOTO 91
         ELSE
-           IFATH = -IN
            FACT(STEP(IFATH))=FACT(STEP(IFATH))+FACT(STEP(INODE))
            IF((PERM.EQ.3).OR.(PERM.EQ.4))THEN
               DEPTH(STEP(IFATH))=MAX(DEPTH(STEP(INODE)),
@@ -10132,11 +10337,13 @@ C
         ENDIF
         IF (K76.EQ.5)THEN
            IF(SLAVEF.NE.1)THEN
-              IN = INODE
- 395          IN = FRERE(STEP(IN))
-              IF (IN.GT.0) GO TO 395
-              IF (IN.LT.0) THEN
-                 IFATH = -IN
+              IF (USE_DAD) THEN
+                IFATH=DAD(INODE)
+              ELSE
+                IN = INODE
+ 395            IN = FRERE(IN)
+                IF (IN.GT.0) GO TO 395
+                IFATH = -IN
               ENDIF
               NFR    = ND(STEP(INODE))
               NELIM = 0
@@ -10146,7 +10353,7 @@ C
               IF (IN .GT. 0 ) GOTO 396
               CALL DMUMPS_511(NFR,NELIM,NELIM,
      *             SYM,1,COST_NODE)
-              IF(FRERE(STEP(INODE)).NE.0)THEN
+              IF(IFATH.NE.0)THEN
                  IF(DMUMPS_167(STEP(INODE),PROCNODE,SLAVEF))THEN
                     COST_TRAV(STEP(INODE))=COST_TRAV(STEP(
      $                   ROOT_OF_CUR_SBTR))
@@ -10172,7 +10379,7 @@ C
                       MEM_SUBTREE(INDICE(ID+1),ID+1)=
      $                     M_TOTAL(STEP(INODE))
                    ELSE
-                      MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))                      
+                      MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))
                    ENDIF
                    MY_ROOT_SBTR(INDICE(ID+1),ID+1)=INODE
                   INDICE(ID+1)=INDICE(ID+1)+1
@@ -10184,7 +10391,7 @@ C
                     MEM_SUBTREE(INDICE(ID+1),ID+1)=
      $                   M_TOTAL(STEP(INODE))
                  ELSE
-                    MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))                      
+                    MEM_SUBTREE(INDICE(ID+1),ID+1)=M(STEP(INODE))
                  ENDIF
                  INDICE(ID+1)=INDICE(ID+1)+1
               ENDIF

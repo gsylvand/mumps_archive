@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF DMUMPS VERSION 4.5.4
-!   This Version was built on Wed Sep 28 15:22:28 2005
+!   THIS FILE IS PART OF DMUMPS VERSION 4.5.5
+!   This Version was built on Thu Oct 27 10:41:20 2005
 !
 !  This version of DMUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV
@@ -40,7 +40,7 @@
 !   S. Pralet (2005), Hybrid scheduling for the parallel solution
 !   of linear systems. Accepted to Parallel Computing.
 !
-!     $Id: dmumps_struc.h,v 1.53 2005/08/28 10:26:32 aguermou Exp $
+!     $Id: dmumps_struc.h,v 1.54 2005/10/21 10:41:40 pamestoy Exp $
       INCLUDE 'dmumps_root.h'
       TYPE DMUMPS_STRUC
         SEQUENCE
@@ -183,7 +183,7 @@
 !        phase and used during the factorization and solve phases.
          INTEGER LNA
          INTEGER,POINTER,DIMENSION(:)::STEP, NE_STEPS, ND_STEPS
-         INTEGER,POINTER,DIMENSION(:)::FRERE_STEPS
+         INTEGER,POINTER,DIMENSION(:)::FRERE_STEPS, DAD_STEPS
          INTEGER,POINTER,DIMENSION(:)::FILS, PTRAR, FRTPTR, FRTELT
          INTEGER,POINTER,DIMENSION(:)::NA, PROCNODE_STEPS
 !        The two pointer arrays computed in facto and used by the solve

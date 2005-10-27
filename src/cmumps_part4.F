@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -41,7 +41,7 @@ C   S. Pralet (2005), Hybrid scheduling for the parallel solution
 C   of linear systems. Accepted to Parallel Computing.
 C
       SUBROUTINE CMUMPS_246(MYID, N, STEP, FRERE, FILS,
-     *     NA, LNA, NE, ND, PROCNODE, SLAVEF,
+     *     NA, LNA, NE, DAD, ND, PROCNODE, SLAVEF,
      *     NRLADU, NIRADU, NIRNEC, NRLNEC, NRLBDU, NIRBDU,
      *     MAXFR, OPSA, PERLU, 
      *     KEEP, LOCAL_M, LOCAL_N,
@@ -56,7 +56,7 @@ C
       INTEGER  MAXFR, PERLU, NSTEPS
       INTEGER  STEP(N)
       INTEGER  FRERE(NSTEPS),FILS(N),NA(LNA),NE(NSTEPS),
-     *         ND(NSTEPS),PROCNODE(NSTEPS)
+     *         ND(NSTEPS),PROCNODE(NSTEPS),DAD(NSTEPS)
       INTEGER  SLAVEF, KEEP(150), LOCAL_M, LOCAL_N
       INTEGER  SBUF_SEND, SBUF_REC
       INTEGER  NMB_PAR2
@@ -211,10 +211,7 @@ C
             SBUF_REC   = MAX(SBUF_REC, NFR*LKJIB+LKJIB+4)
          ENDIF
       ENDIF
-      IN = INODE
- 660  IN = FRERE(STEP(IN))
-      IF (IN.GT.0) GO TO 660
-      IFATH = -IN
+      IFATH = DAD(STEP(INODE))
       IF ( UPDATE ) THEN
          IF ( (MASTER) .AND. (LEVEL.EQ.1) ) THEN
             SIZECB = NCB*NCB
@@ -878,10 +875,11 @@ C
      *   ISTEP_TO_INIV2, TAB_POS_IN_PERE  )
         IF (IFLAG.LT.0 ) RETURN
         CALL CMUMPS_314( N, INODE,
-     *    PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
-     *    LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
-     *    NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, TYPE_SON)
+     *      PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
+     *      LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
+     *      NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
+     *      IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, TYPE_SON
+     $      )
         IF (IFLAG.LT.0) THEN
            CALL CMUMPS_44( MYID, SLAVEF, COMM )
         ENDIF

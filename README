@@ -1,8 +1,8 @@
 ===========================================
-MUMPS version 4.5.4
+MUMPS version 4.5.5
 ===========================================
 
-MUMPS 4.5.4 solves a sparse system of linear equations A x = b
+MUMPS 4.5.5 solves a sparse system of linear equations A x = b
 using Gaussian elimination. Please read this README file and
 the documentation (in ./doc/) for a complete list of
 functionalities. Documentation and publications related to
@@ -63,8 +63,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.5.4.tar.gz
-% cd MUMPS_4.5.4
+% tar zxvf MUMPS_4.5.5.tar.gz
+% cd MUMPS_4.5.5
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -181,7 +181,7 @@ Otherwise some derived datatypes may not match.
 Platform dependencies
 ---------------------
 
-Versions of MUMPS_4.5.4 should work on IBM SP systems,
+Versions of MUMPS_4.5.5 should work on IBM SP systems,
 SGI Origin 2000, COMPAQ ALPHA systems and some Linux clusters.
 
 We could potentially generate versions for any other
@@ -225,6 +225,7 @@ of more than 1 processor.
 Release history
 ---------------
 
+Release 4.5.5           : October 2005
 Release 4.5.4           : September 2005
 Release 4.5.3           : September 2005
 Release 4.5.2           : September 2005
@@ -261,6 +262,12 @@ Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
 
+Changes from Version 4.5.4 to Version 4.5.5
+* Improved tree management
+* Improved weighted matching preprocessing:
+  duplicates allowed, overflow avoided, dense rows
+* Improved strategy for selecting default ordering
+* Improved node amalgamation
 
 Changes from Version 4.5.3 to Version 4.5.4
 * Double complex version no more depends on

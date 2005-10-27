@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -1783,6 +1783,7 @@ C
       NULLIFY(id%IS)
       NULLIFY(id%IS1)
       NULLIFY(id%STEP)
+      NULLIFY(id%DAD_STEPS)
       NULLIFY(id%NE_STEPS)
       NULLIFY(id%ND_STEPS)
       NULLIFY(id%FRERE_STEPS)
@@ -3510,7 +3511,8 @@ C
      *         PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
      *         LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
      *         NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *         IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE2)
+     *         IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE2
+     $         )
        ENDIF
       ENDIF
  600  CONTINUE

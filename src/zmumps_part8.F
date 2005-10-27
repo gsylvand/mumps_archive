@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -627,7 +627,8 @@ C
      *    S(ISRW2), LWC, IS( LIW + 1 ),
      *    LIWW, id%RHS(IBEG), LD_RHS, NBRHS_EFF, RHSSOL,
      *    id%NA,id%LNA,id%NE_STEPS(1), SRW3, MTYPE,
-     *    ICNTL, id%STEP(1), id%FRERE_STEPS(1), id%FILS(1),
+     *    ICNTL, id%STEP(1), id%FRERE_STEPS(1), 
+     *    id%DAD_STEPS(1), id%FILS(1),
      *    id%PTLUST_S(1), id%PTRFAC(1),
      *    IWK_SOLVE, LIWK_SOLVE,
      *    id%PROCNODE_STEPS,
@@ -1019,7 +1020,8 @@ C
      *    LIWW,
      *    Y, N, NBRHS_EFF, RHSSOL, id%NA, id%LNA, id%NE_STEPS,
      *    SRW1, SOLVET, ICNTL,
-     *    id%STEP(1), id%FRERE_STEPS(1), id%FILS(1),
+     *    id%STEP(1), id%FRERE_STEPS(1), id%DAD_STEPS(1), 
+     *    id%FILS(1),
      *    id%PTLUST_S(1), id%PTRFAC(1),
      *    IWK_SOLVE, LIWK_SOLVE,
      *    id%PROCNODE_STEPS, id%NSLAVES, INFO, KEEP,
@@ -1251,7 +1253,7 @@ C
       SUBROUTINE ZMUMPS_245(root, N, A, LA, IW, LIW, W, LWC, 
      * IWCB,LIWW,RHS,LRHS,NRHS,RHSSOL,NA,LNA,NE_STEPS, W2,
      * MTYPE, ICNTL,
-     * STEP, FRERE,FILS, PTRIST, PTRFAC, IW1,LIW1,
+     * STEP, FRERE, DAD, FILS, PTRIST, PTRFAC, IW1,LIW1,
      * PROCNODE_STEPS, SLAVEF,
      * INFO, KEEP, COMM, COMM_NODES, MYID,
      * MYID_NODES,
@@ -1269,7 +1271,7 @@ C
       INTEGER ICNTL(40),INFO(40), KEEP(150)
       INTEGER IW(LIW),IW1(LIW1),NA(LNA),NE_STEPS(KEEP(28)),IWCB(LIWW)
       INTEGER STEP(N), FRERE(KEEP(28)), FILS(N), PTRIST(KEEP(28)),
-     * PTRFAC(KEEP(28))
+     * PTRFAC(KEEP(28)), DAD(KEEP(28))
       INTEGER LRHS, NRHS
       COMPLEX*16    A(LA), W(LWC), RHS(LRHS,NRHS),
      *        RHSSOL(N,NRHS), W2(KEEP(133))
@@ -1351,7 +1353,7 @@ C
       CALL ZMUMPS_248(N, A(1), LA, IW(1), LIW, W(1),
      *           LWC_LOC, RHS, LRHS, NRHS,
      *           IW1(PTRICB), IWCB, LIWW,
-     *           RHSSOL,NE_STEPS, NA, LNA, STEP, FRERE,FILS,
+     *           RHSSOL,NE_STEPS, NA, LNA, STEP, FRERE,DAD,FILS,
      *           IW1(NSTK_S),IW1(IPOOL),LPOOL,PTRIST,PTRFAC,
      *           MYLEAF,INFO,
      *           KEEP, PROCNODE_STEPS, SLAVEF, COMM_NODES, MYID_NODES,
@@ -1747,7 +1749,7 @@ C
       SUBROUTINE ZMUMPS_248(N, A, LA, IW, LIW, WCB, LWCB,
      *    RHS, LRHS, NRHS,
      *    PTRICB, IWCB, LIWCB, W1, NE_STEPS, NA, LNA, STEP,
-     *    FRERE, FILS,
+     *    FRERE, DAD, FILS,
      *    NSTK_S, IPOOL, LPOOL, PTRIST, PTRFAC, MYLEAF, INFO, KEEP,
      *    PROCNODE_STEPS,
      *    SLAVEF, COMM, MYID, BUFR, LBUFR, LBUFR_BYTES,
@@ -1768,7 +1770,8 @@ C
       INTEGER LBUFR, LBUFR_BYTES
       INTEGER BUFR( LBUFR )
       INTEGER NA( LNA ), NE_STEPS( KEEP(28) )
-      INTEGER STEP( N ), FRERE( KEEP(28) ), FILS( N )
+      INTEGER STEP( N ), FRERE( KEEP(28) ), FILS( N ),
+     *        DAD( KEEP(28) )
       INTEGER NSTK_S(KEEP(28)), IPOOL( LPOOL )
       INTEGER PTRIST(KEEP(28)), PTRFAC(KEEP(28))
       INTEGER PTRICB( KEEP(28) )
@@ -1847,7 +1850,7 @@ C
      *        IW, LIW, RHS, LRHS, NRHS, W1,
      *        POSWCB, PLEFTWCB, POSIWCB,
      *        PTRICB, PTRIST, PTRFAC, PROCNODE_STEPS,
-     *        FILS, STEP, FRERE,
+     *        FILS, STEP, FRERE, DAD,
      *        MYROOT, INFO, KEEP, RHS_ROOT, MTYPE, 
      *
      *        ISTEP_TO_INIV2, TAB_POS_IN_PERE
@@ -2080,7 +2083,7 @@ C
      *           RHS, LRHS, NRHS, W1, POSWCB,
      *           PLEFTWCB, POSIWCB,
      *           PTRICB, PTRIST, PTRFAC, PROCNODE_STEPS,
-     *           FILS, STEP, FRERE,
+     *           FILS, STEP, FRERE, DAD,
      *           MYROOT,
      *           INFO, KEEP, RHS_ROOT, MTYPE,
      *
@@ -2104,7 +2107,7 @@ C
      *                 RHS_ROOT( * )
       INTEGER PTRICB(KEEP(28)), PTRIST(KEEP(28)), PTRFAC(KEEP(28))
       INTEGER PROCNODE_STEPS(KEEP(28))
-      INTEGER FILS( N ), STEP( N ), FRERE(KEEP(28))
+      INTEGER FILS( N ), STEP( N ), FRERE(KEEP(28)), DAD(KEEP(28))
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
       EXTERNAL ZGEMV, ZTRSV, ZGEMM, ZTRSM, ZMUMPS_275
@@ -2157,7 +2160,6 @@ C
           DO K=1,NRHS
             RHS_ROOT(IFR+NPIV*(K-1)) = RHS(J,K) + W1(J,K)
           END DO
-          W1( J,1:NRHS ) = ZERO
         END DO
         IF ( NPIV .LT. LIELL ) THEN
           WRITE(*,*) ' Internal error in SOLVE_NODE for Root node'
@@ -2189,7 +2191,6 @@ C
         IFR = IFR + 1
         DO K=1, NRHS
           WCB(IFR+(K-1)*NPIV) = RHS(J,K) + W1(J,K)
-          W1(J,K) = ZERO
         END DO
   130 CONTINUE
       IFR = PCB_COURANT - 1
@@ -2330,11 +2331,7 @@ C
            ENDIF
         ENDDO
       END IF
-      IN = INODE
-      DO WHILE ( IN .GT. 0 )
-        IN = FRERE(STEP( IN ))
-      END DO
-      FPERE = -IN
+      FPERE = DAD(STEP(INODE))
       IF ( FPERE .EQ. 0 ) THEN
           MYROOT = MYROOT - 1
           PLEFTWCB = PLEFTWCB - LIELL *NRHS

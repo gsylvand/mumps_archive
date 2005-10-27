@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -488,7 +488,8 @@ C
      *    PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
      *    LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
      *    NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE)
+     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, ITYPE
+     $     )
  600  CONTINUE
       DEALLOCATE(SLAVES_PERE)
       DEALLOCATE(NBROW)
@@ -833,11 +834,12 @@ C
       CALL ZMUMPS_44(MYID, SLAVEF, COMM )
       RETURN
       END SUBROUTINE ZMUMPS_211
-      SUBROUTINE ZMUMPS_209( N, FRERE, FILS, NFSIZ )
+      SUBROUTINE ZMUMPS_209( N, FRERE, FILS, NFSIZ, THEROOT )
       IMPLICIT NONE
       INTEGER, intent( in    )  :: N
       INTEGER, intent( in    )  :: NFSIZ( N )
       INTEGER, intent( inout )  :: FRERE( N ), FILS( N )
+      INTEGER, intent( out   )  :: THEROOT
       INTEGER INODE, IROOT, IFILS, IN, IROOTLAST, SIZE
       IROOT = -9999
       SIZE  = 0
@@ -867,6 +869,7 @@ C
           END IF
         END IF
       END DO
+      THEROOT = IROOT
       RETURN
       END SUBROUTINE ZMUMPS_209
       SUBROUTINE ZMUMPS_22( SSARBR, PROCESS_BANDE,
@@ -1046,7 +1049,8 @@ C
      *    PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA, 
      *    LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP, 
      *    NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, TYPE_SON)
+     *    IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, TYPE_SON
+     $     )
       USE ZMUMPS_LOAD
       IMPLICIT NONE
       INTEGER N, ISON, LIW, LA, LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC,
@@ -1482,7 +1486,7 @@ C
       NB_REAL = 0
       NB_BYTES = 0.0
       NB_INT  = 0
-      NB_INT = NB_INT + 4*KEEP(28)
+      NB_INT = NB_INT + 5*KEEP(28)
       NB_INT = NB_INT +KEEP(28)+KEEP(56)*(NSLAVES+2)
       NB_INT = NB_INT + 3*N
       IF (KEEP(23).ne.0 .and. I_AM_MASTER) NB_INT=NB_INT + N
@@ -1720,7 +1724,7 @@ C
       SUBROUTINE ZMUMPS_244(N, NZ, NSTEPS,
      * A, LA, IW, LIW, SYM_PERM, NA, LNA,
      * NE_STEPS, NFSIZ, FILS,
-     * STEP, FRERE, CAND, 
+     * STEP, FRERE, DAD, CAND, 
      * ISTEP_TO_INIV2, TAB_POS_IN_PERE, 
      * PTRAR, LDPTRAR,
      * PTRIST, PTLUST_S, PTRFAC, IW1, IW2, POOL, LPOOL,  
@@ -1748,7 +1752,8 @@ C
       INTEGER   INFO(40), KEEP(150)
       INTEGER   IW(LIW), SYM_PERM(N), NA(LNA),
      *          NE_STEPS(KEEP(28)), FILS(N),
-     *          FRERE(KEEP(28)), NFSIZ(KEEP(28))
+     *          FRERE(KEEP(28)), NFSIZ(KEEP(28)), 
+     *          DAD(KEEP(28))
       INTEGER   CAND(SLAVEF+1, MAX(1,KEEP(56)))
       INTEGER   STEP(N)
       INTEGER   PTRAR(LDPTRAR,2)
@@ -1785,6 +1790,9 @@ C
       UULOC = CNTL(1)
       IF (UULOC.GT.ONE)   UULOC=ONE
       IF (UULOC.LT.ZERO)  UULOC=ZERO
+      IF (KEEP(50).NE.0.AND.UULOC.GT.0.5D0) THEN
+        UULOC = 0.5D0
+      ENDIF
       PTRAST     = 1
       PIMASTER   = PTRAST + KEEP(28)
       PAMASTER   = PIMASTER + KEEP(28) 
@@ -1794,7 +1802,7 @@ C
       CALL ZMUMPS_250(N, NZ, NSTEPS, A, LA, IW,
      * LIW, SYM_PERM, NA, LNA, NE_STEPS, IW1(NSTK),
      * IW1( NBPROCFILS ),
-     * INFO(11),NFSIZ,FILS,STEP, FRERE, CAND, 
+     * INFO(11),NFSIZ,FILS,STEP, FRERE, DAD, CAND, 
      * ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      * PTRAR(1,2),PTRAR(1,1),IW1(PTRAST),PTRIST,
      * PTLUST_S, PTRFAC,
@@ -3566,6 +3574,10 @@ C
       ENDIF
    10 L1 = 1
       L2 = L1 + N
+      IF (LIW .LT. 3*N) THEN
+          INFO(1)= -2002
+          INFO(2) = LIW
+      ENDIF
 #if defined(metis)
       IF ( IORD == 5 ) THEN
         IF (LIW .LT. N+N+1) THEN
@@ -3723,7 +3735,7 @@ C
      *     NFSIZ, PTRAR(1,2), 
      *     INFO(6), FILS, FRERE, PTRAR(1,3), NEMIN, 
      *     IW(L2),  KEEP(60), KEEP(20), KEEP(38),
-     *     IW2,KEEP(104))
+     *     IW2,KEEP(104),IW(L2+N))
 #endif
       DEALLOCATE(IW2)
       IF (KEEP(60).NE.0) THEN
@@ -3753,7 +3765,7 @@ C
      *  INFO(5), KEEP(2),KEEP(50),INFO(20),
      *  KEEP(101))
       IF ( KEEP(53) .NE. 0 ) THEN
-        CALL ZMUMPS_209( N, FRERE, FILS, NFSIZ )
+        CALL ZMUMPS_209( N, FRERE, FILS, NFSIZ, KEEP(20) )
       END IF
       IF ( KEEP(48) == 4 .OR.
      *   ( (KEEP(24).NE.0).AND.(KEEP(10).GT.0) ) ) THEN
@@ -6829,6 +6841,7 @@ C
       ELSE
         mumps_par%COMM = MPI_COMM_WORLD
       ENDIF
+      CALL MPI_BCAST(NRHS,1,MPI_INTEGER,0,mumps_par%COMM,IERR)
       IF ( IRNhere /= 0 ) mumps_par%IRN => IRN(1:NZ)
       IF ( JCNhere /= 0 ) mumps_par%JCN => JCN(1:NZ)
       IF ( Ahere /= 0 )   mumps_par%A   => A(1:NZ)

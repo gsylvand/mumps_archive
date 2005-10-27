@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF DMUMPS VERSION 4.5.4
-!   This Version was built on Wed Sep 28 15:22:28 2005
+!   THIS FILE IS PART OF DMUMPS VERSION 4.5.5
+!   This Version was built on Thu Oct 27 10:41:20 2005
 !
 !  This version of DMUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV

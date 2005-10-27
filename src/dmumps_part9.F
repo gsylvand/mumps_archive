@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.4
-C   This Version was built on Wed Sep 28 15:22:28 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
+C   This Version was built on Thu Oct 27 10:41:20 2005
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
@@ -1240,6 +1240,7 @@ C
         L(K) = 0
    15 CONTINUE
       DO 30 J = 1,N
+         IF (IP(J+1)-IP(J) .GT. N/10 .AND. N.GT.50) GO TO 30
         DO 20 K = IP(J),IP(J+1)-1
           I = IRN(K)
           IF (A(K).GT.U(I)) GO TO 20
@@ -1265,6 +1266,19 @@ C
           IPERM(I) = 0
         ENDIF
    40 CONTINUE
+#if 0
+      DO I=1,N
+         IF(JPERM(I) .NE. 0) THEN
+            J = IRN(JPERM(I))
+            IF(D(I) .GT. LOG(HUGE(RINF))) THEN
+               write(*,*) 'warning I,D(I),U(I)',I,D(I),U(I)
+            ENDIF
+         ENDIF
+         IF(J .EQ. I) THEN
+            write(*,*) 'diag in lazy I = ',I
+         ENDIF
+      ENDDO
+#endif
       IF (NUM.EQ.N) GO TO 1000
       DO 45 K = 1,M
         D(K) = ZERO
@@ -1587,12 +1601,12 @@ C
         IF (CW(J).NE.0) GO TO 30
         K = K + 1
         I = RW(K)
-        IPERM(I) = J
+        IPERM(I) = -J
    30 CONTINUE
       DO 40 J = N+1,M
         K = K + 1
         I = RW(K)
-        IPERM(I) = J
+        IPERM(I) = -J
    40 CONTINUE
       RETURN
       END

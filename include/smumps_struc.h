@@ -1,12 +1,14 @@
 !
-!   THIS FILE IS PART OF SMUMPS VERSION 4.5.5
-!   This Version was built on Thu Oct 27 10:41:20 2005
+!   THIS FILE IS PART OF SMUMPS VERSION 4.6
+!   This Version was built on Tue Jan 24 09:35:01 2006
+!
 !
 !  This version of SMUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV
-!  European project PARASOL (1996-1999). 
-!  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-!  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+!  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+!  Since this first public domain version in 1999, the developments are
+!  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+!  INRIA Rhone-Alpes.
 !
 !  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 !  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -40,7 +42,7 @@
 !   S. Pralet (2005), Hybrid scheduling for the parallel solution
 !   of linear systems. Accepted to Parallel Computing.
 !
-!     $Id: smumps_struc.h,v 1.54 2005/10/21 10:41:40 pamestoy Exp $
+!     $Id: smumps_struc.h,v 1.60 2005/12/08 11:16:42 jylexcel Exp $
       INCLUDE 'smumps_root.h'
       TYPE SMUMPS_STRUC
         SEQUENCE
@@ -173,7 +175,8 @@
 !        for analysis/facto/solve phases
          INTEGER MAXIS, MAXS
          INTEGER MAXIS1
-         INTEGER KEEP(150)
+         INTEGER KEEP(500)
+	 INTEGER*8 KEEP8(150)
 !        IS is used for the factors + workspace for contrib. blocks
          INTEGER, DIMENSION(:), POINTER :: IS
 !        is1 (maxis1) contains working arrays computed 
@@ -230,8 +233,6 @@
          INTEGER MAX_SURF_MASTER
 !    For simulating parallel out-of-core stack.
          INTEGER, DIMENSION(:),POINTER ::CB_SON_SIZE
-!    MAX size of factor block on a processor (used for ooc)
-         INTEGER  MAX_SIZE_FACTOR
 !    OOC management data that must persist from factorization to solve.
          INTEGER, DIMENSION(:),   POINTER :: OOC_INODE_SEQUENCE
          INTEGER, DIMENSION(:),   POINTER :: OOC_NUM_FILE
@@ -242,4 +243,6 @@
          CHARACTER,DIMENSION(:,:), POINTER :: OOC_FILE_NAMES  
          INTEGER,DIMENSION(:), POINTER :: OOC_FILE_NAME_LENGTH
          CHARACTER(LEN=150) SMUMPS_OOC_TMPDIR,SMUMPS_OOC_PREFIX
+!    Other internal data
+         LOGICAL PB_ALLOC_ON_EXIT
       END TYPE SMUMPS_STRUC

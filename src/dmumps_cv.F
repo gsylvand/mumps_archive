@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -102,6 +104,7 @@ C
       integer,dimension(:),pointer::
      *    cv_ne,cv_nfsiz,cv_frere,cv_fils,cv_keep,cv_info,
      *    cv_procnode,cv_ssarbr,cv_icntl
+      integer*8,dimension(:),pointer::cv_keep8
       type(alloc_arraytype),pointer,dimension(:)::cv_layer_p2node
       DOUBLE PRECISION,dimension(:),pointer:: cv_ncostw,
      * cv_tcostw,cv_ncostm,cv_tcostm,cv_layerworkload,cv_layermemused
@@ -109,13 +112,14 @@ C
       type(procs4node_t),dimension(:),pointer :: cv_prop_map
       contains
       subroutine DMUMPS_369(n,slavef,icntl,info,
-     *                        ne,nfsiz,frere,fils,keep,
+     *                        ne,nfsiz,frere,fils,keep,KEEP8,
      *                        procnode,ssarbr,nbsa,peak,istat)
       implicit none
       integer,intent(in)::n,slavef
       integer, intent(inout),TARGET:: ne(n),nfsiz(n),
-     *         procnode(n),ssarbr(n),frere(n),fils(n),keep(150),
+     *         procnode(n),ssarbr(n),frere(n),fils(n),keep(500),
      *         icntl(40),info(40)
+      INTEGER*8 KEEP8(150)
       integer,intent(out)::nbsa,istat
       integer ierr,nmb_thislayer,layernmb,mapalgo,allocok,i
       integer,pointer,dimension(:)::thislayer
@@ -135,7 +139,7 @@ C
       nullify(thislayer)
       err_rep='INITPART1'
       call DMUMPS_478(n,slavef,
-     *                   frere,fils,nfsiz,ne,keep,icntl,info,
+     *                   frere,fils,nfsiz,ne,keep,KEEP8,icntl,info,
      *                   procnode,ssarbr,peak,ierr)
       if (ierr.ne.0) goto 99999
       err_rep='PROCINIT'
@@ -299,7 +303,7 @@ C
       call DMUMPS_371(ierr)
       if (ierr.ne.0) goto 99999
       err_rep='STORE_GLOB'
-      call DMUMPS_402(ne,nfsiz,frere,fils,keep,
+      call DMUMPS_402(ne,nfsiz,frere,fils,keep,KEEP8,
      *                         info,procnode,ssarbr,nbsa)
       err_rep='mem_dealloc'
       deallocate(thislayer,STAT=ierr)
@@ -2112,20 +2116,21 @@ C
       return
       end subroutine DMUMPS_377
       subroutine DMUMPS_478(n,slavef,
-     *                    frere,fils,nfsiz,ne,keep,icntl,info,
+     *                    frere,fils,nfsiz,ne,keep,KEEP8,icntl,info,
      *                    procnode,ssarbr,peak,istat)
       implicit none
       integer, intent(in)::n,slavef
       integer, intent(in), TARGET:: frere(n),fils(n),nfsiz(n),ne(n),
-     *  keep(150),icntl(40),info(40),
+     *  keep(500),icntl(40),info(40),
      *  procnode(n),ssarbr(n)
+      INTEGER*8, intent(in), TARGET:: KEEP8(150)
       integer,intent(out)::istat
       integer i,allocok,rest
       DOUBLE PRECISION peak
       character (len=48):: subname
       intrinsic bit_size,min,max
       istat=-1
-      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,
+      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,cv_keep8,
      *        cv_icntl,cv_info,cv_procnode,cv_ssarbr)
       nullify(cv_ncostw,cv_tcostw,cv_ncostm,cv_tcostm,
      *        cv_nodelayer,cv_nodetype,cv_depth,cv_potsplit,
@@ -2136,6 +2141,7 @@ C
       cv_stack_peak = peak
       cv_mem_strat = MAX((300 / cv_slavef),1)
       cv_keep=>keep
+      cv_keep8=>keep8
       if(cv_keep(82) .lt. 0) then
          write(cv_lp,*) 'warning in mumps_cv : keep(82) reset to 0'         
          cv_keep(82) = 0
@@ -2174,7 +2180,7 @@ C
      *       cv_prop_map(n),STAT=allocok)
       if (allocok.gt.0) then
          cv_info(1) = cv_error_memalloc
-         cv_info(2) = 14*n+2*cv_slavef+2*40+150
+         cv_info(2) = 8*n+2*cv_slavef
          istat = cv_error_memalloc
          if(cv_lp.gt.0) 
      *        write(cv_lp,*)'memory allocation error in ',subname
@@ -2184,7 +2190,7 @@ C
          allocate(cv_potsplit(cv_maxcut),STAT=allocok)
          if (allocok.gt.0) then
             cv_info(1) = cv_error_memalloc
-            cv_info(2) = 14*n+2*cv_slavef+2*40+150
+            cv_info(2) = cv_maxcut
             istat = cv_error_memalloc
             if(cv_lp.gt.0) 
      *           write(cv_lp,*)'memory allocation error in ',subname
@@ -4243,12 +4249,13 @@ C
       istat = 0 
       return
       end subroutine DMUMPS_401
-      subroutine DMUMPS_402(ne,nfsiz,frere,fils,keep,
+      subroutine DMUMPS_402(ne,nfsiz,frere,fils,keep,KEEP8,
      *                                info,procnode,ssarbr,nbsa)
       implicit none
       integer,dimension(cv_n),intent(inout)::ne,nfsiz,frere,fils,
      *                                     procnode,ssarbr
-      integer, intent(inout):: keep(150),info(40),nbsa
+      integer, intent(inout):: keep(500),info(40),nbsa
+      INTEGER*8 KEEP8(150)
       ne=cv_ne
       nfsiz=cv_nfsiz
       frere=cv_frere
@@ -4281,7 +4288,7 @@ C
             return
          end if
       endif
-      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,
+      nullify(cv_frere,cv_fils,cv_nfsiz,cv_ne,cv_keep,cv_keep8,
      *        cv_icntl,cv_info,cv_procnode,cv_ssarbr)
       deallocate(cv_proc_workload,cv_proc_maxwork,cv_proc_memused,
      *    cv_proc_maxmem,cv_nodetype,

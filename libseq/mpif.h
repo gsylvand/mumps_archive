@@ -1,12 +1,14 @@
 !
-!   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-!   This Version was built on Thu Oct 27 10:41:20 2005
+!   THIS FILE IS PART OF MUMPS VERSION 4.6
+!   This Version was built on Tue Jan 24 09:35:01 2006
+!
 !
 !  This version of MUMPS is provided to you free of charge. It is public
 !  domain, based on public domain software developed during the Esprit IV
-!  European project PARASOL (1996-1999). 
-!  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-!  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+!  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+!  Since this first public domain version in 1999, the developments are
+!  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+!  INRIA Rhone-Alpes.
 !
 !  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 !  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -75,6 +77,7 @@
       INTEGER MPI_WTIME_IS_GLOBAL
       INTEGER MPI_LOR
       INTEGER MPI_LAND
+      INTEGER MPI_INTEGER8
       PARAMETER (MPI_2DOUBLE_PRECISION=1)
       PARAMETER (MPI_2INTEGER=2)
       PARAMETER (MPI_2REAL=3)
@@ -107,5 +110,6 @@
       PARAMETER (MPI_WTIME_IS_GLOBAL=30)
       PARAMETER (MPI_LOR=31)
       PARAMETER (MPI_LAND=32)
+      PARAMETER (MPI_INTEGER8=33)
       DOUBLE PRECISION MPI_WTIME
       EXTERNAL MPI_WTIME

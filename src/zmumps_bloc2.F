@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -127,11 +129,12 @@ C
      &               MIN ( NSLAVESMAX, NCB )
       RETURN
       END FUNCTION ZMUMPS_52
-      SUBROUTINE ZMUMPS_503( WHAT, KEEP,
+      SUBROUTINE ZMUMPS_503( WHAT, KEEP,KEEP8,
      *           NCB, NFR, SLAVEF, NBROWMAX, MAXSURFCB )
       IMPLICIT NONE
       INTEGER, intent(in) :: WHAT, NCB, NFR, SLAVEF
-      INTEGER, intent(in) :: KEEP(150)
+      INTEGER, intent(in) :: KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER, intent(out) :: NBROWMAX, MAXSURFCB
       INTEGER KMAX, KMIN, NSLAVES, SIZEDUMMY, TABDUMMY
       EXTERNAL ZMUMPS_497, ZMUMPS_442,
@@ -327,13 +330,14 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_440
       SUBROUTINE ZMUMPS_441(      
-     *            KEEP, SLAVEF,
+     *            KEEP,KEEP8, SLAVEF,
      *            TAB_POS_IN_PERE,
      *            NSLAVES, NFRONT, NCB
      *             )
       IMPLICIT NONE
       INTEGER, INTENT( IN ) :: NCB, NSLAVES, SLAVEF, NFRONT,
-     *                         KEEP(150)
+     *                         KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER TAB_POS_IN_PERE(SLAVEF+2)
       INTEGER :: I, BLSIZE
       INTEGER KMIN, KMAX, NBROWDUMMY, MAXSURFDUMMY,
@@ -365,13 +369,14 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_441
       SUBROUTINE ZMUMPS_49(
-     *            KEEP, INODE, STEP, N, SLAVEF,
+     *            KEEP,KEEP8, INODE, STEP, N, SLAVEF,
      *            ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      *
      *            ISLAVE, NCB, NSLAVES, SIZE, FIRST_INDEX )
       IMPLICIT NONE
       INTEGER, INTENT( IN ) :: ISLAVE, NCB, NSLAVES, SLAVEF,
-     *                         KEEP(150), INODE, N 
+     *                         KEEP(500), INODE, N 
+      INTEGER*8 KEEP8(150)
       INTEGER, INTENT( IN ) :: STEP(N), 
      *          ISTEP_TO_INIV2(KEEP(71)), 
      *          TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
@@ -472,13 +477,14 @@ C
       RETURN
       END FUNCTION ZMUMPS_12
       SUBROUTINE ZMUMPS_47( 
-     *   KEEP, INODE, STEP, N, SLAVEF, 
+     *   KEEP,KEEP8, INODE, STEP, N, SLAVEF, 
      *   ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      *
      *   NASS, NCB, 
      *   NSLAVES, POSITION, ISLAVE, IPOSSLAVE )
       IMPLICIT NONE
-      INTEGER, INTENT( IN ) :: KEEP(150),INODE,N,SLAVEF 
+      INTEGER, INTENT( IN ) :: KEEP(500),INODE,N,SLAVEF 
+      INTEGER*8 KEEP8(150)
       INTEGER, INTENT( IN ) :: STEP(N), 
      *          ISTEP_TO_INIV2(KEEP(71)), 
      *          TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))

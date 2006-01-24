@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -621,7 +623,7 @@ C
      *  IROW, NCOL, ICOL, VAL, LDA, NELIM, TYPE_SON,
      *  NSLAVES, SLAVES, DEST, COMM, IERR, 
      * 
-     *  SLAVEF, KEEP, INIV2, TAB_POS_IN_PERE )
+     *  SLAVEF, KEEP,KEEP8, INIV2, TAB_POS_IN_PERE )
         IMPLICIT NONE
         INTEGER LDA, NELIM, TYPE_SON
         INTEGER IPERE, ISON, NROW, NCOL, NSLAVES
@@ -630,7 +632,8 @@ C
         INTEGER SLAVES( NSLAVES )
         COMPLEX VAL(LDA, *)
         INTEGER IPOS, IREQ, DEST, COMM, IERR
-        INTEGER SLAVEF, KEEP(150), INIV2
+        INTEGER SLAVEF, KEEP(500), INIV2
+      INTEGER*8 KEEP8(150)
         INTEGER TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
         INCLUDE 'mpif.h'
         INCLUDE 'mumps_tags.h'
@@ -737,7 +740,7 @@ C
      *  ISON, NBROW, LMAP, MAPROW, PERM, IW_CBSON, A_CBSON,
      *  ISLAVE, PDEST, PDEST_MASTER, COMM, IERR, 
      *  
-     * KEEP, STEP, N, SLAVEF,
+     * KEEP,KEEP8, STEP, N, SLAVEF,
      * ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      * MAX_ROW_LENGTH, SIZE_SLAVE_REALS )
         IMPLICIT NONE
@@ -750,7 +753,8 @@ C
         INTEGER IW_CBSON( * )
         COMPLEX A_CBSON( * )
         LOGICAL DESC_IN_LU
-       INTEGER   KEEP(150), N , SLAVEF
+       INTEGER   KEEP(500), N , SLAVEF
+      INTEGER*8 KEEP8(150)
        INTEGER   STEP(N), 
      *          ISTEP_TO_INIV2(KEEP(71)), 
      *          TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
@@ -856,7 +860,7 @@ C
            I = PERM(J)
            INDICE_PERE=MAPROW(I)
            CALL CMUMPS_47(
-     *          KEEP, IPERE, STEP, N, SLAVEF,
+     *          KEEP,KEEP8, IPERE, STEP, N, SLAVEF,
      *          ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      *
      *          NASS_PERE,
@@ -874,7 +878,7 @@ C
            I = PERM(J)
            INDICE_PERE=MAPROW(I)
            CALL CMUMPS_47(
-     *          KEEP, IPERE, STEP, N, SLAVEF,
+     *          KEEP,KEEP8, IPERE, STEP, N, SLAVEF,
      *          ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      *          
      *          NASS_PERE,
@@ -919,7 +923,7 @@ C
      *                COMM, IERR,
      *                DEST, NDEST, SLAVEF, 
      * 
-     *                KEEP, STEP, N, 
+     *                KEEP,KEEP8, STEP, N, 
      *                ISTEP_TO_INIV2, TAB_POS_IN_PERE
      *
      *                                  )
@@ -931,7 +935,8 @@ C
       INTEGER DEST( NDEST )
       INTEGER SLAVES_PERE( NSLAVES )
       INTEGER COMM, IERR
-      INTEGER KEEP(150), N
+      INTEGER KEEP(500), N
+      INTEGER*8 KEEP8(150)
       INTEGER STEP(N), 
      *        ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
@@ -1016,7 +1021,7 @@ C
           END IF
           DO IDEST= 1, NDEST
             CALL CMUMPS_49( 
-     &                KEEP, ISON, STEP, N, SLAVEF,
+     &                KEEP,KEEP8, ISON, STEP, N, SLAVEF,
      &                ISTEP_TO_INIV2, TAB_POS_IN_PERE,
      &                IDEST, NCBSON, 
      &                NDEST, 

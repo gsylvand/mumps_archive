@@ -1,13 +1,15 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-   This Version was built on Thu Oct 27 10:41:20 2005
+   THIS FILE IS PART OF MUMPS VERSION 4.6
+   This Version was built on Tue Jan 24 09:35:01 2006
+
 
   This version of MUMPS is provided to you free of charge. It is public
   domain, based on public domain software developed during the Esprit IV
-  European project PARASOL (1996-1999). 
-  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+  Since this first public domain version in 1999, the developments are
+  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+  INRIA Rhone-Alpes.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -42,7 +44,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/* $Id: smumps_orderings.c,v 1.19 2005/03/23 12:52:11 spralet Exp $ */
+/* $Id: smumps_orderings.c,v 1.20 2005/12/21 14:22:35 jylexcel Exp $ */
 /*
  * This file contains interfaces to external ordering packages.
  * At the moment, PORD (J. Schulze) and SCOTCH are interfaced.
@@ -201,67 +203,6 @@ ouput:
   
   }
   
-
-/*******************************************
-begining of printing ordering
-********************************************
-
-************************************************************ 
-This part compile but there is an exucution mistake later in
-psl_ma41_ordering when allocate id%POIDS.
-The bug accurs when the following for loop is uncommented:
-when perm and iperm are filled. 
-************************************************************
-
-   mymalloc(perm, nvtx, int); 
-   mymalloc(iperm, nvtx, int);  
-
-   for (K = firstPostorder(T); K != -1; K = nextPostorder(T, K))
-   {
-  	vertex_root = first[K];
-	if (vertex_root != -1)
-	{	
-		perm[vertex_root] = count+1;
-		iperm[count] = vertex_root+1;
-		count++;
-	}
-	for (vertex = link[vertex_root]; vertex != -1; vertex = link[vertex])
-	{ 
-		perm[vertex] = count+1;
-		iperm[count] = vertex+1;
-		count++;
-        }
-    }
-  
-   if ((fp1 = fopen("perm_pord", "w")) == NULL)
-   { fprintf(stderr, "\nError in function greg_pord\n"
-          "  unable to open file perm_pord for writing\n");
-     quit();
-   }
-   if ((fp2 = fopen("iperm_pord", "w")) == NULL)
-   { fprintf(stderr, "\nError in function greg_pord\n"
-          "  unable to open file iperm_pord for writing\n");
-     quit();
-   }
-  
-   for (K = 0; K < nvtx; K++)
-   {
-    fprintf(fp1, "%d\n", perm[K]);
-   }
-   for (K = 0; K < nvtx; K++)
-   {
-    fprintf(fp2, "%d\n", iperm[K]);
-   }
-  
-   fclose(fp1);
-   fclose(fp2);
-  
-   free(perm); 
-   free(iperm);
-
-*************************
-end of printing ordering 
-**************************/
 
   /* ----------------------
      free memory and return

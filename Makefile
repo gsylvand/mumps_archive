@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.5.5
-# This Version was built on Thu Oct 27 10:41:20 2005
+# This file is part of MUMPS VERSION 4.6
+# This Version was built on Tue Jan 24 09:35:01 2006
 #
 #
 default: double

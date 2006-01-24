@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -42,14 +44,15 @@ C   of linear systems. Accepted to Parallel Computing.
 C
 #if defined(try_null_space)
       SUBROUTINE SMUMPS_295
-     *(NN,A,ROOT,WR03,LWR03,KEEP,RIGHT_SV,INFO,LP)
+     *(NN,A,ROOT,WR03,LWR03,KEEP,KEEP8,RIGHT_SV,INFO,LP)
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
       INCLUDE 'mpif.h'
       TYPE ( SMUMPS_ROOT_STRUC ) :: root
       INTEGER NN,LWR03,LP
       REAL A(NN*NN)
-      INTEGER INFO(2),KEEP(150)
+      INTEGER INFO(2),KEEP(500)
+      INTEGER*8 KEEP8(150)
       REAL WR03(LWR03),RIGHT_SV(NN)
       INTEGER LDLT,QR,DEFICIENCY
       REAL, DIMENSION(:), POINTER :: GROW, GCOS, GSIN
@@ -814,7 +817,7 @@ C
       RETURN
       END SUBROUTINE SMUMPS_295
       SUBROUTINE SMUMPS_296
-     *  (NN,A,ROOT,RHS,WK,LWK,KEEP,MTYPE,INFO)
+     *  (NN,A,ROOT,RHS,WK,LWK,KEEP,KEEP8,MTYPE,INFO)
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
       INTEGER NN,LWK
@@ -1106,7 +1109,7 @@ C
      *  id%STEP(1), id%FRERE_STEPS(1),id%FILS(1),
      *  id%PTLUST_S(1),id%PTRFAC(1), IWK_SOLVE, LIWK_SOLVE,
      *  id%PROCNODE_STEPS, id%NSLAVES,
-     *  id%INFO, id%KEEP,
+     *  id%INFO, id%KEEP,id%KEEP8,
      *  id%COMM,
      *  id%COMM_NODES, id%MYID,
      *  id%MYID_NODES,
@@ -1157,11 +1160,12 @@ C
       RETURN
       END SUBROUTINE SMUMPS_84
       SUBROUTINE SMUMPS_279( MBLOCK, NBLOCK, SIZE_ROOT,
-     *           LOCAL_M, LOCAL_N, ROOT_OWNER, KEEP,
+     *           LOCAL_M, LOCAL_N, ROOT_OWNER, KEEP,KEEP8,
      *           LIWK_QR, LWK_QR )
       INTEGER MBLOCK, NBLOCK, SIZE_ROOT, LOCAL_M, LOCAL_N
       INTEGER LIWK_QR, LWK_QR,QR,PAR_ROOT
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       LOGICAL ROOT_OWNER
       QR=KEEP(19)
       PAR_ROOT=KEEP(38)
@@ -3598,7 +3602,7 @@ C
      * IWCB,LIWW,NULL,NULLSOL,NA, LNA, NE_STEPS, W2, MTYPE, ICNTL,
      * STEP, FRERE,FILS, PTRIST, PTRFAC, IW1,LIW1,
      * PROCNODE_STEPS, SLAVEF,
-     * INFO, KEEP, COMM, COMM_NODES, MYID,
+     * INFO, KEEP,KEEP8, COMM, COMM_NODES, MYID,
      * MYID_NODES, BUFR, LBUFR, LBUFR_BYTES, 
      *
      * ISTEP_TO_INIV2, TAB_POS_IN_PERE )
@@ -3606,7 +3610,8 @@ C
       INCLUDE 'smumps_root.h'
       TYPE ( SMUMPS_ROOT_STRUC ) :: root
       INTEGER LA,LWC,N,LIW,MTYPE,LIW1,LIWW,null_basis_col,LNA
-      INTEGER ICNTL(40),INFO(40), KEEP(150)
+      INTEGER ICNTL(40),INFO(40), KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER IW(LIW),IW1(LIW1),NA(LNA),NE_STEPS(KEEP(28)),IWCB(LIWW)
       INTEGER STEP(N), FRERE(KEEP(28)), FILS(N), PTRIST(KEEP(28))
       INTEGER PTRFAC(KEEP(28))
@@ -3750,7 +3755,8 @@ C
      *              NE_STEPS, NA, LNA, STEP, FRERE,FILS,
      *              IW1(IPOOL),LPOOL,PTRIST,PTRFAC,MYLEAF,INFO,
      *              PROCNODE_STEPS, SLAVEF, COMM_NODES, MYID_NODES,
-     *              BUFR, LBUFR, LBUFR_BYTES, KEEP, W( IPT_NULL_ROOT ),
+     *              BUFR, LBUFR, LBUFR_BYTES, KEEP,KEEP8,
+     *              W( IPT_NULL_ROOT ),
      *              MTYPE, 
      *              ISTEP_TO_INIV2, TAB_POS_IN_PERE )
         IF (INFO(1).eq.-2) INFO(1)=-11
@@ -3788,7 +3794,8 @@ C
      *              NE_STEPS, NA, LNA, STEP, FRERE,FILS,
      *              IW1(IPOOL),LPOOL,PTRIST,PTRFAC,MYLEAF,INFO,
      *              PROCNODE_STEPS, SLAVEF, COMM_NODES, MYID_NODES,
-     *              BUFR, LBUFR, LBUFR_BYTES, KEEP, W( IPT_NULL_ROOT ),
+     *              BUFR, LBUFR, LBUFR_BYTES, KEEP,KEEP8,
+     *              W( IPT_NULL_ROOT ),
      *              MTYPE, 
      *              ISTEP_TO_INIV2, TAB_POS_IN_PERE)
 #ifdef try_null_space_not_tested
@@ -3901,7 +3908,7 @@ C
      *           COMM, IW, LIW, IFREE,
      *           A, LA, PTRAST, PTLUST_S, PTRFAC,
      *           STEP, INFO, LDLT, QR,
-     *           WK, LWK, KEEP, WK1,LWK1,RV,VAUX_SEQ )
+     *           WK, LWK, KEEP,KEEP8, WK1,LWK1,RV,VAUX_SEQ )
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
       INCLUDE 'mpif.h'
@@ -3909,7 +3916,8 @@ C
       INTEGER N, IROOT, COMM, LIW, LA, MYID, LWK, LIWK, IFREE,LWK1
       REAL WK( LWK ),WK1(LWK1,1)
       REAL RV(LWK1,1),VAUX_SEQ(LWK1)
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER PTRAST(KEEP(28)), PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
      *STEP(N), IW( LIW )
       INTEGER INFO( 2 ), LDLT, QR
@@ -5207,14 +5215,15 @@ C
      *           COMM, IW, LIW, IFREE,
      *           A, LA, PTRAST, PTLUST_S, PTRFAC,
      *           STEP, INFO, LDLT, QR,
-     *           WK, LWK, KEEP )
+     *           WK, LWK, KEEP,KEEP8)
       IMPLICIT NONE
       INCLUDE 'smumps_root.h'
       INCLUDE 'mpif.h'
       TYPE ( SMUMPS_ROOT_STRUC ) :: root
       INTEGER N, IROOT, COMM, LIW, LA, MYID, LWK, LIWK, IFREE
       REAL WK( LWK )
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER PTRAST(KEEP(28)), PTLUST_S(KEEP(28)), PTRFAC(KEEP(28)),
      *STEP(N), IW( LIW )
       INTEGER INFO( 2 ), LDLT, QR
@@ -5292,13 +5301,14 @@ C
       END SUBROUTINE SMUMPS_146
       SUBROUTINE SMUMPS_556(
      *     N,PIV,FRERE,FILS,NFSIZ,IKEEP,
-     *     NCST,KEEP,id)
+     *     NCST,KEEP,KEEP8,id)
+      USE SMUMPS_STRUC_DEF
       IMPLICIT NONE
-      INCLUDE 'smumps_struc.h'
       TYPE (SMUMPS_STRUC) :: id
       INTEGER N,NCST
       INTEGER PIV(N),FRERE(N),FILS(N),NFSIZ(N),IKEEP(N,3)
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER I,P11,P1,P2,K1,K2,NLOCKED
       LOGICAL V1,V2
       NCST = 0
@@ -5633,10 +5643,11 @@ C
      *     N,NZ, IRN, ICN, PIV,
      *     NCMP, IW, LW, IPE, LEN, IQ, 
      *     FLAG, ICMP, IWFR,
-     *     IERROR, KEEP, ICNTL)
+     *     IERROR, KEEP,KEEP8, ICNTL)
       IMPLICIT NONE
       INTEGER N,NZ,NCMP,LW,IWFR,IERROR
-      INTEGER ICNTL(40),KEEP(150)
+      INTEGER ICNTL(40),KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER IRN(NZ),ICN(NZ),IW(LW),PIV(N),IPE(N+1)
       INTEGER LEN(N),IQ(N),FLAG(N),ICMP(N) 
       INTEGER MP,N11,N22,NDUP

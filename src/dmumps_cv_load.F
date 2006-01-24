@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -142,7 +144,8 @@ C
       DOUBLE PRECISION, SAVE, PRIVATE  ::      CHK_LD
       INTEGER, DIMENSION(:),POINTER, SAVE, PRIVATE  :: 
      $         KEEP_LOAD, PROCNODE_LOAD, STEP_TO_NIV2_LOAD
-       INTEGER, DIMENSION(:),POINTER, SAVE :: 
+      INTEGER*8, DIMENSION(:), POINTER, SAVE, PRIVATE:: KEEP8_LOAD
+      INTEGER, DIMENSION(:),POINTER, SAVE :: 
      *         FILS_LOAD, STEP_LOAD,
      *         FRERE_LOAD, ND_LOAD,
      $         NE_LOAD,DAD_LOAD
@@ -181,12 +184,13 @@ C
       END SUBROUTINE DMUMPS_188
       SUBROUTINE DMUMPS_472(
      *  NCBSON_MAX, SLAVEF,
-     *  KEEP,
+     *  KEEP,KEEP8,
      *  CAND_OF_NODE,
      *  MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *  TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,INODE)
        IMPLICIT NONE
-      INTEGER, intent(in) :: KEEP(150),SIZE_SLAVES_LIST
+      INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
+      INTEGER*8 KEEP8(150)
       INTEGER, intent(in) :: SLAVEF, NFRONT, NCB
       INTEGER, intent(in) :: CAND_OF_NODE(SLAVEF+1)
       INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1),INODE
@@ -198,14 +202,14 @@ C
       IF ( KEEP(48) == 0 .OR. KEEP(48) .EQ. 3 ) THEN
          CALL DMUMPS_499(
      *        SLAVEF,
-     *        KEEP,
+     *        KEEP,KEEP8,
      *        CAND_OF_NODE,
      *        MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *        TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST)
       ELSE IF ( KEEP(48) == 4 ) THEN
          CALL DMUMPS_504(
      *        SLAVEF,
-     *        KEEP,
+     *        KEEP,KEEP8,
      *        CAND_OF_NODE,
      *        MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *        TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,MYID)
@@ -220,7 +224,7 @@ C
          CALL DMUMPS_518(
      *        NCBSON_MAX,
      *        SLAVEF,
-     *        KEEP,
+     *        KEEP,KEEP8,
      *        CAND_OF_NODE,
      *        MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *        TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,MYID,INODE)
@@ -239,12 +243,13 @@ C
       END SUBROUTINE DMUMPS_472
       SUBROUTINE DMUMPS_499(
      *  SLAVEF,
-     *  KEEP,
+     *  KEEP,KEEP8,
      *  CAND_OF_NODE,
      *  MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *  TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST)
       IMPLICIT NONE
-      INTEGER, intent(in) :: KEEP(150),SIZE_SLAVES_LIST
+      INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
+      INTEGER*8 KEEP8(150)
       INTEGER, intent(in) :: SLAVEF, NFRONT, NCB
       INTEGER, intent(in) :: CAND_OF_NODE(SLAVEF+1)
       INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1)
@@ -286,7 +291,7 @@ C
      *          KEEP(50),SLAVEF,
      *          NCB, NFRONT, NSLAVES_less, NMB_OF_CAND)
       CALL DMUMPS_441(
-     *            KEEP, SLAVEF,
+     *            KEEP,KEEP8, SLAVEF,
      *            TAB_POS,
      *            NSLAVES_NODE, NFRONT, NCB
      *             )
@@ -302,9 +307,9 @@ C
       END SUBROUTINE DMUMPS_499
       SUBROUTINE DMUMPS_185( id )
       USE DMUMPS_BUFFER
+      USE DMUMPS_STRUC_DEF
       IMPLICIT NONE
-      INCLUDE 'dmumps_struc.h'
-      TYPE(DMUMPS_STRUC), TARGET, intent(INOUT) :: id
+      TYPE(DMUMPS_STRUC), TARGET :: id
       INTEGER K34_LOC,K35_LOC
       INTEGER allocok, IERR, I, BUF_LOAD_SIZE
       INTEGER MAX_SBTR
@@ -317,6 +322,7 @@ C
       ND_LOAD=>id%ND_STEPS
       KEEP_LOAD=>id%KEEP
       KEEP     =>id%KEEP
+      KEEP8_LOAD=>id%KEEP8
       FILS_LOAD=>id%FILS
       FRERE_LOAD=>id%FRERE_STEPS
       DAD_LOAD=>id%DAD_STEPS
@@ -626,11 +632,12 @@ C
       ENDIF
       END SUBROUTINE DMUMPS_185
       SUBROUTINE DMUMPS_190( CHECK_FLOPS,PROCESS_BANDE,
-     $     INC_LOAD, KEEP )
+     $     INC_LOAD, KEEP,KEEP8 )
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       DOUBLE PRECISION INC_LOAD
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       LOGICAL PROCESS_BANDE
       INTEGER CHECK_FLOPS
       INTEGER IERR
@@ -740,12 +747,13 @@ C
       END SUBROUTINE DMUMPS_190
       SUBROUTINE DMUMPS_471( SSARBR,
      *           PROCESS_BANDE_ARG, MEM_VALUE, NEW_LU, INC_MEM_ARG,
-     *           KEEP,LRLU)
+     *           KEEP,KEEP8,LRLU)
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: MEM_VALUE, INC_MEM_ARG, NEW_LU,LRLU
       LOGICAL, INTENT(IN) :: PROCESS_BANDE_ARG, SSARBR
-      INTEGER IERR, KEEP(150)
+      INTEGER IERR, KEEP(500)
+      INTEGER*8 KEEP8(150)
       DOUBLE PRECISION ZERO, SEND_MEM, TMP_MEM, SBTR_TMP
       PARAMETER( ZERO=0.0 )
       INTRINSIC MAX, ABS
@@ -763,12 +771,20 @@ C
 #endif
       DM_SUMLU = DM_SUMLU + DBLE(NEW_LU)
       CHECK_MEM = CHECK_MEM + INC_MEM
+#if ! defined (SIMULATE_OOC_FAC)
+      IF (KEEP(201).NE.0) THEN
+#endif
+        GOTO 777
+#if ! defined (SIMULATE_OOC_FAC)
+      ENDIF
+#endif
       IF ( MEM_VALUE .NE. CHECK_MEM ) THEN
          WRITE(*,*)MYID,
      *   ':Problem with increments in DMUMPS_471',
      *   CHECK_MEM, MEM_VALUE, INC_MEM
          CALL DMUMPS_ABORT()
       ENDIF
+ 777  CONTINUE
 #if ! defined(OLD_LOAD_MECHANISM)
       IF (PROCESS_BANDE) THEN
          RETURN
@@ -1001,6 +1017,7 @@ C
       ENDIF
       NULLIFY(ND_LOAD)
       NULLIFY(KEEP_LOAD)
+      NULLIFY(KEEP8_LOAD)
       NULLIFY(FILS_LOAD)
       NULLIFY(FRERE_LOAD)
       NULLIFY(PROCNODE_LOAD)
@@ -1029,7 +1046,7 @@ C
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER IERR, MSGTAG, MSGLEN, MSGSOU,COMM
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
       INTEGER STATUS(MPI_STATUS_SIZE)
       LOGICAL FLAG
  10   CONTINUE
@@ -1414,7 +1431,7 @@ C
       integer, intent(in) :: nslaves_inode, SLAVEF
       integer, intent(in) :: CAND(SLAVEF+1)
       integer, dimension(0:NPROCS - 1), intent(in) :: MEM_DISTRIB
-      integer, intent(out) :: dest(nslaves_inode)
+      integer, intent(out) :: dest(CAND(SLAVEF+1))
       integer i,j,NMB_OF_CAND,deficit,nextproc
       DOUBLE PRECISION lref
       external DMUMPS_558
@@ -1551,13 +1568,14 @@ C
       RETURN
       END SUBROUTINE DMUMPS_426
       SUBROUTINE DMUMPS_461(MYID, SLAVEF, COMM,
-     *     TAB_POS, NASS, KEEP, LIST_SLAVES, NSLAVES,INODE)
+     *     TAB_POS, NASS, KEEP,KEEP8, LIST_SLAVES, NSLAVES,INODE)
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       INTEGER, INTENT (IN) :: MYID, SLAVEF, COMM, NASS, NSLAVES
       INTEGER, INTENT (IN) :: TAB_POS(SLAVEF+2)
       INTEGER, INTENT (IN) :: LIST_SLAVES( NSLAVES )
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER NCB, NFRONT, NBROWS_SLAVE
       INTEGER I, IERR,WHAT,INODE
       DOUBLE PRECISION MEM_INCREMENT ( NSLAVES )
@@ -1597,10 +1615,11 @@ C
       DO I = 1, NSLAVES
          NBROWS_SLAVE = TAB_POS(I+1) - TAB_POS(I)
          IF ( KEEP(50) == 0 ) THEN
-            FLOPS_INCREMENT( I ) = DBLE(NBROWS_SLAVE * NASS ) +
-     *           DBLE(NBROWS_SLAVE * NASS ) * DBLE(2*NFRONT-NASS-1)
+            FLOPS_INCREMENT( I ) = (DBLE(NBROWS_SLAVE)*DBLE( NASS ))+
+     *           DBLE(NBROWS_SLAVE) * DBLE(NASS) *
+     $           DBLE(2*NFRONT-NASS-1)
          ELSE
-            FLOPS_INCREMENT( I ) = DBLE(NBROWS_SLAVE * NASS ) *
+            FLOPS_INCREMENT( I ) = DBLE(NBROWS_SLAVE) * DBLE(NASS ) *
      *           DBLE( 2 * ( NASS + TAB_POS(I+1) - 1 ) 
      *           - NBROWS_SLAVE - NASS + 1 )
          ENDIF
@@ -1670,12 +1689,13 @@ C
       END SUBROUTINE DMUMPS_461
       SUBROUTINE DMUMPS_500(
      $     POOL, LPOOL,
-     *     PROCNODE, KEEP, SLAVEF, COMM, MYID, STEP, N,
+     *     PROCNODE, KEEP,KEEP8, SLAVEF, COMM, MYID, STEP, N,
      *     ND, FILS )
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       INTEGER LPOOL, SLAVEF, COMM, MYID 
-      INTEGER N, KEEP(150)
+      INTEGER N, KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER POOL( LPOOL ), PROCNODE( KEEP(28) ), STEP( N )
       INTEGER ND( KEEP(28) ), FILS( N )
       INTEGER I, INODE, NELIM, NFR, LEVEL, IERR, WHAT
@@ -1749,12 +1769,12 @@ C
         NFR = ND( STEP(INODE) )
         LEVEL = DMUMPS_330( STEP(INODE), PROCNODE, SLAVEF )
         IF (LEVEL .EQ. 1) THEN
-          COST = DBLE( NFR * NFR )
+          COST = DBLE( NFR ) * DBLE( NFR )
         ELSE
           IF ( KEEP(50) == 0 ) THEN
-            COST = DBLE( NFR * NELIM )
+            COST = DBLE( NFR ) * DBLE( NELIM )
           ELSE
-            COST = DBLE( NELIM * NELIM )
+            COST = DBLE( NELIM ) * DBLE( NELIM )
           ENDIF
         ENDIF
  30   CONTINUE
@@ -1780,11 +1800,12 @@ C
       RETURN
       END SUBROUTINE DMUMPS_500
       SUBROUTINE DMUMPS_501(
-     $     OK,INODE,POOL,LPOOL,MYID,slavef,COMM,KEEP)
+     $     OK,INODE,POOL,LPOOL,MYID,slavef,COMM,KEEP,KEEP8)
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       INTEGER LPOOL,MYID,SLAVEF,COMM,INODE
-      INTEGER POOL(LPOOL),KEEP(150)
+      INTEGER POOL(LPOOL),KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER WHAT,IERR
       LOGICAL OK
       DOUBLE PRECISION ZERO,COST
@@ -1872,11 +1893,12 @@ C
  666  CONTINUE
       END SUBROUTINE DMUMPS_501
       SUBROUTINE DMUMPS_504
-     &      (SLAVEF,KEEP,PROCS,MEM_DISTRIB,NCB,NFRONT,
+     &      (SLAVEF,KEEP,KEEP8,PROCS,MEM_DISTRIB,NCB,NFRONT,
      $       NSLAVES_NODE,TAB_POS,
      $       SLAVES_LIST,SIZE_SLAVES_LIST,MYID)
       IMPLICIT NONE
-      INTEGER, intent(in) :: KEEP(150),SIZE_SLAVES_LIST
+      INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
+      INTEGER*8 KEEP8(150)
       INTEGER, intent(in) :: SLAVEF, NFRONT, NCB,MYID
       INTEGER, intent(in) :: PROCS(SLAVEF+1)
       INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1)
@@ -1962,10 +1984,10 @@ C
          CALL DMUMPS_558(NUMBER_OF_PROCS, TEMP, TEMP_ID)
          IF(K50.EQ.0)THEN
            PEAK=MAX(PEAK,
-     *       DM_MEM(MYID)+DBLE(NFRONT*(NFRONT-NCB)))
+     *       DM_MEM(MYID)+DBLE(NFRONT)*DBLE(NFRONT-NCB))
          ELSE
            PEAK=MAX(PEAK,
-     *       DM_MEM(MYID)+DBLE((NFRONT-NCB)*(NFRONT-NCB)))
+     *       DM_MEM(MYID)+DBLE(NFRONT-NCB)*DBLE(NFRONT-NCB))
          ENDIF
          PEAK=MAX(PEAK,TEMP(OTHERS))
          SOMME=0
@@ -2274,17 +2296,18 @@ C
                        ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-
      $                      ((K10/NCB)-NB_ROWS(J))
                        NB_ROWS(J)=(K10/NFRONT)
-                    ELSE IF ((TEMP(J)+DBLE((NB_ROWS(J)+x)*NFRONT)).GT.
+                    ELSE IF ((TEMP(J)+DBLE((NB_ROWS(J)+x))*
+     $                      DBLE(NFRONT)).GT.
      *                 PEAK)THEN
-                       AFFECTED=INT((PEAK-(TEMP(J)+DBLE(NB_ROWS(J)*
-     *                 NFRONT)))/DBLE(NFRONT))
+                       AFFECTED=INT((PEAK-(TEMP(J)+DBLE(NB_ROWS(J))*
+     *                 DBLE(NFRONT))/DBLE(NFRONT))
                        ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
                        NB_ROWS(J)=NB_ROWS(J)+AFFECTED
                     ELSE
                        NB_ROWS(J)=NB_ROWS(J)+X
                        ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
                     ENDIF
-                    IF(((TEMP(J)+DBLE(NB_ROWS(J)*NFRONT))
+                    IF(((TEMP(J)+DBLE(NB_ROWS(J))*DBLE(NFRONT))
      *               .GT. PEAK)
      *               .AND.(SMALL_SET.LT.OTHERS))THEN
                        WRITE(*,*)MYID,
@@ -2304,22 +2327,23 @@ C
      *           ':Internal error 9 in DMUMPS_504'
                             CALL DMUMPS_ABORT()
                           ENDIF
-                          IF ((TEMP(J)+DBLE(NB_ROWS(J)
-     *                 *NFRONT)).GT.
+                          IF ((TEMP(J)+DBLE(NB_ROWS(J))
+     *                 *DBLE(NFRONT)).GT.
      *                 PEAK)THEN
                              WRITE(*,*)MYID,
      *         ':Internal error 10 in DMUMPS_504'
                           CALL DMUMPS_ABORT()
                        ENDIF
-                          IF ((TEMP(J)+DBLE((NB_ROWS(J)+
-     *                 ADDITIONNAL_ROWS)*NFRONT)).GE.
+                          IF ((TEMP(J)+DBLE(NB_ROWS(J)+
+     *                 ADDITIONNAL_ROWS)*DBLE(NFRONT)).GE.
      *                 PEAK)THEN
                             AFFECTED=INT((PEAK-(TEMP(J)+
-     *                      DBLE(NB_ROWS(J)*
-     *                      NFRONT)))/DBLE(NFRONT))
+     *                      DBLE(NB_ROWS(J))*
+     *                      DBLE(NFRONT))/DBLE(NFRONT))
                             ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-AFFECTED
                             NB_ROWS(J)=NB_ROWS(J)+AFFECTED
-                            IF((TEMP(J)+DBLE(NFRONT*NB_ROWS(J))).GT.
+                            IF((TEMP(J)+DBLE(NFRONT)*
+     $                           DBLE(NB_ROWS(J))).GT.
      *                         PEAK)THEN
                                WRITE(*,*)MYID,
      *         ':Internal error 11 in DMUMPS_504'
@@ -2377,14 +2401,14 @@ C
               POS=0
               DO I=1,CHOSEN
                  IF(K50.NE.0) THEN
-                    IF((TEMP(I)+DBLE(NB_ROWS(I)
-     *                   *(X+NB_ROWS(I)+NFRONT-NCB)))
+                    IF((TEMP(I)+DBLE(NB_ROWS(I))
+     *                   *DBLE(X+NB_ROWS(I)+NFRONT-NCB))
      *                   .GT.PEAK)THEN
                        SMALL_SET=SMALL_SET+1
                     ENDIF
                  ENDIF
                  IF(K50.EQ.0) THEN
-                    IF((TEMP(I)+DBLE(NB_ROWS(I)*NFRONT))
+                    IF((TEMP(I)+DBLE(NB_ROWS(I))*DBLE(NFRONT))
      *                   .GT.PEAK)THEN
                        SMALL_SET=SMALL_SET+1
                     ENDIF
@@ -2438,11 +2462,13 @@ C
            ENDIF
       END SUBROUTINE DMUMPS_504
       SUBROUTINE DMUMPS_518
-     &      (NCBSON_MAX,SLAVEF,KEEP,PROCS,MEM_DISTRIB,NCB,NFRONT,
+     &      (NCBSON_MAX,SLAVEF,KEEP,KEEP8,
+     *       PROCS,MEM_DISTRIB,NCB,NFRONT,
      $       NSLAVES_NODE,TAB_POS,
      $       SLAVES_LIST,SIZE_SLAVES_LIST,MYID,INODE)
       IMPLICIT NONE
-      INTEGER, intent(in) :: KEEP(150),SIZE_SLAVES_LIST
+      INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
+      INTEGER*8 KEEP8(150)
       INTEGER, intent(in) :: SLAVEF, NFRONT, NCB,MYID
       INTEGER, intent(in) :: NCBSON_MAX
       INTEGER, intent(in) :: PROCS(SLAVEF+1)
@@ -2517,10 +2543,10 @@ C
          NB_ROWS=0
          CALL DMUMPS_558(NUMBER_OF_PROCS, WLOAD, IDWLOAD)
          IF(K50.EQ.0)THEN
-            TOTAL_COST=DBLE( NELIM * NCB ) +
-     *           DBLE(NCB*NELIM)*DBLE(2*NFRONT-NELIM-1)
+            TOTAL_COST=DBLE( NELIM ) * DBLE ( NCB ) +
+     *           DBLE(NCB) * DBLE(NELIM)*DBLE(2*NFRONT-NELIM-1)
          ELSE
-            TOTAL_COST=DBLE( NELIM * NCB ) *
+            TOTAL_COST=DBLE(NELIM) * DBLE ( NCB ) *
      *           DBLE(NFRONT+1)
          ENDIF
          CALL DMUMPS_511(NFRONT,NELIM,NELIM,K50,
@@ -2594,20 +2620,28 @@ C
          ENDIF
         IF(BDC_MD)THEN
          BUF_SIZE=K10
+      IF (KEEP(201).NE.0) THEN
+         A=INT((DBLE(KEEP(100))/DBLE(2))/DBLE(NELIM))
+         IF(K50.EQ.0)THEN
+            BUF_SIZE=MIN(BUF_SIZE,DBLE(INT(A*DBLE(NCB))))               
+         ELSE
+            BUF_SIZE=MIN(BUF_SIZE,DBLE(INT(A*A)))
+         ENDIF
+      ENDIF
          DO I=1,NUMBER_OF_PROCS
             A=DBLE(INT(MD_MEM(TEMP_ID(I))/
      $           DBLE(NELIM)))
             A=A*DBLE(NFRONT)
             IF(K50.EQ.0)THEN
                B=DBLE((INT(DBLE(NCB)/DBLE(NUMBER_OF_PROCS))+1)*
-     $              NFRONT)
+     $              DBLE(NFRONT))
             ELSE
                WHAT = 5 
                x=OTHERS
                CALL DMUMPS_503(
-     &              WHAT, KEEP, NCB, NFRONT, x,
+     &              WHAT, KEEP,KEEP8, NCB, NFRONT, x,
      &              J, X )
-               B=DBLE(X)+DBLE(J*NELIM)
+               B=DBLE(X)+(DBLE(J)*DBLE(NELIM))
             ENDIF
             NELIM_MEM_SIZE=A+B
             MEM_SIZE(I)=NELIM_MEM_SIZE
@@ -2777,7 +2811,7 @@ C
                         DELTA=((B*B)-(4*A*C))
                         KMAX=INT((-B+SQRT(DELTA))/(2*A))
                      A=DBLE(NELIM)
-                     B=DBLE(NELIM*(NELIM+2*ACC+1))
+                     B=DBLE(NELIM)*(DBLE(NELIM)+DBLE(2*ACC+1))
                      C=-(MAX_LOAD-TEMP(I))
                      DELTA=(B*B-(4*A*C))
                      x=INT((-B+SQRT(DELTA))/(2*A))
@@ -2812,13 +2846,13 @@ C
                   AFFECTED=MAX_LOAD
                   IF(K50.EQ.0)THEN
                      MAX_LOAD=MAX(MAX_LOAD,
-     $                    (TEMP(I)+DBLE(NELIM *
-     $                    NB_ROWS(I))+
-     $                    DBLE(NB_ROWS(I)*NELIM)*
-     $                    DBLE(2*NFRONT-NELIM-1)))
+     $                    (TEMP(I)+(DBLE(NELIM) *
+     $                    DBLE(NB_ROWS(I)))+
+     $                    (DBLE(NB_ROWS(I))*DBLE(NELIM)*
+     $                    DBLE(2*NFRONT-NELIM-1))))
                   ELSE
                      MAX_LOAD=MAX(MAX_LOAD,
-     $               TEMP(I)+DBLE(NELIM * NB_ROWS(I))*
+     $               TEMP(I)+(DBLE(NELIM) * DBLE(NB_ROWS(I)))*
      $                    DBLE(2*(NELIM+ACC)-NB_ROWS(I)
      $                    -NELIM+1))
                   ENDIF
@@ -2897,7 +2931,7 @@ C
                              DELTA=((B*B)-(4*A*C))
                              KMAX=INT((-B+SQRT(DELTA))/(2*A))
                              A=DBLE(NELIM)
-                             B=DBLE(NELIM*(NELIM+2*ACC+1))
+                             B=(DBLE(NELIM)*DBLE(NELIM+2*ACC+1))
                              C=-(MAX_LOAD-TEMP(J)+SOMME)
                              DELTA=(B*B-(4*A*C))
                              x=INT((-B+SQRT(DELTA))/(2*A))
@@ -2933,7 +2967,8 @@ C
                              ACC=ACC+X
                              AFFECTED=MAX_LOAD
                              TEMP_MAX_LOAD=MAX(TEMP_MAX_LOAD,
-     $                            TEMP(J)+DBLE(NELIM * NB_ROWS(J))*
+     $                            TEMP(J)+(DBLE(NELIM) *
+     $                            DBLE(NB_ROWS(J)))*
      $                            DBLE(2*(NELIM+
      $                            ACC)-NB_ROWS(J)
      $                            -NELIM+1))
@@ -3025,7 +3060,7 @@ C
                                 ENDIF
                                 TEMP_MAX_LOAD=MAX(TEMP_MAX_LOAD,
      $                               TEMP(I)+
-     $                               DBLE(NELIM * NB_ROWS(I))*
+     $                               (DBLE(NELIM) * DBLE(NB_ROWS(I)))*
      $                               DBLE(2*(NELIM+
      $                               ACC)-NB_ROWS(I)
      $                               -NELIM+1))
@@ -3092,7 +3127,7 @@ C
                              DELTA=((B*B)-(4*A*C))
                              KMAX=INT((-B+SQRT(DELTA))/(2*A))
                              A=DBLE(NELIM)
-                             B=DBLE(NELIM*(NELIM+2*ACC+1))
+                             B=DBLE(NELIM)*DBLE(NELIM+2*ACC+1)
                              C=-(MAX_LOAD-TEMP(I))
                              DELTA=(B*B-(4*A*C))
                              x=INT((-B+SQRT(DELTA))/(2*A))
@@ -3146,7 +3181,7 @@ C
                                 DELTA=((B*B)-(4*A*C))
                                 KMAX=INT((-B+SQRT(DELTA))/(2*A))
                                 A=DBLE(NELIM)
-                                B=DBLE(NELIM*(NELIM+2*ACC+1))
+                                B=DBLE(NELIM)*DBLE(NELIM+2*ACC+1)
                                 C=-(MAX_LOAD-TEMP(J))
                                 DELTA=(B*B-(4*A*C))
                                 x=INT((-B+SQRT(DELTA))/(2*A))
@@ -3178,7 +3213,7 @@ C
                                 ACC=ACC+X
                                 MAX_LOAD=MAX(MAX_LOAD,
      $                               TEMP(J)+
-     $                               DBLE(NELIM * NB_ROWS(J))*
+     $                               (DBLE(NELIM)*DBLE(NB_ROWS(J)))*
      $                               DBLE(2*(NELIM+
      $                               ACC)-NB_ROWS(J)
      $                               -NELIM+1))
@@ -3195,7 +3230,7 @@ C
                        IF(ADDITIONNAL_ROWS.NE.0)THEN
                           ADDITIONNAL_ROWS=NCB-ACC
                           SOMME=DBLE(NELIM)*DBLE(ADDITIONNAL_ROWS)*
-     $                         (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
+     $                         DBLE(2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
                           SOMME=SOMME/NUMBER_OF_PROCS
                           NB_ROWS=0
                           ACC=0
@@ -3234,7 +3269,7 @@ C
                              DELTA=((B*B)-(4*A*C))
                              KMAX=INT((-B+SQRT(DELTA))/(2*A))
                              A=DBLE(NELIM)
-                             B=DBLE(NELIM*(NELIM+2*ACC+1))
+                             B=DBLE(NELIM)*DBLE(NELIM+2*ACC+1)
                              C=-(MAX_LOAD-TEMP(I)+SOMME)
                              DELTA=(B*B-(4*A*C))
                              x=INT((-B+SQRT(DELTA))/(2*A))
@@ -3271,7 +3306,7 @@ C
                           ADDITIONNAL_ROWS=NCB-ACC
                           SOMME=DBLE(NELIM)*
      $                         DBLE(ADDITIONNAL_ROWS)*
-     $                         (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
+     $                         DBLE(2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
                           SOMME=SOMME/NUMBER_OF_PROCS
                           NB_ROWS=0
                           ACC=0
@@ -3312,7 +3347,7 @@ C
                              DELTA=((B*B)-(4*A*C))
                              KMAX=INT((-B+SQRT(DELTA))/(2*A))
                              A=DBLE(NELIM)
-                             B=DBLE(NELIM*(NELIM+2*ACC+1))
+                             B=DBLE(NELIM)*DBLE(NELIM+2*ACC+1)
                              C=-(MAX_LOAD-TEMP(I)+SOMME)
                              DELTA=(B*B-(4*A*C))
                              x=INT((-B+SQRT(DELTA))/(2*A))
@@ -3406,7 +3441,8 @@ C
                             ADDITIONNAL_ROWS=NCB-ACC
                             SOMME=DBLE(NELIM)*
      $                           DBLE(ADDITIONNAL_ROWS)*
-     $                           (2*NFRONT-ADDITIONNAL_ROWS-NELIM+1)
+     $                           DBLE(2*NFRONT-ADDITIONNAL_ROWS-
+     $                           NELIM+1)
                             SOMME=SOMME/(NUMBER_OF_PROCS-NB_SAT)
                             ACC=0
                             DO I=1,CHOSEN
@@ -3431,8 +3467,8 @@ C
                                   GOTO 102
                                ENDIF
                                A=DBLE(NELIM)
-                               B=DBLE(NELIM*
-     $                              (NELIM+2*(ACC+NB_ROWS(I))+1))
+                               B=DBLE(NELIM)*
+     $                              DBLE(NELIM+2*(ACC+NB_ROWS(I))+1)
                                C=-(SOMME)
                                DELTA=(B*B-(4*A*C))
                                x=INT((-B+SQRT(DELTA))/(2*A))
@@ -3543,9 +3579,10 @@ C
                              GOTO 323
                           ELSE
                              MAX_LOAD=MAX(MAX_LOAD,
-     $                            (TEMP(IDWLOAD(I))+DBLE(NELIM *
-     $                            NB_ROWS(IDWLOAD(I)))+
-     $                            DBLE(NB_ROWS(IDWLOAD(I))*NELIM)*
+     $                            (TEMP(IDWLOAD(I))+(DBLE(NELIM) *
+     $                            DBLE(NB_ROWS(IDWLOAD(I))))+
+     $                            (DBLE(NB_ROWS(IDWLOAD(I)))*
+     $                            DBLE(NELIM))*
      $                            DBLE(2*NFRONT-NELIM-1)))
                              GOTO 777
                           ENDIF
@@ -3579,9 +3616,9 @@ C
                     ENDIF
  912                CONTINUE
                     MAX_LOAD=MAX(MAX_LOAD,
-     $                   (TEMP(IDWLOAD(I))+DBLE(NELIM *
-     $                   NB_ROWS(IDWLOAD(I)))+
-     $                   DBLE(NB_ROWS(IDWLOAD(I))*NELIM)*
+     $                   (TEMP(IDWLOAD(I))+(DBLE(NELIM)*
+     $                   DBLE(NB_ROWS(IDWLOAD(I))))+
+     $                   (DBLE(NB_ROWS(IDWLOAD(I)))*DBLE(NELIM))*
      $                   DBLE(2*NFRONT-NELIM-1)))
                     IF(SMALL_SET.LT.NUMBER_OF_PROCS)THEN
                        IF(MAX_LOAD.GT.TEMP(SMALL_SET+1))THEN
@@ -3594,7 +3631,10 @@ C
                        ENDIF
                     ENDIF
                     IF(SMALL_SET.EQ.NB_SAT)GOTO 777
-                    IF(ADDITIONNAL_ROWS.EQ.0)GOTO 049
+                    IF(ADDITIONNAL_ROWS.EQ.0)THEN
+                       CHOSEN=SMALL_SET
+                       GOTO 049
+                    ENDIF
                  ENDDO
  777             CONTINUE
                  IF((NB_ZERO.NE.0).AND.(ADDITIONNAL_ROWS.GE.KMIN))THEN
@@ -3633,9 +3673,9 @@ C
                              NB_ROWS(I)=X
                              ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-X
                              MAX_LOAD=MAX(MAX_LOAD,
-     $                            (TEMP(I)+DBLE(NELIM *
-     $                            NB_ROWS(I))+
-     $                            DBLE(NB_ROWS(I)*NELIM)*
+     $                            (TEMP(I)+(DBLE(NELIM) *
+     $                            DBLE(NB_ROWS(I)))+
+     $                            (DBLE(NB_ROWS(I))*DBLE(NELIM))*
      $                            DBLE(2*NFRONT-NELIM-1)))
                           ENDIF
                        ENDIF
@@ -3738,11 +3778,11 @@ C
                                 AFFECTED=INT((K10-NFRONT)/(NFRONT+1))
                                 BANDE_K10=AFFECTED*NFRONT
                              ENDIF
-                             AFFECTED=(DBLE(NELIM * NB_ROWS(J))
-     $                            +DBLE(NB_ROWS(J)*NELIM)*
+                             AFFECTED=((DBLE(NELIM)* DBLE(NB_ROWS(J)))
+     $                            +(DBLE(NB_ROWS(J))*DBLE(NELIM))*
      $                            DBLE(2*NFRONT-NELIM-1))
                              x=INT((MAX_LOAD-(TEMP(J)+AFFECTED))/
-     $                            DBLE(NELIM*(2*NFRONT-NELIM)))
+     $                            (DBLE(NELIM)*DBLE(2*NFRONT-NELIM)))
                              IF(X.LT.0)THEN
                                 WRITE(*,*)MYID,
      *    ': Internal error 10 in DMUMPS_518'
@@ -3790,9 +3830,9 @@ C
                           ADDITIONNAL_ROWS=ADDITIONNAL_ROWS-1
                        ENDIF
                        MAX_LOAD=MAX(MAX_LOAD,
-     $                      (TEMP(I)+DBLE(NELIM *
-     $                      NB_ROWS(I))+
-     $                      DBLE(NB_ROWS(I)*NELIM)*
+     $                      (TEMP(I)+(DBLE(NELIM) *
+     $                      DBLE(NB_ROWS(I)))+
+     $                      (DBLE(NB_ROWS(I))*DBLE(NELIM))*
      $                      DBLE(2*NFRONT-NELIM-1)))
                        IF(ADDITIONNAL_ROWS.EQ.0) GOTO 048
                     ENDDO
@@ -3825,11 +3865,11 @@ C
                              MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
                           ENDIF
                           KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=(DBLE(NELIM * NB_ROWS(I))
-     $                         +DBLE(NB_ROWS(I)*NELIM)*
+                          AFFECTED=((DBLE(NELIM) * DBLE(NB_ROWS(I)))
+     $                         +(DBLE(NB_ROWS(I))*DBLE(NELIM))*
      $                         DBLE(2*NFRONT-NELIM-1))
                           x=INT((MAX_LOAD-(TEMP(I)+AFFECTED))/
-     $                         (NELIM*(2*NFRONT-NELIM)))
+     $                         (DBLE(NELIM)*DBLE(2*NFRONT-NELIM)))
                           AFFECTED=X
                           IF(X.LT.0)THEN
                              WRITE(*,*)MYID,
@@ -3855,9 +3895,9 @@ C
                        ELSE IF((TEMP(I).GT.MAX_LOAD))THEN
                           X=INT(ADDITIONNAL_ROWS/I-1)
                           X=MAX(X,1)
-                          IF((MAX_LOAD+(DBLE(NELIM*
-     $                         x)+DBLE(
-     $                         x*NELIM)*DBLE(
+                          IF((MAX_LOAD+((DBLE(NELIM)*
+     $                         DBLE(x))+(DBLE(
+     $                         x)*DBLE(NELIM))*DBLE(
      $                         (2*NFRONT-NELIM-1)))).LE.TEMP(I))THEN
                              AFFECTED=X
                              POS=1
@@ -3883,8 +3923,9 @@ C
                              ENDIF
                              KMAX=INT(MAX_MEM_ALLOW/NFRONT)
                              IF(POS.EQ.0)THEN
-                                AFFECTED=(DBLE(NELIM * NB_ROWS(J))
-     $                               +DBLE(NB_ROWS(J)*NELIM)*
+                                AFFECTED=((DBLE(NELIM) *
+     $                               DBLE(NB_ROWS(J)))
+     $                               +(DBLE(NB_ROWS(J))*DBLE(NELIM))*
      $                               DBLE(2*NFRONT-NELIM-1))
                                 x=INT((TEMP(I)-(TEMP(J)+AFFECTED))/
      $                               (NELIM*(2*NFRONT-NELIM)))
@@ -3929,8 +3970,8 @@ C
                              MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
                           ENDIF
                              KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=(DBLE(NELIM * NB_ROWS(I))
-     $                    +DBLE(NB_ROWS(I)*NELIM)*
+                          AFFECTED=((DBLE(NELIM) * DBLE(NB_ROWS(I)))
+     $                    +(DBLE(NB_ROWS(I))*DBLE(NELIM))*
      $                    DBLE(2*NFRONT-NELIM-1))
                           x=INT((MAX_LOAD-
      $                         (TEMP(I)+AFFECTED))/
@@ -3984,8 +4025,8 @@ C
                              MAX_MEM_ALLOW=MAX(DBLE(0),MAX_MEM_ALLOW)
                           ENDIF
                           KMAX=INT(MAX_MEM_ALLOW/NFRONT)
-                          AFFECTED=(DBLE(NELIM * NB_ROWS(I))
-     $                         +DBLE(NB_ROWS(I)*NELIM)*
+                          AFFECTED=((DBLE(NELIM) * DBLE(NB_ROWS(I)))
+     $                         +(DBLE(NB_ROWS(I))*DBLE(NELIM))*
      $                         DBLE(2*NFRONT-NELIM-1))
                           J=INT((MAX_LOAD-
      $                         (TEMP(I)+AFFECTED))/
@@ -4223,7 +4264,7 @@ C
                        DELTA=((B*B)-(4*A*C))
                        KMAX=INT((-B+SQRT(DELTA))/(2*A))
                     A=DBLE(NELIM)
-                    B=DBLE(NELIM*(NELIM+2*ACC+1))
+                    B=DBLE(NELIM)*DBLE(NELIM+2*ACC+1)
                     IF(AFFECTED+TEMP(I).GT.MAX_LOAD)THEN
                        C=-(MAX_LOAD-TEMP(I))
                     ELSE
@@ -4509,10 +4550,12 @@ C
            ENDIF
       END SUBROUTINE DMUMPS_518
       SUBROUTINE DMUMPS_520
-     &      (INODE,UPPER,SLAVEF,KEEP,STEP,POOL,LPOOL,PROCNODE,N)
+     &      (INODE,UPPER,SLAVEF,KEEP,KEEP8,
+     *       STEP,POOL,LPOOL,PROCNODE,N)
       IMPLICIT NONE
       INTEGER INODE, LPOOL, SLAVEF, N
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER STEP(KEEP(28)), POOL(LPOOL), PROCNODE(KEEP(28))
       LOGICAL UPPER
       INTEGER MEM_COST,J
@@ -4670,11 +4713,12 @@ C
       ENDIF
       END SUBROUTINE DMUMPS_515
       SUBROUTINE DMUMPS_512(INODE,STEP,NSTEPS,PROCNODE,FRERE,
-     *     NE,COMM,SLAVEF,MYID,KEEP,N)
+     *     NE,COMM,SLAVEF,MYID,KEEP,KEEP8,N)
       USE DMUMPS_BUFFER
       IMPLICIT NONE
       INTEGER INODE,NSTEPS,MYID,SLAVEF,COMM,N
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER FRERE(NSTEPS),NE(NSTEPS),STEP(N),PROCNODE(NSTEPS)
       EXTERNAL DMUMPS_170,DMUMPS_275
       LOGICAL DMUMPS_170
@@ -4916,7 +4960,7 @@ C
       RETURN
       END FUNCTION DMUMPS_541
       SUBROUTINE DMUMPS_533(SLAVEF,NMB_OF_CAND,
-     *     TAB_POS, NASS, KEEP, LIST_SLAVES,
+     *     TAB_POS, NASS, KEEP,KEEP8, LIST_SLAVES,
      $     NSLAVES,INODE)
       USE DMUMPS_BUFFER
       IMPLICIT NONE
@@ -4924,7 +4968,8 @@ C
       INTEGER, INTENT (IN) :: TAB_POS(SLAVEF+2)
       INTEGER, intent(in) :: NMB_OF_CAND
       INTEGER, INTENT (IN) :: LIST_SLAVES( NMB_OF_CAND )
-      INTEGER KEEP(150),INODE,NELIM
+      INTEGER KEEP(500),INODE,NELIM
+      INTEGER*8 KEEP8(150)
       INTEGER allocok
       DOUBLE PRECISION MEM_COST,FCT_COST
       DOUBLE PRECISION, DIMENSION(:),ALLOCATABLE ::EMPTY_ARRAY,
@@ -5023,8 +5068,10 @@ C
       DOUBLE PRECISION MEM_COST,FCT_COST
       NFR=ND_LOAD(STEP_LOAD(INODE))
       IN = INODE
-      FCT_COST=DBLE((INT((NFR-NELIM)/NSLAVES)+1)*NELIM)
-      MEM_COST=DBLE((INT((NFR-NELIM)/NSLAVES)+1)*NFR)
+      FCT_COST=DBLE((INT(DBLE(NFR-NELIM)/DBLE(NSLAVES))+1)*
+     $     DBLE(NELIM))
+      MEM_COST=DBLE((INT(DBLE(NFR-NELIM)/DBLE(NSLAVES))+1)*
+     $     DBLE(NFR))
       END SUBROUTINE DMUMPS_540
       SUBROUTINE CLEAN_POOL_MEM_INFO(INODE)
       IMPLICIT NONE
@@ -5228,7 +5275,7 @@ C
                   IF(CAND_LOAD(J, STEP_TO_NIV2_LOAD(STEP_LOAD(INODE)))
      $                 .EQ.I)THEN
                      MEM_ON_PROCS(I)=MEM_ON_PROCS(I)-
-     $                 (DBLE(NFRONT*NCB)/DBLE(NCAND))
+     $                 ((DBLE(NFRONT)*DBLE(NCB))/DBLE(NCAND))
                      CONCERNED(I)=.TRUE.
                      GOTO 666
                   ENDIF
@@ -5395,9 +5442,10 @@ C
          ENDIF
       ENDDO
       END SUBROUTINE DMUMPS_553
-      SUBROUTINE DMUMPS_555(POOL, LPOOL,KEEP)
+      SUBROUTINE DMUMPS_555(POOL, LPOOL,KEEP,KEEP8)
       IMPLICIT NONE
-      INTEGER LPOOL,POOL(LPOOL),KEEP(150)
+      INTEGER LPOOL,POOL(LPOOL),KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER I,POS
       EXTERNAL DMUMPS_283
       LOGICAL DMUMPS_283

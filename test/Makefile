@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.5.5
-# This Version was built on Thu Oct 27 10:41:20 2005
+# This file is part of MUMPS VERSION 4.6
+# This Version was built on Tue Jan 24 09:35:01 2006
 #
 #
 
@@ -27,18 +27,18 @@ clean:
 	$(RM) *.o ssimpletest dsimpletest csimpletest zsimpletest c_example
 
 dsimpletest: ../lib/libdmumps.a dsimpletest.o
-	$(FL) -o dsimpletest $(OPTL) dsimpletest.o -L../lib -ldmumps $(LIB) $(LIBBLAS) $(LORDERINGS)
+	$(FL) -o dsimpletest $(OPTL) dsimpletest.o ../lib/libdmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 c_example: ../lib/libdmumps.a c_example.o
-	$(FL) -o c_example $(OPTL) c_example.o -L../lib -ldmumps $(LIB) $(LIBBLAS) $(LORDERINGS)
+	$(FL) -o c_example $(OPTL) c_example.o ../lib/libdmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
 ssimpletest: ../lib/libsmumps.a ssimpletest.o
-	$(FL) -o ssimpletest $(OPTL) ssimpletest.o -L../lib -lsmumps $(LIB) $(LIBBLAS) $(LORDERINGS)
+	$(FL) -o ssimpletest $(OPTL) ssimpletest.o ../lib/libsmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
 zsimpletest: ../lib/libzmumps.a zsimpletest.o
-	$(FL) -o zsimpletest $(OPTL) zsimpletest.o -L../lib -lzmumps $(LIB) $(LIBBLAS) $(LORDERINGS)
+	$(FL) -o zsimpletest $(OPTL) zsimpletest.o ../lib/libzmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
 csimpletest: ../lib/libcmumps.a csimpletest.o
-	$(FL) -o csimpletest $(OPTL) csimpletest.o -L../lib -lcmumps $(LIB) $(LIBBLAS) $(LORDERINGS)
+	$(FL) -o csimpletest $(OPTL) csimpletest.o ../lib/libcmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
 
 ../lib/libsmumps.a:

@@ -1,13 +1,15 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-   This Version was built on Thu Oct 27 10:41:20 2005
+   THIS FILE IS PART OF MUMPS VERSION 4.6
+   This Version was built on Tue Jan 24 09:35:01 2006
+
 
   This version of MUMPS is provided to you free of charge. It is public
   domain, based on public domain software developed during the Esprit IV
-  European project PARASOL (1996-1999). 
-  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+  Since this first public domain version in 1999, the developments are
+  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+  INRIA Rhone-Alpes.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.

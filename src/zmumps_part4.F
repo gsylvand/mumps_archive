@@ -1,12 +1,14 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.5.5
-C   This Version was built on Thu Oct 27 10:41:20 2005
+C   THIS FILE IS PART OF MUMPS VERSION 4.6
+C   This Version was built on Tue Jan 24 09:35:01 2006
+C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
 C  domain, based on public domain software developed during the Esprit IV
-C  European project PARASOL (1996-1999). 
-C  It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS, 
-C  LIP-INRIA-Rhone-Alpes, and PARALLAB.
+C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
+C  Since this first public domain version in 1999, the developments are
+C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+C  INRIA Rhone-Alpes.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -43,26 +45,31 @@ C
       SUBROUTINE ZMUMPS_246(MYID, N, STEP, FRERE, FILS,
      *     NA, LNA, NE, DAD, ND, PROCNODE, SLAVEF,
      *     NRLADU, NIRADU, NIRNEC, NRLNEC, NRLBDU, NIRBDU,
+     *     NRLNEC_ACTIVE,
      *     MAXFR, OPSA, PERLU, 
-     *     KEEP, LOCAL_M, LOCAL_N,
+     *     KEEP,KEEP8, LOCAL_M, LOCAL_N,
      *     SBUF_SEND, SBUF_REC, OPS_SUBTREE, NSTEPS,
      *     NMB_PAR2, ISTEP_TO_INIV2, CANDIDATES, 
      *     IFLAG, IERROR
      $     ,MEMORY_MD,MAX_FRONT_SURFACE_LOCAL
+     *     ,IO_BUF_SIZE,MAX_SIZE_FACTOR
      $     )
       IMPLICIT NONE
       INTEGER  MYID, N, LNA, IFLAG, IERROR
       INTEGER  NRLADU, NIRADU, NRLNEC, NIRNEC
+      INTEGER NRLADU_CURRENT, NRLADU_ROOT_3, NRLNEC_ACTIVE
       INTEGER  MAXFR, PERLU, NSTEPS
       INTEGER  STEP(N)
       INTEGER  FRERE(NSTEPS),FILS(N),NA(LNA),NE(NSTEPS),
      *         ND(NSTEPS),PROCNODE(NSTEPS),DAD(NSTEPS)
-      INTEGER  SLAVEF, KEEP(150), LOCAL_M, LOCAL_N
+      INTEGER  SLAVEF, KEEP(500), LOCAL_M, LOCAL_N
+      INTEGER*8 KEEP8(150)
       INTEGER  SBUF_SEND, SBUF_REC
       INTEGER  NMB_PAR2
       INTEGER  ISTEP_TO_INIV2( KEEP(71) )
       INTEGER  CANDIDATES( SLAVEF+1, MAX(NMB_PAR2,1) ), INFO
       INTEGER  NRLBDU, NIRBDU
+      INTEGER IO_BUF_SIZE,MAX_SIZE_FACTOR
       DOUBLE PRECISION OPSA
       DOUBLE PRECISION OPS_SUBTREE
       INTEGER, ALLOCATABLE, DIMENSION(:) :: LSTKR, TNSTK, IPOOL, 
@@ -96,7 +103,9 @@ C
       logical :: force_cand , concerned, UPDATES, STACKCB, MASTERSON
       integer :: nmb_of_cand,istat, IFSON, LEVELSON
       integer, allocatable :: cand_of_node(:)
-      INTEGER MAX_FRONT_SURFACE_LOCAL,MEMORY_MD,BANDS_FCT
+      INTEGER MAX_FRONT_SURFACE_LOCAL,MEMORY_MD
+      IO_BUF_SIZE=0
+      MAX_SIZE_FACTOR=0
       ALLOCATE( LSTKR(NSTEPS), TNSTK(NSTEPS), IPOOL(NSTEPS),
      *          LSTKI(NSTEPS) , stat=allocok)
       if (allocok .GT. 0) THEN
@@ -106,7 +115,6 @@ C
       endif
       MAX_FRONT_SURFACE_LOCAL=0
       MEMORY_MD=0
-      BANDS_FCT=0
       LKJIB = MAX(KEEP(5),KEEP(6))
       TNSTK = NE
       LEAF = NA(1)+1
@@ -119,6 +127,9 @@ C
       OPS_SUBTREE = 0.0D0
       NRLADU = 0
       NIRADU = 0
+      NRLADU_CURRENT = 0
+      NRLADU_ROOT_3 = 0
+      NRLNEC_ACTIVE = 0
       NRLNEC = 0
       NIRNEC = 0
       MAXFR  = 0
@@ -130,6 +141,9 @@ C
       IF (KEEP(38) .NE. 0 .AND. KEEP(60).EQ.0) THEN
          INODE  = KEEP(38)
          NRLADU = LOCAL_M*LOCAL_N
+        NRLADU_ROOT_3 = LOCAL_M*LOCAL_N
+        NRLNEC_ACTIVE = NRLADU_CURRENT
+         MAX_SIZE_FACTOR=MAX(MAX_SIZE_FACTOR,LOCAL_M*LOCAL_N)
          NRLNEC = NRLADU
          IF (ZMUMPS_275(STEP(INODE),PROCNODE,SLAVEF)
      *                                        .EQ. MYID) THEN
@@ -155,23 +169,6 @@ C
  95   CONTINUE 
       MASTER = ZMUMPS_275(STEP(INODE),PROCNODE,SLAVEF) .EQ. MYID
       LEVEL  = ZMUMPS_330(STEP(INODE),PROCNODE,SLAVEF)
-      IF(KEEP(86).EQ.1)THEN
-         IF(MASTER.AND.(.NOT.ZMUMPS_170(STEP(INODE),
-     $        PROCNODE,SLAVEF)))THEN
-            IF(LEVEL.EQ.1)THEN
-               MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
-     $              NFR*NFR)
-            ELSEIF(LEVEL.EQ.2)THEN
-               IF(KEEP(50).EQ.0)THEN
-                  MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
-     $                 NFR*NELIM)
-               ELSE
-                  MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
-     $                 NELIM*NELIM)
-               ENDIF
-            ENDIF
-         ENDIF
-      ENDIF
       UPDATE=.FALSE.
       if(.NOT.force_cand) then
        UPDATE = ( (MASTER.AND.(LEVEL.NE.3) ).OR. LEVEL.EQ.2 )
@@ -197,12 +194,32 @@ C
       IF (LEVEL.EQ.3) THEN
          NRLNEC = MAX(NRLNEC,NRLADU+ISTKR+
      *        LOCAL_M*LOCAL_N)
+         NRLADU_CURRENT = LOCAL_M*LOCAL_N
+         NRLNEC_ACTIVE = MAX0(NRLNEC_ACTIVE,NRLADU_ROOT_3 + 
+     *                        NRLADU_CURRENT+ISTKR)
          IF (MASTER) THEN 
             IF (NFR.GT.MAXFR) MAXFR = NFR
          ENDIF
       ENDIF
       NCB      = NFR-NELIM
       SIZECB   =  NCB*NCB
+      IF(KEEP(86).EQ.1)THEN
+         IF(MASTER.AND.(.NOT.ZMUMPS_170(STEP(INODE),
+     $        PROCNODE,SLAVEF)))THEN
+            IF(LEVEL.EQ.1)THEN
+               MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $              NFR*NFR)
+            ELSEIF(LEVEL.EQ.2)THEN
+               IF(KEEP(50).EQ.0)THEN
+                  MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $                 NFR*NELIM)
+               ELSE
+                  MAX_FRONT_SURFACE_LOCAL=MAX(MAX_FRONT_SURFACE_LOCAL,
+     $                 NELIM*NELIM)
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF
       SIZECBI  = 2* NCB  + 6 + 3
       IF (LEVEL.EQ.2) THEN
          IF (MASTER) THEN
@@ -216,12 +233,16 @@ C
          IF ( (MASTER) .AND. (LEVEL.EQ.1) ) THEN
             SIZECB = NCB*NCB
             NRLADU = NRLADU + NELIM*(2*NFR-NELIM)
+             NRLADU_CURRENT = NELIM*(2*NFR-NELIM)
+            MAX_SIZE_FACTOR=MAX(MAX_SIZE_FACTOR,NELIM*(2*NFR-NELIM))
             NIRADU = NIRADU + 6 + 2*NFR
             SIZECBI    = 2* NCB  + 6 + 3
          ELSEIF (LEVEL.EQ.2) THEN
             IF (MASTER) THEN
                NIRADU = NIRADU + 6 + SLAVEF - 1 + 2*NFR
                NRLADU = NRLADU + NFR*NELIM
+             NRLADU_CURRENT = NFR*NELIM
+               MAX_SIZE_FACTOR=MAX(MAX_SIZE_FACTOR,NFR*NELIM)
                SIZECB = 0
                SIZECBI    = NCB + 5 +  SLAVEF - 1
             ELSE
@@ -238,18 +259,20 @@ C
                NSLAVES_LOC=SLAVEF
              ENDIF
              CALL ZMUMPS_503( WHAT,
-     &     KEEP, NCB, NFR, NSLAVES_LOC, NBROWMAX, SIZECB )
+     &     KEEP,KEEP8, NCB, NFR, NSLAVES_LOC, NBROWMAX, SIZECB )
                NIRADU   = NIRADU+4+NELIM+NBROWMAX
                NRLADU   = NRLADU + NELIM*NBROWMAX
-               IF(KEEP(86).EQ.1)THEN
-                  BANDS_FCT=BANDS_FCT+(NELIM*NBROWMAX)
-               ENDIF
+             NRLADU_CURRENT = NELIM*NBROWMAX
+               MAX_SIZE_FACTOR=MAX(MAX_SIZE_FACTOR,NELIM*NBROWMAX)
                SIZECBI      = 4 + NBROWMAX + NCB
             ENDIF
          ENDIF
          NIRNEC = MAX(NIRNEC,NIRADU+ISTKI+SIZECBI+MAXITEMPCB)
          NRLNEC = MAX(NRLNEC,NRLADU+ISTKR+SIZECB+
      *                  MAX(SIZECB,MAXTEMPCB) )
+         NRLNEC_ACTIVE = MAX(NRLNEC_ACTIVE,NRLADU_CURRENT+
+     *                        NRLADU_ROOT_3+ISTKR+SIZECB+
+     *                        MAX(SIZECB,MAXTEMPCB) )
          IF (NFR.GT.MAXFR) MAXFR = NFR
          IF (NSTK.GT.0) THEN
             DO 70 K=1,NSTK
@@ -375,7 +398,7 @@ C
                  WHAT = 1 ! Only NBROWMAX
                  NSLAVES_LOC=SLAVEF
                ENDIF
-               CALL ZMUMPS_503( WHAT, KEEP,
+               CALL ZMUMPS_503( WHAT, KEEP,KEEP8,
      &         NCBF, NFRF, NSLAVES_LOC, NBROWMAXF, IDUMMY )
                NCOLMAX  = NCB
                if (update) then 
@@ -442,7 +465,7 @@ C
                    NSLAVES_LOC=SLAVEF
                   ENDIF
                   CALL ZMUMPS_503(
-     &                WHAT, KEEP, NCB, NFR, NSLAVES_LOC,
+     &                WHAT, KEEP,KEEP8, NCB, NFR, NSLAVES_LOC,
      &                NBROWMAX, SIZECB )
                   SIZECB     = MIN(CBMAXR,SIZECB)
                   MAXTEMPCB  = MAX(MAXTEMPCB, MIN(SIZECB,CBMAXR))
@@ -484,7 +507,8 @@ C
                    WHAT = 1 ! Only NBROWMAX 
                    NSLAVES_LOC=SLAVEF
                   ENDIF
-                        CALL ZMUMPS_503( WHAT, KEEP,
+                        CALL ZMUMPS_503( WHAT,
+     *                  KEEP,KEEP8,
      *                  NCB, NFR, NSLAVES_LOC, NBROWMAX, IDUMMY )
                         SIZECBI =  NFR + 6 + SLAVEF - 1
                         SIZECB  = NBROWMAX * NCB
@@ -543,7 +567,8 @@ C
      *   ( MYID .eq. ZMUMPS_275(STEP(IROOT), PROCNODE, SLAVEF) )
          SIZE_ROOT = ND(STEP(IROOT))
          CALL ZMUMPS_279( KEEP(51), KEEP(51), SIZE_ROOT,
-     *        LOCAL_M, LOCAL_N, ROOT_OWNER, KEEP, LIWK_QR, LWK_QR )
+     *        LOCAL_M, LOCAL_N, ROOT_OWNER, KEEP,KEEP8,
+     *        LIWK_QR, LWK_QR )
          IF ( NRLNEC-NRLADU .LT. LWK_QR ) THEN
             NRLNEC = NRLADU + LWK_QR
          END IF
@@ -552,6 +577,8 @@ C
          END IF
       END IF
       NRLNEC = MAX(NRLNEC, NRLADU+3*KEEP(127)*KEEP(84))
+      NRLNEC_ACTIVE = MAX(NRLNEC_ACTIVE, MAX_SIZE_FACTOR+
+     *                    3*KEEP(127)*KEEP(84))
       SBUF_REC = MAX(SBUF_REC, MAXTEMPCB+MAXITEMPCB )
       SBUF_REC = SBUF_REC + 10
       SBUF_SEND = SBUF_SEND + 10
@@ -567,6 +594,7 @@ C
       IF(KEEP(86).EQ.1)THEN
          MEMORY_MD=(PERLU*(NRLNEC/100+1))
       ENDIF
+      IO_BUF_SIZE=MAX_SIZE_FACTOR
       DEALLOCATE( LSTKR, TNSTK, IPOOL,
      *          LSTKI )
       RETURN
@@ -585,14 +613,15 @@ C
      *    NBFIN, MYID, SLAVEF,
      *
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *    INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
+     *    INTARR, DBLARR, ICNTL, KEEP,KEEP8, ND, FRERE,
      *    LPTRAR, NELT, FRTPTR, FRTELT, 
      *    ISTEP_TO_INIV2, TAB_POS_IN_PERE  )
       IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
       INCLUDE 'mpif.h'
       TYPE (ZMUMPS_ROOT_STRUC) :: ROOT
-      INTEGER KEEP(150), ICNTL( 40 )
+      INTEGER KEEP(500), ICNTL( 40 )
+      INTEGER*8 KEEP8(150)
       INTEGER COMM_LOAD, ASS_IRECV
       INTEGER INODE, NELIM_ROOT
       INTEGER LBUFR, LBUFR_BYTES
@@ -693,7 +722,7 @@ C
      *   NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
      *   IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *   OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *   INTARR, DBLARR, ICNTL, KEEP, .FALSE., ND, FRERE,
+     *   INTARR, DBLARR, ICNTL, KEEP,KEEP8, .FALSE., ND, FRERE,
      *   LPTRAR, NELT, FRTPTR, FRTELT, 
      *   ISTEP_TO_INIV2, TAB_POS_IN_PERE  )
        IF (IFLAG.LT.0 ) RETURN
@@ -722,7 +751,7 @@ C
      *    NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
      *    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *    INTARR, DBLARR, ICNTL, KEEP, INVERT, ND, FRERE,
+     *    INTARR, DBLARR, ICNTL, KEEP,KEEP8, INVERT, ND, FRERE,
      *    LPTRAR, NELT, FRTPTR, FRTELT, 
      *   ISTEP_TO_INIV2, TAB_POS_IN_PERE  )
         IF (IFLAG.LT.0 ) RETURN
@@ -773,7 +802,7 @@ C
        IW(IOLDPS + 3) = NPIV
       CALL ZMUMPS_93(MYID,N,IOLDPS,TYPE_SON,IW,LIW,
      *    A, LA, POSFAC, LRLU, LRLUS,
-     *    IWPOS, PTRAST,PTRFAC,STEP,  KEEP, .FALSE.,INODE,IERR)
+     *    IWPOS, PTRAST,PTRFAC,STEP, KEEP,KEEP8, .FALSE.,INODE,IERR)
       IF(IERR.LT.0)THEN
          IFLAG=IERR
          IERROR=0
@@ -819,7 +848,7 @@ C
      *    NBFIN, MYID, SLAVEF,
      *
      *    root, OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *    INTARR, DBLARR, ICNTL, KEEP, ND, FRERE, LPTRAR,
+     *    INTARR, DBLARR, ICNTL, KEEP,KEEP8, ND, FRERE, LPTRAR,
      *    NELT, FRTPTR, FRTELT,
      *    ISTEP_TO_INIV2, TAB_POS_IN_PERE )
           IF ( IFLAG .LT. 0 ) RETURN
@@ -870,7 +899,7 @@ C
      *    NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
      *    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      *    OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *    INTARR, DBLARR, ICNTL, KEEP, INVERT, ND, FRERE,
+     *    INTARR, DBLARR, ICNTL, KEEP,KEEP8, INVERT, ND, FRERE,
      *    LPTRAR, NELT, FRTPTR, FRTELT, 
      *   ISTEP_TO_INIV2, TAB_POS_IN_PERE  )
         IF (IFLAG.LT.0 ) RETURN
@@ -878,7 +907,7 @@ C
      *      PTRIST, PTRAST, PTLUST_S, PTRFAC, IW, LIW, A, LA,
      *      LRLU, LRLUS, IWPOS, IWPOSCB, POSFAC, COMP,
      *      NIRBDU, IPTRLU, OPELIW, STEP, PIMASTER, PAMASTER, ITLOC,
-     *      IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP, TYPE_SON
+     *      IFLAG, IERROR, SLAVEF, MYID, COMM, KEEP,KEEP8, TYPE_SON
      $      )
         IF (IFLAG.LT.0) THEN
            CALL ZMUMPS_44( MYID, SLAVEF, COMM )
@@ -1431,14 +1460,15 @@ C
        RETURN
        END SUBROUTINE ZMUMPS_89
       SUBROUTINE ZMUMPS_221(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
-     *    INOPV,NOFFW,IFLAG,IOLDPS,POSELT,UU, SEUIL,KEEP)
+     *    INOPV,NOFFW,IFLAG,IOLDPS,POSELT,UU, SEUIL,KEEP,KEEP8)
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV,NOFFW
       COMPLEX*16 A(LA) 
       DOUBLE PRECISION UU, SEUIL
       INTEGER IW(LIW) 
       INTEGER  IOLDPS, POSELT
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
        include 'mpif.h'
       COMPLEX*16 SWOP
       INTEGER APOS
@@ -2091,15 +2121,16 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_92
       SUBROUTINE ZMUMPS_27( id,  ANORMINF, LSCAL )
+      USE ZMUMPS_STRUC_DEF
       IMPLICIT NONE
       INCLUDE 'mpif.h'
       INTEGER MASTER, IERR
       PARAMETER( MASTER = 0 )
-      INCLUDE 'zmumps_struc.h'
       TYPE(ZMUMPS_STRUC), TARGET :: id
       DOUBLE PRECISION, INTENT(OUT) :: ANORMINF
       LOGICAL :: LSCAL
-      INTEGER, DIMENSION (:), POINTER :: KEEP, INFO
+      INTEGER, DIMENSION (:), POINTER :: KEEP,INFO
+      INTEGER*8, DIMENSION (:), POINTER :: KEEP8
       LOGICAL :: I_AM_SLAVE
       COMPLEX*16 DUMMY(1)
       DOUBLE PRECISION ZERO
@@ -2108,6 +2139,7 @@ C
       INTEGER :: ALLOCOK, MTYPE, I
       INFO =>id%INFO
       KEEP =>id%KEEP
+      KEEP8 =>id%KEEP8
       I_AM_SLAVE = ( id%MYID .ne. MASTER  .OR.
      *             ( id%MYID .eq. MASTER .AND.
      *               KEEP(46) .eq. 1 ) )
@@ -2126,12 +2158,12 @@ C
               CALL ZMUMPS_207(id%A(1),
      *          id%NZ, id%N,
      *          id%IRN(1), id%JCN(1),
-     *          SUMR, KEEP )
+     *          SUMR, KEEP,KEEP8 )
              ELSE
               CALL ZMUMPS_289(id%A(1),
      *          id%NZ, id%N,
      *          id%IRN(1), id%JCN(1), 
-     *          SUMR, KEEP, 
+     *          SUMR, KEEP, KEEP8,
      *          id%COLSCA(1))
              ENDIF
             ELSE
@@ -2141,13 +2173,13 @@ C
      *           id%NELT, id%ELTPTR,
      *           id%LELTVAR, id%ELTVAR,
      *           id%NA_ELT, id%A_ELT(1),
-     *           SUMR, KEEP )
+     *           SUMR, KEEP,KEEP8 )
              ELSE
               CALL ZMUMPS_135(MTYPE, id%N,
      *           id%NELT, id%ELTPTR(1),
      *           id%LELTVAR, id%ELTVAR(1),
      *           id%NA_ELT, id%A_ELT(1),
-     *           SUMR, KEEP, id%COLSCA(1))
+     *           SUMR, KEEP,KEEP8, id%COLSCA(1))
              ENDIF
             ENDIF
           ENDIF
@@ -2165,12 +2197,12 @@ C
               CALL ZMUMPS_207(id%A_loc,
      *          id%NZ_loc, id%N,
      *          id%IRN_loc, id%JCN_loc, 
-     *          SUMR_LOC, id%KEEP )
+     *          SUMR_LOC, id%KEEP,id%KEEP8 )
            ELSE
               CALL ZMUMPS_289(id%A_loc,
      *          id%NZ_loc, id%N,
      *          id%IRN_loc, id%JCN_loc, 
-     *          SUMR_LOC, id%KEEP, 
+     *          SUMR_LOC, id%KEEP,id%KEEP8,
      *          id%COLSCA)
            ENDIF
           ELSE
@@ -2214,13 +2246,15 @@ C
      *     PTRIST, PTLUST_S, PTRFAC, PTRAST, STEP, PIMASTER, PAMASTER,
      *     COMP, LRLUS, IPOOL, LPOOL, LEAF,
      *     FILS, MYID, PTRAIW, PTRARW, INTARR, DBLARR,
-     *     KEEP, IFLAG, IERROR, COMM, COMM_LOAD, ITLOC,
+     *     KEEP,KEEP8, IFLAG, IERROR, COMM, COMM_LOAD, ITLOC,
      *     ND,PROCNODE_STEPS,SLAVEF )
       USE ZMUMPS_LOAD
+      USE ZMUMPS_OOC        
       IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
       TYPE (ZMUMPS_ROOT_STRUC ) :: ROOT
-      INTEGER KEEP( 150 )
+      INTEGER KEEP( 500 )
+      INTEGER*8 KEEP8(150)
       INTEGER LBUFR, LBUFR_BYTES, N, LIW, LA, NIRBDU, LRLU, IPTRLU,
      *        IWPOS, IWPOSCB, COMP, COMM, COMM_LOAD, IFLAG,
      *        IERROR, LRLUS
@@ -2255,6 +2289,9 @@ C
      *       PTLUST_S( STEP(IROOT)) .NE. 0 ) THEN
             NBPROCFILS(STEP(IROOT)) = NBPROCFILS(STEP(IROOT))-1
             IF ( NBPROCFILS( STEP(IROOT) ) .eq. 0 ) THEN
+              IF (KEEP(201).NE.0) THEN
+              CALL ZMUMPS_580(IERR)
+              ENDIF
               CALL ZMUMPS_507( N, IPOOL, LPOOL,
      *             PROCNODE_STEPS, SLAVEF, KEEP(28), KEEP(76),
      *             KEEP(80), KEEP(47),
@@ -2262,7 +2299,7 @@ C
               IF (KEEP(47) .GE. 3) THEN
                  CALL ZMUMPS_500(
      $                IPOOL, LPOOL, 
-     *                PROCNODE_STEPS, KEEP, SLAVEF, COMM_LOAD,
+     *                PROCNODE_STEPS, KEEP,KEEP8, SLAVEF, COMM_LOAD,
      *                MYID, STEP, N, ND, FILS )
               ENDIF
             END IF
@@ -2276,7 +2313,7 @@ C
      *                     LRLU, IPTRLU,
      *                     IWPOS, IWPOSCB, PTRIST, PTRAST,
      *                     STEP, PIMASTER, PAMASTER, ITLOC,
-     *                     COMP, LRLUS, IFLAG, KEEP, IERROR )
+     *                     COMP, LRLUS, IFLAG, KEEP,KEEP8, IERROR )
             IF ( IFLAG .LT. 0 ) RETURN
            ELSE
              PTRIST(STEP(IROOT)) = -55555
@@ -2292,7 +2329,7 @@ C
         ENDIF
         IF (LREQA.NE.0) THEN
           CALL ZMUMPS_22(.FALSE.,.FALSE.,
-     *     MYID,N,KEEP,IW,LIW,A, LA, NIRBDU,
+     *     MYID,N,KEEP,KEEP8,IW,LIW,A, LA, NIRBDU,
      *     LRLU, IPTRLU, IWPOS, IWPOSCB, PTRIST,
      *     PTRAST, STEP, PIMASTER, PAMASTER, ITLOC,
      *     LREQI, LREQA,
@@ -2330,13 +2367,13 @@ C
           LRLU    = LRLU    + LREQA
           LRLUS   = LRLUS   + LREQA
           CALL ZMUMPS_471(.FALSE.,.FALSE.,
-     *                          LA-LRLUS,0,-LREQA,KEEP,LRLU)
+     *                    LA-LRLUS,0,-LREQA,KEEP,KEEP8,LRLU)
         ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_272
       SUBROUTINE ZMUMPS_224(NFRONT,NASS,IBEGKJI, LPIV, TIPIV,
      *    N,INODE,IW,LIW,A,LA,
-     *    INOPV,NOFFW,IFLAG,IOLDPS,POSELT,UU,SEUIL,KEEP)
+     *    INOPV,NOFFW,IFLAG,IOLDPS,POSELT,UU,SEUIL,KEEP,KEEP8)
       IMPLICIT NONE
       INTEGER IBEGKJI, LPIV 
       INTEGER TIPIV(LPIV)
@@ -2345,7 +2382,8 @@ C
       DOUBLE PRECISION UU, SEUIL
       INTEGER IW(LIW) 
       INTEGER IOLDPS, POSELT
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       COMPLEX*16 SWOP
       INTEGER APOS,ILOC
       DOUBLE PRECISION ZERO, RMAX, AMROW
@@ -2461,7 +2499,7 @@ C
      *             STEP, PIMASTER, PAMASTER,
      *             NSTK_S,NBPROCFILS,PROCNODE_STEPS, root,
      *             OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *             INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
+     *             INTARR, DBLARR, ICNTL, KEEP,KEEP8, ND, FRERE,
      *             LPTRAR, NELT, FRTPTR, FRTELT, 
      *             ISTEP_TO_INIV2, TAB_POS_IN_PERE )
       USE ZMUMPS_BUFFER
@@ -2479,7 +2517,8 @@ C
       INTEGER COMM, MYID, LBUFR, LBUFR_BYTES
       INTEGER NELT, LPTRAR
       INTEGER FRTPTR( N+1 ), FRTELT( NELT ) 
-      INTEGER KEEP(150)
+      INTEGER KEEP(500)
+      INTEGER*8 KEEP8(150)
       INTEGER NBFIN, IFLAG, IERROR, LEAF, LPOOL,
      *        SLAVEF, ICNTL(40)
       INTEGER POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, 
@@ -2522,7 +2561,7 @@ C
       CALL ZMUMPS_511( LDA_FS, IEND, LPIV,
      *                           KEEP(50),2,FLOP2)
       FLOP2 = FLOP1 - FLOP2
-      CALL ZMUMPS_190(1, .FALSE., FLOP2, KEEP)
+      CALL ZMUMPS_190(1, .FALSE., FLOP2, KEEP,KEEP8)
       IF ((NPIV.GT.0) .OR. 
      *    ((NPIV.EQ.0).AND.(LASTBL)) ) THEN
         PDEST  = IOLDPS + 6
@@ -2552,7 +2591,7 @@ C
      *      NBPROCFILS,
      *      IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      *      root, OPASSW, OPELIW, ITLOC, FILS, PTRARW, PTRAIW,
-     *      INTARR, DBLARR, ICNTL, KEEP, ND, FRERE,
+     *      INTARR, DBLARR, ICNTL, KEEP,KEEP8, ND, FRERE,
      *      LPTRAR, NELT, FRTPTR, FRTELT, 
      *      ISTEP_TO_INIV2, TAB_POS_IN_PERE )
            IF (MESSAGE_RECEIVED) POSELT = PTRAST(STEP(INODE))
@@ -2579,14 +2618,15 @@ C
      *    PTLUST_S, PTRFAC,
      *    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, ITLOC, COMP,
      *    IFLAG, IERROR, 
-     *    IPOOL, LPOOL, LEAF, MYID, SLAVEF, KEEP,
+     *    IPOOL, LPOOL, LEAF, MYID, SLAVEF, KEEP,KEEP8,
      *    COMM,COMM_LOAD,FILS,ND )
       USE ZMUMPS_LOAD
       IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
       TYPE (ZMUMPS_ROOT_STRUC) :: ROOT
       INTEGER INODE, NELIM, NSLAVES 
-      INTEGER KEEP( 150 )
+      INTEGER KEEP( 500 )
+      INTEGER*8 KEEP8(150)
       INTEGER ROW_LIST(*), COL_LIST(*), 
      *        SLAVE_LIST(*)
       INTEGER IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, NIRBDU
@@ -2633,7 +2673,7 @@ C
        NOINT = 6 + NSLAVES + NELIM  + NELIM
        NOREAL= 0
        CALL ZMUMPS_22(.FALSE.,.FALSE.,
-     *   MYID,N,KEEP,IW,LIW, A, LA, NIRBDU,
+     *   MYID,N,KEEP,KEEP8,IW,LIW, A, LA, NIRBDU,
      *   LRLU, IPTRLU,IWPOS,IWPOSCB,
      *   PTRIST,PTRAST,STEP, PIMASTER, PAMASTER, ITLOC,
      *   NOINT, NOREAL,
@@ -2669,7 +2709,7 @@ C
           IF (KEEP(47) .GE. 3) THEN
              CALL ZMUMPS_500(
      $            IPOOL, LPOOL, 
-     *            PROCNODE_STEPS, KEEP, SLAVEF, COMM_LOAD,
+     *            PROCNODE_STEPS, KEEP,KEEP8, SLAVEF, COMM_LOAD,
      *            MYID, STEP, N, ND, FILS )
           ENDIF
       END IF

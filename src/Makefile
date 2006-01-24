@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.5.5
-# This Version was built on Thu Oct 27 10:41:20 2005
+# This file is part of MUMPS VERSION 4.6
+# This Version was built on Tue Jan 24 09:35:01 2006
 #
 #
 .PHONY: double simple cmplx cmplx16
@@ -22,80 +22,84 @@ clean:
 ################################################################################
 #                            Double precision
 ################################################################################
-../lib/libdmumps.a:dmumps_part1.o dmumps_part2.o dmumps_part3.o dmumps_part4.o dmumps_part5.o dmumps_part6.o dmumps_part7.o dmumps_part8.o dmumps_part9.o dmumps_buffer.o dmumps_bloc2.o dmumps_cv_load.o dmumps_cv.o dmumps_distribution.o dmumps_c.o dmumps_orderings.o
+../lib/libdmumps.a:dmumps_part1.o dmumps_part2.o dmumps_part3.o dmumps_part4.o dmumps_part5.o dmumps_part6.o dmumps_part7.o dmumps_part8.o dmumps_part9.o dmumps_buffer.o dmumps_bloc2.o dmumps_cv_load.o dmumps_cv.o dmumps_c.o dmumps_orderings.o dmumps_ooc.o dmumps_io.o dmumps_io_basic.o dmumps_io_thread.o dmumps_io_err.o
 	$(AR) $@ $?
 	$(RANLIB) $@
 
-dmumps_cv_load.o  : dmumps_buffer.o
-dmumps_buffer.o: dmumps_bloc2.o
-dmumps_part1.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part2.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part3.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part4.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part5.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_cv.o
-dmumps_part6.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part7.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part8.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
-dmumps_part9.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o
+dmumps_cv_load.o:dmumps_buffer.o dmumps_struc_def.o
+dmumps_ooc.o : dmumps_struc_def.o
+dmumps_buffer.o :dmumps_bloc2.o
+dmumps_part1.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part2.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part3.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part4.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part5.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_cv.o dmumps_ooc.o
+dmumps_part6.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part7.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part8.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
+dmumps_part9.o:dmumps_bloc2.o dmumps_buffer.o dmumps_cv_load.o dmumps_ooc.o
 
 
 ################################################################################
 #                            Simple precision
 ################################################################################
-../lib/libsmumps.a:smumps_part1.o smumps_part2.o smumps_part3.o smumps_part4.o smumps_part5.o smumps_part6.o smumps_part7.o smumps_part8.o smumps_part9.o smumps_buffer.o smumps_bloc2.o smumps_cv_load.o smumps_cv.o smumps_distribution.o smumps_c.o smumps_orderings.o
+../lib/libsmumps.a:smumps_part1.o smumps_part2.o smumps_part3.o smumps_part4.o smumps_part5.o smumps_part6.o smumps_part7.o smumps_part8.o smumps_part9.o smumps_buffer.o smumps_bloc2.o smumps_cv_load.o smumps_cv.o smumps_c.o smumps_orderings.o smumps_ooc.o smumps_io.o smumps_io_basic.o smumps_io_thread.o smumps_io_err.o
 	$(AR) $@ $?
 	$(RANLIB) $@
 
-smumps_cv_load.o  : smumps_buffer.o
+smumps_cv_load.o  : smumps_buffer.o smumps_struc_def.o
+smumps_ooc.o : smumps_struc_def.o
 smumps_buffer.o: smumps_bloc2.o
-smumps_part1.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part2.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part3.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part4.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part5.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_cv.o
-smumps_part6.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part7.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part8.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
-smumps_part9.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o
+smumps_part1.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part2.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part3.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part4.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part5.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_cv.o smumps_ooc.o
+smumps_part6.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part7.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part8.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
+smumps_part9.o:smumps_bloc2.o smumps_buffer.o smumps_cv_load.o smumps_ooc.o
 
 
 ################################################################################
 #                            Complex precision
 ################################################################################
-../lib/libcmumps.a:cmumps_part1.o cmumps_part2.o cmumps_part3.o cmumps_part4.o cmumps_part5.o cmumps_part6.o cmumps_part7.o cmumps_part8.o cmumps_part9.o cmumps_buffer.o cmumps_bloc2.o cmumps_cv_load.o cmumps_cv.o cmumps_distribution.o cmumps_c.o cmumps_orderings.o
+../lib/libcmumps.a:cmumps_part1.o cmumps_part2.o cmumps_part3.o cmumps_part4.o cmumps_part5.o cmumps_part6.o cmumps_part7.o cmumps_part8.o cmumps_part9.o cmumps_buffer.o cmumps_bloc2.o cmumps_cv_load.o cmumps_cv.o cmumps_c.o cmumps_orderings.o cmumps_ooc.o cmumps_io.o cmumps_io_basic.o cmumps_io_thread.o cmumps_io_err.o
 	$(AR) $@ $?
 	$(RANLIB) $@
 
-cmumps_cv_load.o  : cmumps_buffer.o
+cmumps_cv_load.o  : cmumps_buffer.o cmumps_struc_def.o
+cmumps_ooc.o : cmumps_struc_def.o
 cmumps_buffer.o: cmumps_bloc2.o
-cmumps_part1.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part2.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part3.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part4.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part5.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_cv.o
-cmumps_part6.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part7.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part8.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
-cmumps_part9.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o
+cmumps_part1.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part2.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part3.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part4.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part5.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_cv.o cmumps_ooc.o
+cmumps_part6.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part7.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part8.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
+cmumps_part9.o:cmumps_bloc2.o cmumps_buffer.o cmumps_cv_load.o cmumps_ooc.o
 
 
 ################################################################################
 #                            Double complex precision
 ################################################################################
-../lib/libzmumps.a:zmumps_part1.o zmumps_part2.o zmumps_part3.o zmumps_part4.o zmumps_part5.o zmumps_part6.o zmumps_part7.o zmumps_part8.o zmumps_part9.o zmumps_buffer.o zmumps_bloc2.o zmumps_cv_load.o zmumps_cv.o zmumps_distribution.o zmumps_c.o zmumps_orderings.o
+../lib/libzmumps.a:zmumps_part1.o zmumps_part2.o zmumps_part3.o zmumps_part4.o zmumps_part5.o zmumps_part6.o zmumps_part7.o zmumps_part8.o zmumps_part9.o zmumps_buffer.o zmumps_bloc2.o zmumps_cv_load.o zmumps_cv.o zmumps_c.o zmumps_orderings.o zmumps_ooc.o zmumps_io.o zmumps_io_basic.o zmumps_io_thread.o zmumps_io_err.o
 	$(AR) $@ $?
 	$(RANLIB) $@
 
-zmumps_cv_load.o  : zmumps_buffer.o
+zmumps_cv_load.o  : zmumps_buffer.o zmumps_struc_def.o
+zmumps_ooc.o : zmumps_struc_def.o
 zmumps_buffer.o: zmumps_bloc2.o
-zmumps_part1.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part2.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part3.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part4.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part5.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_cv.o
-zmumps_part6.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part7.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part8.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
-zmumps_part9.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o
+zmumps_part1.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part2.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part3.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part4.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part5.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_cv.o zmumps_ooc.o
+zmumps_part6.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part7.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part8.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
+zmumps_part9.o:zmumps_bloc2.o zmumps_buffer.o zmumps_cv_load.o zmumps_ooc.o
 
 

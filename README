@@ -1,8 +1,8 @@
 ===========================================
-MUMPS version 4.5.5
+MUMPS version 4.6
 ===========================================
 
-MUMPS 4.5.5 solves a sparse system of linear equations A x = b
+MUMPS 4.6 solves a sparse system of linear equations A x = b
 using Gaussian elimination. Please read this README file and
 the documentation (in ./doc/) for a complete list of
 functionalities. Documentation and publications related to
@@ -16,19 +16,21 @@ mumps@cerfacs.fr.
 
 This version of MUMPS is provided to you free of charge. It is public
 domain, based on public domain software developed during the Esprit IV
-european project PARASOL (1996-1999).
-It has also been supported by CERFACS, ENSEEIHT-IRIT-CNRS,
-LIP-INRIA-Rhone-Alpes, and PARALLAB.
+european project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL.
+Since this first public domain version in 1999, the developments are
+supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
+INRIA Rhone-Alpes.
 
 Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
-Other contributions were made by C. Bousquet, C. Daniel, 
-G. Richard, M. Tuma, C. Voemel.
+We are also grateful to C. Bousquet, C. Daniel, V. Espirat, A. Fèvre,
+C. Puglisi, G. Richard, M. Tuma, and C. Voemel who have been contributing
+to this work.
 
 
 Contents of the distribution :
----------------------------
+----------------------------
 
 COPYRIGHT  Makefile  README   doc/      lib/     src/
 Make.inc/  PORD/     VERSION  include/  libseq/  test/
@@ -63,8 +65,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.5.5.tar.gz
-% cd MUMPS_4.5.5
+% tar zxvf MUMPS_4.6.tar.gz
+% cd MUMPS_4.6
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -181,12 +183,10 @@ Otherwise some derived datatypes may not match.
 Platform dependencies
 ---------------------
 
-Versions of MUMPS_4.5.5 should work on IBM SP systems,
-SGI Origin 2000, COMPAQ ALPHA systems and some Linux clusters.
-
-We could potentially generate versions for any other
-platform with Fortran 90, MPI, BLACS, and ScaLAPACK
-installed, but the code has only been tested
+Versions of MUMPS_4.6 have been tested on CRAY, IBM, SGI,
+COMPAQ, and Linux systems.  We could potentially generate
+versions for any other platform with Fortran 90, MPI, BLACS,
+and ScaLAPACK installed, but the code has only been tested
 on the above-mentionned platforms.
 
 
@@ -225,6 +225,8 @@ of more than 1 processor.
 Release history
 ---------------
 
+Release 4.6             : January 2006
+Release 4.5.6           : December 2005, internal release
 Release 4.5.5           : October 2005
 Release 4.5.4           : September 2005
 Release 4.5.3           : September 2005
@@ -261,6 +263,17 @@ Version 2.0.4     : Mar 24, 1998
 Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
+
+Changes from Version 4.5.6 to Version 4.6
+* Official release with Scilab and Matlab interfaces available
+* Correction in 2x2 pivots for symmetric indefinite complex matrices
+* Correction in irregular scheduler (Internal error 17)
+
+Changes from Version 4.5.5 to Version 4.5.6
+* Preliminary developments for an out-of-core code (not yet available)
+* Improvement in parallel symmetric indefinite solver
+* Preliminary distribution of a SCILAB and a MATLAB interface
+  to MUMPS.
 
 Changes from Version 4.5.4 to Version 4.5.5
 * Improved tree management

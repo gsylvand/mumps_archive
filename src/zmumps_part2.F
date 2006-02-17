@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -1787,8 +1787,8 @@ C
       END IF
       KEEP(7) =  40
       KEEP(8) =  40
-      KEEP(57) = 80
-      KEEP(58) = 40
+      KEEP(57) = 500
+      KEEP(58) = 250
       KEEP(59) = 120
       KEEP(63) = 30
 #elif defined(SP_)
@@ -1809,8 +1809,8 @@ C
       END IF
       KEEP(7) = 40
       KEEP(8) = 40
-      KEEP(57) = 80
-      KEEP(58) = 40
+      KEEP(57) = 500
+      KEEP(58) = 250
       KEEP(59) = 120
       KEEP(62) = 150
       KEEP(63) = 30
@@ -1840,8 +1840,8 @@ C
       END IF
       KEEP(7) =  40
       KEEP(8) =  40
-      KEEP(57) = 80
-      KEEP(58) = 40
+      KEEP(57) = 500
+      KEEP(58) = 250
       KEEP(59) = 120
       KEEP(63) = 30
 #endif
@@ -2553,7 +2553,7 @@ C
       CALL ZMUMPS_201(IKEEP(1,2),
      *  PTRAR(1,3), INFO(6),
      *  INFO(5), KEEP(2), KEEP(50), INFO(20), 
-     *  KEEP(101),KEEP8(1))
+     *  KEEP(101),KEEP8(1),KEEP(108))
       IF ( KEEP(53) .NE. 0 ) THEN
         CALL ZMUMPS_209( N, FRERE, FILS, NFSIZ, KEEP(20) )
       END IF
@@ -3962,9 +3962,9 @@ C
       END SUBROUTINE ZMUMPS_557
 #endif
       SUBROUTINE ZMUMPS_201(NE, ND, NSTEPS,
-     * MAXFR, MAXELIM, K50, SIZEFAC, MAXFAC, SIZEFAC8 )
+     * MAXFR, MAXELIM, K50, SIZEFAC, MAXFAC, SIZEFAC8,MAXNPIV )
       IMPLICIT NONE
-      INTEGER NSTEPS
+      INTEGER NSTEPS,MAXNPIV
       INTEGER  MAXFR, MAXELIM, K50, SIZEFAC, MAXFAC
       INTEGER  NE(NSTEPS), ND(NSTEPS)
       INTEGER*8 SIZEFAC8, TEMP8
@@ -3972,12 +3972,16 @@ C
       MAXFR   = 0
       MAXFAC  = 0
       MAXELIM = 0
+      MAXNPIV = 0
       SIZEFAC8 = 0
       DO ITREE=1,NSTEPS
         NELIM = NE(ITREE)
         NFR = ND(ITREE)
         IF (NFR.GT.MAXFR)         MAXFR   = NFR
         IF (NFR-NELIM.GT.MAXELIM) MAXELIM = NFR - NELIM
+        IF (NELIM .GT. MAXNPIV) THEN
+           IF(NFR .NE. NELIM) MAXNPIV = NELIM
+        ENDIF
         IF (K50.EQ.0) THEN
           SIZEFAC8 = SIZEFAC8 + (2*NFR - NELIM)*NELIM 
           MAXFAC = MAX(MAXFAC, (2*NFR - NELIM)*NELIM )
@@ -4978,15 +4982,6 @@ C
  100     CONTINUE
         END DO
       END IF
-      IF ( MP.GT. 0 ) THEN
-         WRITE(MP,*) ' ICNTL(13)= (0=scalapack on)',
-     *                ICNTL(13)
-        IF (ICNTL(40).EQ.0) THEN 
-              WRITE(MP,*) ' Node level parallelism ON'
-        ELSE
-              WRITE(MP,*) ' Node level parallelism OFF'
-        ENDIF
-      END IF
       ONE_LEVEL2 = .FALSE.
       DO INODE = 1, N
         IF ( FRERE( INODE ) .LT. N + 1 .AND.
@@ -5067,8 +5062,6 @@ C
         END IF
       END DO
       IF ( KEEP( 45 ) .NE. 0 ) RETURN
-      IF ( MP .GT. 0 )
-     *  WRITE(MP,*) ' Mapping takes memory into account'
       NNODE = 0
       DO INODE = 1, N
         IF ( FRERE( INODE ) .LT. N + 1 ) THEN
@@ -5264,9 +5257,11 @@ C
         RINFO(1) = 0.0d0
       END IF
       MPG = ICNTL(3)
-      CALL MPI_REDUCE( INFO(3), INFOG(3), 2, MPI_INTEGER,
+      CALL ZMUMPS_621( INFO(3), INFOG(3), KEEP8(5), COMM )
+      CALL MPI_REDUCE( INFO(3), INFOG(3), 1, MPI_INTEGER,
      *  MPI_SUM, MASTER, COMM, IERR_MPI )
-      IF (MYID.eq.MASTER) KEEP(125) = INFOG(3)
+      CALL MPI_REDUCE( INFO(4), INFOG(4), 1, MPI_INTEGER,
+     *  MPI_SUM, MASTER, COMM, IERR_MPI )
       IF (MYID.eq.MASTER) KEEP(126) = INFOG(4)
       CALL MPI_REDUCE( INFO(5), INFOG(5), 1, MPI_INTEGER,
      *  MPI_MAX, MASTER, COMM, IERR_MPI )
@@ -5275,7 +5270,7 @@ C
      *  MPI_SUM, MASTER, COMM, IERR_MPI )
       IF ( MYID.eq.MASTER.and.MPG.GT.0)
      *WRITE(MPG, 99992) INFO(1), INFO(2), 
-     *  KEEP8(1), INFOG(3), INFOG(4),
+     *  KEEP8(1), KEEP8(5), INFOG(4),
      *  INFOG(5), KEEP(28), INFOG(7), KEEP(23), ICNTL(7), 
      *  KEEP(12), KEEP(56), KEEP(61), RINFOG(1)
       RETURN
@@ -6255,7 +6250,7 @@ C
       NCB = NFRONT - NPIV
       IF ( (NFRONT - (NPIV/2)) .LE. KEEP(9)) RETURN
       IF ((KEEP(50) == 0.and.NFRONT * NPIV > KEEP(79) ) .OR.
-     &    (KEEP(50) == 1.and.NPIV * NPIV > KEEP(79) )) GOTO 333
+     &(KEEP(50) .NE.0.and.NPIV * NPIV > KEEP(79) )) GOTO 333
       NSLAVESMIN = ZMUMPS_50 
      *         ( NSLAVES, KEEP(48), KEEP(10), KEEP(50),
      *         NFRONT, NCB)
@@ -9253,11 +9248,9 @@ C
                IORD = 2         ! AMF
             ENDIF
          ELSE
-            IF ((NPROCS.EQ.1).AND.(MedDens.LT.9)) THEN
-               IF (NBQD.GE.MAXQD) THEN
+            IF (NBQD.GE.MedDens*NPROCS) THEN
                   IORD = 6      ! QAMD
                   RETURN
-               ENDIF
             ENDIF
 #if  defined(metis)
             IORD = 5
@@ -9281,12 +9274,10 @@ C
           IORD = 2   ! AMF
          ENDIF
        ELSE
-        IF ((NPROCS.EQ.1).AND.(MedDens.LT.9)) THEN
-          IF (NBQD.GE.MAXQD) THEN
-            IORD = 6   ! QAMD
+        IF (NBQD.GE.MedDens*NPROCS) THEN
+           IORD = 6      ! QAMD
             RETURN
-          ENDIF
-        ENDIF
+         ENDIF
 #if  defined(metis)
         IORD = 5
 #else
@@ -9369,12 +9360,13 @@ C
       DOUBLE PRECISION A(LA)
       DOUBLE PRECISION DW(LDW),CNTL(NCNTL)
       INTEGER I,J,K,WARN1,WARN2,WARN4
-      DOUBLE PRECISION FACT,ZERO,ONE,RINF,RINF2
+      DOUBLE PRECISION FACT,ZERO,ONE,RINF,RINF2,RINF3
       PARAMETER (ZERO=0.0D+00,ONE=1.0D+0)
       EXTERNAL ZMUMPS_457,ZMUMPS_444,ZMUMPS_451,ZMUMPS_452,ZMUMPS_454
       INTRINSIC ABS,LOG
       RINF = CNTL(2)
-      RINF2 = HUGE(RINF2)
+      RINF2 = HUGE(RINF2)/DBLE(2*N)
+      RINF3 = 0.0D0
       WARN1 = 0
       WARN2 = 0
       WARN4 = 0
@@ -9504,13 +9496,15 @@ C
          DO 50 J = 1,N
             FACT = ZERO
             DO 30 K = IP(J),IP(J+1)-1
-               IF (A(K).GT.FACT) FACT = A(K)
+               IF (ABS(A(K)).GT.FACT) FACT = ABS(A(K))
  30         CONTINUE
+            IF(FACT .GT. RINF3) RINF3 = FACT
             DO 40 K = IP(J),IP(J+1)-1
                A(K) = FACT - ABS(A(K))
  40         CONTINUE
  50      CONTINUE
          DW(1) = MAX(ZERO,CNTL(1))
+         DW(2) = RINF3
          IW(1) = JOB
          CALL ZMUMPS_454(M,N,NE,IP,IRN,A,PERM,NUM,
      &        IW(1),IW(N+1),IW(2*N+1),IW(3*N+1),IW(3*N+M+1),
@@ -9518,6 +9512,7 @@ C
          GO TO 90
       ENDIF
       IF (JOB.EQ.5 .or. JOB.EQ.6) THEN
+         RINF3=ONE
          IF (JOB.EQ.5) THEN
             DO 75 J = 1,N
                FACT = ZERO
@@ -9527,9 +9522,11 @@ C
                DW(2*M+J) = FACT
                IF (FACT.NE.ZERO) THEN
                   FACT = LOG(FACT)
+                  IF(FACT .GT. RINF3) RINF3=FACT
                   DO 70 K = IP(J),IP(J+1)-1
                      IF (A(K).NE.ZERO) THEN
                         A(K) = FACT - LOG(A(K))
+                        IF(A(K) .GT. RINF3) RINF3=A(K)
                      ELSE
                         A(K) = FACT + RINF
                      ENDIF
@@ -9580,6 +9577,7 @@ C
                   DO 170 K = IP(J),IP(J+1)-1
                      IF (A(K).NE.ZERO) THEN
                         A(K) = FACT - LOG(A(K))
+                        IF(A(K) .GT. RINF3) RINF3=A(K)
                      ELSE
                         A(K) = FACT + RINF
                      ENDIF
@@ -9592,6 +9590,8 @@ C
  176        CONTINUE
          ENDIF
          DW(1) = MAX(ZERO,CNTL(1))
+         RINF3 = RINF3+ONE
+         DW(2) = RINF3
          IW(1) = JOB
          IF (JOB.EQ.5) THEN
             CALL ZMUMPS_454(M,N,NE,IP,IRN,A,PERM,NUM,

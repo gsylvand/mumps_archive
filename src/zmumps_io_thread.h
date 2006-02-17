@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -9,7 +9,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -44,7 +44,8 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/*    $Id: zmumps_io_thread.h,v 1.17 2006/01/19 14:13:40 jylexcel Exp $  */
+
+/*    $Id: zmumps_io_thread.h,v 1.20 2006/02/08 08:00:18 pamestoy Exp $  */
 #ifndef _WIN32  
 
 #include <unistd.h>
@@ -72,11 +73,14 @@ struct request_io{
   int* pos_in_file; /*offset in the swap file*/
   int* num_file; /* file number*/
   int io_type; /*read or write*/
+  pthread_cond_t local_cond;
+  int int_local_cond;
 };
 
 void*  _zmumps_async_thread_function_with_sem (void* arg);
 void*  _zmumps_async_thread_function (void* arg);
 
+int   zmumps_wait_req_sem_th(int *request_id);
 int   zmumps_is_there_finished_request_th(int* flag);
 int   zmumps_clean_request_th(int* request_id);
 int   zmumps_test_request_th(int* request_id,int *flag);
@@ -87,7 +91,7 @@ int   zmumps_async_write_th(const int * strat_IO,void * address_block,int * bloc
 			int * file_number,int * inode,int * request_arg,int * ierr);
 int   zmumps_async_read_th(const int * strat_IO,void * address_block,int * block_size,int * from_where,
 		       int * file_number,int * inode,int * request_arg,int * ierr);
-int zmumps_clean_io_data_c_th();
+int zmumps_clean_io_data_c_th(int *myid);
 
 int _zmumps_get_sem(void *arg,int *value);
 

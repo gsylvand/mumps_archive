@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -5826,9 +5826,6 @@ C
          END FUNCTION SMUMPS_METRIC2x2
       END INTERFACE
 #endif
-#if defined(PATH_STATS)
-      INTEGER PATH_STATS(N)
-#endif
       LOGICAL VRAI,FAUX,MAX_CARD_DIAG,USE_SCALING
       INTEGER JOB_DEF,DONE
       INTEGER SUM,PROD,STRUCT,MA47,MAGNITUDE
@@ -5870,36 +5867,17 @@ C
          INFO(1) = -1
          RETURN
       ENDIF
-#if(SP_DEBUG >= 1 || check_LDLT_preprocess)
-      PIV_OUT = -1
-#endif
       DO CUR_EL=1,N
          IF(MARKED(CUR_EL) .LE. 0) THEN
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) CUR_EL,' already visited, MARKED(CUR_EL) =',
-     *           MARKED(CUR_EL)
-#endif
             CYCLE
          ENDIF
-#if defined(check_LDLT_preprocess)
-#endif
          IF(CPERM(CUR_EL) .LT. 0) THEN
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) CUR_EL,'in structural kernel'
-            IF(CPERM(CUR_EL) .NE. -CUR_EL) THEN
-               WRITE(*,*) 'pb ker cur_el cperm',CUR_EL,CPERM(CUR_EL)
-               CALL SMUMPS_ABORT()
-            ENDIF
-#endif
             MARKED(CUR_EL) = -1
             CYCLE
          ENDIF
          PATH_LENGTH = 2
          CUR_EL_PATH = CPERM(CUR_EL)
          IF(CUR_EL_PATH .EQ. CUR_EL) THEN
-#if(SP_DEBUG >= 6 || check_LDLT_preprocess)
-            WRITE(*,*) CUR_EL,'diagonal matched entry'
-#endif
             MARKED(CUR_EL) = -1
             CYCLE
          ENDIF
@@ -5920,16 +5898,9 @@ C
      *        VAL,DIAG,N,FLAG,FAUX,T22)
          WEIGHT(PATH_LENGTH+1) = 
      *        SMUMPS_UPDATESCORE(WEIGHT(1),CUR_VAL,TUP)
-#if defined(check_LDLT_preprocess)
-         WRITE(*,*) 'CUR_EL,CUR_EL_PATH,WEIGHT(3) =',
-     *        CUR_EL,CUR_EL_PATH,WEIGHT(3)
-#endif
          DO
             IF(CUR_EL_PATH .EQ. CUR_EL) EXIT
             PATH_LENGTH = PATH_LENGTH+1
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) 'increment PATH_LENGTH = ',PATH_LENGTH
-#endif
             MARKED(CUR_EL_PATH) = 0
             CUR_EL_PATH_NEXT = CPERM(CUR_EL_PATH)
             L1 = IP(CUR_EL_PATH+1)-IP(CUR_EL_PATH)
@@ -5947,75 +5918,24 @@ C
      *           VAL,DIAG,N,FLAG,VRAI,T22)
             WEIGHT(PATH_LENGTH+1) = 
      *           SMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH-1),CUR_VAL,TUP)
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) 'WEIGHT(',PATH_LENGTH+1,') = ',
-     *           WEIGHT(PATH_LENGTH+1)
-#endif	  
             CUR_EL_PATH = CUR_EL_PATH_NEXT
          ENDDO
-#if defined(path_stats)
-         PATH_STATS(PATH_LENGTH-2) = PATH_STATS(PATH_LENGTH-2)+1
-#endif
          IF(MOD(PATH_LENGTH,2) .EQ. 1) THEN
-#if(SP_DEBUG >= 6 || check_LDLT_preprocess)
-            WRITE(*,*) 'WE HAVE FOUND AN EVEN PATH OF LENGTH',
-     *           PATH_LENGTH-1
-#endif
             IF(WEIGHT(PATH_LENGTH+1) .GE. WEIGHT(PATH_LENGTH)) THEN
-#if defined(check_LDLT_preprocess)
-               WRITE(*,*) 
-     *              'WE CHOOSE THE 2X2 PIVOTS IN EVEN/ODD POSITION'
-#endif      
                CUR_EL_PATH = CPERM(CUR_EL)
             ELSE
-#if defined(check_LDLT_preprocess)
-               WRITE(*,*) 
-     *              'WE CHOOSE THE 2X2 PIVOTS IN ODD/EVEN POSITION'
-#endif
                CUR_EL_PATH = CUR_EL
             ENDIF
             DO I=1,(PATH_LENGTH-1)/2
-#if defined(check_LDLT_preprocess)
-               DO K=1,NUM2
-                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
-                     WRITE(*,*) 
-     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
-     *                   CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL SMUMPS_ABORT()
-                  ENDIF
-               ENDDO
-               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
-                  WRITE(*,*) 'PB : NUM2,PIV_OUT',NUM2,'/',PIV_OUT
-                  CALL SMUMPS_ABORT()
-               ENDIF
-#endif
                NUM2 = NUM2+1
                PIV_OUT(NUM2) = CUR_EL_PATH
                CUR_EL_PATH = CPERM(CUR_EL_PATH)
-#if defined(check_LDLT_preprocess)
-               DO K=1,NUM2
-                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
-                     WRITE(*,*) 
-     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
-     *                   CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL SMUMPS_ABORT()
-                  ENDIF
-               ENDDO
-               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
-                  WRITE(*,*) 'PB : NUM2'
-                  CALL SMUMPS_ABORT()
-               ENDIF
-#endif
                NUM2 = NUM2+1
                PIV_OUT(NUM2) = CUR_EL_PATH
                CUR_EL_PATH = CPERM(CUR_EL_PATH)
             ENDDO
             NUMTOT = NUMTOT + PATH_LENGTH - 1
          ELSE
-#if(SP_DEBUG >= 6 || check_LDLT_preprocess)	
-            WRITE(*,*) 'WE HAVE FOUND AN ODD PATH OF LENGTH',
-     *           PATH_LENGTH-1 
-#endif
             IF(MAX_CARD_DIAG) THEN
                CUR_EL_PATH = CPERM(CUR_EL)
                IF(DIAG(CUR_EL) .NE. 0) THEN 
@@ -6032,17 +5952,11 @@ C
             ENDIF
             BEST_BEG = CUR_EL
             BEST_SCORE = WEIGHT(PATH_LENGTH-1)
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',BEST_SCORE,CUR_EL
-#endif
             CUR_EL_PATH = CPERM(CUR_EL)
             DO I=1,(PATH_LENGTH/2)-1
                TMP = SMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH),
      *              WEIGHT(2*I-1),TUP)
                TMP = SMUMPS_UPDATE_INVERSE(TMP,WEIGHT(2*I),TUP)
-#if defined(check_LDLT_preprocess)
-               WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',TMP,CUR_EL_PATH
-#endif
                IF(TMP .GT. BEST_SCORE) THEN
                   BEST_SCORE = TMP
                   BEST_BEG = CUR_EL_PATH
@@ -6051,51 +5965,17 @@ C
                TMP = SMUMPS_UPDATESCORE(WEIGHT(PATH_LENGTH+1),
      *              WEIGHT(2*I),TUP)
                TMP = SMUMPS_UPDATE_INVERSE(TMP,WEIGHT(2*I+1),TUP)
-#if defined(check_LDLT_preprocess)
-               WRITE(*,*) 'MAGNITUDE OF 2X2,DEB',TMP,CUR_EL_PATH
-#endif
                IF(TMP .GT. BEST_SCORE) THEN
                   BEST_SCORE = TMP
                   BEST_BEG = CUR_EL_PATH
                ENDIF
                CUR_EL_PATH = CPERM(CUR_EL_PATH)
             ENDDO
-#if defined(check_LDLT_preprocess)
-            WRITE(*,*) 'BEST EL FOUND',BEST_BEG
-#endif
  1000       CUR_EL_PATH = BEST_BEG
             DO I=1,(PATH_LENGTH/2)-1
-#if defined(check_LDLT_preprocess)
-               DO K=1,NUM2
-                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
-                     WRITE(*,*) 
-     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
-     *                    CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL SMUMPS_ABORT()
-                  ENDIF
-               ENDDO
-               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
-                  WRITE(*,*) 'PB : NUM2'
-                  CALL SMUMPS_ABORT()
-               ENDIF
-#endif
                NUM2 = NUM2+1
                PIV_OUT(NUM2) = CUR_EL_PATH
                CUR_EL_PATH = CPERM(CUR_EL_PATH)
-#if defined(check_LDLT_preprocess)
-               DO K=1,NUM2
-                  IF(PIV_OUT(K) .EQ. CUR_EL_PATH) THEN
-                     WRITE(*,*) 
-     *         'PB 2X2 : VAR ALREADY AFFECTED,CUR_EL_PATH,K,PIV_OUT(K)',
-     *                    CUR_EL_PATH,K,PIV_OUT(K)
-                     CALL SMUMPS_ABORT()
-                  ENDIF
-               ENDDO
-               IF(PIV_OUT(NUM2+1) .NE. -1) THEN
-                  WRITE(*,*) 'PB : NUM2'
-                  CALL SMUMPS_ABORT()
-               ENDIF
-#endif
                NUM2 = NUM2+1
                PIV_OUT(NUM2) = CUR_EL_PATH
                CUR_EL_PATH = CPERM(CUR_EL_PATH)
@@ -6116,21 +5996,9 @@ C
             ENDIF
          ENDIF
       ENDDO
-#if defined(check_LDLT_preprocess)
-      IF(NUM2+NUM1 .NE. NLAST) THEN
-         WRITE(*,*) 'PB NUM2,NUM1,NUM2+NUM1,NLAST',
-     *        NUM2,NUM1,NUM2+NUM1,NLAST
-      ENDIF  
-      WRITE(*,*) 'PIV_OUT',PIV_OUT
-#endif
       INFO(2) = NUMTOT
       INFO(3) = NUM1
       INFO(4) = NUM2
-#if defined(path_stats)
-      DO I=1,N
-         WRITE(*,*) PATH_STATS(I)
-      ENDDO
-#endif
       RETURN
       END SUBROUTINE SMUMPS_551
       FUNCTION SMUMPS_UPDATESCORE(A,B,T)
@@ -6156,12 +6024,6 @@ C
       IF(T .EQ. SUM) THEN
          SMUMPS_UPDATE_INVERSE = A-B
       ELSE
-#if defined(check_LDLT_preprocess)
-         IF(B .EQ. 0.0E0) THEN
-            WRITE(*,*) 'ERROR in SMUMPS_UPDATE_INVERSE'
-            CALL SMUMPS_ABORT()
-         ENDIF
-#endif
          SMUMPS_UPDATE_INVERSE = A/B
       ENDIF
       END FUNCTION SMUMPS_UPDATE_INVERSE

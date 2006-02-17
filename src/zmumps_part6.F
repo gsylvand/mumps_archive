@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -767,42 +767,6 @@ C
        ENDIF
       GO TO 50
  500  CONTINUE
-#if defined(PRINTPERM)
-      DO I = 1, IW(IOLDPS+1)
-         IF(ABS(IW(IOLDPS+5+I+NFRONT)) .NE. IW(IOLDPS+5+I)) THEN
-            WRITE(*,*) 'pb in IW',
-     *           IW(IOLDPS+5+I+NFRONT),IW(IOLDPS+5+I)
-            CALL ZMUMPS_ABORT()
-         ENDIF
-         WRITE(*,*) IW(IOLDPS+5+I)
-      ENDDO
-#endif
-#if defined(PRINTLD)
-      WRITE(*,*) '%FULLY SUMMED'
-      DO I = 1, IW(IOLDPS+1)
-         DO J = 1,I
-            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+5+J),
-     *           A(POSELT+J-1+NFRONT*(I-1))
-         ENDDO
-      ENDDO
-      WRITE(*,*) '%PARTIALLY SUMMED'
-      DO I = IW(IOLDPS+1)+1,NFRONT
-         DO J = 1,IW(IOLDPS+1)
-            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+5+J),
-     *           A(POSELT+J-1+NFRONT*(I-1))
-         ENDDO
-      ENDDO
-      WRITE(*,*) '%2x2 pivots'
-      DO I = 1, IW(IOLDPS+1)
-         IF(IW(IOLDPS+5+I+NFRONT) .LT. 0) THEN
-            WRITE(*,*) IW(IOLDPS+5+I),IW(IOLDPS+6+I),
-     *           A(POSELT+I+NFRONT*(I-1))
-            WRITE(*,*) IW(IOLDPS+6+I),IW(IOLDPS+5+I),
-     *           A(POSELT+I+NFRONT*(I-1))
-         ENDIF
-      ENDDO
-      WRITE(*,*) '%FRONT END'
-#endif
       RETURN
       END SUBROUTINE ZMUMPS_140
       SUBROUTINE ZMUMPS_222 
@@ -896,12 +860,6 @@ C
                   ENDIF
                   PIVOT = A(POSPV1)
                   WRITE(*,*) 'WARNING matrix may be singular'
-#if defined(check2x2)
-                  WRITE(*,*) 'AMAX,RMAX,ABS(PIVOT)',
-     *                 AMAX,RMAX,ABS(PIVOT)
-                  WRITE(*,*) 'IPIV,JMAX',
-     *                 IPIV,JMAX
-#endif
                   KEEP(98) = KEEP(98)+1
                   GO TO 415
                ENDIF
@@ -969,8 +927,6 @@ C
      +          ABS(DETPIV)) GO TO 460
            IF ((ABS(A(POSPV1))*TMAX+AMAX*RMAX)*UULOC.GT.
      +          ABS(DETPIV)) GO TO 460
-#if defined(check2x2)
-#endif
            PIVSIZ = 2
            KEEP(103) = KEEP(103)+1
  415       CONTINUE
@@ -1022,9 +978,6 @@ C
       INTEGER NEL2,LPOS,NEL
       COMPLEX*16 ONE, ALPHA
       DOUBLE PRECISION  ZERO
-#if defined(PRINTLD)
-      COMPLEX*16 A11,A22,A12
-#endif
       INTEGER PIVSIZ,NPIV_NEW,OFFDAG_OLD,LPOS1,LPOS2,JJ
       INTEGER POSPV1,POSPV2,OFFDAG,IBEG,IEND,J2,K1,K2,IROW
       COMPLEX*16 SWOP,DETPIV,MULT1,MULT2
@@ -1070,29 +1023,17 @@ C
             CALL ZGERU(NEL2, NCB1 , ALPHA, A(APOS+1), 1, 
      &           A(K1POS), LDA, A(K1POS+1), LDA)
          ENDIF
-#if defined(PRINTLD)
-         A(APOS) = ONE/A(APOS)
-#endif
       ELSE
          POSPV1 = POSELT + NPIV*(NFRONT + 1)
          POSPV2 = POSPV1+NFRONT+1
          OFFDAG_OLD = POSPV2 - 1
          OFFDAG = POSPV1+1
          SWOP = A(POSPV2)
-#if defined(check2x2)
-#endif
          DETPIV = A(OFFDAG)
-#if defined(PRINTLD)
-         A11 = A(POSPV1)
-         A22 = A(POSPV2)
-         A12 = A(OFFDAG_OLD)
-#endif
          A(POSPV2) = A(POSPV1)/DETPIV
          A(POSPV1) = SWOP/DETPIV
          A(OFFDAG) = -A(OFFDAG_OLD)/DETPIV
          A(OFFDAG_OLD) = ZERO
-#if defined(check2x2)
-#endif
          LPOS1   = POSPV2 + LDA - 1
          LPOS2   = LPOS1+1
          CALL ZCOPY(NFRONT-NPIV_NEW, A(LPOS1), LDA, A(POSPV1+2), 1)
@@ -1137,11 +1078,6 @@ C
             IEND = IEND + NFRONT
             JJ = JJ+NFRONT
          ENDDO
-#if defined(PRINTLD)
-         A(POSPV2) = A22
-         A(POSPV1) = A11
-         A(OFFDAG) = A12
-#endif
       ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_226
@@ -1172,9 +1108,6 @@ C
             LPOS    = LPOS + NFRONT
           END DO
   500   CONTINUE
-#if defined(PRINTLD)
-        A(APOS) = ONE/A(APOS)
-#endif
         RETURN
         END SUBROUTINE ZMUMPS_230
       SUBROUTINE ZMUMPS_234(IBEG_BLOCK,
@@ -1436,7 +1369,7 @@ C
        END DO
       END IF
       END SUBROUTINE ZMUMPS_568
-      SUBROUTINE ZMUMPS_570(NFRONT,NASS,N,INODE,
+      SUBROUTINE ZMUMPS_237(NFRONT,NASS,N,INODE,
      *    IW,LIW,A,LA,
      *    LDA,
      *    IOLDPS,POSELT,KEEP,KEEP8,UU)
@@ -1460,7 +1393,7 @@ C
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 16
+      BLSIZE2 = 32
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        IF ( UU.eq.ZERO ) THEN
@@ -1503,7 +1436,7 @@ C
        END DO
       END IF
       RETURN
-      END SUBROUTINE ZMUMPS_570
+      END SUBROUTINE ZMUMPS_237
       SUBROUTINE ZMUMPS_571(NFRONT,NASS,N,INODE,
      *    IW,LIW,A,LA,
      *    LDA,
@@ -1528,7 +1461,7 @@ C
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 16
+      BLSIZE2 = 32
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        IF ( UU.eq.ZERO ) THEN
@@ -1596,7 +1529,7 @@ C
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 16
+      BLSIZE2 = 32
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        UPOS = POSELT + NASS
@@ -1662,7 +1595,7 @@ C
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 16
+      BLSIZE2 = 32
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        UPOS = POSELT + NASS
@@ -1702,7 +1635,7 @@ C
       END IF
       RETURN
       END SUBROUTINE ZMUMPS_573
-      SUBROUTINE ZMUMPS_237(NFRONT,NASS,N,INODE,
+      SUBROUTINE ZMUMPS_570(NFRONT,NASS,N,INODE,
      *    IW,LIW,A,LA,
      *    LDA,
      *    IOLDPS,POSELT,KEEP,KEEP8,UU)
@@ -1726,7 +1659,7 @@ C
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 16
+      BLSIZE2 = 32
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        UPOS = POSELT + NASS
@@ -1797,7 +1730,7 @@ C
        END IF
       END IF
       RETURN
-      END SUBROUTINE ZMUMPS_237
+      END SUBROUTINE ZMUMPS_570
       SUBROUTINE ZMUMPS_320( BUF, BLOCK_SIZE,
      *                           MYROW, MYCOL, NPROW, NPCOL,
      *                           A, LOCAL_M, LOCAL_N, N, MYID, COMM )
@@ -2211,8 +2144,6 @@ C
             POSPV1 = DPOS
             POSPV2 = DPOS+ NCOL + 1
             OFFDAG = POSPV1+1
-#if defined(check2x2)
-#endif
             LPOS1 = LPOS
             DO J2 = 1,NROW1
                K1 = JJ
@@ -2586,6 +2517,7 @@ C
       DOUBLE PRECISION DELTA,MAXPIV
       COMPLEX*16 PIVOT,DETPIV
       PARAMETER(TOL = 1.0D-20)
+      INTEGER APOSMAX
       INTEGER APOS, LDAFS
       DOUBLE PRECISION ZERO,ONE
       INTEGER NPIV,NASSW,IPIV
@@ -2601,6 +2533,7 @@ C
         ILOC = NPIVP1 - IBEGKJI + 1
         TIPIV( ILOC ) = ILOC
         NASSW   = IABS(IW(IOLDPS+3))
+        APOSMAX = POSELT+LDAFS**2-1
         IF(INOPV .EQ. -1) THEN
            APOS = POSELT + LDAFS*(NPIVP1-1) + NPIV
            POSPV1 = APOS
@@ -2642,7 +2575,11 @@ C
                ENDIF
                J1 = J1 + LDAFS
             ENDDO
+#if defined(PARPIV)
+            RMAX = MAX(SEUIL/UULOC,A(APOSMAX+IPIV))
+#else
             RMAX = SEUIL/UULOC
+#endif
             J2 = NASS - NASSW 
             DO JJ=1,J2
                RMAX = MAX(ABS(A(J1)),RMAX)
@@ -2678,7 +2615,11 @@ C
             ELSE
                OFFDAG = APOS + JMAX - NPIVP1
             END IF
+#if defined(PARPIV)
+            TMAX = MAX(SEUIL/UULOC,A(APOSMAX+JMAX))
+#else
             TMAX = SEUIL/UULOC
+#endif
             IF(JMAX .LT. IPIV) THEN
                JJ = POSPV2
                DO K = 1, NASS-JMAX
@@ -2710,8 +2651,6 @@ C
      +           ABS(DETPIV)) GO TO 460
             IF ((ABS(A(POSPV1))*TMAX+AMAX*RMAX)*UULOC.GT.
      +           ABS(DETPIV)) GO TO 460
-#if defined(check2x2)
-#endif
            PIVSIZ = 2
            KEEP(105) = KEEP(105)+1
  415       CONTINUE
@@ -2889,8 +2828,6 @@ C
          A(POSPV1) = SWOP/DETPIV
          A(OFFDAG) = -A(OFFDAG_OLD)/DETPIV
          A(OFFDAG_OLD) = ZERO
-#if defined(check2x2)
-#endif
          LPOS1   = POSPV2 + LDAFS - 1
          LPOS2   = LPOS1+1
          CALL ZCOPY(NASS-NPIV_NEW, A(LPOS1), LDAFS, A(POSPV1+2), 1)
@@ -3498,8 +3435,18 @@ C
             ENDIF
           ENDIF
           NIRNEC = MAX0(NIRNEC,NIRADU+ISTKI+SIZECBI+MAXITEMPCB)
+#if defined(PARPIV)
+          IF (MASTER .AND. KEEP(50).EQ.2) THEN
+             NRLNEC = MAX0(NRLNEC,NRLADU+ISTKR+SIZECB+
+     *            MAX0(SIZECB,MAXTEMPCB)+NELIM )
+          ELSE
+             NRLNEC = MAX0(NRLNEC,NRLADU+ISTKR+SIZECB+
+     *            MAX0(SIZECB,MAXTEMPCB) )
+          ENDIF
+#else
           NRLNEC = MAX0(NRLNEC,NRLADU+ISTKR+SIZECB+
-     *                  MAX0(SIZECB,MAXTEMPCB) )
+     *         MAX0(SIZECB,MAXTEMPCB) )
+#endif
          NRLNEC_ACTIVE = MAX0(NRLNEC_ACTIVE,NRLADU_CURRENT+
      *                        NRLADU_ROOT_3+ISTKR+SIZECB+
      *                        MAX0(SIZECB,MAXTEMPCB) )
@@ -3808,6 +3755,12 @@ C
       SBUF_REC = SBUF_REC   + 10
       SBUF_SEND = SBUF_SEND + 10
       NRLBDU = NRLNEC + PERLU*(NRLNEC/100+1) 
+#if defined(PARPIV)
+      IF(KEEP(50) .EQ. 2) THEN
+         SBUF_REC = SBUF_REC+KEEP(108)+1
+         SBUF_SEND = SBUF_SEND+KEEP(108)+1
+      ENDIF
+#endif
       IF (SLAVEF.EQ.1) THEN 
          SBUF_REC = 1
          SBUF_SEND= 1

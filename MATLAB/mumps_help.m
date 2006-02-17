@@ -8,7 +8,7 @@
 %
 % - id.SYM: controls the matrix type (symmetric positive definite, symmetric indefinite or unsymmetric) and it has do be initialized by the user before the initialization phase of MUMPS (see id.JOB). Its value is set to 0 after the call of initmumps.
 %
-% - id.JOB: defines the action that will be realized by MUMPS: initialize, analyze and/or factorize and/or solve and release mumps internal C/Fortran data. It has to be set by the user before any call to MUMPS (except after a call to initmumps, which sets its value to -1).
+% - id.JOB: defines the action that will be realized by MUMPS: initialize, analyze and/or factorize and/or solve and release MUMPS internal C/Fortran data. It has to be set by the user before any call to MUMPS (except after a call to initmumps, which sets its value to -1).
 %
 % - id.ICNTL and id.CNTL: define control parameters that can be set after the initialization call (id.JOB = -1). See Section ``Control parameters'' of the MUMPS user's guide for more details. If the user does not modify an entry in id.ICNTL then MUMPS uses the default parameter. For example, if the user wants to use the AMD ordering, he/she should set id.ICNTL(7) = 0. Note that the following parameters are inhibited because they are automatically set within the interface: id.ICNTL(19) which controls the Schur complement option and id.ICNTL(20) which controls the format of the right-hand side.
 %
@@ -34,7 +34,7 @@
 %
 %--------------- Internal Parameters ---------------
 %
-% - id.INST: (mumps reserved component) mumps internal parameter.
+% - id.INST: (MUMPS reserved component) MUMPS internal parameter.
 % 
-% - id.TYPE: (mumps reserved component) defines the arithmetic (complex or double precision).
+% - id.TYPE: (MUMPS reserved component) defines the arithmetic (complex or double precision).
 % 

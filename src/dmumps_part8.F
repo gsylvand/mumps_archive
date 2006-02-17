@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -152,8 +152,15 @@ C
      *               id%COMM,IERR)
       CALL MPI_BCAST(NBRHS,1,MPI_INTEGER,MASTER,
      *               id%COMM,IERR)
-      CALL MPI_BCAST(KEEP(204),1,MPI_INTEGER,MASTER,
-     *               id%COMM,IERR)
+        IF (id%KEEP(201).NE.0) THEN
+          KEEP(107) = MAX(0,KEEP(107))
+          CALL MPI_BCAST( KEEP(107), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+          CALL MPI_BCAST( KEEP(204), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+          CALL MPI_BCAST( KEEP(208), 2, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        ENDIF
       IF ( I_AM_SLAVE ) THEN
         NB_K133 = 2
         IF ( KEEP( 38 ) .NE. 0 .OR. KEEP( 20 ) .NE. 0 ) THEN 
@@ -1485,6 +1492,7 @@ C
 #if defined(V_T)
       CALL VTBEGIN(root_soln,ierr)
 #endif
+        IF ( root%yes ) THEN
           CALL DESCINIT( root%DESCB, root%TOT_ROOT_SIZE,
      *      NRHS, root%MBLOCK, root%NBLOCK, 0, 0,
      *      root%CNTXT_BLACS, LOCAL_M, IERR )
@@ -1514,6 +1522,7 @@ C
      *       root%TOT_ROOT_SIZE, A( IAPOS ),
      *       INFO(1), MTYPE, KEEP(50))
 #endif
+         ENDIF
       ELSE
         IF ( MYID_NODES .eq.  DMUMPS_275( STEP(KEEP(38)),
      *        PROCNODE_STEPS, SLAVEF ) ) THEN
@@ -2472,13 +2481,6 @@ C
            IF(JJ .GT. J3) EXIT
            J = IW(JJ)
            IFR = IFR + 1
-#if defined(check2x2)
-           IF(ABS(IW(JJ+LIELL)).NE.J) THEN
-              WRITE(*,*) '2x2 pb 1 in solve IW(JJ+LIELL),J',
-     *             IW(JJ+LIELL),J
-              CALL DMUMPS_ABORT()
-           ENDIF
-#endif
            IF(IW(JJ+LIELL) .GT. 0) THEN
               DO K=1, NRHS
                  RHS( J, K ) = WCB( IFR+(K-1)*NPIV ) * A( APOS1 )
@@ -2488,16 +2490,6 @@ C
            ELSE
               J22 = IW(JJ+1)
               APOS2 = APOS1+NPIV+1
-#if defined(check2x2)
-              IF(J22 .LE. 0) THEN
-                 WRITE(*,*) '2x2 pb 2 in solve'
-                 CALL DMUMPS_ABORT()
-              ENDIF
-              IF(IW(JJ+1+LIELL).LE. 0) THEN
-                 WRITE(*,*) '2x2 pb 3 in solve'
-                 CALL DMUMPS_ABORT()
-              ENDIF
-#endif
               DO K=1, NRHS
                  POSWCB1 = IFR+(K-1)*NPIV
                  POSWCB2 = POSWCB1+1

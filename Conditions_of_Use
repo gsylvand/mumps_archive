@@ -1,6 +1,6 @@
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.

@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -9,7 +9,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -44,7 +44,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/*    $Id: zmumps_io.c,v 1.37 2006/01/19 11:45:24 jylexcel Exp $    */
+/*    $Id: zmumps_io.c,v 1.39 2006/02/16 14:27:00 aguermou Exp $    */
 
 #include "zmumps_io_basic_extern.h"
 #include "zmumps_io_err_extern.h"
@@ -471,7 +471,11 @@ int zmumps_ooc_get_file_name(int* indice,char* name,int* length){
 }
 
 int zmumps_ooc_set_file_name(int* indice,char* name,int* length,int *ierr){
-  return zmumps_io_set_file_name(indice,name,length);
+  *ierr=zmumps_io_set_file_name(indice,name,length);
+  if(*ierr<0){
+    zmumps_io_prop_err_info(*ierr);
+  }
+  return *ierr;
 }
 
 int zmumps_ooc_alloc_pointers(int* dim,int* ierr){
@@ -492,6 +496,9 @@ int zmumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
 			char* zmumps_dir, char* zmumps_file,
 			int* zmumps_dim_dir, int* zmumps_dim_file,
 			int *ierr){
+#ifndef _WIN32
+  zmumps_time_spent_in_sync=0;
+#endif
   *ierr=zmumps_init_file_name(zmumps_dir,zmumps_file,zmumps_dim_dir,zmumps_dim_file,myid_arg);
   if(*ierr<0){
     zmumps_io_prop_err_info(*ierr);

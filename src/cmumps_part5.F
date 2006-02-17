@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -256,7 +256,7 @@ C
       IORD = ICNTL(7)
       IF (PROK) WRITE( MP, 220 )
       IF (PROKG.AND.(MPG .NE. MP)) WRITE( MPG, 220 )
- 220  FORMAT( /' CMUMPS Version 4.6 -- January 2006' )
+ 220  FORMAT( /' CMUMPS Version 4.6.1 -- February 2006' )
       IF ( PROK ) THEN
         IF ( KEEP(50) .eq. 0 ) THEN
           WRITE(MP, '(A)') 'L U Solver for unsymmetric matrices'
@@ -660,6 +660,9 @@ C
      *       .OR.
      *       KEEP(52) .EQ. -2
      *       ) THEN
+          IF (.not.ASSOCIATED(id%A)) THEN
+            IF (KEEP(23).GT.2) KEEP(23) = 1
+          ENDIF
           CALL CMUMPS_203(id%N, id%NZ, KEEP(23), id%IS1(1), id,
      *        ICNTL, INFO)
           IF (INFO(1) .LT. 0) THEN
@@ -1027,6 +1030,8 @@ C
       CALL CMUMPS_276( ICNTL, INFO, id%COMM, id%MYID )
       IF ( INFO(1) < 0 ) RETURN
       CALL MPI_BCAST( id%KEEP, 110, MPI_INTEGER, MASTER,
+     *                                   id%COMM, IERR )
+      CALL MPI_BCAST( id%KEEP(205), 1, MPI_INTEGER, MASTER,
      *                                   id%COMM, IERR )
       IF (id%MYID==MASTER) KEEP(127)=INFOG(5)
       CALL MPI_BCAST( id%KEEP(127), 1, MPI_INTEGER, MASTER,
@@ -2730,7 +2735,7 @@ C
         CALL CMUMPS_587(id,IERR)
       END IF
       IF (id%root%gridinit_done) THEN
-        IF ( id%KEEP(38).NE.0 ) THEN
+        IF ( id%KEEP(38).NE.0 .and. id%root%yes ) THEN
           CALL BLACS_GRIDEXIT( id%root%CNTXT_BLACS )
           id%root%gridinit_done = .FALSE.
         END IF
@@ -3619,6 +3624,14 @@ C
       KEEP=>id%KEEP
       KEEP8=>id%KEEP8
       ICNTL=>id%ICNTL
+#if defined(PARPIV)
+      CALL CMUMPS_617(MAX(KEEP(108),1),IERR)
+      IF (IERR .NE. 0) THEN
+         INFO(1) = -13
+         INFO(2) = MAX(KEEP(108),1)
+         GOTO 137
+      END IF
+#endif
       KEEP13_SAVE = id%KEEP(13)
       MP  = ICNTL( 2 )
       MPG = ICNTL( 3 )
@@ -3636,6 +3649,24 @@ C
       I_AM_SLAVE = ( id%MYID .ne. MASTER  .OR.
      *             ( id%MYID .eq. MASTER .AND.
      *               KEEP(46) .eq. 1 ) )
+        IF (id%MYID .EQ. MASTER) THEN
+          KEEP(201)=id%ICNTL(22)
+          IF (KEEP(201).NE.1) KEEP(201)=0
+        ENDIF
+        CALL MPI_BCAST( KEEP(12), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        CALL MPI_BCAST( KEEP(19), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        CALL MPI_BCAST( KEEP(21), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        CALL MPI_BCAST( KEEP(201), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        IF (id%KEEP(201).NE.0) THEN
+          CALL MPI_BCAST( KEEP(99), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+          CALL MPI_BCAST( KEEP(205), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+        ENDIF
         IF ( KEEP(50) .eq. 1 ) THEN
           IF (id%CNTL(1) .ne. 0.0E0 ) THEN
             IF ( MPG .GT. 0 ) THEN
@@ -3650,7 +3681,7 @@ C
       IF (INFO(1).LT.0) GOTO 550
       IF ( PROKG ) THEN
           WRITE( MPG, 172 ) id%NSLAVES,
-     *    KEEP(125), KEEP(126), KEEP(127), KEEP(28)
+     *    KEEP8(5), KEEP(126), KEEP(127), KEEP(28)
       ENDIF
       IF ( id%MYID.EQ.MASTER ) THEN
         LSCAL = ((KEEP(52) .GT. 0) .AND. (KEEP(52) .LE. 6))
@@ -3769,7 +3800,7 @@ C
 #endif
       ENDIF
       CALL CMUMPS_536(PROKG, MPG, id%MAXS, id%NSLAVES,
-     *     id%COMM, "RELAXED VALUE OF MAXS        =")
+     * id%COMM, "effective relaxed value of MAXS          =")
       IF ( I_AM_SLAVE ) THEN
         CALL CMUMPS_188( DBLE(id%COST_SUBTREES),
      $        KEEP(64), KEEP(66),id%MAXS )
@@ -4141,6 +4172,9 @@ C
      *               MAX(0.0E0,MIN(REAL(PERLU),REAL(PERLU/2)+2.5,
      $                5.0E0))*REAL(KEEP(10))/100.0E0)
               ENDIF
+#if defined(PARPIV)
+              IF(KEEP(50) .EQ. 2) KEEP(10)=KEEP(10)-KEEP(108)-1
+#endif
            ENDIF
               IF (KEEP(50) .EQ. 1) THEN
                  COEF_PERLU=2.0E0
@@ -4400,6 +4434,9 @@ C
       END IF
       CALL CMUMPS_57( IERR )
       CALL CMUMPS_59( IERR )
+#if defined(PARPIV)
+      CALL CMUMPS_620()
+#endif
       IF ( KEEP(60) .EQ. 1 ) THEN
         ID_SCHUR =CMUMPS_275(id%STEP(id%KEEP(20)),
      *            id%PROCNODE_STEPS(1),id%NSLAVES)
@@ -4465,7 +4502,7 @@ C
        K67 = 0
       ENDIF
       CALL CMUMPS_536(PROKG, MPG, K67, id%NSLAVES,
-     *     id%COMM, "EFF. SPACE USED IN S(MAXS)   =")
+     * id%COMM, "effective space used in S    (KEEP(67)   =")
       CALL CMUMPS_243( id%MYID, id%COMM,
      *                    TOTAL_MBYTES, id%INFOG(21), IRANK )
       IF ( PROKG ) THEN
@@ -4499,7 +4536,8 @@ C
       CALL MPI_REDUCE( RINFO(2), RINFOG(2), 2,
      *                 MPI_REAL,
      *                 MPI_SUM, MASTER, id%COMM, IERR)
-      CALL MPI_REDUCE( INFO(9), INFOG(9), 2, MPI_INTEGER,
+      CALL CMUMPS_621( INFO(9), INFOG(9), KEEP8(6), id%COMM)
+      CALL MPI_REDUCE( INFO(10), INFOG(10), 1, MPI_INTEGER,
      *                 MPI_SUM, MASTER, id%COMM, IERR)
       CALL MPI_ALLREDUCE( INFO(11), INFOG(11), 1, MPI_INTEGER,
      *                 MPI_MAX, id%COMM, IERR)
@@ -4516,7 +4554,7 @@ C
       CALL MPI_ALLREDUCE( INFO(25), INFOG(25), 1, MPI_INTEGER,
      *                 MPI_SUM, id%COMM, IERR)
       IF ( PROKG ) THEN
-          WRITE(MPG,99984) RINFOG(2),RINFOG(3),INFOG(9),INFOG(10),
+          WRITE(MPG,99984) RINFOG(2),RINFOG(3),KEEP8(6),INFOG(10),
      *                    INFOG(11)
           IF (id%SYM == 0) THEN
             WRITE(MPG, 99985) INFOG(12)
@@ -4597,7 +4635,7 @@ C
       INTEGER VAL
       INTEGER NSLAVES
       INTEGER COMM
-      CHARACTER*30 MSG 
+      CHARACTER*42 MSG 
       INTEGER MAX_VAL
       INTEGER IERR, MASTER
       REAL LOC_VAL, AVG_VAL
@@ -4608,11 +4646,11 @@ C
       CALL MPI_REDUCE( LOC_VAL, AVG_VAL, 1, MPI_REAL,
      *                 MPI_SUM, MASTER, COMM, IERR )
       IF (PROKG) THEN
-        WRITE(MPG,100) " MAXIMUM ", MSG, MAX_VAL
-        WRITE(MPG,100) " AVERAGE ", MSG, INT(AVG_VAL)
+        WRITE(MPG,100) " Maximum ", MSG, MAX_VAL
+        WRITE(MPG,100) " Average ", MSG, INT(AVG_VAL)
       ENDIF
       RETURN
- 100  FORMAT(A9,A30,I12)
+ 100  FORMAT(A9,A42,I12)
       END SUBROUTINE CMUMPS_536
       SUBROUTINE CMUMPS_83
      * ( N, MAPPING, NZ, IRN, JCN, PROCNODE, STEP,

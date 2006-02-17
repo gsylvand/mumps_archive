@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -63,6 +63,10 @@ C
      *   SMUMPS_524, SMUMPS_469,
      *   SMUMPS_460, SMUMPS_502,
      *   SMUMPS_519
+#if defined(PARPIV)
+     *   ,SMUMPS_620
+     *   ,SMUMPS_617
+#endif
         INTEGER NEXT, REQ, CONTENT, OVHSIZE
         PARAMETER( NEXT = 0, REQ = 1, CONTENT = 2, OVHSIZE = 2 )
         INTEGER, SAVE :: SIZEofINT, BUF_MYID
@@ -74,6 +78,11 @@ C
         TYPE ( SMUMPS_BUFFER_TYPE ), SAVE :: BUF_SMALL
         TYPE ( SMUMPS_BUFFER_TYPE ), SAVE :: BUF_LOAD
         INTEGER, SAVE :: SIZE_RBUF_BYTES
+#if defined(PARPIV)
+        INTEGER BUF_LMAX_ARRAY
+        REAL, DIMENSION(:), ALLOCATABLE :: BUF_MAX_ARRAY
+        PUBLIC :: BUF_LMAX_ARRAY, BUF_MAX_ARRAY
+#endif
       CONTAINS
         SUBROUTINE SMUMPS_528( MYID )
         IMPLICIT NONE
@@ -128,6 +137,23 @@ C
         INTEGER IERR
         CALL SMUMPS_3( BUF_LOAD, IERR )
         END SUBROUTINE SMUMPS_58
+#if defined(PARPIV)
+        SUBROUTINE SMUMPS_620()
+        IMPLICIT NONE
+        IF (ALLOCATED( BUF_MAX_ARRAY)) DEALLOCATE( BUF_MAX_ARRAY )
+        END SUBROUTINE SMUMPS_620
+        SUBROUTINE SMUMPS_617(NFS4FATHER,IERR)
+        IMPLICIT NONE
+        INTEGER IERR, NFS4FATHER
+        IERR = 0
+        IF (ALLOCATED( BUF_MAX_ARRAY)) THEN
+          IF (BUF_LMAX_ARRAY .GE. NFS4FATHER) RETURN
+          DEALLOCATE( BUF_MAX_ARRAY )
+        ENDIF
+        ALLOCATE(BUF_MAX_ARRAY(NFS4FATHER),stat=IERR)
+        BUF_LMAX_ARRAY=NFS4FATHER
+        END SUBROUTINE SMUMPS_617
+#endif
         SUBROUTINE SMUMPS_57( IERR )
         IMPLICIT NONE
         INTEGER IERR
@@ -736,7 +762,8 @@ C
         RETURN
         END SUBROUTINE SMUMPS_70
         SUBROUTINE SMUMPS_67(DESC_IN_LU,
-     *  IPERE, NFRONT_PERE, NASS_PERE, NSLAVES_PERE,
+     *  IPERE, NFRONT_PERE, NASS_PERE, NFS4FATHER,
+     * NSLAVES_PERE,
      *  ISON, NBROW, LMAP, MAPROW, PERM, IW_CBSON, A_CBSON,
      *  ISLAVE, PDEST, PDEST_MASTER, COMM, IERR, 
      *  
@@ -747,17 +774,20 @@ C
         INTEGER IPERE, ISON, NBROW 
         INTEGER PDEST, ISLAVE, COMM, IERR
         INTEGER PDEST_MASTER, NASS_PERE, NSLAVES_PERE,
-     *          NFRONT_PERE, LMAP
+     *       NFRONT_PERE, LMAP
         INTEGER MAPROW( LMAP ), PERM( MAX(1, NBROW ))
         INTEGER MAX_ROW_LENGTH, SIZE_SLAVE_REALS
         INTEGER IW_CBSON( * )
         REAL A_CBSON( * )
         LOGICAL DESC_IN_LU
        INTEGER   KEEP(500), N , SLAVEF
-      INTEGER*8 KEEP8(150)
+       INTEGER*8 KEEP8(150)
        INTEGER   STEP(N), 
      *          ISTEP_TO_INIV2(KEEP(71)), 
      *          TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
+       INTEGER NFS4FATHER,SIZE3,PS1,NCA,OFFSET
+       LOGICAL COMPUTE_MAX
+       REAL TMP
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
         INTEGER LROW
@@ -768,6 +798,15 @@ C
         INTEGER IONE, J, THIS_ROW_LENGTH
         INTEGER PDEST2(1)
         PARAMETER ( IONE=1 )
+        REAL ZERO
+        PARAMETER (ZERO = 0.0E0)
+#if defined(PARPIV)
+      CALL SMUMPS_617(NFS4FATHER,IERR)
+      IF (IERR .NE. 0) THEN
+        IERR         = -3
+        RETURN
+      ENDIF
+#endif
         PDEST2(1) = PDEST
         IERR   = 0
         LROW   = IW_CBSON( 1 )
@@ -810,7 +849,26 @@ C
          SIZE2=0
          ENDIF
         ENDIF
+#if defined(PARPIV)
+        COMPUTE_MAX = KEEP(50).EQ.2 .AND.
+     *       PDEST.EQ.PDEST_MASTER
+        IF(COMPUTE_MAX) THEN
+           CALL MPI_PACK_SIZE(1, MPI_INTEGER,
+     *          COMM, PS1, IERR )
+           IF(NFS4FATHER .GT. 0) THEN
+              CALL MPI_PACK_SIZE( NFS4FATHER, MPI_REAL,
+     *             COMM, SIZE3, IERR )
+           ELSE
+              SIZE3=0
+           ENDIF
+           SIZE3 = SIZE3+PS1
+        ELSE
+           SIZE3 = 0
+        ENDIF
+        SIZE = SIZE1 + SIZE2 + SIZE3
+#else
         SIZE = SIZE1 + SIZE2
+#endif
         CALL SMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE , PDEST2
      &               )
@@ -905,6 +963,38 @@ C
      *        BUF_CB%CONTENT( IPOS ), SIZE,
      *        POSITION, COMM, IERR )
         ENDDO
+#if defined(PARPIV)
+        IF(COMPUTE_MAX) THEN
+           CALL MPI_PACK(NFS4FATHER,1,
+     *          MPI_INTEGER,
+     *          BUF_CB%CONTENT( IPOS ), SIZE,
+     *          POSITION, COMM, IERR )
+           IF(NFS4FATHER .GT. 0) THEN
+              BUF_MAX_ARRAY(1:NFS4FATHER) = ZERO
+              IF(MAPROW(NROW) .GT. NASS_PERE) THEN
+                 DO PS1=1,NROW
+                    IF(MAPROW(PS1).GT.NASS_PERE) EXIT
+                 ENDDO
+                 IF (DESC_IN_LU) THEN
+                    APOS = ( PS1 - 1 ) * LROW + 1
+                    OFFSET = 0
+                    NCA = LROW 
+                 ELSE
+                    APOS = ( PS1 - 1 ) * NFRONT + 1
+                    OFFSET = NPIV
+                    NCA = NFRONT
+                 ENDIF
+                 CALL SMUMPS_618(
+     *                A_CBSON(APOS),OFFSET,NCA,NROW-PS1+1,
+     *                BUF_MAX_ARRAY,NFS4FATHER)
+              ENDIF
+              CALL MPI_PACK(BUF_MAX_ARRAY, NFS4FATHER,
+     *             MPI_REAL,
+     *             BUF_CB%CONTENT( IPOS ), SIZE,
+     *             POSITION, COMM, IERR )
+           ENDIF
+        ENDIF
+#endif  
         CALL MPI_ISEND( BUF_CB%CONTENT( IPOS ), POSITION, MPI_PACKED,
      *                  PDEST, CONTSIPERENIV2, COMM,
      *                  BUF_CB%CONTENT( IREQ ), IERR )
@@ -917,7 +1007,7 @@ C
         RETURN
         END SUBROUTINE SMUMPS_67
         SUBROUTINE SMUMPS_71( 
-     *                INODE, NFRONT, NASS1,
+     *                INODE, NFRONT, NASS1, NFS4FATHER,
      *                ISON, MYID, NSLAVES, SLAVES_PERE,
      *                TROW, NCBSON,
      *                COMM, IERR,
@@ -942,7 +1032,7 @@ C
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
-        INTEGER SIZE_AV, IDEST, NSEND, SIZE
+        INTEGER SIZE_AV, IDEST, NSEND, SIZE, NFS4FATHER
         INTEGER TROW_SIZE, POSITION, INDX, INIV2
         INTEGER IPOS, IREQ
         INTEGER IONE
@@ -952,9 +1042,9 @@ C
         IERR = 0
         IF ( NDEST .eq. 1 ) THEN
           IF ( DEST(1).EQ.MYID )  GOTO 500
-          SIZE = SIZEofINT * ( 6 + NSLAVES + NCBSON )
+          SIZE = SIZEofINT * ( 7 + NSLAVES + NCBSON )
           IF (( NSLAVES.GT.0 ) .AND. (KEEP(48).NE.0) ) THEN
-           SIZE = SIZE + SIZEofINT * ( NSLAVES + 1 )
+             SIZE = SIZE + SIZEofINT * ( NSLAVES + 1 )
           ENDIF
           CALL SMUMPS_4( BUF_CB, IPOS, IREQ, SIZE, IERR, 
      &                 IONE, DEST
@@ -978,6 +1068,8 @@ C
               BUF_CB%CONTENT( POSITION ) = NASS1
               POSITION = POSITION + 1
               BUF_CB%CONTENT( POSITION ) = NCBSON
+              POSITION = POSITION + 1
+              BUF_CB%CONTENT( POSITION ) = NFS4FATHER
               POSITION = POSITION + 1
               IF (( NSLAVES.GT.0 ) .AND. (KEEP(48).NE.0) ) THEN
                 INIV2 = ISTEP_TO_INIV2 ( STEP(INODE) )
@@ -1009,8 +1101,8 @@ C
           DO IDEST = 1, NDEST
             IF ( DEST( IDEST ) .ne. MYID ) NSEND = NSEND + 1
           END DO
-          SIZE = SIZEofINT * ( ( OVHSIZE + 6 + NSLAVES )
-     *                           * NSEND + NCBSON )
+          SIZE = SIZEofINT * 
+     *         ( ( OVHSIZE + 7 + NSLAVES )* NSEND + NCBSON )
           IF (( NSLAVES.GT.0 ) .AND. (KEEP(48).NE.0) ) THEN
            SIZE = SIZE + SIZEofINT * NSEND*( NSLAVES + 1 )
           ENDIF
@@ -1026,7 +1118,7 @@ C
      &                IDEST, NCBSON, 
      &                NDEST, 
      &                TROW_SIZE, INDX  )
-            SIZE = SIZEofINT * ( NSLAVES + TROW_SIZE + 6 )
+            SIZE = SIZEofINT * ( NSLAVES + TROW_SIZE + 7 )
             IF (( NSLAVES.GT.0 ) .AND. (KEEP(48).NE.0) ) THEN
              SIZE = SIZE + SIZEofINT * ( NSLAVES + 1 )
             ENDIF
@@ -1054,6 +1146,8 @@ C
               BUF_CB%CONTENT( POSITION ) = NASS1
               POSITION = POSITION + 1
               BUF_CB%CONTENT( POSITION ) = TROW_SIZE
+              POSITION = POSITION + 1
+              BUF_CB%CONTENT( POSITION ) = NFS4FATHER
               POSITION = POSITION + 1
               IF (( NSLAVES.GT.0 ) .AND. (KEEP(48).NE.0) ) THEN
                 INIV2 = ISTEP_TO_INIV2 ( STEP(INODE) )

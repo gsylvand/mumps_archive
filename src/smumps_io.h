@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -9,7 +9,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -44,7 +44,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/*    $Id: smumps_io.h,v 1.12 2005/12/14 10:23:36 jylexcel Exp $ */
+/*    $Id: smumps_io.h,v 1.13 2006/02/08 08:00:18 pamestoy Exp $ */
 
 #if defined(Add_)
 #define smumps_is_there_finished_request smumps_is_there_finished_request_
@@ -122,7 +122,7 @@ int smumps_test_request(int* request_id,int* flag,int* ierr);
 
 int smumps_wait_request(int* request_id,int* ierr);
 
-int smumps_wait_all_requests();
+int smumps_wait_all_requests(int* ierr);
 
 int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
 			       int* async,char* smumps_dir, char* smumps_file,

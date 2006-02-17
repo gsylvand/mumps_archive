@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6
-C   This Version was built on Tue Jan 24 09:35:01 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+C   This Version was built on Fri Feb 17 14:27:51 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -8,7 +8,7 @@ C  domain, based on public domain software developed during the Esprit IV
 C  European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
 C  Since this first public domain version in 1999, the developments are
 C  supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-C  INRIA Rhone-Alpes.
+C  INRIA.
 C
 C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -1220,7 +1220,7 @@ C
       IMPLICIT NONE
       INTEGER M,N,NE,NUM
       INTEGER IP(N+1),IRN(NE),IPERM(M),JPERM(N),OUT(N),PR(N),Q(M),L(M)
-      REAL A(NE),U(M),D(M),RINF
+      REAL A(NE),U(M),D(M),RINF,RINF3
       INTEGER I,I0,II,J,JJ,JORD,Q0,QLEN,JDUM,ISP,JSP,
      &        K,K0,K1,K2,KK,KK1,KK2,UP,LOW
       REAL             CSP,DI,DMIN,DNEW,DQ0,VJ,RLX
@@ -1229,6 +1229,7 @@ C
       PARAMETER (ZERO=0.0D+0)
       EXTERNAL SMUMPS_445, SMUMPS_446, SMUMPS_447, SMUMPS_455
       RLX = U(1)
+      RINF3 = U(2)
       LORD = (JPERM(1).EQ.6)
       NUM = 0
       DO 10 K = 1,N
@@ -1237,7 +1238,7 @@ C
         D(K) = RINF
    10 CONTINUE
       DO 15 K = 1,M
-        U(K) = RINF
+        U(K) = RINF3
         IPERM(K) = 0
         L(K) = 0
    15 CONTINUE

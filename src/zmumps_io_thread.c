@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -9,7 +9,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -44,7 +44,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/*    $Id: zmumps_io_thread.c,v 1.21 2006/01/18 14:32:33 aguermou Exp $  */
+/*    $Id: zmumps_io_thread.c,v 1.25 2006/02/14 15:30:35 aguermou Exp $  */
 
 #ifndef _WIN32  
 
@@ -136,6 +136,8 @@ void* _zmumps_async_thread_function (void* arg){
       pthread_mutex_lock(&io_mutex);  
    }
    pthread_exit(NULL);
+/* Not reached */
+   return NULL;
 }
 
 /**
@@ -208,13 +210,9 @@ void*  _zmumps_async_thread_function_with_sem (void* arg){
 
       pthread_mutex_lock(&io_mutex);
       /* Updates active queue bounds */
-      nb_active--;
-      if(first_active<MAX_IO-1){
-	 first_active++; 
-      }
-      else{
-	 first_active=0;
-      }
+
+      
+
       /* Register the notification in finished_requests queue
        and updates its bounds. */
       finished_requests_id[last_finished_requests]=current_io_request->req_num;
@@ -222,6 +220,19 @@ void*  _zmumps_async_thread_function_with_sem (void* arg){
       last_finished_requests=(last_finished_requests+1)%(MAX_FINISH_REQ); /* ??? */
       nb_finished_requests++;      
       /* Realeases the lock : ***UNLOCK*** */
+
+      nb_active--;      
+      if(first_active<MAX_IO-1){
+	 first_active++; 
+      }
+      else{
+	 first_active=0;
+      }
+
+      if(with_sem==2){
+	_zmumps_post_sem(&(current_io_request->int_local_cond),&(current_io_request->local_cond));
+      }
+
       pthread_mutex_unlock(&io_mutex);  
       
       /* Finally increases the number of free active requests.*/
@@ -234,6 +245,8 @@ void*  _zmumps_async_thread_function_with_sem (void* arg){
     We exit. */
 
    pthread_exit(NULL);
+/* Not reached */
+   return NULL;
 }
 
 int zmumps_is_there_finished_request_th(int* flag){
@@ -376,13 +389,35 @@ int zmumps_test_request_th(int* request_id,int *flag){
   return 0;
 }
 
+int zmumps_wait_req_sem_th(int *request_id){
+  int i,j;
+  j=first_active;
+  for(i=0;i<nb_active;i++){
+    if(io_queue[j].req_num==*request_id) break;
+    j=(j+1)%MAX_IO;
+  }
+  if(i<nb_active){
+    _zmumps_wait_sem(&(io_queue[j].int_local_cond),&(io_queue[j].local_cond));
+  }
+  return 0;
+}
+
 int zmumps_wait_request_th(int *request_id){
   /* waits for the termination of the request "request_id" */
   int flag=0,ierr;
-
-  while(!flag){
+  if(with_sem!=2){
+    while(!flag){
+      ierr=zmumps_test_request_th(request_id,&flag);
+      if(ierr!=0)return ierr;
+    }
+  }else{
     ierr=zmumps_test_request_th(request_id,&flag);
     if(ierr!=0)return ierr;
+    if(!flag){
+      zmumps_wait_req_sem_th(request_id);
+      ierr=zmumps_test_request_th(request_id,&flag);
+      if(ierr!=0)return ierr;
+    }
   }
   return 0;
 }
@@ -450,6 +485,12 @@ int zmumps_low_level_init_ooc_c_th(int* async, int* ierr){
 #endif
 
     io_queue=(struct request_io *)malloc(MAX_IO*sizeof(struct request_io));
+    if(with_sem==2){
+      for(i=0;i<MAX_IO;i++){
+	pthread_cond_init(&(io_queue[i].local_cond),NULL);
+	io_queue[i].int_local_cond=0;
+      }
+    }
     finished_requests_id=(int *)malloc(MAX_IO*2*sizeof(int));
     finished_requests_inode=(int *)malloc(MAX_IO*2*sizeof(int));
 
@@ -536,6 +577,9 @@ int zmumps_async_write_th(const int * strat_IO,
     io_queue[cur_req].pos_in_file=pos_in_file; 
     io_queue[cur_req].num_file=file_number; 
     io_queue[cur_req].io_type=0;
+    if(with_sem==2){
+      io_queue[cur_req].int_local_cond=0;      
+    }
     *request_arg=current_req_num; 
     current_req_num++;
   }else{
@@ -612,6 +656,9 @@ int zmumps_async_read_th(const int * strat_IO,
     io_queue[cur_req].pos_in_file=from_where; 
     io_queue[cur_req].num_file=file_number; 
     io_queue[cur_req].io_type=1;
+    if(with_sem==2){
+      io_queue[cur_req].int_local_cond=0;      
+    }
     *request_arg=current_req_num; 
     current_req_num++;
   }else{
@@ -629,6 +676,7 @@ int zmumps_async_read_th(const int * strat_IO,
 }
 
 int zmumps_clean_io_data_c_th(int *myid){
+  int i;
   /* cleans the thread/io management data*/
   if(zmumps_io_flag_async){
     /*we can use either signals or mutexes for this step */
@@ -662,7 +710,11 @@ int zmumps_clean_io_data_c_th(int *myid){
     }
   }
 
-
+  if(with_sem==2){
+    for(i=0;i<MAX_IO;i++){
+      pthread_cond_destroy(&(io_queue[i].local_cond));
+    }
+  }
   free(io_queue);
   free(finished_requests_id);
   free(finished_requests_inode);

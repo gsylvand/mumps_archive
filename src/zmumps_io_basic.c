@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6
-   This Version was built on Tue Jan 24 09:35:01 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.1
+   This Version was built on Fri Feb 17 14:27:51 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -9,7 +9,7 @@
   European project PARASOL (1996-1999) by CERFACS, ENSEEIHT-IRIT and RAL. 
   Since this first public domain version in 1999, the developments are
   supported by the following institutions: CERFACS, ENSEEIHT-IRIT, and
-  INRIA Rhone-Alpes.
+  INRIA.
 
   Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
@@ -44,7 +44,7 @@
    of linear systems. Accepted to Parallel Computing.
 
 */
-/*    $Id: zmumps_io_basic.c,v 1.39 2006/01/18 14:51:24 afevre Exp $  */
+/*    $Id: zmumps_io_basic.c,v 1.40 2006/02/16 14:27:00 aguermou Exp $  */
 
 #include "zmumps_io_basic_var.h"
 #include "zmumps_io_err_extern.h"
@@ -553,9 +553,8 @@ int zmumps_io_set_file_name(int* indice,char* name,int* length){
   int i;
   i=(*indice)-1;
   *(zmumps_io_pfile_name+i)=(char *) malloc((*length)*strlen(name));
-  
   if(*(zmumps_io_pfile_name+i)==NULL){
-    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
+    sprintf(error_str,"Allocation problem in low-level OOC layer");
     return -13;
   }
   strcpy(*(zmumps_io_pfile_name+i),name);
@@ -578,7 +577,7 @@ int zmumps_io_open_files_for_read(){
 #else
     *(zmumps_io_pfile_pointer_array+i)=fopen(*(zmumps_io_pfile_name+i),"a+");
     if(*(zmumps_io_pfile_pointer_array+i)==NULL){
-      sprintf(error_str,"Problem while opening OOC file\n");
+      sprintf(error_str,"Problem while opening OOC file");
       return -90;
     }
 #endif

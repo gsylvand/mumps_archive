@@ -1,5 +1,5 @@
-C This file is part of DMUMPS VERSION 4.6.1
-C This Version was built on Fri Feb 17 14:27:51 2006
+C This file is part of DMUMPS VERSION 4.6.2
+C This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
       PROGRAM DMUMPS_TEST

@@ -7,6 +7,17 @@
 # NOTE that PORD is distributed within MUMPS by default. If you would like to
 # use other orderings, you need to obtain the corresponding package and modify
 # the variables below accordingly.
+# For example, to have Metis available within MUMPS:
+#          1/ download Metis and compile it
+#          2/ uncomment (suppress # in first column) lines
+#             starting with LMETISDIR,  LMETIS
+#          3/ add -Dmetis in line ORDERINGSF
+#             ORDERINGSF  = -Dpord -Dmetis
+#          4/ Compile and install MUMPS
+#             make clean; make   (to clean up previous installation)
+#
+#          Metis is now available as an internal ordering for MUMPS.
+#
 
 #LSCOTCHDIR = $(HOME)/JY/emilio/bin/generic
 #LSCOTCH   = -L$(LSCOTCHDIR) -lesmumps  -lfax -lorder -lscotch -lsymbol -ldof -lgraph -lcommon -lm
@@ -19,40 +30,39 @@ LPORD    = -L$(LPORDDIR) -lpord
 #IMETIS    = # Metis doesn't need include files (Fortran interface avail.)
 #LMETIS    = -L$(LMETISDIR) -lmetis
 
-# Corresponding variables reused later
+# The following variables will be used in the compilation process.
 #ORDERINGSF = -Dscotch -Dmetis -Dpord
-#ORDERINGSC = -Dscotch -Dmetis -Dpord
-ORDERINGSF  = -WF,-Dpord
-ORDERINGSC  = -Dpord
+ORDERINGSF  = -Dpord
+ORDERINGSC  = $(ORDERINGSF)
 LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
 IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
 
 #End orderings
 ########################################################################
-########################################################################
+################################################################################
 
-PLAT    =
 RM      = /bin/rm -f
-CC      = cc
-FC      = xlf90
-FL      = xlf90
-AR      = ar vr
-RANLIB  = ranlib
+CC      = gcc
+FC = g95
+FL = g95
+AR = ar vr
+RANLIB  = echo
 
 
-
-INCSEQ  = -I../libseq
+INCSEQ = -I../libseq
 LIBSEQ  =  -L../libseq -lmpiseq
-LIBBLAS = -lessl
-LIBOTHERS = -lpthread
+
+LIBBLAS =/usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /usr/local/ATLAS/lib/Linux_P4SSE2/libatlas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a -lg2c -lpthread
+
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS = 
+CDEFS   = -DAdd__
 
 #Begin Optimization options
-OPTF    = -WF,-DPESSL -WF,-DSP_ -WF,-DALLOW_NON_INIT -O3 -qstrict -qmaxmem=-1 -Q -qfixed -qalign=4k -qarch=auto -qtune=auto -qcache=auto -q32 -bmaxdata:0x80000000 -B/usr/lib/ -tF 
-OPTC    = -O3 -qstrict -qarch=auto -qtune=auto -qcache=auto -Q=150 -s -qmaxmem=-1 -qcpluscmt -q32 -bmaxdata:0x80000000
-OPTL    = -O3 -qstrict -Q -qfixed -qalign=4k -q32 -bmaxdata:0x80000000 
+OPTF   = -O -i4
+OPTL   = -O  
+OPTC   = -O -DMAIN_COMP 
 #End Optimization options
+
  
 
 INC = $(INCSEQ)

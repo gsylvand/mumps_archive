@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,11 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: smumps_c.c,v 1.21 2005/04/18 10:58:44 jylexcel Exp $ */
+/* $Id: smumps_c.c,v 1.22 2006/03/27 16:46:59 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
 #include "smumps_c.h"
 #include <stdio.h>
@@ -84,9 +84,9 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     F_INT *irhs_sparse, *irhs_ptr, *isol_loc;
 
     F_INT irn_avail, jcn_avail, a_avail, rhs_avail; /* These are actually used
-						   * as booleans, but we stick
-						   * to simple types for the
-						   * C-F77 interface */
+                                                     * as booleans, but we stick
+                                                     * to simple types for the
+                                                     * C-F77 interface */
     F_INT irn_loc_avail, jcn_loc_avail, a_loc_avail;
     F_INT eltptr_avail, eltvar_avail, a_elt_avail;
     F_INT colsca_avail, rowsca_avail;
@@ -121,12 +121,12 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     if ( smumps_par->job == -1 )
       { /* job = -1: we just reset all pointers to 0 */
         smumps_par->irn=0; smumps_par->jcn=0; smumps_par->a=0; smumps_par->rhs=0;
-	smumps_par->eltptr=0; smumps_par->eltvar=0; smumps_par->a_elt=0; smumps_par->perm_in=0; smumps_par->sym_perm=0; smumps_par->uns_perm=0; smumps_par->irn_loc=0;smumps_par->jcn_loc=0;smumps_par->a_loc=0; smumps_par->listvar_schur=0;smumps_par->schur=0;smumps_par->mapping=0;smumps_par->nullspace=0;smumps_par->colsca=0;smumps_par->rowsca=0; smumps_par->rhs_sparse=0; smumps_par->irhs_sparse=0; smumps_par->sol_loc=0; smumps_par->irhs_ptr=0; smumps_par->isol_loc=0;
+        smumps_par->eltptr=0; smumps_par->eltvar=0; smumps_par->a_elt=0; smumps_par->perm_in=0; smumps_par->sym_perm=0; smumps_par->uns_perm=0; smumps_par->irn_loc=0;smumps_par->jcn_loc=0;smumps_par->a_loc=0; smumps_par->listvar_schur=0;smumps_par->schur=0;smumps_par->mapping=0;smumps_par->nullspace=0;smumps_par->colsca=0;smumps_par->rowsca=0; smumps_par->rhs_sparse=0; smumps_par->irhs_sparse=0; smumps_par->sol_loc=0; smumps_par->irhs_ptr=0; smumps_par->isol_loc=0;
 
-	/* Next line initializes scalars to arbitrary values.
-	 * Some of those will anyway be overwritten during the
-	 * call to Fortran routine SMUMPS_163 */
-	smumps_par->n=0; smumps_par->nz=0; smumps_par->nz_loc=0; smumps_par->nelt=0;smumps_par->instance_number=0;smumps_par->deficiency=0;smumps_par->size_schur=0;smumps_par->lrhs=0; smumps_par->nrhs=0; smumps_par->nz_rhs=0; smumps_par->lsol_loc=0;
+        /* Next line initializes scalars to arbitrary values.
+         * Some of those will anyway be overwritten during the
+         * call to Fortran routine SMUMPS_163 */
+        smumps_par->n=0; smumps_par->nz=0; smumps_par->nz_loc=0; smumps_par->nelt=0;smumps_par->instance_number=0;smumps_par->deficiency=0;smumps_par->size_schur=0;smumps_par->lrhs=0; smumps_par->nrhs=0; smumps_par->nz_rhs=0; smumps_par->lsol_loc=0;
  smumps_par->schur_mloc=0; smumps_par->schur_nloc=0; smumps_par->schur_lld=0; smumps_par->mblock=0; smumps_par->nblock=0; smumps_par->nprow=0; smumps_par->npcol=0;
       }
 
@@ -194,25 +194,25 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     smumps_f77_(&(smumps_par->job), &(smumps_par->sym), &(smumps_par->par), &(smumps_par->comm_fortran),
           &(smumps_par->n), icntl, cntl,
           &(smumps_par->nz), irn, &irn_avail, jcn, &jcn_avail, a, &a_avail,
-	  &(smumps_par->nz_loc), irn_loc, &irn_loc_avail, jcn_loc, &jcn_loc_avail,
-	  a_loc, &a_loc_avail,
+          &(smumps_par->nz_loc), irn_loc, &irn_loc_avail, jcn_loc, &jcn_loc_avail,
+          a_loc, &a_loc_avail,
           &(smumps_par->nelt), eltptr, &eltptr_avail, eltvar, &eltvar_avail, a_elt, &a_elt_avail,
-	  perm_in, &perm_in_avail,
-	  rhs, &rhs_avail, info, rinfo, infog, rinfog,
-	  &(smumps_par->deficiency), &(smumps_par->size_schur), listvar_schur, &listvar_schur_avail, schur,
-	  &schur_avail, colsca, &colsca_avail, rowsca, &rowsca_avail,
-	  &(smumps_par->instance_number), &(smumps_par->nrhs), &(smumps_par->lrhs),
-	  rhs_sparse, &rhs_sparse_avail, sol_loc, &sol_loc_avail, irhs_sparse,
-	  &irhs_sparse_avail, irhs_ptr, &irhs_ptr_avail, isol_loc,
-	  &isol_loc_avail, &(smumps_par->nz_rhs), &(smumps_par->lsol_loc)
-	  , &(smumps_par->schur_mloc)
-	  , &(smumps_par->schur_nloc)
-	  , &(smumps_par->schur_lld)
-	  , &(smumps_par->mblock)
-	  , &(smumps_par->nblock)
-	  , &(smumps_par->nprow)
-	  , &(smumps_par->npcol)
-	  );
+          perm_in, &perm_in_avail,
+          rhs, &rhs_avail, info, rinfo, infog, rinfog,
+          &(smumps_par->deficiency), &(smumps_par->size_schur), listvar_schur, &listvar_schur_avail, schur,
+          &schur_avail, colsca, &colsca_avail, rowsca, &rowsca_avail,
+          &(smumps_par->instance_number), &(smumps_par->nrhs), &(smumps_par->lrhs),
+          rhs_sparse, &rhs_sparse_avail, sol_loc, &sol_loc_avail, irhs_sparse,
+          &irhs_sparse_avail, irhs_ptr, &irhs_ptr_avail, isol_loc,
+          &isol_loc_avail, &(smumps_par->nz_rhs), &(smumps_par->lsol_loc)
+          , &(smumps_par->schur_mloc)
+          , &(smumps_par->schur_nloc)
+          , &(smumps_par->schur_lld)
+          , &(smumps_par->mblock)
+          , &(smumps_par->nblock)
+          , &(smumps_par->nprow)
+          , &(smumps_par->npcol)
+);
 
     /*
      * mapping and nullspace are usually 0 except if

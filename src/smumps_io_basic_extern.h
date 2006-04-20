@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,15 +40,15 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
 #include "smumps_io_basic.h"
 
 
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
 #include <pthread.h>
 extern pthread_mutex_t smumps_io_pwrite_mutex;
 #endif
@@ -72,3 +72,7 @@ extern int smumps_io_is_init_called;
 extern int smumps_io_myid;
 extern int smumps_io_nb_file;
 extern int smumps_io_flag_async;
+extern int smumps_io_k211;
+extern int smumps_flag_open;
+extern int directio_flag;
+extern int smumps_directio_flag;

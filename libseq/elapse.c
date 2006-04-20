@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,27 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-#include <elapse.h>
+#if defined(_WIN32)
+#include  "elapse.h"
+#include  <time.h>
+#include  <sys/timeb.h>
+void __stdcall ELAPSE(double *val)
+{
+  time_t	ltime;
+  struct    _timeb	tstruct;
+
+  time (&ltime);
+  _ftime(&tstruct);
+  *val = (double) ltime + (double) tstruct.millitm*(0.001);
+}
+
+#else
+
+#include "elapse.h"
 #include <sys/time.h>
 void elapse(double *val)
   {
@@ -64,3 +80,4 @@ void ELAPSE(double *val)
     gettimeofday(&time,(struct timezone *)0);
     *val=time.tv_sec+time.tv_usec*1.e-6;
   }
+#endif

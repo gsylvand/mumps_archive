@@ -345,7 +345,7 @@ void DMUMPS_alloc(DMUMPS_STRUC_C **dmumps_par){
 	}
 	
 	GetRhsVar(9,"i",&nv_schu,&mv_schu,&lv_schu);
-	dmumps_par-> size_schur=nv_schu;
+	dmumps_par-> size_schur=mv_schu;
 	EXTRACT_FROM_SCILAB_TOPTR(A.it,istk(lv_schu),istk(lv_schu),(dmumps_par->listvar_schur),int,dmumps_par->size_schur);
 	if(!dmumps_par->listvar_schur) dmumps_par->size_schur=0;
 

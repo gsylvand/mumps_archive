@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,12 +40,12 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
 
-/*    $Id: cmumps_io_thread.h,v 1.20 2006/02/08 08:00:18 pamestoy Exp $  */
+/*    $Id: cmumps_io_thread.h,v 1.21 2006/03/27 16:46:59 jylexcel Exp $  */
 #ifndef _WIN32  
 
 #include <unistd.h>
@@ -88,9 +88,9 @@ int   cmumps_wait_request_th(int *request_id);
 int   cmumps_wait_all_requests_th();
 int   cmumps_low_level_init_ooc_c_th(int* async, int* ierr);
 int   cmumps_async_write_th(const int * strat_IO,void * address_block,int * block_size,int * pos_in_file,
-			int * file_number,int * inode,int * request_arg,int * ierr);
+                           int * file_number,int * inode,int * request_arg,int * ierr);
 int   cmumps_async_read_th(const int * strat_IO,void * address_block,int * block_size,int * from_where,
-		       int * file_number,int * inode,int * request_arg,int * ierr);
+                          int * file_number,int * inode,int * request_arg,int * ierr);
 int cmumps_clean_io_data_c_th(int *myid);
 
 int _cmumps_get_sem(void *arg,int *value);

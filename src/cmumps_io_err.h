@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,21 +40,28 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: cmumps_io_err.h,v 1.6 2006/01/18 14:32:33 aguermou Exp $  */
+/*    $Id: cmumps_io_err.h,v 1.7 2006/03/14 09:49:50 jylexcel Exp $  */
 
 #include <errno.h>
 
-#ifdef Add_
+#if defined(UPPER) || defined(_WIN32)
+#define cmumps_low_level_init_err_str CMUMPS_LOW_LEVEL_INIT_ERR_STR
+#elif defined(Add_)
 #define cmumps_low_level_init_err_str cmumps_low_level_init_err_str_
-#else
-#ifdef Add__
+#elif defined(Add__)
 #define cmumps_low_level_init_err_str cmumps_low_level_init_err_str__
 #endif
+
+#ifdef _WIN32
+#define MUMPS_CALL __stdcall
+#else
+#define MUMPS_CALL
 #endif
+
 
 #ifndef _WIN32  
 
@@ -76,5 +83,5 @@ int cmumps_io_prop_err_info(int ierr);
 
 int cmumps_io_build_err_str(int errnum, int cmumps_err,const char* desc,char* buf,int size);
 
-int cmumps_low_level_init_err_str(char* err_str,int* dim);
+int MUMPS_CALL cmumps_low_level_init_err_str(char* err_str,int* dim);
 

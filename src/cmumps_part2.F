@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE CMUMPS_267( BUFR, LBUFR, LBUFR_BYTES,
      *                           N, ID, MYID, STEP,
@@ -1738,30 +1738,12 @@ C
       KEEP(68) = 0
       KEEP(36) = 1
       KEEP(1) = 8
-#if defined(valuesV416sgi)
-      IF ( SYM .eq. 0 ) THEN
-        KEEP(4)  = 32
-        KEEP(3)  = 96
-        KEEP(5)  = 16
-        KEEP(6)  = 32
-        KEEP(9)  = 500
-        KEEP(85) = 250
-      ELSE
-        KEEP(4)  = 24
-        KEEP(3) =  96
-        KEEP(5) =  16
-        KEEP(6) =  48
-        KEEP(9)  = 800
-        KEEP(85) = 100
-      END IF
-      KEEP(7) = 40
-      KEEP(8) = 40
-      KEEP(57) = 80
-      KEEP(58) = 40
+      KEEP(7)  = 150
+      KEEP(8)  = 120
+      KEEP(57) = 500
+      KEEP(58) = 250
       KEEP(59) = 120
-      KEEP(62) = 200
-      KEEP(63) = 180
-#elif defined(t3e) || defined(sgi)
+#if defined(t3e) || defined(sgi)
       KEEP(9)  = 400
       IF ( SYM .eq. 0 ) THEN
         KEEP(4)  = 32
@@ -1785,12 +1767,6 @@ C
         IF (NPROCS.GE.128) KEEP(9)=600
         IF (NPROCS.GE.256) KEEP(9)=700
       END IF
-      KEEP(7) =  40
-      KEEP(8) =  40
-      KEEP(57) = 500
-      KEEP(58) = 250
-      KEEP(59) = 120
-      KEEP(63) = 30
 #elif defined(SP_)
       IF ( SYM .eq. 0 ) THEN
         KEEP(4)  = 32
@@ -1807,13 +1783,7 @@ C
         KEEP(9)  = 400
         KEEP(85) = 100
       END IF
-      KEEP(7) = 40
-      KEEP(8) = 40
-      KEEP(57) = 500
-      KEEP(58) = 250
-      KEEP(59) = 120
       KEEP(62) = 150
-      KEEP(63) = 30
 #else
       IF ( SYM .eq. 0 ) THEN
         KEEP(4)  = 32
@@ -1838,13 +1808,8 @@ C
         IF (NPROCS.GE.64) KEEP(9)=800
         IF (NPROCS.GE.128) KEEP(9)=900
       END IF
-      KEEP(7) =  40
-      KEEP(8) =  40
-      KEEP(57) = 500
-      KEEP(58) = 250
-      KEEP(59) = 120
-      KEEP(63) = 30
 #endif
+      KEEP(63) = 60
       KEEP(48) = 5
       KEEP(17) = 0
       CALL CMUMPS_464( KEEP(34), KEEP(35))
@@ -1882,7 +1847,7 @@ C
      &       int(log(REAL(NPROCS))/log(REAL(2))) - 2 
      &       , 0         )
       ENDIF
-      KEEP(79) = 2000000000
+      KEEP(79) = -10
       KEEP(80) = 1
       KEEP(81) = 0
       KEEP(82) = 5
@@ -1895,10 +1860,6 @@ C
       KEEP(90)=1
       KEEP(91)=MIN(8, NPROCS)
       KEEP(91) = MAX(MIN(4,NPROCS),MIN(KEEP(83),KEEP(91)))
-      KEEP(99)=0
-      KEEP(100)=0
-      KEEP(204)=4
-      KEEP(205)=0
       IF(NPROCS.LT.48)THEN
          KEEP(102)=150
       ELSEIF(NPROCS.LT.128)THEN
@@ -1910,8 +1871,12 @@ C
       ELSEIF(NPROCS.GT.512)THEN
          KEEP(102)=400
       ENDIF
+      KEEP(99)=0
+      KEEP(100)=0
+      KEEP(204)=0
+      KEEP(205)=0
       KEEP(104) = 16
-      KEEP(107)=2
+      KEEP(107)=0
       RETURN
       END SUBROUTINE CMUMPS_20
       SUBROUTINE CMUMPS_195(N, NZ, IRN, ICN, LIW, IKEEP, PTRAR,
@@ -1932,7 +1897,7 @@ C
       INTEGER K,I,L1,L2,IWFR,NCMPA,LLIW, IN, IFSON
       INTEGER NEMIN, MPRINT, LP, MP, LDIAG, ITEMP, symmetry
       INTEGER MedDens, NBQD, AvgDens
-      LOGICAL PROK
+      LOGICAL PROK, COMPRESS_SCHUR
       INTEGER NBBUCK
       INTEGER, DIMENSION(:), ALLOCATABLE :: HEAD
       INTEGER NUMFLAG
@@ -1942,6 +1907,8 @@ C
       LOGICAL AGG6
       INTEGER MINSYM
       PARAMETER (MINSYM=50)
+      INTEGER K79REF
+      PARAMETER(K79REF=12000000)
       INTEGER PIV(N)
       INTEGER MTRANS, COMPRESS,NCMP,IERROR,J,JPERM,NCST,NLOCKED,P11,
      *     K1,K2,P1,P2
@@ -1953,6 +1920,7 @@ C
 #if defined(OLDDFS)
       EXTERNAL CMUMPS_200
 #endif
+      EXTERNAL CMUMPS_623
       EXTERNAL CMUMPS_547, CMUMPS_550,
      *     CMUMPS_565, CMUMPS_566,
      *     CMUMPS_549,CMUMPS_556
@@ -2016,6 +1984,7 @@ C
       MP    = ICNTL(3)
       LDIAG = ICNTL(4)
       REBUILTG = .FALSE.
+      COMPRESS_SCHUR = .FALSE.
       IF (KEEP(1).LT.0) KEEP(1) = 0
       NEMIN = KEEP(1)
       IF (LDIAG.GT.2 .AND. MP.GT.0) THEN
@@ -2029,13 +1998,39 @@ C
         WRITE (MP,99997) (IKEEP(I,1),I=1,K)
        ENDIF
       ENDIF
+         NCMP    = N   
+         IF (KEEP(60).NE.0) THEN
+           IF ((SIZE_SCHUR.LE.0 ).OR.
+     &          (SIZE_SCHUR.GE.N) ) GOTO 90
+         ENDIF
+#if defined(metis)
+          IF  ( ( KEEP(60).NE.0).AND.(SIZE_SCHUR.GT.0)
+     &         .AND.
+     &          ((IORD.EQ.7).OR.(IORD.EQ.5))
+     &        )THEN
+          COMPRESS_SCHUR=.TRUE.
+          NCMP          = N-SIZE_SCHUR
+          CALL CMUMPS_623(N,NCMP,NZ,IRN, ICN, IW(1), LLIW, 
+     *         IW(L2), PTRAR(1,2),
+     *         PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
+     *         INFO(1), INFO(2), ICNTL, symmetry, 
+     *         SYM, MedDens, NBQD, AvgDens, 
+     *         LISTVAR_SCHUR, SIZE_SCHUR, 
+     *         FRERE,FILS)
+           IORD = 5
+           KEEP(95) = 1
+           NBQD     = 0    ! Not clear how to use it
+          ELSE
+#endif
           CALL CMUMPS_351(N,NZ,IRN, ICN, IW(1), LLIW, 
      *         IW(L2), PTRAR(1,2),
      *         PTRAR, IW(L1), IWFR, KEEP(113), KEEP(114),
      *         INFO(1), INFO(2), ICNTL, symmetry, 
      *         SYM, MedDens, NBQD, AvgDens)
+#if defined(metis)
+          ENDIF
+#endif
           INFO(8) = symmetry
-          NCMP    = N   ! default value if no compress
           IF(NBQD .GT. 0) THEN
              IF( KEEP(50) .EQ. 2 .AND. ICNTL(12) .LE. 1 ) THEN
                 IF(KEEP(95) .NE. 1) THEN
@@ -2046,8 +2041,9 @@ C
                 ENDIF
              ENDIF
           ENDIF
-      IF ( (IORD.GT.1) .AND. (KEEP(60).NE.0) ) THEN
-       IORD = 0    ! AMD based ordering is used
+      IF ( (KEEP(60).NE.0) .AND. (IORD.GT.1) .AND.
+     &     .NOT. COMPRESS_SCHUR ) THEN
+            IORD = 0    ! AMD based ordering is used
       ENDIF 
       IF (IORD.EQ.7) 
      *     CALL CMUMPS_423( N, SYM, NSLAVES, IORD, 
@@ -2411,13 +2407,18 @@ C
      *              IKEEP(1,2), IKEEP(1,1) )
             ENDIF
             DEALLOCATE (OPTIONS_METIS)
+            IF ( COMPRESS_SCHUR ) THEN
+               CALL CMUMPS_622(
+     *         N, NCMP, IKEEP(1,1),IKEEP(1,2),
+     *         LISTVAR_SCHUR, SIZE_SCHUR, FILS)
+            ENDIF
             IF(COMPRESS .EQ. 1) THEN
 #if(SP_DEBUG >= 5)
                WRITE(*,*) 'IKEEP = ',IKEEP(1:NCMP,1)
                WRITE(*,*) 'PIV',PIV
 #endif
-               CALL CMUMPS_550(N,NCMP,KEEP(94),KEEP(93),
-     *              PIV,IKEEP(1,1),IKEEP(1,2))
+               CALL CMUMPS_550(N,NCMP,KEEP(94),
+     *              KEEP(93),PIV,IKEEP(1,1),IKEEP(1,2))
 #if(SP_DEBUG >= 5)
                WRITE(*,*) 'IKEEP = ',IKEEP(1:N,1)
 #endif
@@ -2457,16 +2458,6 @@ C
      *         MedDens, NBQD, AvgDens)
           INFO(8) = symmetry
         ENDIF
-#if defined(GRIDTLSE)
-          IF ( (symmetry.LT.MINSYM).AND.(SYM.EQ.0).AND.
-     *         (KEEP(23) .EQ. 7 ) ) THEN
-             KEEP(23) = -5
-             DEALLOCATE (IW)
-             RETURN
-          ELSE IF (KEEP(23) .EQ. 7) THEN
-             KEEP(23) = 0
-          ENDIF
-#endif
           ALLOCATE( HEAD ( 2*N ), stat = IERR )
           IF ( IERR .GT. 0 ) THEN
              INFO( 1 ) = -7
@@ -2524,10 +2515,6 @@ C
      *     PTRAR(1,3), NEMIN, PTRAR(1,4), KEEP(60),
      *     KEEP(20),KEEP(38),PTRAR(1,2),KEEP(104),IW(1),KEEP(50))
 #endif
-#if defined(AZZAM)
-      IF (KEEP(60).EQ.-1) THEN
-      ENDIF
-#endif
       IF (KEEP(60).NE.0)  THEN
          IF (KEEP(60)==1) THEN
            IN = KEEP(20)
@@ -2565,9 +2552,26 @@ C
           CALL CMUMPS_510(KEEP(10), KEEP(2),
      *    KEEP(48), KEEP(50), NSLAVES)
       END IF
-      IF ( KEEP(62) .GE. 1 .and. KEEP(82) .EQ. 0 )
+      IF (KEEP(210).LT.0.OR.KEEP(210).GT.2) KEEP(210)=0
+      IF (KEEP(210).EQ.0.AND.KEEP(201).NE.0) KEEP(210)=1 !On
+      IF (KEEP(210).EQ.0.AND.KEEP(201).EQ.0) KEEP(210)=2 !Off
+      IF (KEEP(210).EQ.2) KEEP(79)=HUGE(KEEP(79))
+      IF (KEEP(210).EQ.1.AND.KEEP(79).LE.0) THEN
+        IF ( HUGE(KEEP(79)) / K79REF + 1 .GE. NSLAVES ) THEN
+        KEEP(79)=HUGE(KEEP(79))
+        ELSE
+        KEEP(79)=K79REF * NSLAVES
+        ENDIF
+      ENDIF
+      IF (KEEP(210).EQ.1) THEN
+       IF ( KEEP(62).GE.1) 
+     *  CALL CMUMPS_97(N, FRERE, FILS, NFSIZ,INFO(6),
+     *                       NSLAVES, KEEP,KEEP8)
+      ELSE
+       IF ( KEEP(62) .GE. 1 .and. KEEP(82) .EQ. 0 )
      *   CALL CMUMPS_97(N, FRERE, FILS, NFSIZ,INFO(6),
      *                        NSLAVES, KEEP,KEEP8)
+      ENDIF
       IF ( KEEP(24) == 0 ) THEN
          CALL CMUMPS_202(N, NZ, IKEEP(1,1), FILS, FRERE,
      *      NFSIZ, IKEEP(1,3), IKEEP(1,2),
@@ -2595,6 +2599,11 @@ C
    40 INFO(1) = -4
       INFO(2) = K
       IF ((LP.GT.0).AND.(ICNTL(4).GE.1)) WRITE (LP,99996) INFO(1)
+      IF ((LP.GT.0).AND.(ICNTL(4).GE.1)) WRITE (LP,99982) INFO(2)
+      GOTO 90
+   45 INFO(1) = -32    ! Schur size is out of range
+      INFO(2) = SIZE_SCHUR
+      IF ((LP.GT.0).AND.(ICNTL(4).GE.1)) WRITE (LP,99996)
       IF ((LP.GT.0).AND.(ICNTL(4).GE.1)) WRITE (LP,99982) INFO(2)
    90 CONTINUE 
       DEALLOCATE(IW)
@@ -3631,7 +3640,7 @@ C
       INTEGER NV(N), IPS(N), NE(N), NA(N), NODE(N)
       INTEGER NEMIN,AMALG_COUNT
       INTEGER NAMALG(N),NAMALGMAX, CUMUL(N)
-      REAL ACCU, FLOPS_FATHER, FLOPS_SON,
+      DOUBLE PRECISION ACCU, FLOPS_FATHER, FLOPS_SON,
      *                  FLOPS_AVANT, FLOPS_APRES
       INTEGER I,IF,IS,NR,NR1,INS,INL,INB,INF,INFS,INSW
       INTEGER K,L,ISON,IN,IFSON,INO
@@ -3755,26 +3764,26 @@ C
      *      ) 
      *     ) THEN
            ACCU = 
-     &     ( REAL(20000)*
-     &       REAL(NODE(I))*REAL(NV(DADI)-NV(I)+NODE(I)) 
+     &     ( DBLE(20000)*
+     &       DBLE(NODE(I))*DBLE(NV(DADI)-NV(I)+NODE(I)) 
      &      )
      &      /
-     &          ( REAL(NV(DADI)+NODE(I))*
-     &              REAL(NV(DADI)+NODE(I))  )
+     &          ( DBLE(NV(DADI)+NODE(I))*
+     &              DBLE(NV(DADI)+NODE(I))  )
            ACCU = ACCU + CUMUL(I) 
            AMALG_TO_father_OK = ( (NODE(I).LE.NEMIN).OR.
      &         (NODE(DADI).LE.NEMIN) )
            AMALG_TO_father_OK = ( AMALG_TO_father_OK .AND.
      &       ( 
-     &        ( REAL(2*(NODE(I)))*
-     &         REAL((NV(DADI)-NV(I)+NODE(I)))
+     &        ( DBLE(2*(NODE(I)))*
+     &         DBLE((NV(DADI)-NV(I)+NODE(I)))
      &        ) .LT.
-     &        (  REAL(NV(DADI)+NODE(I))*
-     &         REAL(NV(DADI)+NODE(I))*REAL(NEMIN)/REAL(100)
+     &        (  DBLE(NV(DADI)+NODE(I))*
+     &         DBLE(NV(DADI)+NODE(I))*DBLE(NEMIN)/DBLE(100)
      &        ) 
      &       ) )
            AMALG_TO_father_OK = ( AMALG_TO_father_OK .AND.
-     &     ( ACCU .LE. REAL(NEMIN)*REAL(100) )
+     &     ( ACCU .LE. DBLE(NEMIN)*DBLE(100) )
      &                           )
 #if 0
            AMALG_TO_father_OK = (AMALG_TO_father_OK 
@@ -3789,9 +3798,9 @@ C
      *                             NODE(DADI),
      *                             KEEP50,1,FLOPS_FATHER)
               FLOPS_AVANT = FLOPS_FATHER+FLOPS_SON
-     *                      + MAX(REAL(200.0) * REAL(NV(I)-NODE(I))
-     *                            * REAL(NV(I)-NODE(I)),
-     *                            REAL(10000.0))
+     *                      + MAX(DBLE(200.0) * DBLE(NV(I)-NODE(I))
+     *                            * DBLE(NV(I)-NODE(I)),
+     *                            DBLE(10000.0))
               CALL CMUMPS_511(NV(DADI)+NODE(I),
      *                             NODE(DADI)+NODE(I),
      *                             NODE(DADI)+NODE(I),
@@ -5268,11 +5277,13 @@ C
       IF (MYID.EQ.MASTER) KEEP(127) = INFOG(5)
       CALL MPI_REDUCE( RINFO(1), RINFOG(1), 1, MPI_REAL,
      *  MPI_SUM, MASTER, COMM, IERR_MPI )
-      IF ( MYID.eq.MASTER.and.MPG.GT.0)
-     *WRITE(MPG, 99992) INFO(1), INFO(2), 
+      IF ( MYID.eq.MASTER.and.MPG.GT.0) THEN
+       WRITE(MPG, 99992) INFO(1), INFO(2), 
      *  KEEP8(1), KEEP8(5), INFOG(4),
      *  INFOG(5), KEEP(28), INFOG(7), KEEP(23), ICNTL(7), 
      *  KEEP(12), KEEP(56), KEEP(61), RINFOG(1)
+       IF (KEEP(54).GT.0) WRITE(MPG, 99993) KEEP(54)
+      ENDIF
       RETURN
 99992 FORMAT(/'Leaving analysis phase with  ...'/
      1       'INFOG(1)                                       =',I12/
@@ -5287,8 +5298,9 @@ C
      8       'ICNTL(7) Pivot order option                    =',I12/
      8       'Percentage of memory relaxation (effective)    =',I12/
      8       'Number of level 2 nodes                        =',I12/
-     8       'Number of nodes cut for better parallelism     =',I12/
+     8       'Number of splitted nodes                       =',I12/
      9   'RINFO(1) Operations during elimination (estim) =  ',1PD10.3)
+99993 FORMAT('Distributed matrix entry format (ICNTL(18))    =',I12)
       END SUBROUTINE CMUMPS_100
       SUBROUTINE CMUMPS_23(N,IWLEN, PE, PFREE, LEN, IW, NV, ELEN,
      $                   LAST, NCMPA, DEGREE, HEAD, NEXT, W)
@@ -6170,8 +6182,14 @@ C
       INTEGER INODE, DEPTH, I, IBEG, IEND, IIPOOL, NROOT
       INTEGER MAX_DEPTH, ISON, TOT_CUT, MAX_CUT, STRAT
       STRAT=KEEP(62)
-      IF ( NSLAVES .eq. 1 ) RETURN
-      MAX_DEPTH = INT( LOG( REAL( NSLAVES - 1 ) ) / LOG(2.0E0) )
+      IF (KEEP(210).EQ.1) THEN
+        MAX_DEPTH = 2*NSLAVES*KEEP(82)
+        STRAT     = STRAT/4
+      ELSE
+        IF ( NSLAVES .eq. 1 ) RETURN
+        MAX_DEPTH = INT( LOG( REAL( NSLAVES - 1 ) ) 
+     &                 / LOG(2.0E0) )
+      ENDIF
       NROOT = 0
       DO INODE = 1, N
         IF ( FRERE(INODE) .eq. 0 ) THEN
@@ -6203,6 +6221,7 @@ C
       IPOOL( IBEG ) = -IPOOL( IBEG )
       TOT_CUT = 0
       MAX_CUT = 2 * NSLAVES
+      IF (KEEP(210).EQ.1) MAX_CUT = 4 * (MAX_CUT + 4)
       DEPTH   = -1
       DO I = 1, IIPOOL - 1
         INODE = IPOOL( I )
@@ -6231,15 +6250,27 @@ C
       INTEGER INODE_SON, INODE_FATH, IN_SON, IN_FATH, IN_GRANDFATH
       INTEGER NPIV_SON, NPIV_FATH, MAX_CUT
       INTEGER NCB, KAVERAGE, NSLAVESMIN, NSLAVESMAX
+      INTEGER K79
       INTEGER  CMUMPS_50,
      *         CMUMPS_52
       EXTERNAL  CMUMPS_50,
      *         CMUMPS_52
+      K79 = KEEP(79)
+      IF (KEEP(210).EQ.1.AND.KEEP(60).EQ.0) THEN
+        IF ( FRERE ( INODE ) .eq. 0 ) THEN 
+          NFRONT = NFSIZ( INODE )
+          NPIV = NFRONT
+          NCB = 0
+          IF (NFRONT*NFRONT.GT.K79) THEN 
+           GOTO 333
+          ENDIF
+        ENDIF
+      ENDIF
+      IF ( FRERE ( INODE ) .eq. 0 ) RETURN
       IF ( FRERE ( INODE ) .eq. 0 ) THEN
         IF ( KEEP(60) .ne. 0 ) RETURN
         IF ( KEEP(19) .le. 0 ) RETURN
       END IF
-      IF ( FRERE ( INODE ) .eq. 0 ) RETURN
       NFRONT = NFSIZ( INODE )
       IN = INODE
       NPIV = 0
@@ -6249,18 +6280,24 @@ C
       END DO
       NCB = NFRONT - NPIV
       IF ( (NFRONT - (NPIV/2)) .LE. KEEP(9)) RETURN
-      IF ((KEEP(50) == 0.and.NFRONT * NPIV > KEEP(79) ) .OR.
-     &(KEEP(50) .NE.0.and.NPIV * NPIV > KEEP(79) )) GOTO 333
-      NSLAVESMIN = CMUMPS_50 
+      IF ((KEEP(50) == 0.and.NFRONT * NPIV > K79 ) .OR.
+     &(KEEP(50) .NE.0.and.NPIV * NPIV > K79 )) GOTO 333
+      IF (KEEP(210).EQ.1) THEN
+        NSLAVESMIN    = 1   ! not used
+        NSLAVESMAX    = 64  ! not used
+        NSLAVES_ESTIM = 32+NSLAVES
+      ELSE
+        NSLAVESMIN = CMUMPS_50 
      *         ( NSLAVES, KEEP(48), KEEP(10), KEEP(50),
      *         NFRONT, NCB)
-      NSLAVESMAX = CMUMPS_52 
+        NSLAVESMAX = CMUMPS_52 
      *        ( NSLAVES, KEEP(48), KEEP(10), KEEP(50),
      *          NFRONT, NCB)
-      NSLAVES_ESTIM = MAX (1, 
+        NSLAVES_ESTIM = MAX (1, 
      *   NINT( REAL(NSLAVESMAX-NSLAVESMIN)/REAL(3) )
      *                    )
-      NSLAVES_ESTIM = MIN (NSLAVES_ESTIM, NSLAVES-1)
+        NSLAVES_ESTIM = MIN (NSLAVES_ESTIM, NSLAVES-1)
+      ENDIF
       IF ( KEEP(50) .eq. 0 ) THEN
        WK_MASTER = 0.6667E0 * 
      *                REAL(NPIV)*REAL(NPIV)*REAL(NPIV) +
@@ -6274,9 +6311,15 @@ C
      *           (REAL(NPIV)*REAL(NCB)*REAL(NFRONT)) 
      *           / REAL(NSLAVES_ESTIM)
       ENDIF
-      IF ( ( 100 + STRAT * MAX( DEPTH-1, 1 ) )
+      IF (KEEP(210).EQ.1) THEN
+        IF ( ( 100 + STRAT )
      &        * WK_SLAVE / 100 .GE. WK_MASTER ) RETURN
+      ELSE
+        IF ( ( 100 + STRAT * MAX( DEPTH-1, 1 ) )
+     &        * WK_SLAVE / 100 .GE. WK_MASTER ) RETURN
+      ENDIF
  333  CONTINUE
+      IF (NPIV .LE. 1 ) RETURN
        NSTEPS  = NSTEPS + 1
        TOT_CUT = TOT_CUT + 1
        NPIV_SON  = MAX(NPIV/2,1)
@@ -8594,7 +8637,12 @@ C
         IF (THRESH.LT.0) THRESH = 0
         IF ( SchurON )  THEN 
            DO I= 1, N
-             IF ( PERM(I) .GE. IBEGSchur) PERM(I) = N + 1
+             IF ( PERM(I) .GE. IBEGSchur) THEN 
+                 PERM(I) = N + 1
+                IF (LEN(I) .EQ.0) THEN
+                  PE(I) = 0
+                ENDIF
+             ENDIF
            ENDDO
         ENDIF
         IF (SchurON) THEN

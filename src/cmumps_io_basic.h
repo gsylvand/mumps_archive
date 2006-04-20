@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,13 +40,15 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: cmumps_io_basic.h,v 1.28 2006/01/19 17:15:23 aguermou Exp $  */
+/*    $Id: cmumps_io_basic.h,v 1.45 2006/04/13 11:54:15 jylexcel Exp $  */
 
 #define MAX_FILE_SIZE 1879048192 /* (2^31)-1-(2^27) */
+
+
 /*                                                      */
 /* Important Note :                                     */
 /* ================                                     */
@@ -70,12 +72,17 @@
 #endif
 
 #ifndef _WIN32
-#if defined(SP_) || defined(__USE_GNU)
-#define CMUMPS_IO_FLAGS O_RDWR|O_DIRECT
-#else
-#define CMUMPS_IO_FLAGS O_RDWR
+#define CMUMPS_IO_FLAG_TRY_O_DIRECT O_RDWR
 #endif
+
+
+
+/* Force WITH_PFUNC on architectures where we know that it should work */
+#if defined(IRIX64_) | defined(SP_) | defined(SUN_) | defined(_GNU_SOURCE)
+#undef WITH_PFUNC
+#define WITH_PFUNC
 #endif
+
 
 #define IO_SYNC      0
 
@@ -88,11 +95,7 @@
 
 #define UNITIALIZED "NAME_NOT_INITIALIZED"
 
-#if defined (CINES_)
-#define CMUMPS_OOC_DEFAULT_DIR "/tmpp/eagullo"
-#else
 #define CMUMPS_OOC_DEFAULT_DIR "/tmp"
-#endif
 
 #define SEPARATOR "/"
 
@@ -115,15 +118,36 @@ int cmumps_io_set_file_name(int* indice,char* name,int* length);
 int cmumps_io_open_files_for_read();
 int cmumps_io_set_last_file(int* dim);
 
+int cmumps_io_write__(void *file, void *loc_add, size_t write_size, int where);
+
+#ifndef _WIN32
+int cmumps_io_write_os_buff__(void *file, void *loc_add, size_t write_size, int where);
+int cmumps_io_write_direct_io__(void *file, void *loc_addr, size_t write_size, int where);
+int cmumps_io_flush_write__();
+#else
+int cmumps_io_write_win32__(void *file, void *loc_add, size_t write_size, int where);
+#endif
+
+
+int cmumps_io_read__(void * file,void * loc_addr,size_t size,int local_offset);
+#ifndef _WIN32
+int cmumps_io_read_os_buff__(void * file,void * loc_addr,size_t size,int local_offset);
+int cmumps_io_read_direct_io__(void * file,void * loc_addr,size_t size,int local_offset);
+#else
+int cmumps_io_read_win32__(void * file,void * loc_addr,size_t size,int local_offset);
+#endif
+
+
+
 #ifndef _WIN32  
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
 
 int cmumps_io_protect_pointers();
 int cmumps_io_unprotect_pointers();
 int cmumps_io_init_pointers_lock();
 int cmumps_io_destroy_pointers_lock();
 
-#endif /*WITHOUT_PFUNC*/
+#endif /*WITH_PFUNC*/
 #endif /*_WIN32*/
 
 

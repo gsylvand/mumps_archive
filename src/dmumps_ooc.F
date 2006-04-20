@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       MODULE DMUMPS_OOC
       IMPLICIT NONE
@@ -171,9 +171,6 @@ C
       DMUMPS_ELEMENTARY_DATA_SIZE = id%KEEP(35)
       SIZE_OF_BLOCK=0
       STRAT_IO=id%KEEP(99)
-# if defined(perfanal)
-      WRITE(*,*) 'STRAT_IO for facto = ',STRAT_IO
-#endif
       STRAT_IO_ASYNC=.FALSE.
       WITH_BUF=.FALSE.
       IF((STRAT_IO.EQ.1).OR.(STRAT_IO.EQ.2))THEN
@@ -228,7 +225,8 @@ C
      $     id%DMUMPS_OOC_PREFIX)
       IERR=0
       CALL DMUMPS_LOW_LEVEL_INIT_OOC_C(MYID_OOC,id%MAXS,
-     $     id%KEEP(35),LOW_LEVEL_STRAT_IO,TMP_DIR,TMP_FILE,DIM_DIR,
+     $     id%KEEP(35),LOW_LEVEL_STRAT_IO,id%KEEP(211),
+     $     TMP_DIR,TMP_FILE,DIM_DIR,
      $     DIM_FILE,IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': PB in DMUMPS_LOW_LEVEL_INIT_OOC_C'
@@ -373,7 +371,7 @@ C
          END DO
       ELSE
          POS=POS_IN_FILE(STEP_OOC(OOC_INODE_SEQUENCE
-     $        (I_FIRSTPOS_INODE_SEQUENCE)))
+     $        (I_FIRSTPOS_INODE_SEQUENCE)))         
          TMP_NUM_FILE=ABS(TMP_NUM_FILE)
          DO I = I_FIRSTPOS_INODE_SEQUENCE, I_LASTPOS_INODE_SEQUENCE
             IF((POS+SIZE_OF_BLOCK(STEP_OOC(OOC_INODE_SEQUENCE(I)))*
@@ -474,6 +472,10 @@ C
             IF(IERR.LT.0)THEN
                RETURN
             ENDIF
+            CALL DB_DO_IO_AND_CHANGE_HBUF(IERR)
+            IF(IERR.LT.0)THEN
+               RETURN
+            ENDIF
             CALL DMUMPS_LOW_LEVEL_WRITE_OOC_C(LOW_LEVEL_STRAT_IO,
      &           A(PTRFAC(STEP_OOC(INODE))),SIZE,
      &           POS_IN_FILE(STEP_OOC(INODE)),NUM_FILE(STEP_OOC(INODE)),
@@ -489,8 +491,7 @@ C
             OOC_INODE_SEQUENCE(I_CUR_HBUF_NEXTPOS)=INODE
             I_CUR_HBUF_NEXTPOS=
      $           I_CUR_HBUF_NEXTPOS+1
-            I_CUR_HBUF_FSTPOS =
-     &           I_CUR_HBUF_NEXTPOS
+            CALL DB_NEXT_HBUF()
          ENDIF
       END IF
       NODE=-9999
@@ -509,7 +510,8 @@ C
       END SUBROUTINE DMUMPS_576
       SUBROUTINE DMUMPS_577(DEST,INODE,IERR)
       IMPLICIT NONE
-      INTEGER IERR,INODE
+      INCLUDE 'mpif.h'
+      INTEGER IERR,INODE,STATUS
       DOUBLE PRECISION DEST
       INTEGER FLAG,NODE,ASYNC,REQUEST
       LOGICAL IO_C
@@ -577,7 +579,7 @@ C
       USE DMUMPS_STRUC_DEF
       IMPLICIT NONE
       TYPE(DMUMPS_STRUC), TARGET :: id
-      INTEGER IERR
+      INTEGER IERR,I
       IERR=0
       IF(WITH_BUF)THEN
          IF(ALLOCATED(BUF_IO))THEN
@@ -604,6 +606,11 @@ C
       ENDIF
       IF(ASSOCIATED(SIZE_OF_BLOCK))THEN
          NULLIFY(SIZE_OF_BLOCK)
+      ENDIF
+      CALL DMUMPS_OOC_END_WRITE(IERR)
+      IF(IERR.LT.0)THEN
+         WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
+         RETURN
       ENDIF
       id%OOC_MAX_NB_NODES_FOR_ZONE=MAX(MAX_NB_NODES_FOR_ZONE,
      $     TMP_NB_NODES)
@@ -946,6 +953,7 @@ C
       SUBROUTINE DMUMPS_595(DEST,INDICE,SIZE,
      $     ZONE,PTRFAC,NSTEPS,POS_SEQ,NB_NODES,FLAG,IERR)
       IMPLICIT NONE
+      INCLUDE 'mpif.h'
       INTEGER ZONE,SIZE,NSTEPS,INDICE,FLAG,POS_SEQ,NB_NODES
       DOUBLE PRECISION DEST
       INTEGER PTRFAC(NSTEPS)
@@ -976,7 +984,7 @@ C
       INTEGER PTRFAC(NSTEPS)
       INTEGER ZONE
       INTEGER POS,J,POS_REQ,I,TMP_NODE,LAST,POS_IN_S,POS_IN_MANAGE
-      INTEGER SIZE
+      INTEGER SIZE, STATUS
       POS_REQ=MOD(REQUEST,MAX_NB_REQ)+1
       SIZE=SIZE_OF_READ(POS_REQ)
       I=FIRST_POS_IN_READ(POS_REQ)
@@ -1163,8 +1171,12 @@ C
          CUR_POS_SEQUENCE=POS_SEQ-1
       ENDIF
       END SUBROUTINE DMUMPS_597
-      SUBROUTINE DMUMPS_598(INODE,PTRFAC,NSTEPS)
+      SUBROUTINE DMUMPS_598(INODE,PTRFAC,NSTEPS,A,
+     $     LA,IERR)
       IMPLICIT NONE
+      INTEGER LA
+      INTEGER IERR
+      DOUBLE PRECISION A(LA)
       INTEGER INODE,NSTEPS
       INTEGER PTRFAC(NSTEPS)
       INTEGER TMP,FREE_SIZE,TMP_NODE,I,ZONE,J,FREE_HOLE_POS,
@@ -1220,10 +1232,13 @@ C
          ENDDO
          POS_HOLE_T(ZONE)=TMP
  666     CONTINUE
-         IF(POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE))THEN
+         IF((POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE)).OR.
+     $        (POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
+     $        (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
             CURRENT_POS_B(ZONE)=-9999
             POS_HOLE_B(ZONE)=-9999
             LRLU_SOLVE_B(ZONE)=0
+            POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
          ENDIF
       ELSEIF(WHICH.EQ.0)THEN
          J=MAX(PDEB_SOLVE_Z(ZONE),POS_HOLE_B(ZONE))
@@ -1244,6 +1259,13 @@ C
          ENDDO
          POS_HOLE_B(ZONE)=TMP
  777     CONTINUE
+         IF((POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
+     $        (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
+            CURRENT_POS_B(ZONE)=-9999
+            POS_HOLE_B(ZONE)=-9999
+            LRLU_SOLVE_B(ZONE)=0
+            POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
+         ENDIF
       ENDIF
 #else
       IF((TMP.EQ.CURRENT_POS_T(ZONE)-1).OR.
@@ -1287,15 +1309,6 @@ C
  777     CONTINUE
       ENDIF
 #endif
-      END SUBROUTINE DMUMPS_598
-      FUNCTION DMUMPS_SOLVE_IS_INODE_IN_MEM(INODE,PTRFAC,NSTEPS,A,LA,
-     $     IERR)
-      IMPLICIT NONE
-      INTEGER INODE,NSTEPS,LA,IERR
-      DOUBLE PRECISION A(LA)
-      INTEGER PTRFAC(NSTEPS)
-      LOGICAL DMUMPS_SOLVE_IS_INODE_IN_MEM
-      INTEGER ZONE
       IERR=0
       IF(NB_Z.GT.1)THEN
          CALL DMUMPS_601(ZONE)
@@ -1310,6 +1323,16 @@ C
             CALL DMUMPS_603(ZONE)
          ENDIF
       ENDIF      
+      END SUBROUTINE DMUMPS_598
+      FUNCTION DMUMPS_SOLVE_IS_INODE_IN_MEM(INODE,PTRFAC,NSTEPS,A,LA,
+     $     IERR)
+      IMPLICIT NONE
+      INTEGER INODE,NSTEPS,LA,IERR
+      DOUBLE PRECISION A(LA)
+      INTEGER PTRFAC(NSTEPS)
+      LOGICAL DMUMPS_SOLVE_IS_INODE_IN_MEM
+      INTEGER ZONE
+      IERR=0
       IF(INODE_TO_POS(STEP_OOC(INODE)).GT.0)THEN
          DMUMPS_SOLVE_IS_INODE_IN_MEM=.TRUE.
          IF(.NOT.DMUMPS_SOLVE_IS_END_REACHED())THEN
@@ -2429,7 +2452,7 @@ C
       IMPLICIT NONE
       INTEGER NSTEPS
       INTEGER PTRFAC(NSTEPS)
-      INTEGER I,TMP
+      INTEGER I,TMP,ZONE,SAVE_PTR
       IF(SOLVE_STEP.EQ.0)THEN
          DO I=1,TOTAL_NB_OOC_NODES
             TMP=INODE_TO_POS(STEP_OOC(OOC_INODE_SEQUENCE(I)))
@@ -2437,6 +2460,14 @@ C
                EXIT
             ELSEIF(TMP.LT.0)THEN
                IF(TMP.GT.-(N_OOC+1)*NB_Z)THEN
+                  SAVE_PTR=PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))
+                  PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=ABS(SAVE_PTR)
+                  CALL DMUMPS_600(OOC_INODE_SEQUENCE(I),
+     $                 ZONE,PTRFAC,NSTEPS)
+                  PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=SAVE_PTR
+                  IF(ZONE.EQ.NB_Z)THEN
+                     EXIT
+                  ENDIF
                   CALL DMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
                ENDIF
@@ -2450,6 +2481,15 @@ C
                EXIT
             ELSEIF(TMP.LT.0)THEN
                IF(TMP.GT.-(N_OOC+1)*NB_Z)THEN
+                  SAVE_PTR=PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))
+                  PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=ABS(SAVE_PTR)
+                  CALL DMUMPS_600(OOC_INODE_SEQUENCE(I)
+     $                 ,ZONE,
+     $                 PTRFAC,NSTEPS)
+                  PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=SAVE_PTR
+                  IF(ZONE.EQ.NB_Z)THEN
+                     EXIT
+                  ENDIF
                   CALL DMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
                ENDIF
@@ -2514,7 +2554,6 @@ C
          id%INFO(2) = id%OOC_NB_FILES
          RETURN
       ENDIF
-      WRITE(*,*)'NB_FILES=',id%OOC_NB_FILES
       DO I=1,id%OOC_NB_FILES
          CALL DMUMPS_OOC_GET_FILE_NAME(I,TMP_NAME(1),DIM)
          DO J=1,DIM+1
@@ -2530,20 +2569,21 @@ C
       CHARACTER*1 TMP_NAME(150)
       INTEGER I,J,K,L,DIM,NB_FILES,IERR
       CHARACTER*1 TMP_DIR(150),TMP_FILE(150)
-      INTEGER DIM_DIR,DIM_FILE
+      INTEGER DIM_DIR,DIM_FILE,K211
       IERR=0
       NB_FILES=id%OOC_NB_FILES
       I=id%MYID
       J=id%OOC_NB_FILES
       K=id%KEEP(35)
       L=MOD(id%KEEP(204),3)
+      K211=id%KEEP(211)
       CALL DMUMPS_589(TMP_DIR(1),
      $     id%DMUMPS_OOC_TMPDIR)
       CALL DMUMPS_589(TMP_FILE(1),
      $     id%DMUMPS_OOC_PREFIX)
       DIM_DIR=LEN(TRIM(id%DMUMPS_OOC_TMPDIR))
       DIM_FILE=LEN(TRIM(id%DMUMPS_OOC_PREFIX))
-      CALL DMUMPS_OOC_INIT_VARS(I,J,K,L,TMP_DIR,TMP_FILE,DIM_DIR,
+      CALL DMUMPS_OOC_INIT_VARS(I,J,K,L,K211,TMP_DIR,TMP_FILE,DIM_DIR,
      $     DIM_FILE,IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)

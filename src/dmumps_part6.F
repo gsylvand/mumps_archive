@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE DMUMPS_324(A, NFRONT, NPIV, NBROW, K59)
       IMPLICIT NONE
@@ -670,7 +670,7 @@ C
      *                           IOLDPS, POSELT, IFLAG,
      *                           UU, NNEG, NPVW,
      *                           KEEP,KEEP8,
-     *                           MYID, SEUIL, AVOID_DELAYED )
+     *                           MYID, SEUIL, AVOID_DELAYED, ETATASS )
       IMPLICIT NONE
       INTEGER N, INODE, LIW, LA, IFLAG, NNEG, NPVW
       INTEGER MYID, SLAVEF, IOLDPS, POSELT
@@ -681,6 +681,7 @@ C
       DOUBLE PRECISION A( LA )
       INTEGER IW( LIW )
       LOGICAL AVOID_DELAYED
+      INTEGER ETATASS
       INTEGER INOPV, IFINB, NFRONT, NPIV, LAELL, NBTLKJ,IBEG_BLOCK
       INTEGER NASS, NEL1, LDA
       DOUBLE PRECISION UUTEMP
@@ -727,7 +728,7 @@ C
             GOTO 50
          ENDIF
          CALL DMUMPS_237(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
-     *            LDA, IOLDPS,POSELT, KEEP,KEEP8, UUTEMP )
+     *        LDA, IOLDPS,POSELT, KEEP,KEEP8, UUTEMP, ETATASS )
          GOTO 500
       END IF
       IF (INOPV.EQ.2) THEN
@@ -762,7 +763,7 @@ C
      *            KEEP,KEEP8)
        IF (IFINB.EQ.-1) THEN 
          CALL DMUMPS_237(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
-     *            LDA, IOLDPS,POSELT, KEEP,KEEP8, UUTEMP)
+     *         LDA, IOLDPS,POSELT, KEEP,KEEP8, UUTEMP, ETATASS)
          GOTO 500
        ENDIF
       GO TO 50
@@ -774,6 +775,9 @@ C
      *    A,LA, INOPV,
      *    NNEG,
      *    IFLAG,IOLDPS,POSELT,UU, SEUIL,KEEP,KEEP8,PIVSIZ)
+#if defined (PROFILE_BLAS_ASS_G)
+      USE DMUMPS_LOAD
+#endif
       IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LA,LIW,INODE,IFLAG,INOPV,
      *        IOLDPS, POSELT, NNEG
@@ -1174,6 +1178,17 @@ C
           BLSIZE = NASS - JROW2
         END IF
         IF ( NASS - JROW2 .GT. 0 ) THEN
+#if defined(SAK_BYROW)
+         DO IROW = JROW2+1, NASS, BLSIZE
+           Block = MIN( BLSIZE, NASS - IROW + 1 )
+           LPOS = POSELT + (IROW  - 1) * LDA + NPBEG - 1
+           UPOS = POSELT + (NPBEG - 1) * LDA + IROW - 1
+           APOS = POSELT + (IROW  - 1) * LDA + JROW2
+           CALL DGEMM( 'N','N', IROW + Block - JROW2 - 1, Block, LKJIW,
+     *                ALPHA, A( UPOS ), LDA,
+     *                A( LPOS ), LDA, ONE, A( APOS ), LDA )
+         ENDDO
+#else
          DO IROW = JROW2+1, NASS, BLSIZE
           Block = MIN( BLSIZE, NASS - IROW + 1 )
            LPOS = POSELT + ( IROW - 1 ) * LDA + NPBEG - 1
@@ -1183,6 +1198,7 @@ C
      *                ALPHA, A( UPOS ), LDA,
      *                A( LPOS ), LDA, ONE, A( APOS ), LDA )
          END DO
+#endif
         END IF
        LPOS = POSELT + NASS*LDA + NPBEG - 1
        UPOS = POSELT + (NPBEG-1) * LDA + JROW2
@@ -1275,113 +1291,10 @@ C
             END IF
         RETURN
         END SUBROUTINE DMUMPS_319
-      SUBROUTINE DMUMPS_569(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, Block, IROW, NPIV, I
-      INTEGER UPOS, APOS, LPOS, U_MAJ
-      DOUBLE PRECISION  ONE, ALPHA, SCALVAL
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       UPOS = POSELT + NASS
-        IF (UU.EQ.ZERO) THEN
-         LPOS = POSELT + NASS*LDA 
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, NFRONT-NASS, ONE,
-     *               A( POSELT ), LDA,
-     *               A( LPOS ), LDA )
-       ENDIF
-       DO IROW = 1, NFRONT - NASS, BLSIZE
-        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS 
-        IF (UU.EQ.ZERO) THEN
-         U_MAJ = UPOS+IROW-1
-         DO I = 1, NPIV
-          CALL DCOPY( Block, A(LPOS+I-1),LDA, A(U_MAJ+(I-1)*LDA), 1)
-          CALL DSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1  ), LDA )
-         ENDDO
-        ENDIF
-        CALL DGEMM( 'N', 'N', IROW+Block-1, Block, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS ), LDA,
-     *              ONE,
-     *              A( APOS ), LDA )
-       END DO
-      END IF
-      END SUBROUTINE DMUMPS_569
-      SUBROUTINE DMUMPS_568(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, Block, IROW, NPIV, I
-      INTEGER UPOS, APOS, LPOS, U_MAJ
-      DOUBLE PRECISION  ONE, ALPHA, SCALVAL
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       UPOS = POSELT + NASS
-       DO IROW = 1, NFRONT - NASS, BLSIZE
-        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS 
-        IF (UU.EQ.ZERO) THEN
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, Block, ONE,
-     *               A( POSELT ), LDA,
-     *               A( LPOS ), LDA )
-         U_MAJ = UPOS+IROW-1
-         DO I = 1, NPIV
-          CALL DCOPY( Block, A(LPOS+I-1),LDA, A(U_MAJ+(I-1)*LDA), 1)
-          CALL DSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1  ), LDA )
-         ENDDO
-        ENDIF
-        CALL DGEMM( 'N', 'N', IROW+Block-1, Block, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS ), LDA,
-     *              ONE,
-     *              A( APOS ), LDA )
-       END DO
-      END IF
-      END SUBROUTINE DMUMPS_568
       SUBROUTINE DMUMPS_237(NFRONT,NASS,N,INODE,
      *    IW,LIW,A,LA,
      *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
+     *    IOLDPS,POSELT,KEEP,KEEP8,UU, ETATASS)
       IMPLICIT NONE
       INTEGER NFRONT, NASS,N,INODE,LA,LIW
       DOUBLE PRECISION    A(LA)
@@ -1390,19 +1303,24 @@ C
       INTEGER KEEP(500)
       INTEGER*8 KEEP8(150)
       INTEGER POSELT, LDA
-      INTEGER IOLDPS
+      INTEGER IOLDPS, ETATASS
       INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
       INTEGER UPOS, APOS, LPOS
       INTEGER I2, I2END, Block2
-      DOUBLE PRECISION  ONE, ALPHA
+      DOUBLE PRECISION  ONE, ALPHA, BETA
       DOUBLE PRECISION ZERO
       PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
+      IF (ETATASS.EQ.1) THEN
+        BETA = ZERO
+      ELSE
+        BETA = ONE
+      ENDIF
       IF ( NFRONT - NASS > KEEP(57) ) THEN
         BLSIZE = KEEP(58)
       ELSE
         BLSIZE = NFRONT - NASS
       END IF
-      BLSIZE2 = 32
+      BLSIZE2 = 50
       NPIV = IW( IOLDPS + 1 )
       IF ( NFRONT - NASS .GT. 0 ) THEN
        IF ( UU.eq.ZERO ) THEN
@@ -1432,314 +1350,20 @@ C
           I2 = I2END - Block2+1
           CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
      *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
+     *               BETA,
      *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
         ENDDO
         IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
         CALL DGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
      *              ALPHA,  A( UPOS ), LDA,
      *              A( LPOS + LDA * Block ), LDA,
-     *              ONE,
+     *              BETA,
      *              A( APOS + LDA * Block ), LDA )
         ENDIF
        END DO
       END IF
       RETURN
       END SUBROUTINE DMUMPS_237
-      SUBROUTINE DMUMPS_571(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
-      INTEGER UPOS, APOS, LPOS
-      INTEGER I2, I2END, Block2
-      DOUBLE PRECISION  ONE, ALPHA
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      BLSIZE2 = 32
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       IF ( UU.eq.ZERO ) THEN
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, NFRONT-NPIV, ONE,
-     *               A( POSELT ), LDA,
-     *               A( POSELT + LDA * NPIV ), LDA )
-       ENDIF
-       DO IROWEND = NFRONT - NASS, 1, -BLSIZE
-        Block = MIN( BLSIZE, IROWEND )
-        IROW  = IROWEND - Block + 1
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS
-        IF (UU.NE.ZERO) THEN
-          UPOS = POSELT + NASS + IROW - 1
-        ENDIF
-        IF (UU.EQ.ZERO) THEN
-         DO I = 1, NPIV
-          CALL DCOPY( Block, A(LPOS+I-1), LDA, A(UPOS+(I-1)*LDA),1)
-          CALL DSCAL( Block, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1 ), LDA )
-         ENDDO
-        ENDIF
-        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
-        CALL DGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS ), LDA,
-     *              ONE,
-     *              A( APOS + LDA * Block ), LDA )
-        ENDIF
-        DO I2END = Block, 1, -BLSIZE2
-          Block2 = MIN(BLSIZE2, I2END)
-          I2 = I2END - Block2+1
-          CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
-     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
-     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
-        ENDDO
-       END DO
-      END IF
-      RETURN
-      END SUBROUTINE DMUMPS_571
-      SUBROUTINE DMUMPS_572(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
-      INTEGER UPOS, APOS, LPOS
-      INTEGER I2, I2END, Block2
-      DOUBLE PRECISION  ONE, ALPHA
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      BLSIZE2 = 32
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       UPOS = POSELT + NASS
-       IF ( UU.eq.ZERO ) THEN
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, NFRONT-NPIV, ONE,
-     *               A( POSELT ), LDA,
-     *               A( POSELT + LDA * NPIV ), LDA )
-         LPOS = POSELT + NASS*LDA 
-         DO I = 1, NPIV
-          CALL DCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
-     *                A(UPOS+(I-1)*LDA),1)
-          CALL DSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1 ), LDA )
-         ENDDO
-       ENDIF
-       DO IROWEND = NFRONT - NASS, 1, -BLSIZE
-        Block = MIN( BLSIZE, IROWEND )
-        IROW  = IROWEND - Block + 1
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS + IROW - 1
-        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
-        CALL DGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS + LDA * Block ), LDA,
-     *              ONE,
-     *              A( APOS + LDA * Block ), LDA )
-        ENDIF
-        DO I2END = Block, 1, -BLSIZE2
-          Block2 = MIN(BLSIZE2, I2END)
-          I2 = I2END - Block2+1
-          CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
-     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
-     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
-        ENDDO
-       END DO
-      END IF
-      RETURN
-      END SUBROUTINE DMUMPS_572
-      SUBROUTINE DMUMPS_573(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
-      INTEGER UPOS, APOS, LPOS
-      INTEGER I2, I2END, Block2
-      DOUBLE PRECISION  ONE, ALPHA
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      BLSIZE2 = 32
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       UPOS = POSELT + NASS
-       IF ( UU.eq.ZERO ) THEN
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, NFRONT-NPIV, ONE,
-     *               A( POSELT ), LDA,
-     *               A( POSELT + LDA * NPIV ), LDA )
-         LPOS = POSELT + NASS*LDA 
-         DO I = 1, NPIV
-          CALL DCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
-     *                A(UPOS+(I-1)*LDA),1)
-          CALL DSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1 ), LDA )
-         ENDDO
-       ENDIF
-       DO IROW = 1, NFRONT - NASS,  BLSIZE
-        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS + IROW - 1
-        DO I2 = 1, Block, BLSIZE2
-          Block2 = MIN(BLSIZE2, Block-I2+1)
-          CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
-     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
-     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
-        ENDDO
-        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
-        CALL DGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS + LDA * Block ), LDA,
-     *              ONE,
-     *              A( APOS + LDA * Block ), LDA )
-        ENDIF
-       END DO
-      END IF
-      RETURN
-      END SUBROUTINE DMUMPS_573
-      SUBROUTINE DMUMPS_570(NFRONT,NASS,N,INODE,
-     *    IW,LIW,A,LA,
-     *    LDA,
-     *    IOLDPS,POSELT,KEEP,KEEP8,UU)
-      IMPLICIT NONE
-      INTEGER NFRONT, NASS,N,INODE,LA,LIW
-      DOUBLE PRECISION    A(LA)
-      DOUBLE PRECISION   UU
-      INTEGER IW(LIW) 
-      INTEGER KEEP(500)
-      INTEGER*8 KEEP8(150)
-      INTEGER POSELT, LDA
-      INTEGER IOLDPS
-      INTEGER BLSIZE, BLSIZE2, Block, IROW, NPIV, I, IROWEND
-      INTEGER UPOS, APOS, LPOS
-      INTEGER I2, I2END, Block2, idemi, kdemi
-      DOUBLE PRECISION  ONE, ALPHA
-      DOUBLE PRECISION ZERO
-      PARAMETER (ONE=1.0D0, ALPHA=-1.0D0,ZERO=0.0D0)
-      IF ( NFRONT - NASS > KEEP(57) ) THEN
-        BLSIZE = KEEP(58)
-      ELSE
-        BLSIZE = NFRONT - NASS
-      END IF
-      BLSIZE2 = 32
-      NPIV = IW( IOLDPS + 1 )
-      IF ( NFRONT - NASS .GT. 0 ) THEN
-       UPOS = POSELT + NASS
-       IF ( UU.eq.ZERO ) THEN
-         CALL DTRSM( 'L', 'U', 'T', 'U',
-     *               NPIV, NFRONT-NPIV, ONE,
-     *               A( POSELT ), LDA,
-     *               A( POSELT + LDA * NPIV ), LDA )
-         LPOS = POSELT + NASS*LDA 
-         DO I = 1, NPIV
-          CALL DCOPY( NFRONT-NPIV, A(LPOS+I-1), LDA, 
-     *                A(UPOS+(I-1)*LDA),1)
-          CALL DSCAL( NFRONT-NPIV, A(POSELT+(LDA+1)*(I-1)),
-     *                A( LPOS + I - 1 ), LDA )
-         ENDDO
-       ENDIF
-       kdemi = (NFRONT - NASS) / BLSIZE
-       kdemi = min(kdemi,1)
-       idemi = min(kdemi*BLSIZE, NFRONT - NASS)
-       DO IROW = 1, idemi,  BLSIZE
-        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS + IROW - 1
-        DO I2 = 1, Block, BLSIZE2
-          Block2 = MIN(BLSIZE2, Block-I2+1)
-          CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
-     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
-     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
-        ENDDO
-        IF ( idemi - IROW + 1 - Block > 0 ) THEN
-        CALL DGEMM( 'N', 'N', Block, idemi-Block-IROW+1, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS + LDA * Block ), LDA,
-     *              ONE,
-     *              A( APOS + LDA * Block ), LDA )
-        ENDIF
-       END DO
-       if (idemi.LT.NFRONT-NASS) THEN
-        LPOS = POSELT + NASS*LDA + Idemi * LDA
-        APOS = LPOS + NASS 
-        CALL DGEMM( 'N', 'N', Idemi, NFRONT-NASS-idemi, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS ), LDA,
-     *              ONE,
-     *              A( APOS ), LDA )
-       DO IROW = idemi+1, NFRONT - NASS,  BLSIZE
-        Block = MIN( BLSIZE, NFRONT - NASS - IROW + 1 )
-        LPOS = POSELT + NASS*LDA + (IROW-1) * LDA
-        APOS = POSELT + NASS*LDA + (IROW-1) * LDA + NASS + IROW - 1
-        UPOS = POSELT + NASS + IROW - 1
-        DO I2 = 1, Block, BLSIZE2
-          Block2 = MIN(BLSIZE2, Block-I2+1)
-          CALL DGEMM('N', 'N', Block2, Block-I2+1, NPIV, ALPHA,
-     *               A(UPOS+I2-1), LDA, A(LPOS+(I2-1)*LDA),LDA,
-     *               ONE,
-     *               A(APOS + I2-1 + (I2-1)*LDA), LDA)
-        ENDDO
-        IF ( NFRONT - NASS - IROW + 1 - Block > 0 ) THEN
-        CALL DGEMM( 'N', 'N', Block, NFRONT-NASS-Block-IROW+1, NPIV,
-     *              ALPHA,  A( UPOS ), LDA,
-     *              A( LPOS + LDA * Block ), LDA,
-     *              ONE,
-     *              A( APOS + LDA * Block ), LDA )
-        ENDIF
-       END DO
-       END IF
-      END IF
-      RETURN
-      END SUBROUTINE DMUMPS_570
       SUBROUTINE DMUMPS_320( BUF, BLOCK_SIZE,
      *                           MYROW, MYCOL, NPROW, NPCOL,
      *                           A, LOCAL_M, LOCAL_N, N, MYID, COMM )

@@ -12,7 +12,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips spec -o spec.ps
 %DVIPSParameters: dpi=600
-%DVIPSSource:  TeX output 2006.02.17:1427
+%DVIPSSource:  TeX output 2006.04.14:1459
 %%BeginProcSet: tex.pro 0 0
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -1785,13 +1785,13 @@ rf /Fy 149[19 56[61 45[32 1[19 48{}5 49.8132 /CMSY6 rf
 6[50 54 54 75 54 54 50 42 54 1[46 58 54 71 50 58 37 29
 58 58 46 50 54 54 50 54 3[43 3[37 37 37 37 37 37 37 37
 37 37 21 19 2[43 1[25 25 40[{TeXBase1Encoding ReEncodeFont}64
-74.7198 /Times-Bold rf /FC 134[50 3[50 2[33 12[44 2[50
-44 26[55 14[50 50 3[50 50 50 3[25 44[{TeXBase1Encoding ReEncodeFont}13
+74.7198 /Times-Bold rf /FC 141[33 1[50 3[28 2[28 39[72
+10[50 1[50 1[50 50 50 3[25 44[{TeXBase1Encoding ReEncodeFont}11
 99.6264 /Times-Roman rf /FD 201[0 50[50 3[{}2 99.6264
 /CMSY10 rf /FE 170[86 1[86 2[86 2[86 77[{TeXBase1Encoding ReEncodeFont}
 4 143.462 /Courier rf /FF 134[72 2[72 72 40 56 48 2[72
 72 1[40 2[40 1[72 48 64 72 2[64 10[104 104 1[80 2[80
-2[128 22[72 1[72 2[72 2[36 4[48 48 48 39[{TeXBase1Encoding ReEncodeFont}
+2[128 22[72 1[72 1[72 3[36 4[48 48 48 39[{TeXBase1Encoding ReEncodeFont}
 27 143.462 /Times-Roman rf end
 %%EndProlog
 %%BeginSetup
@@ -1803,11 +1803,11 @@ TeXDict begin
 %%Page: 1 1
 TeXDict begin 1 0 bop 891 639 a FF(MUltifrontal)33 b(Massi)l(v)n(ely)h
 (P)n(arallel)g(Solv)n(er)1346 822 y(\()p FE(MUMPS)i FF(V)-16
-b(ersion)35 b(4.6.1\))1625 1005 y(Users')g(guide)2390
-953 y FD(\003)1641 1428 y FC(February)26 b(17,)e(2006)1869
-1810 y FB(Abstract)556 1947 y FA(This)c(document)h(describes)g(the)f(F)
-o(ortran)g(90)h(and)f(C)g(user)g(interf)o(ace)h(to)f
-Fz(MUMPS)f FA(V)-8 b(ersion)20 b(4.6.1)g(W)-6 b(e)20
+b(ersion)35 b(4.6.2\))1625 1005 y(Users')g(guide)2390
+953 y FD(\003)1716 1428 y FC(April)24 b(14,)h(2006)1869
+1810 y FB(Abstract)556 1947 y FA(This)20 b(document)h(describes)g(the)f
+(F)o(ortran)g(90)h(and)f(C)g(user)g(interf)o(ace)h(to)f
+Fz(MUMPS)f FA(V)-8 b(ersion)20 b(4.6.2)g(W)-6 b(e)20
 b(describe)h(in)444 2038 y(detail)f(the)g(data)h(structures,)f
 (parameters,)h(calling)f(sequences,)i(and)f(error)f(diagnostics.)28
 b(Example)21 b(programs)g(using)444 2130 y Fz(MUMPS)d
@@ -1822,7 +1822,7 @@ eop end
 %%Page: 2 2
 TeXDict begin 2 1 bop 444 291 a Fu(Contents)444 459 y
 FB(1)75 b(Intr)o(oduction)2572 b(3)444 625 y(2)75 b(Main)18
-b(functionalities)f(of)i(MUMPS)e(4.6.1)1788 b(4)556 717
+b(functionalities)f(of)i(MUMPS)e(4.6.2)1788 b(4)556 717
 y FA(2.1)79 b(Input)19 b(matrix)g(structure)54 b(.)38
 b(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)h(.)f(.)g
 (.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)142
@@ -1892,7 +1892,7 @@ f(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g
 h(v)o(ectors/matrices)i(.)38 b(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)g(.)g
 (.)g(.)g(.)g(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)104 b(15)444
 3133 y FB(5)75 b(Contr)o(ol)18 b(parameters)2311 b(16)444
-3299 y(6)75 b(Inf)n(ormation)19 b(parameters)2170 b(21)556
+3299 y(6)75 b(Inf)n(ormation)19 b(parameters)2170 b(22)556
 3390 y FA(6.1)79 b(Information)19 b(local)g(to)g(each)h(processor)48
 b(.)38 b(.)g(.)g(.)g(.)g(.)g(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)g(.)g(.)
 g(.)g(.)g(.)g(.)g(.)h(.)f(.)g(.)g(.)g(.)g(.)104 b(22)556
@@ -1959,47 +1959,48 @@ b(main)h(features)f(of)h(the)f Fz(MUMPS)f FA(package)j(include)f(the)g
 (or)h(centralized\))h(or)f(elemental)g(format,)h(error)f(analysis,)h
 (iterati)n(v)o(e)444 1190 y(re\002nement,)k(scaling)f(of)f(the)g
 (original)h(matrix,)83 b(and)27 b(return)f(of)h(a)f(Schur)g(complement)
-h(matrix.)45 b Fz(MUMPS)26 b FA(of)n(fers)444 1281 y(se)n(v)o(eral)c(b)
-o(uilt-in)e(ordering)j(algorithms,)f(a)f(tight)h(interf)o(ace)f(to)h
-(some)g(e)o(xternal)g(ordering)g(packages)h(such)f(as)g(PORD)444
-1372 y([23])15 b(and)g(METIS)f([22],)h(and)g(the)g(possibility)g(for)g
-(the)f(user)h(to)g(input)g(a)g(gi)n(v)o(en)g(ordering.)23
-b(Finally)-5 b(,)15 b Fz(MUMPS)e FA(is)i(a)o(v)n(ailable)444
-1464 y(in)k(v)n(arious)g(arithmetics)g(\(real)g(or)g(comple)o(x,)g
-(single)g(or)g(double)h(precision\).)556 1555 y(The)g(softw)o(are)g(is)
-g(written)f(in)h(F)o(ortran)g(90)g(although)i(a)e(C)f(interf)o(ace)i
-(is)e(a)o(v)n(ailable)h(\(see)h(Section)e(8\).)27 b(The)20
-b(parallel)444 1646 y(v)o(ersion)g(of)f Fz(MUMPS)f FA(requires)i(MPI)f
-([24)q(])g(for)g(message)h(passing)h(and)f(mak)o(es)g(use)g(of)f(the)g
-(BLAS)g([12,)g(13)q(],)f(BLA)m(CS,)444 1738 y(and)h(ScaLAP)-7
-b(A)m(CK)18 b([10)q(])g(libraries.)23 b(The)c(sequential)g(v)o(ersion)h
-(only)f(relies)g(on)g(BLAS.)556 1829 y Fz(MUMPS)25 b
-FA(is)h(do)n(wnloaded)j(from)e(the)f(web)h(site)f(almost)h(once)g(a)g
-(day)g(on)g(a)o(v)o(erage)g(and)g(has)g(been)g(run)g(on)g(v)o(ery)444
-1920 y(man)o(y)g(machines,)h(compilers)f(and)g(operating)g(systems,)h
-(although)g(our)e(e)o(xperience)i(is)e(really)g(only)h(with)e(UNIX-)444
-2012 y(based)h(systems.)45 b(W)-6 b(e)25 b(ha)o(v)o(e)h(tested)g(it)f
-(e)o(xtensi)n(v)o(ely)i(on)f(parallel)g(computers)h(from)f(SGI,)e(Cray)
--5 b(,)28 b(and)e(IBM)g(and)g(on)444 2103 y(clusters)19
-b(of)g(w)o(orkstations.)556 2194 y Fz(MUMPS)28 b FA(distrib)o(utes)h
-(the)h(w)o(ork)g(tasks)f(among)i(the)e(processors,)k(b)o(ut)c(an)h
-(identi\002ed)g(processor)g(\(the)g(host\))f(is)444 2286
-y(required)21 b(to)g(perform)g(most)f(of)h(the)g(analysis)g(phase,)g
-(to)g(distrib)o(ute)f(the)g(incoming)i(matrix)f(to)f(the)h(other)g
-(processors)444 2377 y(\(sla)o(v)o(es\))h(in)g(the)g(case)h(where)g
-(the)f(matrix)g(is)g(centralized,)h(and)g(to)g(collect)f(the)g
-(solution.)34 b(The)23 b(system)f Fr(Ax)27 b Fs(=)h Fr(b)22
-b FA(is)444 2468 y(solv)o(ed)d(in)g(three)g(main)g(steps:)529
-2610 y(1.)41 b Fo(Analysis)o(.)25 b FA(The)19 b(host)h(performs)g(an)g
-(ordering)h(\(see)e(Section)h(2.2\))f(based)i(on)f(the)g(symmetrized)g
-(pattern)g Fr(A)d Fs(+)626 2701 y Fr(A)693 2669 y Fn(T)741
-2701 y FA(,)j(and)g(carries)h(out)f(symbolic)h(f)o(actorization.)28
-b(A)20 b(mapping)h(of)f(the)h(multifrontal)f(computational)h(graph)g
-(is)626 2792 y(then)16 b(computed,)h(and)f(symbolic)g(information)g(is)
-f(transferred)h(from)f(the)h(host)f(to)g(the)h(other)f(processors.)23
-b(Using)626 2883 y(this)c(information,)g(the)g(processors)h(estimate)f
-(the)g(memory)h(necessary)g(for)f(f)o(actorization)g(and)h(solution.)
-529 3008 y(2.)41 b Fo(F)l(actor)q(ization.)52 b FA(The)29
+h(matrix.)45 b Fz(MUMPS)26 b FA(of)n(fers)444 1281 y(se)n(v)o(eral)20
+b(b)o(uilt-in)f(ordering)i(algorithms,)f(a)f(tight)h(interf)o(ace)g(to)
+f(some)i(e)o(xternal)f(ordering)g(packages)i(such)e(as)g(METIS)444
+1372 y([22])i(\(strongly)g(recommended\))h(and)f(PORD)f([23)q(],)g(and)
+h(the)g(possibility)g(for)f(the)h(user)g(to)f(input)h(a)g(gi)n(v)o(en)g
+(ordering.)444 1464 y(Finally)-5 b(,)18 b Fz(MUMPS)g
+FA(is)g(a)o(v)n(ailable)h(in)g(v)n(arious)h(arithmetics)f(\(real)f(or)h
+(comple)o(x,)h(single)f(or)g(double)h(precision\).)556
+1555 y(The)g(softw)o(are)g(is)g(written)f(in)h(F)o(ortran)g(90)g
+(although)i(a)e(C)f(interf)o(ace)i(is)e(a)o(v)n(ailable)h(\(see)h
+(Section)e(8\).)27 b(The)20 b(parallel)444 1646 y(v)o(ersion)g(of)f
+Fz(MUMPS)f FA(requires)i(MPI)f([24)q(])g(for)g(message)h(passing)h(and)
+f(mak)o(es)g(use)g(of)f(the)g(BLAS)g([12,)g(13)q(],)f(BLA)m(CS,)444
+1738 y(and)h(ScaLAP)-7 b(A)m(CK)18 b([10)q(])g(libraries.)23
+b(The)c(sequential)g(v)o(ersion)h(only)f(relies)g(on)g(BLAS.)556
+1829 y Fz(MUMPS)25 b FA(is)h(do)n(wnloaded)j(from)e(the)f(web)h(site)f
+(almost)h(once)g(a)g(day)g(on)g(a)o(v)o(erage)g(and)g(has)g(been)g(run)
+g(on)g(v)o(ery)444 1920 y(man)o(y)g(machines,)h(compilers)f(and)g
+(operating)g(systems,)h(although)g(our)e(e)o(xperience)i(is)e(really)g
+(only)h(with)e(UNIX-)444 2012 y(based)h(systems.)45 b(W)-6
+b(e)25 b(ha)o(v)o(e)h(tested)g(it)f(e)o(xtensi)n(v)o(ely)i(on)f
+(parallel)g(computers)h(from)f(SGI,)e(Cray)-5 b(,)28
+b(and)e(IBM)g(and)g(on)444 2103 y(clusters)19 b(of)g(w)o(orkstations.)
+556 2194 y Fz(MUMPS)28 b FA(distrib)o(utes)h(the)h(w)o(ork)g(tasks)f
+(among)i(the)e(processors,)k(b)o(ut)c(an)h(identi\002ed)g(processor)g
+(\(the)g(host\))f(is)444 2286 y(required)21 b(to)g(perform)g(most)f(of)
+h(the)g(analysis)g(phase,)g(to)g(distrib)o(ute)f(the)g(incoming)i
+(matrix)f(to)f(the)h(other)g(processors)444 2377 y(\(sla)o(v)o(es\))h
+(in)g(the)g(case)h(where)g(the)f(matrix)g(is)g(centralized,)h(and)g(to)
+g(collect)f(the)g(solution.)34 b(The)23 b(system)f Fr(Ax)27
+b Fs(=)h Fr(b)22 b FA(is)444 2468 y(solv)o(ed)d(in)g(three)g(main)g
+(steps:)529 2610 y(1.)41 b Fo(Analysis)o(.)25 b FA(The)19
+b(host)h(performs)g(an)g(ordering)h(\(see)e(Section)h(2.2\))f(based)i
+(on)f(the)g(symmetrized)g(pattern)g Fr(A)d Fs(+)626 2701
+y Fr(A)693 2669 y Fn(T)741 2701 y FA(,)j(and)g(carries)h(out)f
+(symbolic)h(f)o(actorization.)28 b(A)20 b(mapping)h(of)f(the)h
+(multifrontal)f(computational)h(graph)g(is)626 2792 y(then)16
+b(computed,)h(and)f(symbolic)g(information)g(is)f(transferred)h(from)f
+(the)h(host)f(to)g(the)h(other)f(processors.)23 b(Using)626
+2883 y(this)c(information,)g(the)g(processors)h(estimate)f(the)g
+(memory)h(necessary)g(for)f(f)o(actorization)g(and)h(solution.)529
+3008 y(2.)41 b Fo(F)l(actor)q(ization.)52 b FA(The)29
 b(original)h(matrix)f(is)g(\002rst)g(distrib)o(uted)g(to)g(processors)i
 (that)e(will)g(participate)g(in)h(the)626 3099 y(numerical)h(f)o
 (actorization.)58 b(The)31 b(numerical)g(f)o(actorization)g(on)f(each)h
@@ -2046,7 +2047,7 @@ b(use)g(the)g(estimation)g(obtained)h(during)g(the)f(analysis)g(to)g
 4918 y(analysis)e(phase.)1987 5557 y Fv(3)p eop end
 %%Page: 4 4
 TeXDict begin 4 3 bop 444 291 a Fu(2)119 b(Main)30 b(functionalities)h
-(of)f(MUMPS)g(4.6.1)444 459 y FA(W)-6 b(e)29 b(describe)i(here)g(the)f
+(of)f(MUMPS)g(4.6.2)444 459 y FA(W)-6 b(e)29 b(describe)i(here)g(the)f
 (main)g(functionalities)g(of)g(the)g(solv)o(er)h Fz(MUMPS)p
 FA(.)d(The)i(user)h(should)g(refer)f(to)g(Sections)g(4)444
 551 y(and)k(5)g(for)g(a)g(complete)g(description)h(of)f(the)g
@@ -3510,747 +3511,758 @@ b(Automatic)29 b(choice)g(by)h(the)f(softw)o(are)g(during)h(analysis)f
 h(a)o(v)n(ailable)f(if)f(the)i(corresponding)626 2727
 y(packages)k(are)e(installed)f(\(see)h(comments)h(in)f(the)f(Mak)o
 (e\002les)i(to)e(let)h Fz(MUMPS)e FA(kno)n(w)j(about)g(them\).)49
-b(If)28 b(the)626 2818 y(packages)h(are)e(not)g(installed)g(then)g
-(options)g(4)g(and)h(5)f(are)g(treated)g(as)f(7.)47 b(If)27
-b(the)g(problem)g(is)g(in)f(elemental)626 2910 y(format)f
-(\(ICNTL\(5\)=1\),)h(then)f(only)h(options)g(0,)h(1,)f(5)f(and)h(7)f
-(are)g(a)o(v)n(ailable,)i(with)e(option)g(7)h(leading)f(to)g(an)626
-3001 y(automatic)e(choice)f(between)h(AMD)e(and)i(METIS)d(\(options)j
-(0)f(or)f(5\);)i(other)f(v)n(alues)h(are)e(treated)h(as)g(7.)31
-b(If)22 b(the)626 3092 y(user)k(asks)g(for)f(a)g(Schur)h(complement)g
-(matrix,)h(only)f(options)g(0,)h(1)e(and)h(7)g(are)f(currently)h(a)o(v)
-n(ailable,)h(Other)626 3184 y(options)20 b(are)f(treated)g(as)g(7)g
-(which)g(will)f(\(currently\))h(necessarily)h(be)f(treated)g(as)g(0)g
-(\(AMD\).)626 3292 y(Generally)-5 b(,)48 b(with)41 b(the)h(automatic)g
-(choice)h(corresponding)h(to)e(ICNTL\(7\)=7,)k(the)c(option)g(chosen)h
-(by)626 3383 y(the)d(package)i(depends)f(on)f(the)g(ordering)h
-(packages)g(installed,)k(the)40 b(type)g(of)g(matrix)g(\(symmetric)g
-(or)626 3474 y(unsymmetric\),)20 b(the)f(size)g(of)g(the)g(matrix)f
-(and)i(the)f(number)h(of)f(processors.)626 3582 y(F)o(or)k(matrices)h
-(with)f(relati)n(v)o(ely)h(dense)g(ro)n(ws,)h(we)f(highly)g(recommend)h
-(option)g(6)e(which)h(may)g(signi\002cantly)626 3674
-y(reduce)c(the)f(time)g(for)g(analysis.)626 3782 y(On)28
-b(output,)h(the)f(pointer)f(mumps)p 1563 3782 V 28 w(par\045SYM)p
-1910 3782 V 28 w(PERM)f(pro)o(vides)i(access)g(to)f(the)g(symmetric)h
-(permutation)626 3873 y(that)e(is)g(ef)n(fecti)n(v)o(ely)g(used)h(by)g
-(the)f(MUMPS)f(package,)k(and)e(INFOG\(7\))e(to)h(the)g(ordering)h
-(option)g(that)f(w)o(as)626 3964 y(ef)n(fecti)n(v)o(ely)e(used.)35
-b(\(mumps)p 1402 3964 V 28 w(par\045SYM)p 1749 3964 V
-28 w(PERM\(i\),)22 b(\(i=1,)h(...)34 b(N\))23 b(holds)g(the)g(position)
-g(of)g(v)n(ariable)h(i)e(in)h(the)626 4056 y(pi)n(v)o(ot)c(order)l(.\))
-485 4180 y(ICNTL\(8\))j(has)i(def)o(ault)f(v)n(alue)h(7.)72
-b(It)23 b(is)f(used)i(to)f(describe)h(the)f(scaling)h(strate)o(gy)f
-(and)h(is)f(only)h(accessed)g(by)g(the)626 4271 y(host.)p
-626 4303 956 4 v 626 4420 4 117 v 655 4379 a(On)19 b(entry)g(to)g(the)g
-(analysis)g(phase)p 1578 4420 V 626 4423 956 4 v 29 w(,)f(if)e
-(ICNTL\(8\))i(=)h(7,)e(then)h(an)g(automatic)f(choice)i(of)e(the)g
-(scaling)h(option)g(is)626 4483 y(performed)i(during)f(the)g(analysis)g
-(and)g(ICNTL\(8\))f(is)g(modi\002ed)h(accordingly)-5
-b(.)25 b(In)18 b(particular)m(,)h(if)f(ICNTL\(8\))f(is)626
-4574 y(set)k(to)g(-2)g(by)g(the)g(user)g(or)g(reset)f(to)h(-2)g(by)g
-(the)g(package)h(during)g(the)f(analysis,)g(scaling)g(arrays)g(are)g
-(computed)626 4666 y(internally)f(and)f(will)f(be)h(ready)h(to)f(be)g
-(used)h(by)f(the)g(f)o(actorization)g(phase.)p 626 4710
-1092 4 v 626 4827 4 117 v 655 4786 a(On)g(entry)g(to)g(the)g(f)o
-(actorization)g(phase)p 1714 4827 V 626 4830 1092 4 v
-30 w(,)44 b(if)39 b(ICNTL\(8\))18 b Fs(=)h FA(\2261,)45
-b(scaling)40 b(v)o(ectors)h(must)f(be)g(pro)o(vided)h(in)626
-4890 y(COLSCA)23 b(and)i(R)m(O)m(WSCA)e(by)h(the)g(user)m(,)i(who)e(is)
-g(then)g(responsible)h(for)f(allocating)h(and)g(freeing)f(them,)h(if)
-626 4981 y(ICNTL\(8\))18 b Fs(=)h FA(\2262,)f(scaling)h(v)o(ectors)g
-(must)f(be)h(pro)o(vided)g(in)g(COLSCA)d(and)j(R)m(O)m(WSCA)f(by)g(the)
-h(package)h(\(see)626 5072 y(pre)n(vious)26 b(paragraph\).)41
-b(If)23 b(ICNTL\(8\))h(=)g(0,)h(no)g(scaling)g(is)f(performed,)i(and)f
-(arrays)f(COLSCA/R)m(O)m(WSCA)p 236 5141 1418 4 v 327
-5197 a Fd(1)356 5220 y Fx(Distrib)o(uted)19 b(within)f(MUMPS)f(by)g
-(permission)h(of)f(J.)f(Schulze)j(\(Uni)n(v)o(ersity)g(of)e(P)o
-(aderborn\).)327 5278 y Fd(2)356 5302 y Fx(See)g
-(http://www-users.cs.umn.edu/)p Fc(\030)p Fx(karypis/met)q(is/)23
-b(to)17 b(obtain)i(a)e(cop)o(y)l(.)1966 5557 y Fv(18)p
-eop end
+b(If)28 b(the)626 2818 y(packages)21 b(are)e(not)g(installed)g(then)g
+(options)h(4)f(and)h(5)f(are)g(treated)g(as)f(7.)702
+2943 y Ft(\017)42 b FA(If)18 b(the)h(user)g(asks)h(for)f(a)g(Schur)g
+(complement)h(matrix)f(and)g(the)g(matrix)g(is)g(assembled)h(then)f
+(only)h(options)782 3034 y(0,)i(1,)g(5)g(and)g(7)g(are)g(currently)g(a)
+o(v)n(ailable.)32 b(Other)21 b(options)i(are)e(treated)h(as)g(7)g
+(which)g(will)e(\(currently\))i(be)782 3126 y(treated)j(as)g(5)g(if)f
+(the)h(METIS)f(package)i(has)g(been)g(installed)e(\(strongly)i
+(recommended\))h(or)e(0)g(\(AMD\))782 3217 y(otherwise.)702
+3325 y Ft(\017)42 b FA(F)o(or)p 905 3249 619 4 v 905
+3351 4 102 v 48 w(elemental)19 b(matrices)p 1520 3351
+V 905 3354 619 4 v 49 w(\(ICNTL\(5\)=1\),)h(only)h(options)g(0,)g(1,)g
+(5)f(and)i(7)e(are)h(a)o(v)n(ailable,)g(with)f(option)782
+3416 y(7)f(leading)g(to)g(an)g(automatic)g(choice)h(between)g(AMD)f
+(and)g(METIS)f(\(options)h(0)g(or)g(5\);)g(other)g(v)n(alues)h(are)782
+3508 y(treated)i(as)g(7.)33 b(Furthermore,)22 b(if)g(the)g(user)g(asks)
+h(for)f(a)g(Schur)g(complement)h(matrix,)f(only)h(options)g(0,)g(1)782
+3599 y(and)e(7)h(are)f(currently)h(a)o(v)n(ailable.)29
+b(Other)21 b(options)h(are)g(treated)f(as)g(7)g(which)h(will)e
+(\(currently\))h(be)h(treated)782 3690 y(as)d(0)g(\(AMD\).)626
+3815 y(Generally)-5 b(,)48 b(with)41 b(the)h(automatic)g(choice)h
+(corresponding)h(to)e(ICNTL\(7\)=7,)k(the)c(option)g(chosen)h(by)626
+3906 y(the)d(package)i(depends)f(on)f(the)g(ordering)h(packages)g
+(installed,)k(the)40 b(type)g(of)g(matrix)g(\(symmetric)g(or)626
+3997 y(unsymmetric\),)20 b(the)f(size)g(of)g(the)g(matrix)f(and)i(the)f
+(number)h(of)f(processors.)626 4105 y(F)o(or)k(matrices)h(with)f
+(relati)n(v)o(ely)h(dense)g(ro)n(ws,)h(we)f(highly)g(recommend)h
+(option)g(6)e(which)h(may)g(signi\002cantly)626 4197
+y(reduce)c(the)f(time)g(for)g(analysis.)626 4305 y(On)28
+b(output,)h(the)f(pointer)f(mumps)p 1563 4305 23 4 v
+28 w(par\045SYM)p 1910 4305 V 28 w(PERM)f(pro)o(vides)i(access)g(to)f
+(the)g(symmetric)h(permutation)626 4396 y(that)e(is)g(ef)n(fecti)n(v)o
+(ely)g(used)h(by)g(the)f(MUMPS)f(package,)k(and)e(INFOG\(7\))e(to)h
+(the)g(ordering)h(option)g(that)f(w)o(as)626 4487 y(ef)n(fecti)n(v)o
+(ely)e(used.)35 b(\(mumps)p 1402 4487 V 28 w(par\045SYM)p
+1749 4487 V 28 w(PERM\(i\),)22 b(\(i=1,)h(...)34 b(N\))23
+b(holds)g(the)g(position)g(of)g(v)n(ariable)h(i)e(in)h(the)626
+4579 y(pi)n(v)o(ot)c(order)l(.\))485 4703 y(ICNTL\(8\))j(has)i(def)o
+(ault)f(v)n(alue)h(7.)72 b(It)23 b(is)f(used)i(to)f(describe)h(the)f
+(scaling)h(strate)o(gy)f(and)h(is)f(only)h(accessed)g(by)g(the)626
+4794 y(host.)p 626 4826 956 4 v 626 4943 4 117 v 655
+4902 a(On)19 b(entry)g(to)g(the)g(analysis)g(phase)p
+1578 4943 V 626 4946 956 4 v 29 w(,)f(if)e(ICNTL\(8\))i(=)h(7,)e(then)h
+(an)g(automatic)f(choice)i(of)e(the)g(scaling)h(option)g(is)626
+5006 y(performed)i(during)f(the)g(analysis)g(and)g(ICNTL\(8\))f(is)g
+(modi\002ed)h(accordingly)-5 b(.)25 b(In)18 b(particular)m(,)h(if)f
+(ICNTL\(8\))f(is)p 236 5075 1418 4 v 327 5131 a Fd(1)356
+5154 y Fx(Distrib)o(uted)i(within)f(MUMPS)f(by)g(permission)h(of)f(J.)f
+(Schulze)j(\(Uni)n(v)o(ersity)g(of)e(P)o(aderborn\).)327
+5212 y Fd(2)356 5235 y Fx(See)g(http://www-users.cs.umn.edu/)p
+Fc(\030)p Fx(karypis/met)q(is/)23 b(to)17 b(obtain)i(a)e(cop)o(y)l(.)
+1966 5557 y Fv(18)p eop end
 %%Page: 19 19
-TeXDict begin 19 18 bop 626 291 a FA(are)18 b(not)g(used.)24
-b(If)17 b(ICNTL\(8\))g Fq(>)g FA(0,)h(the)g(scaling)g(arrays)g
-(COLSCA/R)m(O)m(WSCA)e(are)h(allocated)i(and)f(computed)626
-382 y(by)i(the)f(package)h(during)g(the)f(f)o(actorization)h(phase.)626
-488 y(Possible)f(v)n(alues)h(of)f(ICNTL\(8\))f(are)h(listed)f(belo)n
-(w:)702 610 y Ft(\017)42 b FA(-2:)26 b(Scaling)20 b(computed)h(during)h
-(analysis)e(\(see)h([14,)f(15)q(])g(for)g(the)g(unsymmetric)h(case)g
-(and)g([18)q(])f(for)g(the)782 701 y(symmetric)f(case\).)702
-807 y Ft(\017)42 b FA(-1:)23 b(Scaling)c(pro)o(vided)h(on)f(entry)h(to)
-e(the)h(numerical)h(f)o(actorization)f(phase,)702 914
-y Ft(\017)42 b FA(0)19 b(:)k(No)c(scaling)g(applied/computed.)702
-1020 y Ft(\017)42 b FA(1)19 b(:)k(Diagonal)c(scaling,)702
-1126 y Ft(\017)42 b FA(2)19 b(:)k(Scaling)18 b(based)i(on)g([11],)702
-1233 y Ft(\017)42 b FA(3)19 b(:)k(Column)c(scaling,)702
-1339 y Ft(\017)42 b FA(4)19 b(:)k(Ro)n(w)c(and)g(column)h(scaling,)702
-1445 y Ft(\017)42 b FA(5)19 b(:)k(Scaling)18 b(based)i(on)g([11])f
-(follo)n(wed)g(by)h(column)g(scaling,)702 1552 y Ft(\017)42
+TeXDict begin 19 18 bop 626 291 a FA(set)21 b(to)g(-2)g(by)g(the)g
+(user)g(or)g(reset)f(to)h(-2)g(by)g(the)g(package)h(during)g(the)f
+(analysis,)g(scaling)g(arrays)g(are)g(computed)626 382
+y(internally)f(and)f(will)f(be)h(ready)h(to)f(be)g(used)h(by)f(the)g(f)
+o(actorization)g(phase.)p 626 425 1092 4 v 626 542 4
+117 v 655 501 a(On)g(entry)g(to)g(the)g(f)o(actorization)g(phase)p
+1714 542 V 626 545 1092 4 v 30 w(,)44 b(if)39 b(ICNTL\(8\))18
+b Fs(=)h FA(\2261,)45 b(scaling)40 b(v)o(ectors)h(must)f(be)g(pro)o
+(vided)h(in)626 605 y(COLSCA)23 b(and)i(R)m(O)m(WSCA)e(by)h(the)g(user)
+m(,)i(who)e(is)g(then)g(responsible)h(for)f(allocating)h(and)g(freeing)
+f(them,)h(if)626 696 y(ICNTL\(8\))18 b Fs(=)h FA(\2262,)f(scaling)h(v)o
+(ectors)g(must)f(be)h(pro)o(vided)g(in)g(COLSCA)d(and)j(R)m(O)m(WSCA)f
+(by)g(the)h(package)h(\(see)626 788 y(pre)n(vious)26
+b(paragraph\).)41 b(If)23 b(ICNTL\(8\))h(=)g(0,)h(no)g(scaling)g(is)f
+(performed,)i(and)f(arrays)f(COLSCA/R)m(O)m(WSCA)626
+879 y(are)18 b(not)g(used.)24 b(If)17 b(ICNTL\(8\))g
+Fq(>)g FA(0,)h(the)g(scaling)g(arrays)g(COLSCA/R)m(O)m(WSCA)e(are)h
+(allocated)i(and)f(computed)626 970 y(by)i(the)f(package)h(during)g
+(the)f(f)o(actorization)h(phase.)626 1077 y(Possible)f(v)n(alues)h(of)f
+(ICNTL\(8\))f(are)h(listed)f(belo)n(w:)702 1200 y Ft(\017)42
+b FA(-2:)26 b(Scaling)20 b(computed)h(during)h(analysis)e(\(see)h([14,)
+f(15)q(])g(for)g(the)g(unsymmetric)h(case)g(and)g([18)q(])f(for)g(the)
+782 1292 y(symmetric)f(case\).)702 1399 y Ft(\017)42
+b FA(-1:)23 b(Scaling)c(pro)o(vided)h(on)f(entry)h(to)e(the)h
+(numerical)h(f)o(actorization)f(phase,)702 1506 y Ft(\017)42
+b FA(0)19 b(:)k(No)c(scaling)g(applied/computed.)702
+1613 y Ft(\017)42 b FA(1)19 b(:)k(Diagonal)c(scaling,)702
+1720 y Ft(\017)42 b FA(2)19 b(:)k(Scaling)18 b(based)i(on)g([11],)702
+1827 y Ft(\017)42 b FA(3)19 b(:)k(Column)c(scaling,)702
+1934 y Ft(\017)42 b FA(4)19 b(:)k(Ro)n(w)c(and)g(column)h(scaling,)702
+2041 y Ft(\017)42 b FA(5)19 b(:)k(Scaling)18 b(based)i(on)g([11])f
+(follo)n(wed)g(by)h(column)g(scaling,)702 2148 y Ft(\017)42
 b FA(6)19 b(:)k(Scaling)18 b(based)i(on)g([11])f(follo)n(wed)g(by)h(ro)
-n(w)f(and)g(column)h(scaling.)702 1658 y Ft(\017)42 b
+n(w)f(and)g(column)h(scaling.)702 2256 y Ft(\017)42 b
 FA(7)19 b(\(analysis)g(only\))g(:)k(Automatic)d(choice)f(of)g(scaling)g
-(v)n(alue)h(done)g(during)g(analysis.)626 1779 y(If)h(the)g(input)g
+(v)n(alue)h(done)g(during)g(analysis.)626 2378 y(If)h(the)g(input)g
 (matrix)g(is)g(symmetric)g(\(SYM)f Ft(6)p Fs(=)25 b(0)p
 FA(\),)d(then)f(only)h(options)f(\2262,)h(\2261,)g(0,)f(1)g(and)h(7)f
-(are)g(allo)n(wed)g(and)626 1871 y(other)e(options)g(are)f(treated)g
+(are)g(allo)n(wed)g(and)626 2470 y(other)e(options)g(are)f(treated)g
 (as)g(0;)g(if)f(ICNTL\(8\))g Fs(=)h FA(\2261,)g(the)g(user)g(should)h
 (ensure)g(that)f(the)g(array)g(R)m(O)m(WSCA)f(is)626
-1962 y(equal)23 b(to)e(the)h(array)g(COLSCA.)d(If)i(the)h(input)g
+2561 y(equal)23 b(to)e(the)h(array)g(COLSCA.)d(If)i(the)h(input)g
 (matrix)f(is)h(in)f(elemental)h(format)f(\(ICNTL\(5\))g(=)g(1\),)h
-(then)g(only)626 2053 y(options)h(\2261)g(and)g(0)f(are)h(allo)n(wed)f
+(then)g(only)626 2652 y(options)h(\2261)g(and)g(0)f(are)h(allo)n(wed)f
 (and)h(other)g(options)g(are)f(treated)g(as)g(0.)34 b(If)21
-b(the)i(initial)e(matrix)h(is)g(distrib)o(uted)626 2145
+b(the)i(initial)e(matrix)h(is)g(distrib)o(uted)626 2744
 y(\(ICNTL\(18\))27 b Ft(6)p Fs(=)g FA(0)g(and)h(ICNTL\(5\))e(=)i(0\))54
 b(then)28 b(the)f(v)n(alue)i(of)e(ICNTL\(8\))f(is)h(ignored)h(and)g(no)
-g(scaling)g(is)626 2236 y(applied.)c(If)18 b(ICNTL\(8\))f
+g(scaling)g(is)626 2835 y(applied.)c(If)18 b(ICNTL\(8\))f
 Fs(=)h FA(\2262)g(then)h(the)f(user)h(has)g(to)f(pro)o(vide)h(the)f
-(numerical)h(v)n(alue)g(\(in)f(mumps)p 3217 2236 23 4
-v 28 w(par)p Fs(\045)p FA(A\))g(on)626 2327 y(entry)i(to)e(the)h
-(analysis.)485 2449 y(ICNTL\(9\))e(has)i(def)o(ault)g(v)n(alue)g(1)f
+(numerical)h(v)n(alue)g(\(in)f(mumps)p 3217 2835 23 4
+v 28 w(par)p Fs(\045)p FA(A\))g(on)626 2926 y(entry)i(to)e(the)h
+(analysis.)485 3049 y(ICNTL\(9\))e(has)i(def)o(ault)g(v)n(alue)g(1)f
 (and)h(is)f(only)g(accessed)i(by)f(the)f(host)g(during)h(the)g(solv)o
-(e)f(phase.)24 b(If)18 b(ICNTL\(9\))f(=)h(1,)626 2540
+(e)f(phase.)24 b(If)18 b(ICNTL\(9\))f(=)h(1,)626 3141
 y Fr(Ax)j Fs(=)g Fr(b)e FA(is)g(solv)o(ed,)g(otherwise,)g
-Fr(A)1605 2508 y Fp(T)1653 2540 y Fr(x)i Fs(=)g Fr(b)e
-FA(is)f(solv)o(ed.)485 2661 y(ICNTL\(10\))29 b(has)g(def)o(ault)h(v)n
+Fr(A)1605 3109 y Fp(T)1653 3141 y Fr(x)i Fs(=)g Fr(b)e
+FA(is)f(solv)o(ed.)485 3263 y(ICNTL\(10\))29 b(has)g(def)o(ault)h(v)n
 (alue)f(0)h(and)f(is)g(only)h(accessed)g(by)g(the)f(host)g(during)h
-(the)f(solv)o(e)h(phase.)54 b(If)29 b(NRHS)626 2753 y(=)g(1,)i(then)f
+(the)f(solv)o(e)h(phase.)54 b(If)29 b(NRHS)626 3355 y(=)g(1,)i(then)f
 (ICNTL\(10\))e(corresponds)j(to)e(the)g(maximum)g(number)h(of)f(steps)g
-(of)g(iterati)n(v)o(e)g(re\002nement.)53 b(If)626 2844
+(of)g(iterati)n(v)o(e)g(re\002nement.)53 b(If)626 3446
 y(ICNTL\(10\))19 b Ft(\024)f FA(0,)h(iterati)n(v)o(e)f(re\002nement)h
-(is)g(not)g(performed.)626 2950 y(In)28 b(the)g(current)g(v)o(ersion,)i
+(is)g(not)g(performed.)626 3553 y(In)28 b(the)g(current)g(v)o(ersion,)i
 (if)d(ICNTL\(21\)=1)h(\(solution)g(k)o(ept)g(distrib)o(uted\))g(or)f
-(NRHS)g Fq(>)g FA(1,)j(then)e(iterati)n(v)o(e)626 3042
+(NRHS)g Fq(>)g FA(1,)j(then)e(iterati)n(v)o(e)626 3645
 y(re\002nement)20 b(is)e(not)h(performed)h(and)g(ICNTL\(10\))e(is)g
-(treated)h(as)g(0.)485 3163 y(ICNTL\(11\))25 b(has)h(def)o(ault)f(v)n
+(treated)h(as)g(0.)485 3767 y(ICNTL\(11\))25 b(has)h(def)o(ault)f(v)n
 (alue)i(0)e(and)h(is)f(only)h(accessed)g(by)g(the)g(host)f(and)h(only)g
-(during)h(the)e(solv)o(e)h(phase.)43 b(A)626 3255 y(positi)n(v)o(e)28
+(during)h(the)e(solv)o(e)h(phase.)43 b(A)626 3859 y(positi)n(v)o(e)28
 b(v)n(alue)g(will)e(return)h(statistics)f(related)h(to)g(the)g(linear)g
 (system)g(solv)o(ed)h(\()p Fr(Ax)36 b Fs(=)h Fr(b)27
-b FA(or)g Fr(A)3295 3223 y Fp(T)3343 3255 y Fr(x)36 b
-Fs(=)h Fr(b)626 3346 y FA(depending)20 b(on)e(the)g(v)n(alue)g(of)g
+b FA(or)g Fr(A)3295 3827 y Fp(T)3343 3859 y Fr(x)36 b
+Fs(=)h Fr(b)626 3950 y FA(depending)20 b(on)e(the)g(v)n(alue)g(of)g
 (ICNTL\(9\)\):)j(the)d(in\002nite)f(norm)h(of)g(the)f(input)h(matrix,)g
-(the)f(computed)i(solution,)626 3437 y(and)25 b(the)f(scaled)g
+(the)f(computed)i(solution,)626 4041 y(and)25 b(the)f(scaled)g
 (residual)h(in)f(RINFOG\(4\))e(to)i(RINFOG\(6\),)g(respecti)n(v)o(ely)
 -5 b(,)26 b(a)e(backw)o(ard)h(error)f(estimate)g(in)626
-3528 y(RINFOG\(7\))15 b(and)i(RINFOG\(8\),)f(an)g(estimate)g(for)g(the)
+4133 y(RINFOG\(7\))15 b(and)i(RINFOG\(8\),)f(an)g(estimate)g(for)g(the)
 g(error)g(in)g(the)g(solution)h(in)f(RINFOG\(9\),)f(and)i(condition)626
-3620 y(numbers)31 b(for)e(the)g(matrix)h(in)f(RINFOG\(10\))f(and)i
+4224 y(numbers)31 b(for)e(the)g(matrix)h(in)f(RINFOG\(10\))f(and)i
 (RINFOG\(11\).)54 b(See)29 b(also)g(Section)g(2.4.)55
-b(Note)29 b(that)g(if)626 3711 y(performance)h(is)e(important,)j
+b(Note)29 b(that)g(if)626 4315 y(performance)h(is)e(important,)j
 (ICNTL\(11\))c(should)j(be)e(left)g(set)g(to)g(0.)52
 b(Finally)-5 b(,)30 b(note)f(that,)h(in)e(the)g(current)626
-3802 y(v)o(ersion,)d(if)e(NRHS)f Fq(>)h FA(1)h(or)f(if)g(ICNTL\(21\)=1)
+4407 y(v)o(ersion,)d(if)e(NRHS)f Fq(>)h FA(1)h(or)f(if)g(ICNTL\(21\)=1)
 g(\(solution)g(v)o(ector)h(k)o(ept)g(distrib)o(uted\))f(then)h(error)f
-(analysis)h(is)626 3894 y(not)c(performed)f(and)h(ICNTL\(11\))e(is)h
-(treated)g(as)g(0.)485 4015 y(ICNTL\(12\))26 b(is)f(meaningful)j(only)e
+(analysis)h(is)626 4498 y(not)c(performed)f(and)h(ICNTL\(11\))e(is)h
+(treated)g(as)g(0.)485 4621 y(ICNTL\(12\))26 b(is)f(meaningful)j(only)e
 (on)h(general)g(symmetric)f(matrices)g(\(SYM)g Fs(=)g
 FA(2\))g(and)h(its)e(def)o(ault)i(v)n(alue)g(is)f(0)626
-4106 y(\(automatic)g(choice\).)41 b(F)o(or)24 b(unsymmetric)i(matrices)
+4712 y(\(automatic)g(choice\).)41 b(F)o(or)24 b(unsymmetric)i(matrices)
 e(\(SYM=0\))h(or)g(symmetric)g(de\002nite)g(positi)n(v)o(e)g(matrices)
-626 4198 y(\(SYM=1\))d(all)e(v)n(alues)j(of)e(ICNTL\(12\))f(are)i
+626 4804 y(\(SYM=1\))d(all)e(v)n(alues)j(of)e(ICNTL\(12\))f(are)i
 (treated)f(as)g(1)h(\(nothing)g(done\).)31 b(It)21 b(is)g(only)h
-(accessed)g(by)g(the)f(host)626 4289 y(and)h(only)f(during)h(the)f
+(accessed)g(by)g(the)f(host)626 4895 y(and)h(only)f(during)h(the)f
 (analysis)g(phase.)30 b(It)20 b(de\002nes)i(the)f(ordering)g(strate)o
 (gy)h(\(see)e([18)q(])h(for)f(more)h(details\))g(and)626
-4380 y(is)k(used,)h(in)f(conjunction)h(with)e(ICNTL\(6\),)h(to)g(add)g
+4986 y(is)k(used,)h(in)f(conjunction)h(with)e(ICNTL\(6\),)h(to)g(add)g
 (constraints)g(to)g(the)g(ordering)g(algorithm.)41 b(\(ICNTL\(7\))626
-4472 y(option\).)24 b(Possible)19 b(v)n(alues)h(of)f(ICNTL\(12\))f(are)
-h(:)702 4593 y Ft(\017)42 b FA(0)19 b(:)k(automatic)c(choice)702
-4700 y Ft(\017)42 b FA(1)19 b(:)k(usual)c(ordering)h(\(nothing)g
-(done\))702 4806 y Ft(\017)42 b FA(2)19 b(:)k(ordering)c(on)h(the)f
-(compressed)h(graph)g(associated)g(with)e(the)h(matrix.)702
-4912 y Ft(\017)42 b FA(3)19 b(:)k(constrained)d(ordering,)f(only)h(a)o
-(v)n(ailable)f(with)f Fz(AMF)h FA(\(ICNTL\(7\)=2\).)626
-5034 y(Other)33 b(v)n(alues)h(are)f(treated)g(as)f(0.)65
-b(ICNTL\(12\),)35 b(ICNTL\(6\),)g(ICNTL\(7\))d(v)n(alues)i(are)e
-(strongly)i(related.)626 5125 y(Therefore,)28 b(as)e(for)g(ICNTL\(6\),)
-g(if)g(the)g(matrix)g(is)f(in)h(elemental)g(format)g(\(ICNTL\(5\)=1\),)
-h(or)f(the)g(ordering)626 5216 y(is)f(pro)o(vided)i(by)f(the)f(user)h
-(\(ICNTL\(7\)=1\),)f(or)h(the)f(Schur)g(option)i(\(ICNTL\(19\))d
-Ft(6)p Fs(=)h FA(0\))g(is)g(required,)i(or)f(the)626
-5308 y(matrix)19 b(is)g(initially)f(distrib)o(uted)h(\(ICNTL\(18\))f
-Ft(6)p Fs(=)g FA(0\))h(then)g(ICNTL\(12\))g(is)f(treated)h(as)g(one.)
-1966 5557 y Fv(19)p eop end
+5078 y(option\).)24 b(Possible)19 b(v)n(alues)h(of)f(ICNTL\(12\))f(are)
+h(:)702 5200 y Ft(\017)42 b FA(0)19 b(:)k(automatic)c(choice)702
+5308 y Ft(\017)42 b FA(1)19 b(:)k(usual)c(ordering)h(\(nothing)g
+(done\))1966 5557 y Fv(19)p eop end
 %%Page: 20 20
-TeXDict begin 20 19 bop 626 291 a FA(If)32 b Fz(MUMPS)f
-FA(detects)h(some)h(incompatibility)g(between)f(control)h(parameters)g
-(then)f(it)g(uses)g(the)g(follo)n(wing)626 382 y(rules)26
-b(to)g(automatically)g(reset)g(the)g(control)g(parameters.)45
-b(Firstly)25 b(ICNTL\(12\))g(has)h(a)g(lo)n(wer)g(priority)f(than)626
-473 y(ICNTL\(7\))34 b(so)h(that)g(if)f(ICNTL\(12\))g
-Fs(=)g FA(3)h(and)h(the)f(ordering)g(required)h(is)e(not)h
-Fz(AMF)f FA(then)i(ICNTL\(12\))626 565 y(is)41 b(internally)g(treated)f
-(as)h(2.)88 b(Secondly)42 b(ICNTL\(12\))e(has)h(a)g(higher)g(priority)f
-(than)i(ICNTL\(6\))d(and)626 656 y(ICNTL\(8\).)c(Thus)23
-b(if)g(ICNTL\(12\))f Fs(=)g FA(2)i(and)f(ICNTL\(6\))f(w)o(as)i(not)f
-(acti)n(v)o(e)g(\(ICNTL\(6\)=0\))f(then)i(ICNTL\(6\))626
-747 y(is)c(automatically)g(reset)g(\(treated)g(as)g(ICNTL\(6\)=7\).)25
-b(Furthermore,)20 b(if)g(ICNTL\(12\))f Fs(=)g FA(3)h(then)g(ICNTL\(6\))
-f(is)626 839 y(automatically)h(set)f(to)f(5)h(and)h(ICNTL\(8\))e(is)g
-(set)h(to)g(-2.)626 943 y(On)i(output)g(from)f(the)h(analysis)g(phase,)
-g(INFOG\(24\))f(holds)h(the)f(v)n(alue)i(of)e(ICNTL\(12\))g(that)g(w)o
-(as)g(ef)n(fecti)n(v)o(ely)626 1035 y(used.)95 b(Note)43
+TeXDict begin 20 19 bop 702 291 a Ft(\017)42 b FA(2)19
+b(:)k(ordering)c(on)h(the)f(compressed)h(graph)g(associated)g(with)e
+(the)h(matrix.)702 397 y Ft(\017)42 b FA(3)19 b(:)k(constrained)d
+(ordering,)f(only)h(a)o(v)n(ailable)f(with)f Fz(AMF)h
+FA(\(ICNTL\(7\)=2\).)626 520 y(Other)33 b(v)n(alues)h(are)f(treated)g
+(as)f(0.)65 b(ICNTL\(12\),)35 b(ICNTL\(6\),)g(ICNTL\(7\))d(v)n(alues)i
+(are)e(strongly)i(related.)626 611 y(Therefore,)28 b(as)e(for)g
+(ICNTL\(6\),)g(if)g(the)g(matrix)g(is)f(in)h(elemental)g(format)g
+(\(ICNTL\(5\)=1\),)h(or)f(the)g(ordering)626 702 y(is)f(pro)o(vided)i
+(by)f(the)f(user)h(\(ICNTL\(7\)=1\),)f(or)h(the)f(Schur)g(option)i
+(\(ICNTL\(19\))d Ft(6)p Fs(=)h FA(0\))g(is)g(required,)i(or)f(the)626
+794 y(matrix)19 b(is)g(initially)f(distrib)o(uted)h(\(ICNTL\(18\))f
+Ft(6)p Fs(=)g FA(0\))h(then)g(ICNTL\(12\))g(is)f(treated)h(as)g(one.)
+626 900 y(If)32 b Fz(MUMPS)f FA(detects)h(some)h(incompatibility)g
+(between)f(control)h(parameters)g(then)f(it)g(uses)g(the)g(follo)n
+(wing)626 992 y(rules)26 b(to)g(automatically)g(reset)g(the)g(control)g
+(parameters.)45 b(Firstly)25 b(ICNTL\(12\))g(has)h(a)g(lo)n(wer)g
+(priority)f(than)626 1083 y(ICNTL\(7\))34 b(so)h(that)g(if)f
+(ICNTL\(12\))g Fs(=)g FA(3)h(and)h(the)f(ordering)g(required)h(is)e
+(not)h Fz(AMF)f FA(then)i(ICNTL\(12\))626 1174 y(is)41
+b(internally)g(treated)f(as)h(2.)88 b(Secondly)42 b(ICNTL\(12\))e(has)h
+(a)g(higher)g(priority)f(than)i(ICNTL\(6\))d(and)626
+1266 y(ICNTL\(8\).)c(Thus)23 b(if)g(ICNTL\(12\))f Fs(=)g
+FA(2)i(and)f(ICNTL\(6\))f(w)o(as)i(not)f(acti)n(v)o(e)g
+(\(ICNTL\(6\)=0\))f(then)i(ICNTL\(6\))626 1357 y(is)c(automatically)g
+(reset)g(\(treated)g(as)g(ICNTL\(6\)=7\).)25 b(Furthermore,)20
+b(if)g(ICNTL\(12\))f Fs(=)g FA(3)h(then)g(ICNTL\(6\))f(is)626
+1448 y(automatically)h(set)f(to)f(5)h(and)h(ICNTL\(8\))e(is)g(set)h(to)
+g(-2.)626 1555 y(On)i(output)g(from)f(the)h(analysis)g(phase,)g
+(INFOG\(24\))f(holds)h(the)f(v)n(alue)i(of)e(ICNTL\(12\))g(that)g(w)o
+(as)g(ef)n(fecti)n(v)o(ely)626 1646 y(used.)95 b(Note)43
 b(that)f(INFOG\(7\))g(and)h(INFOG\(23\))f(hold)h(the)f(v)n(alues)i(of)e
-(ICNTL\(7\))g(and)h(ICNTL\(6\))626 1126 y(\(respecti)n(v)o(ely\))20
-b(that)f(were)g(ef)n(fecti)n(v)o(ely)g(used.)485 1261
+(ICNTL\(7\))g(and)h(ICNTL\(6\))626 1738 y(\(respecti)n(v)o(ely\))20
+b(that)f(were)g(ef)n(fecti)n(v)o(ely)g(used.)485 1877
 y(ICNTL\(13\))d(has)h(def)o(ault)g(v)n(alue)h(0)f(and)g(is)f(only)i
 (accessed)g(by)f(the)f(host)i(during)f(the)g(analysis)g(phase.)23
-b(If)17 b(ICNTL\(13\))626 1353 y(=)24 b(0,)g(ScaLAP)-7
+b(If)17 b(ICNTL\(13\))626 1968 y(=)24 b(0,)g(ScaLAP)-7
 b(A)m(CK)22 b(will)h(be)h(used)g(for)f(the)h(root)g(node)g(if)f(the)h
 (size)f(of)h(the)f(root)h(node)g(of)g(the)g(assembly)g(tree)626
-1444 y(is)j(lar)o(ger)f(than)h(a)f(machine-dependent)j(minimum)e(size.)
+2059 y(is)j(lar)o(ger)f(than)h(a)f(machine-dependent)j(minimum)e(size.)
 46 b(Otherwise,)28 b(the)e(root)h(node)h(of)e(the)h(tree)f(will)f(be)
-626 1535 y(processed)e(sequentially)-5 b(.)31 b(Note)21
+626 2151 y(processed)e(sequentially)-5 b(.)31 b(Note)21
 b(that,)g(although)i(ICNTL\(13\))d(controls)i(the)f(ef)n(\002cienc)o(y)
-h(of)f(the)g(f)o(actorization)626 1626 y(and)h(solv)o(e)g(phases,)h
+h(of)f(the)g(f)o(actorization)626 2242 y(and)h(solv)o(e)g(phases,)h
 (preprocessing)g(w)o(ork)f(is)f(performed)h(during)h(analysis)f(and)g
-(this)f(option)h(must)f(be)h(set)f(on)626 1718 y(entry)f(to)e(the)h
-(analysis)h(phase.)485 1836 y(ICNTL\(14\))e(is)g(accessed)i(by)f(the)g
+(this)f(option)h(must)f(be)h(set)f(on)626 2333 y(entry)f(to)e(the)h
+(analysis)h(phase.)485 2456 y(ICNTL\(14\))e(is)g(accessed)i(by)f(the)g
 (host)g(both)g(during)g(the)g(analysis)g(and)g(the)g(f)o(actorization)g
-(phases.)24 b(It)18 b(corresponds)626 1928 y(to)j(the)h(percentage)g
+(phases.)24 b(It)18 b(corresponds)626 2547 y(to)j(the)h(percentage)g
 (increase)g(in)f(the)g(estimated)g(w)o(orking)i(space.)30
 b(When)21 b(signi\002cant)h(e)o(xtra)f(\002ll-in)f(is)h(caused)626
-2019 y(by)i(numerical)g(pi)n(v)o(oting,)g(lar)o(ger)f(v)n(alues)h(of)g
+2638 y(by)i(numerical)g(pi)n(v)o(oting,)g(lar)o(ger)f(v)n(alues)h(of)g
 (ICNTL\(14\))e(may)i(help)g(use)f(the)h(real/comple)o(x)g(w)o(orking)g
-(space)626 2110 y(more)15 b(ef)n(\002ciently)-5 b(.)22
+(space)626 2729 y(more)15 b(ef)n(\002ciently)-5 b(.)22
 b(The)15 b(def)o(ault)g(v)n(alue)g(is)f(20)h(\045)g(e)o(xcept)g(for)g
 (symmetric)g(positi)n(v)o(e)g(de\002nite)f(matrices)h(\(SYM=1\))626
-2202 y(where)20 b(the)f(def)o(ault)g(v)n(alue)h(is)e(15)i(\045.)485
-2320 y(ICNTL\(15-17\))f(Not)g(used)g(in)g(current)h(v)o(ersion.)485
-2455 y(ICNTL\(18\))f(has)h(def)o(ault)g(v)n(alue)g(0)g(and)g(is)f(only)
+2821 y(where)20 b(the)f(def)o(ault)g(v)n(alue)h(is)e(15)i(\045.)485
+2943 y(ICNTL\(15-17\))f(Not)g(used)g(in)g(current)h(v)o(ersion.)485
+3082 y(ICNTL\(18\))f(has)h(def)o(ault)g(v)n(alue)g(0)g(and)g(is)f(only)
 i(accessed)f(by)g(the)g(host)g(during)g(the)g(analysis)g(phase,)g(if)f
-(the)h(matrix)626 2547 y(format)29 b(is)g(assembled)h(\(ICNTL\(5\))d(=)
+(the)h(matrix)626 3173 y(format)29 b(is)g(assembled)h(\(ICNTL\(5\))d(=)
 i(0\).)53 b(ICNTL\(18\))28 b(de\002nes)i(the)f(strate)o(gy)g(for)g(the)
-g(distrib)o(uted)f(input)626 2638 y(matrix.)23 b(Possible)c(v)n(alues)h
-(are:)702 2756 y Ft(\017)42 b FA(0:)23 b(the)c(input)g(matrix)g(is)g
+g(distrib)o(uted)f(input)626 3265 y(matrix.)23 b(Possible)c(v)n(alues)h
+(are:)702 3387 y Ft(\017)42 b FA(0:)23 b(the)c(input)g(matrix)g(is)g
 (centralized)g(on)g(the)g(host.)24 b(This)18 b(is)h(the)g(def)o(ault,)g
-(see)g(Section)g(4.4.)702 2861 y Ft(\017)42 b FA(1:)j(the)29
+(see)g(Section)g(4.4.)702 3494 y Ft(\017)42 b FA(1:)j(the)29
 b(user)h(pro)o(vides)h(the)f(structure)g(of)g(the)f(matrix)h(on)g(the)g
 (host)g(at)g(analysis,)i Fz(MUMPS)d FA(returns)h(a)782
-2953 y(mapping)20 b(and)g(the)f(user)h(should)g(then)f(pro)o(vide)i
+3585 y(mapping)20 b(and)g(the)f(user)h(should)g(then)f(pro)o(vide)i
 (the)e(matrix)g(distrib)o(uted)g(according)h(to)g(the)f(mapping)h(on)
-782 3044 y(entry)f(to)g(the)g(numerical)g(f)o(actorization)h(phase.)702
-3149 y Ft(\017)42 b FA(2:)d(the)26 b(user)h(pro)o(vides)h(the)f
+782 3676 y(entry)f(to)g(the)g(numerical)g(f)o(actorization)h(phase.)702
+3783 y Ft(\017)42 b FA(2:)d(the)26 b(user)h(pro)o(vides)h(the)f
 (structure)g(of)f(the)h(matrix)g(on)g(the)f(host)h(at)g(analysis,)i
-(and)e(the)g(distrib)o(uted)782 3240 y(matrix)18 b(on)i(all)e(sla)o(v)o
+(and)e(the)g(distrib)o(uted)782 3874 y(matrix)18 b(on)i(all)e(sla)o(v)o
 (e)h(processors)h(at)f(f)o(actorization.)k(An)o(y)d(distrib)o(ution)e
-(is)h(allo)n(wed.)702 3345 y Ft(\017)42 b FA(3:)23 b(user)c(directly)g
+(is)h(allo)n(wed.)702 3981 y Ft(\017)42 b FA(3:)23 b(user)c(directly)g
 (pro)o(vides)h(the)f(distrib)o(uted)g(matrix)g(input)g(both)g(for)g
-(analysis)h(and)f(f)o(actorization.)626 3464 y(F)o(or)h(options)h(1,)g
+(analysis)h(and)f(f)o(actorization.)626 4103 y(F)o(or)h(options)h(1,)g
 (2,)f(3,)h(see)f(Section)h(4.6)f(for)h(more)f(details)g(on)h(the)g
 (input/output)g(parameters)g(to)f Fz(MUMPS)p FA(.)f(F)o(or)626
-3555 y(\003e)o(xibility)-5 b(,)18 b(options)i(2)f(or)g(3)g(are)g
-(recommended.)485 3673 y(ICNTL\(19\))37 b(has)g(def)o(ault)h(v)n(alue)f
+4195 y(\003e)o(xibility)-5 b(,)18 b(options)i(2)f(or)g(3)g(are)g
+(recommended.)485 4317 y(ICNTL\(19\))37 b(has)g(def)o(ault)h(v)n(alue)f
 (0)h(and)f(is)g(only)h(accessed)g(by)g(the)f(host)g(during)h(the)f
-(analysis)h(phase.)78 b(If)626 3765 y(ICNTL\(19\)=1,)29
+(analysis)h(phase.)78 b(If)626 4408 y(ICNTL\(19\)=1,)29
 b(then)f(the)f(Schur)g(complement)i(matrix)e(will)f(be)i(returned)g(to)
-f(the)g(user)h(on)f(the)h(host)f(after)626 3856 y(the)e(f)o
+f(the)g(user)h(on)f(the)h(host)f(after)626 4500 y(the)e(f)o
 (actorization)g(phase.)40 b(If)24 b(ICNTL\(19\)=2)g(or)g(3,)i(then)f
 (the)f(Schur)h(will)e(be)i(returned)g(to)f(the)g(user)h(on)g(the)626
-3947 y(sla)o(v)o(e)e(processors)i(in)e(the)g(form)h(of)f(a)g(2D)g
+4591 y(sla)o(v)o(e)e(processors)i(in)e(the)g(form)h(of)f(a)g(2D)g
 (block)h(c)o(yclic)g(distrib)o(uted)f(matrix)g(\(ScaLAP)-7
-b(A)m(CK)22 b(style\).)36 b(V)-8 b(alues)626 4039 y(not)20
+b(A)m(CK)22 b(style\).)36 b(V)-8 b(alues)626 4682 y(not)20
 b(equal)g(to)f(1,)g(2)g(or)h(3)f(are)g(treated)h(as)f(0.)24
 b(IF)18 b(ICNTL\(19\))h(equals)h(1,)f(2,)g(or)g(3,)g(the)h(user)f(must)
-h(set)f(on)g(entry)h(to)626 4130 y(the)f(analysis)h(phase,)f(on)h(the)f
-(host)g(node:)702 4249 y Ft(\017)42 b FA(the)19 b(inte)o(ger)g(v)n
-(ariable)g(SIZE)p 1537 4249 23 4 v 26 w(SCHUR)f(to)g(the)h(size)g(of)g
-(the)g(Schur)g(matrix,)702 4354 y Ft(\017)42 b FA(the)19
+h(set)f(on)g(entry)h(to)626 4774 y(the)f(analysis)h(phase,)f(on)h(the)f
+(host)g(node:)702 4896 y Ft(\017)42 b FA(the)19 b(inte)o(ger)g(v)n
+(ariable)g(SIZE)p 1537 4896 23 4 v 26 w(SCHUR)f(to)g(the)h(size)g(of)g
+(the)g(Schur)g(matrix,)702 5003 y Ft(\017)42 b FA(the)19
 b(inte)o(ger)g(array)g(pointer)g(LISTV)-10 b(AR)p 1830
-4354 V 26 w(SCHUR)17 b(to)i(the)g(list)f(of)h(indices)g(of)g(the)g
-(Schur)g(matrix.)626 4472 y(F)o(or)i(a)g(distrib)o(uted)g(Schur)g
+5003 V 26 w(SCHUR)17 b(to)i(the)g(list)f(of)h(indices)g(of)g(the)g
+(Schur)g(matrix.)626 5125 y(F)o(or)i(a)g(distrib)o(uted)g(Schur)g
 (complement)h(\(ICNTL\(19\)=2)f(or)g(3\),)g(the)h(inte)o(ger)f(v)n
-(ariables)h(NPR)m(O)m(W)-7 b(,)19 b(NPCOL,)626 4563 y(MBLOCK,)42
+(ariables)h(NPR)m(O)m(W)-7 b(,)19 b(NPCOL,)626 5216 y(MBLOCK,)42
 b(NBLOCK)f(may)h(also)h(be)f(de\002ned)h(on)g(the)f(host)h(before)f
-(the)h(analysis)f(phase)h(\(def)o(ault)626 4655 y(v)n(alues)34
+(the)h(analysis)f(phase)h(\(def)o(ault)626 5308 y(v)n(alues)34
 b(will)e(otherwise)i(be)f(pro)o(vided\).)67 b(Furthermore,)36
-b(w)o(orkspace)f(should)f(be)f(allocated)h(by)f(the)g(user)626
-4746 y(before)27 b(the)f(f)o(actorization)h(phase)g(in)f(order)h(for)f
-Fz(MUMPS)f FA(to)h(store)g(the)g(Schur)h(complement)g(\(see)f(SCHUR,)
-626 4837 y(SCHUR)p 880 4837 V 26 w(MLOC,)19 b(SCHUR)p
-1410 4837 V 26 w(NLOC,)e(and)j(SCHUR)p 2053 4837 V 26
-w(LLD)e(in)h(Section)g(4.9\).)626 4942 y(Note)i(that)f(the)g(partial)g
-(f)o(actorization)h(of)f(the)g(interior)g(v)n(ariables)h(can)f(then)h
-(be)g(e)o(xploited)g(to)f(perform)g(a)g(solv)o(e)626
-5034 y(phase)i(\(transposed)g(matrix)f(or)g(not,)h(see)f(ICNTL\(9\)\).)
-27 b(Note)21 b(that)g(the)g(right-hand)h(side)f(\(RHS\))f(pro)o(vided)i
-(on)626 5125 y(input)h(must)f(still)g(be)g(of)g(size)g(N)g(\(or)h(N)e
-Ft(\002)h FA(NRHS)f(in)i(case)f(of)g(multiple)h(right-hand)g(sides\))f
-(e)n(v)o(en)h(if)f(only)h(the)626 5216 y(N-SIZE)p 868
-5216 V 26 w(SCHUR)h(indices)j(will)d(be)i(considered)i(and)e(if)f(only)
-h(N-SIZE)p 2593 5216 V 26 w(SCHUR)e(indices)j(of)e(the)h(solution)626
-5308 y(will)18 b(be)i(rele)n(v)n(ant)f(to)g(the)g(user)l(.)1966
+b(w)o(orkspace)f(should)f(be)f(allocated)h(by)f(the)g(user)1966
 5557 y Fv(20)p eop end
 %%Page: 21 21
-TeXDict begin 21 20 bop 626 291 a FA(Finally)20 b(note)g(that)g(since)g
-(the)g(Schur)f(complement)i(can)g(be)f(vie)n(wed)g(as)g(a)g(partial)f
-(f)o(actorization)i(of)e(the)h(global)626 382 y(matrix)e(\(with)f
-(partial)g(ordering)i(of)f(the)f(v)n(ariables)h(pro)o(vided)h(by)f(the)
-g(user\))g(the)g(follo)n(wing)g(options)g(of)g Fz(MUMPS)626
-473 y FA(are)j(incompatible)g(with)f(the)g(Schur)h(option:)52
-b(maximum)22 b(transv)o(ersal,)e(scaling,)h(iterati)n(v)o(e)f
-(re\002nement,)h(error)626 565 y(analysis.)26 b(Note)19
-b(that)g(if)g(the)h(ordering)g(is)f(gi)n(v)o(en)i(\(ICNTL\(7\)=1\))d
-(then)i(the)g(follo)n(wing)f(property)i(should)f(hold:)626
-656 y(PERM)p 834 656 23 4 v 27 w(IN\(LISTV)-10 b(AR)p
-1272 656 V 25 w(SCHUR\(i\)\))17 b(=)i(N-SIZE)p 1959 656
-V 25 w(SCHUR+i,)f(for)g(i=1,SIZE)p 2717 656 V 26 w(SCHUR.)485
-767 y(ICNTL\(20\))41 b(has)h(def)o(ault)h(v)n(alue)f(0)g(and)g(is)g
-(only)g(accessed)h(by)f(the)g(host)g(during)h(the)f(solv)o(e)g(phase.)
-92 b(If)626 859 y(ICNTL\(20\)=0,)18 b(the)h(right-hand)g(side)f(must)h
-(be)f(gi)n(v)o(en)h(in)g(dense)g(form)f(in)g(the)h(structure)f
-(component)i(RHS.)d(If)626 950 y(ICNTL\(20\)=1,)f(then)f(the)g
-(right-hand)h(side)f(must)g(be)g(gi)n(v)o(en)h(in)f(sparse)g(form)g
-(using)h(the)f(structure)g(components)626 1041 y(IRHS)p
-801 1041 V 27 w(SP)-7 b(ARSE,)14 b(RHS)p 1276 1041 V
-26 w(SP)-7 b(ARSE,)14 b(IRHS)p 1775 1041 V 26 w(PTR)h(and)j(NZ)p
-2179 1041 V 26 w(RHS.)d(V)-8 b(alues)17 b(dif)n(ferent)f(from)h(0)f
-(and)i(1)e(are)h(treated)626 1133 y(as)i(0.)24 b(\(See)18
-b(Section)h(4.11\).)485 1244 y(ICNTL\(21\))c(has)i(def)o(ault)f(v)n
-(alue)g(0)g(and)h(is)e(only)i(accessed)g(by)f(the)g(host)g(during)h
-(the)f(solv)o(e)g(phase.)23 b(If)15 b(ICNTL\(21\)=0,)626
-1335 y(the)23 b(solution)g(v)o(ector)g(will)f(be)h(assembled)h(and)f
-(stored)g(in)g(the)f(structure)h(component)i(RHS,)c(that)i(must)g(ha)o
-(v)o(e)626 1427 y(been)j(allocated)g(earlier)e(by)h(the)g(user)l(.)41
+TeXDict begin 21 20 bop 626 291 a FA(before)27 b(the)f(f)o
+(actorization)h(phase)g(in)f(order)h(for)f Fz(MUMPS)f
+FA(to)h(store)g(the)g(Schur)h(complement)g(\(see)f(SCHUR,)626
+382 y(SCHUR)p 880 382 23 4 v 26 w(MLOC,)19 b(SCHUR)p
+1410 382 V 26 w(NLOC,)e(and)j(SCHUR)p 2053 382 V 26 w(LLD)e(in)h
+(Section)g(4.9\).)626 487 y(Note)i(that)f(the)g(partial)g(f)o
+(actorization)h(of)f(the)g(interior)g(v)n(ariables)h(can)f(then)h(be)g
+(e)o(xploited)g(to)f(perform)g(a)g(solv)o(e)626 578 y(phase)i
+(\(transposed)g(matrix)f(or)g(not,)h(see)f(ICNTL\(9\)\).)27
+b(Note)21 b(that)g(the)g(right-hand)h(side)f(\(RHS\))f(pro)o(vided)i
+(on)626 669 y(input)h(must)f(still)g(be)g(of)g(size)g(N)g(\(or)h(N)e
+Ft(\002)h FA(NRHS)f(in)i(case)f(of)g(multiple)h(right-hand)g(sides\))f
+(e)n(v)o(en)h(if)f(only)h(the)626 761 y(N-SIZE)p 868
+761 V 26 w(SCHUR)h(indices)j(will)d(be)i(considered)i(and)e(if)f(only)h
+(N-SIZE)p 2593 761 V 26 w(SCHUR)e(indices)j(of)e(the)h(solution)626
+852 y(will)18 b(be)i(rele)n(v)n(ant)f(to)g(the)g(user)l(.)626
+957 y(Finally)h(note)g(that)g(since)g(the)g(Schur)f(complement)i(can)g
+(be)f(vie)n(wed)g(as)g(a)g(partial)f(f)o(actorization)i(of)e(the)h
+(global)626 1048 y(matrix)e(\(with)f(partial)g(ordering)i(of)f(the)f(v)
+n(ariables)h(pro)o(vided)h(by)f(the)g(user\))g(the)g(follo)n(wing)g
+(options)g(of)g Fz(MUMPS)626 1139 y FA(are)j(incompatible)g(with)f(the)
+g(Schur)h(option:)52 b(maximum)22 b(transv)o(ersal,)e(scaling,)h
+(iterati)n(v)o(e)f(re\002nement,)h(error)626 1231 y(analysis.)26
+b(Note)19 b(that)g(if)g(the)h(ordering)g(is)f(gi)n(v)o(en)i
+(\(ICNTL\(7\)=1\))d(then)i(the)g(follo)n(wing)f(property)i(should)f
+(hold:)626 1322 y(PERM)p 834 1322 V 27 w(IN\(LISTV)-10
+b(AR)p 1272 1322 V 25 w(SCHUR\(i\)\))17 b(=)i(N-SIZE)p
+1959 1322 V 25 w(SCHUR+i,)f(for)g(i=1,SIZE)p 2717 1322
+V 26 w(SCHUR.)485 1440 y(ICNTL\(20\))41 b(has)h(def)o(ault)h(v)n(alue)f
+(0)g(and)g(is)g(only)g(accessed)h(by)f(the)g(host)g(during)h(the)f
+(solv)o(e)g(phase.)92 b(If)626 1532 y(ICNTL\(20\)=0,)18
+b(the)h(right-hand)g(side)f(must)h(be)f(gi)n(v)o(en)h(in)g(dense)g
+(form)f(in)g(the)h(structure)f(component)i(RHS.)d(If)626
+1623 y(ICNTL\(20\)=1,)f(then)f(the)g(right-hand)h(side)f(must)g(be)g
+(gi)n(v)o(en)h(in)f(sparse)g(form)g(using)h(the)f(structure)g
+(components)626 1714 y(IRHS)p 801 1714 V 27 w(SP)-7 b(ARSE,)14
+b(RHS)p 1276 1714 V 26 w(SP)-7 b(ARSE,)14 b(IRHS)p 1775
+1714 V 26 w(PTR)h(and)j(NZ)p 2179 1714 V 26 w(RHS.)d(V)-8
+b(alues)17 b(dif)n(ferent)f(from)h(0)f(and)i(1)e(are)h(treated)626
+1806 y(as)i(0.)24 b(\(See)18 b(Section)h(4.11\).)485
+1924 y(ICNTL\(21\))c(has)i(def)o(ault)f(v)n(alue)g(0)g(and)h(is)e(only)
+i(accessed)g(by)f(the)g(host)g(during)h(the)f(solv)o(e)g(phase.)23
+b(If)15 b(ICNTL\(21\)=0,)626 2015 y(the)23 b(solution)g(v)o(ector)g
+(will)f(be)h(assembled)h(and)f(stored)g(in)g(the)f(structure)h
+(component)i(RHS,)c(that)i(must)g(ha)o(v)o(e)626 2106
+y(been)j(allocated)g(earlier)e(by)h(the)g(user)l(.)41
 b(If)25 b(ICNTL\(21\)=1,)h(the)f(solution)g(v)o(ector)g(is)g(k)o(ept)g
-(distrib)o(uted)g(at)g(the)626 1518 y(end)f(of)e(the)h(solv)o(e)f
+(distrib)o(uted)g(at)g(the)626 2198 y(end)f(of)e(the)h(solv)o(e)f
 (phase,)i(and)g(will)d(be)i(a)o(v)n(ailable)f(on)h(each)h(sla)o(v)o(e)e
-(processor)h(in)g(the)f(structure)h(components)626 1609
-y(ISOL)p 797 1609 V 26 w(loc)28 b(and)g(SOL)p 1219 1609
-V 26 w(loc.)49 b(ISOL)p 1571 1609 V 26 w(loc)27 b(and)h(SOL)p
-1992 1609 V 26 w(loc)g(must)f(then)h(ha)o(v)o(e)g(been)g(allocated)g
-(by)g(the)f(user)h(and)626 1700 y(must)19 b(be)f(of)g(size)g(at)g
+(processor)h(in)g(the)f(structure)h(components)626 2289
+y(ISOL)p 797 2289 V 26 w(loc)28 b(and)g(SOL)p 1219 2289
+V 26 w(loc.)49 b(ISOL)p 1571 2289 V 26 w(loc)27 b(and)h(SOL)p
+1992 2289 V 26 w(loc)g(must)f(then)h(ha)o(v)o(e)g(been)g(allocated)g
+(by)g(the)f(user)h(and)626 2380 y(must)19 b(be)f(of)g(size)g(at)g
 (least)f(INFO\(23\),)h(where)g(INFO\(23\))g(has)g(been)h(returned)g(by)
-f(MUMPS)g(at)g(the)g(end)h(of)f(the)626 1792 y(f)o(actorization)i
+f(MUMPS)g(at)g(the)g(end)h(of)f(the)626 2472 y(f)o(actorization)i
 (phase.)k(V)-8 b(alues)19 b(of)g(ICNTL\(21\))f(dif)n(ferent)h(from)g(0)
-g(and)h(1)f(are)f(currently)i(treated)f(as)g(0.)626 1893
+g(and)h(1)f(are)f(currently)i(treated)f(as)g(0.)626 2576
 y(Note)25 b(that)f(if)g(the)g(solution)h(is)f(k)o(ept)h(distrib)o
 (uted,)g(error)f(analysis)h(and)g(iterati)n(v)o(e)f(re\002nement)g
-(\(controlled)h(by)626 1984 y(ICNTL\(10\))19 b(and)g(ICNTL\(11\)\))f
-(are)h(not)g(applied.)485 2096 y(ICNTL\(22-40\))g(are)g(not)g(used)h
-(in)f(the)g(current)g(v)o(ersion.)444 2295 y(mumps)p
-667 2295 V 28 w(par\045)p FB(CNTL)g FA(is)f(a)h FB(r)o(eal)g
+(\(controlled)h(by)626 2668 y(ICNTL\(10\))19 b(and)g(ICNTL\(11\)\))f
+(are)h(not)g(applied.)485 2786 y(ICNTL\(22-40\))g(are)g(not)g(used)h
+(in)f(the)g(current)g(v)o(ersion.)444 2992 y(mumps)p
+667 2992 V 28 w(par\045)p FB(CNTL)g FA(is)f(a)h FB(r)o(eal)g
 FA(\(also)g FB(r)o(eal)g FA(in)f(the)h(comple)o(x)h(v)o(ersion\))g
-(array)f(of)g(dimension)h(5.)485 2423 y(CNTL\(1\))31
+(array)f(of)g(dimension)h(5.)485 3126 y(CNTL\(1\))31
 b(is)g(the)h(relati)n(v)o(e)f(threshold)h(for)g(numerical)g(pi)n(v)o
 (oting.)61 b(It)31 b(forms)h(a)f(trade-of)n(f)h(between)h(preserving)
-626 2514 y(sparsity)c(and)h(ensuring)g(numerical)f(stability)f(during)i
+626 3218 y(sparsity)c(and)h(ensuring)g(numerical)f(stability)f(during)i
 (the)f(f)o(actorization.)53 b(In)29 b(general,)i(a)e(lar)o(ger)f(v)n
-(alue)i(of)626 2605 y(CNTL\(1\))i(increases)g(\002ll-in)f(b)o(ut)h
+(alue)i(of)626 3309 y(CNTL\(1\))i(increases)g(\002ll-in)f(b)o(ut)h
 (leads)h(to)f(a)g(more)g(accurate)h(f)o(actorization.)63
-b(If)32 b(CNTL\(1\))f(is)h(nonzero,)626 2697 y(numerical)c(pi)n(v)o
+b(If)32 b(CNTL\(1\))f(is)h(nonzero,)626 3400 y(numerical)c(pi)n(v)o
 (oting)g(will)e(be)h(performed.)49 b(If)27 b(CNTL\(1\))f(is)h(zero,)i
 (no)f(such)f(pi)n(v)o(oting)h(will)e(be)i(performed)626
-2788 y(and)f(the)e(subroutine)i(will)d(f)o(ail)i(if)e(a)i(zero)g(pi)n
+3492 y(and)f(the)e(subroutine)i(will)d(f)o(ail)i(if)e(a)i(zero)g(pi)n
 (v)o(ot)f(is)g(encountered.)45 b(If)25 b(the)h(matrix)f(is)g
-(diagonally)i(dominant,)626 2879 y(then)j(setting)e(CNTL\(1\))g(to)h
+(diagonally)i(dominant,)626 3583 y(then)j(setting)e(CNTL\(1\))g(to)h
 (zero)g(will)f(decrease)h(the)g(f)o(actorization)g(time)g(while)f
-(still)g(pro)o(viding)i(a)f(stable)626 2971 y(decomposition.)50
+(still)g(pro)o(viding)i(a)f(stable)626 3674 y(decomposition.)50
 b(If)27 b(the)g(code)i(is)d(called)i(for)f(unsymmetric)h(or)f(general)h
-(symmetric)g(matrices,)h(CNTL\(1\))626 3062 y(has)d(def)o(ault)f(v)n
+(symmetric)g(matrices,)h(CNTL\(1\))626 3766 y(has)d(def)o(ault)f(v)n
 (alue)h(0.01.)41 b(F)o(or)25 b(symmetric)g(positi)n(v)o(e)g(de\002nite)
 g(matrices)g(and)h(if)e(the)h(Schur)g(complement)h(is)626
-3153 y(ask)o(ed)h(to)e(be)g(returned)h(\(ICNTL\(19\))p
+3857 y(ask)o(ed)h(to)e(be)g(returned)h(\(ICNTL\(19\))p
 Ft(6)p Fs(=)e FA(0\),)j(numerical)e(pi)n(v)o(oting)h(is)f(suppressed)i
-(and)e(the)h(def)o(ault)f(v)n(alue)h(is)626 3245 y(0.0.)e(V)-8
+(and)e(the)h(def)o(ault)f(v)n(alue)h(is)626 3948 y(0.0.)e(V)-8
 b(alues)18 b(less)h(than)g(0.0)g(are)g(treated)g(as)g(0.0.)k(In)c(the)g
 (unsymmetric)h(case)f(\(respecti)n(v)o(ely)h(symmetric)f(case\),)626
-3336 y(v)n(alues)h(greater)f(than)h(1.0)f(\(respecti)n(v)o(ely)g(0.5\))
+4040 y(v)n(alues)h(greater)f(than)h(1.0)f(\(respecti)n(v)o(ely)g(0.5\))
 g(are)g(treated)g(as)g(1.0)g(\(respecti)n(v)o(ely)h(0.5\).)485
-3447 y(CNTL\(2\))j(is)g(the)h(stopping)h(criterion)e(for)h(iterati)n(v)
+4158 y(CNTL\(2\))j(is)g(the)h(stopping)h(criterion)e(for)h(iterati)n(v)
 o(e)f(re\002nement)h(and)h(is)e(only)h(accessed)h(by)f(the)g(host)g
-(during)h(the)626 3539 y(solv)o(e)h(phase.)42 b(Let)24
-b Fq(B)t(er)r(r)34 b Fs(=)f(max)1602 3547 y Fp(i)1784
-3502 y Fy(j)p Fp(r)r Fy(j)1853 3513 y Fb(i)p 1651 3521
-362 4 v 1651 3564 a Fn(\()p Fy(j)p Fp(A)p Fy(j\001j)p
+(during)h(the)626 4249 y(solv)o(e)h(phase.)42 b(Let)24
+b Fq(B)t(er)r(r)34 b Fs(=)f(max)1602 4257 y Fp(i)1784
+4213 y Fy(j)p Fp(r)r Fy(j)1853 4224 y Fb(i)p 1651 4232
+362 4 v 1651 4275 a Fn(\()p Fy(j)p Fp(A)p Fy(j\001j)p
 Fp(x)p Fy(j)p Fn(+)p Fy(j)p Fp(b)p Fy(j)p Fn(\))1987
-3575 y Fb(i)2047 3539 y FA([9].)41 b(Iterati)n(v)o(e)25
+4286 y Fb(i)2047 4249 y FA([9].)41 b(Iterati)n(v)o(e)25
 b(re\002nement)g(will)f(stop)h(when)h(either)f(the)626
-3630 y(required)d(accurac)o(y)g(is)e(reached)i(\()p Fq(B)t(er)r(r)k(<)
+4341 y(required)d(accurac)o(y)g(is)e(reached)i(\()p Fq(B)t(er)r(r)k(<)
 20 b FA(CNTL\(2\))g(\))g(or)h(the)f(con)m(v)o(er)o(gence)j(rate)d(is)h
-(too)g(slo)n(w)g(\()p Fq(B)t(er)r(r)g FA(does)626 3721
+(too)g(slo)n(w)g(\()p Fq(B)t(er)r(r)g FA(does)626 4432
 y(not)f(decrease)f(by)h(at)e(least)h(a)g(f)o(actor)g(of)g(5\).)k(Def)o
-(ault)c(v)n(alue)h(is)2256 3667 y Ft(p)p 2320 3667 36
-4 v 54 x Fq(")p FA(.)485 3832 y(CNTL\(3\))g(determines)h(the)f
+(ault)c(v)n(alue)h(is)2256 4378 y Ft(p)p 2320 4378 36
+4 v 54 x Fq(")p FA(.)485 4550 y(CNTL\(3\))g(determines)h(the)f
 (absolute)h(threshold)h Fq(thr)r(es)d FA(for)h(numerical)h(pi)n(v)o
 (oting.)28 b(It)20 b(has)h(def)o(ault)g(v)n(alue)g(-1.0)f(and)626
-3924 y(is)j(only)h(accessed)g(by)g(the)f(host)g(during)h(the)f
+4641 y(is)j(only)h(accessed)g(by)g(the)f(host)g(during)h(the)f
 (numerical)h(f)o(actorization)g(phase.)36 b(If)23 b(CNTL\(3\))f
-Fq(<)h FA(0)g(\(def)o(ault\),)626 4015 y Fq(thr)r(es)16
+Fq(<)h FA(0)g(\(def)o(ault\),)626 4733 y Fq(thr)r(es)16
 b FA(is)g(determined)i(automatically:)23 b Fq(thr)r(es)d
 Fs(=)h Fq(\017)p Ft(k)p Fq(A)p Ft(k)34 b FA(if)16 b(SYM=2)h(in)f(the)h
-(case)g(of)g(node)g(le)n(v)o(el)g(parallelism;)626 4106
+(case)g(of)g(node)g(le)n(v)o(el)g(parallelism;)626 4824
 y Fq(thr)r(es)34 b Fs(=)g(0)26 b FA(otherwise.)44 b(If)26
 b(CNTL\(3\))e Ft(\025)i FA(0,)h(then)f(the)g(v)n(alue)h
 Fq(thr)r(es)33 b Fs(=)26 b FA(CNTL\(3\))f(is)g(used.)44
-b(During)27 b(the)626 4198 y(numerical)20 b(f)o(actorization,)f(a)g
+b(During)27 b(the)626 4915 y(numerical)20 b(f)o(actorization,)f(a)g
 (potential)g(pi)n(v)o(ot)g(has)g(to)g(be)g(lar)o(ger)g(than)g
-Fq(thr)r(es)f FA(to)h(be)g(accepted.)485 4309 y(CNTL\(4\))i(determines)
+Fq(thr)r(es)f FA(to)h(be)g(accepted.)485 5034 y(CNTL\(4\))i(determines)
 h(the)f(v)n(alue)h(for)f(static)g(pi)n(v)o(oting.)31
 b(It)21 b(has)h(def)o(ault)g(v)n(alue)g(0.0)f(in)g(symmetric)h
-(inde\002nite)f(case)626 4400 y(and)31 b(-1.0)g(otherwise.)57
+(inde\002nite)f(case)626 5125 y(and)31 b(-1.0)g(otherwise.)57
 b(If)30 b(CNTL\(4\))f Fq(<)h FA(0.0)h(static)f(pi)n(v)o(oting)g(is)g
 (not)h(acti)n(v)n(ated.)58 b(If)30 b(CNTL\(4\))f Fs(=)h
-FA(0.0)g(an)626 4492 y(automatic)21 b(choice)g(between)h(numerical)e
+FA(0.0)g(an)626 5216 y(automatic)21 b(choice)g(between)h(numerical)e
 (and)i(static)d(pi)n(v)o(oting)i(is)f(performed)i(during)f(analysis.)28
-b(If)20 b(CNTL\(4\))626 4583 y Fq(>)f FA(0.0)g(static)f(pi)n(v)o(oting)
+b(If)20 b(CNTL\(4\))626 5308 y Fq(>)f FA(0.0)g(static)f(pi)n(v)o(oting)
 i(is)e(acti)n(v)n(ated)i(and)g(the)f(magnitude)h(of)f(small)f(pi)n(v)o
-(ots)h(will)f(be)h(set)g(to)g(CNTL\(4\).)485 4694 y(CNTL\(5\))f(is)h
-(not)g(used)h(in)e(the)h(current)h(v)o(ersion.)444 4956
-y Fu(6)119 b(Inf)m(ormation)29 b(parameters)444 5125
-y FA(The)d(parameters)h(described)g(in)f(this)g(section)g(are)g
-(returned)h(by)g Fz(MUMPS)e FA(and)h(hold)h(information)g(that)f(may)g
-(be)h(of)444 5216 y(interest)21 b(to)g(the)g(user)l(.)30
-b(Some)22 b(of)f(the)g(information)h(is)f(local)g(to)g(each)h
-(processor)h(and)f(some)f(only)h(on)g(the)f(host.)31
-b(If)20 b(an)444 5308 y(error)f(is)f(detected)i(\(see)f(Section)g(7\),)
-f(the)h(information)h(may)f(be)g(incomplete.)1966 5557
-y Fv(21)p eop end
+(ots)h(will)f(be)h(set)g(to)g(CNTL\(4\).)1966 5557 y
+Fv(21)p eop end
 %%Page: 22 22
-TeXDict begin 22 21 bop 444 291 a Fl(6.1)99 b(Inf)n(ormation)25
-b(local)f(to)h(each)g(pr)n(ocessor)444 432 y FA(The)19
-b(arrays)g(mumps)p 1003 432 23 4 v 28 w(par\045)p FB(RINFO)g
-FA(and)g(mumps)p 1793 432 V 28 w(par\045)p FB(INFO)h
-FA(are)e(local)h(to)g(each)h(process.)444 595 y(mumps)p
-667 595 V 28 w(par\045)p FB(RINFO)34 b FA(is)h(a)f(double)i(precision)f
-(array)g(of)f(dimension)i(20.)71 b(It)34 b(contains)h(the)g(follo)n
-(wing)g(local)444 686 y(information)19 b(on)h(the)f(e)o(x)o(ecution)h
-(of)f Fz(MUMPS)p FA(:)485 810 y(RINFO\(1\))i(-)h(after)f(analysis:)30
+TeXDict begin 22 21 bop 485 291 a FA(CNTL\(5\))18 b(is)h(not)g(used)h
+(in)e(the)h(current)h(v)o(ersion.)444 558 y Fu(6)119
+b(Inf)m(ormation)29 b(parameters)444 726 y FA(The)d(parameters)h
+(described)g(in)f(this)g(section)g(are)g(returned)h(by)g
+Fz(MUMPS)e FA(and)h(hold)h(information)g(that)f(may)g(be)h(of)444
+818 y(interest)21 b(to)g(the)g(user)l(.)30 b(Some)22
+b(of)f(the)g(information)h(is)f(local)g(to)g(each)h(processor)h(and)f
+(some)f(only)h(on)g(the)f(host.)31 b(If)20 b(an)444 909
+y(error)f(is)f(detected)i(\(see)f(Section)g(7\),)f(the)h(information)h
+(may)f(be)g(incomplete.)444 1135 y Fl(6.1)99 b(Inf)n(ormation)25
+b(local)f(to)h(each)g(pr)n(ocessor)444 1276 y FA(The)19
+b(arrays)g(mumps)p 1003 1276 23 4 v 28 w(par\045)p FB(RINFO)g
+FA(and)g(mumps)p 1793 1276 V 28 w(par\045)p FB(INFO)h
+FA(are)e(local)h(to)g(each)h(process.)444 1438 y(mumps)p
+667 1438 V 28 w(par\045)p FB(RINFO)34 b FA(is)h(a)f(double)i(precision)
+f(array)g(of)f(dimension)i(20.)71 b(It)34 b(contains)h(the)g(follo)n
+(wing)g(local)444 1530 y(information)19 b(on)h(the)f(e)o(x)o(ecution)h
+(of)f Fz(MUMPS)p FA(:)485 1654 y(RINFO\(1\))i(-)h(after)f(analysis:)30
 b(The)22 b(estimated)g(number)g(of)g(\003oating-point)h(operations)g
-(on)f(the)g(processor)h(for)f(the)626 902 y(elimination)e(process.)485
-1026 y(RINFO\(2\))33 b(-)h(after)g(f)o(actorization:)54
+(on)f(the)g(processor)h(for)f(the)626 1746 y(elimination)e(process.)485
+1870 y(RINFO\(2\))33 b(-)h(after)g(f)o(actorization:)54
 b(The)34 b(number)i(of)e(\003oating-point)g(operations)i(on)e(the)g
-(processor)i(for)e(the)626 1118 y(assembly)20 b(process.)485
-1242 y(RINFO\(3\))33 b(-)h(after)g(f)o(actorization:)54
+(processor)i(for)e(the)626 1962 y(assembly)20 b(process.)485
+2086 y(RINFO\(3\))33 b(-)h(after)g(f)o(actorization:)54
 b(The)34 b(number)i(of)e(\003oating-point)g(operations)i(on)e(the)g
-(processor)i(for)e(the)626 1333 y(elimination)20 b(process.)485
-1458 y(RINFO\(4\))e(-)h(RINFO\(20\))f(are)h(not)g(used)h(in)f(the)g
-(current)g(v)o(ersion.)444 1653 y(mumps)p 667 1653 V
+(processor)i(for)e(the)626 2177 y(elimination)20 b(process.)485
+2302 y(RINFO\(4\))e(-)h(RINFO\(20\))f(are)h(not)g(used)h(in)f(the)g
+(current)g(v)o(ersion.)444 2497 y(mumps)p 667 2497 V
 28 w(par\045)p FB(INFO)24 b FA(is)f(an)h(inte)o(ger)g(array)g(of)f
 (dimension)i(40.)38 b(It)23 b(contains)h(the)g(follo)n(wing)g(local)g
-(information)g(on)444 1745 y(the)19 b(e)o(x)o(ecution)h(of)f
-Fz(MUMPS)p FA(:)485 1869 y(INFO\(1\))28 b(is)g(0)g(if)g(the)g(call)g
+(information)g(on)444 2589 y(the)19 b(e)o(x)o(ecution)h(of)f
+Fz(MUMPS)p FA(:)485 2713 y(INFO\(1\))28 b(is)g(0)g(if)g(the)g(call)g
 (to)h Fz(MUMPS)e FA(w)o(as)h(successful,)k(ne)o(gati)n(v)o(e)c(if)g(an)
 h(error)f(occurred)i(\(see)e(Section)g(7\),)j(or)626
-1961 y(positi)n(v)o(e)20 b(if)e(a)h(w)o(arning)h(is)e(returned.)485
-2085 y(INFO\(2\))i(holds)g(additional)h(information)g(about)g(the)f
+2804 y(positi)n(v)o(e)20 b(if)e(a)h(w)o(arning)h(is)e(returned.)485
+2929 y(INFO\(2\))i(holds)g(additional)h(information)g(about)g(the)f
 (error)g(or)g(the)h(w)o(arning.)27 b(If)20 b(INFO\(1\))f
-Fs(=)h FA(\2261,)h(INFO\(2\))e(is)h(the)626 2176 y(processor)g(number)g
-(\(in)f(communicator)h(mumps)p 1953 2176 V 28 w(par\045COMM\))g(on)g
-(which)f(the)g(error)g(w)o(as)g(detected.)485 2301 y(INFO\(3\))f(-)h
+Fs(=)h FA(\2261,)h(INFO\(2\))e(is)h(the)626 3020 y(processor)g(number)g
+(\(in)f(communicator)h(mumps)p 1953 3020 V 28 w(par\045COMM\))g(on)g
+(which)f(the)g(error)g(w)o(as)g(detected.)485 3145 y(INFO\(3\))f(-)h
 (after)g(analysis:)k(Estimated)c(real)f(space)i(needed)g(on)g(the)f
-(processor)h(for)f(the)g(f)o(actors.)485 2425 y(INFO\(4\))f(-)h(after)g
+(processor)h(for)f(the)g(f)o(actors.)485 3269 y(INFO\(4\))f(-)h(after)g
 (analysis:)k(Estimated)c(inte)o(ger)g(space)g(needed)i(on)e(the)g
-(processor)h(for)f(f)o(actors.)485 2550 y(INFO\(5\))f(-)h(after)g
+(processor)h(for)f(f)o(actors.)485 3394 y(INFO\(5\))f(-)h(after)g
 (analysis:)k(Estimated)c(maximum)h(front)e(size)h(on)h(the)f(processor)
-l(.)485 2675 y(INFO\(6\))27 b(-)f(after)h(analysis:)40
+l(.)485 3518 y(INFO\(6\))27 b(-)f(after)h(analysis:)40
 b(Number)27 b(of)g(nodes)h(in)f(the)g(complete)h(tree.)47
 b(The)27 b(same)h(v)n(alue)f(is)g(returned)h(on)f(all)626
-2766 y(processors.)485 2890 y(INFO\(7\))34 b(-)f(after)h(analysis:)54
+3610 y(processors.)485 3734 y(INFO\(7\))34 b(-)f(after)h(analysis:)54
 b(Minimum)35 b(v)n(alue)g(of)f(MAXIS)g(estimated)g(by)g(the)h(analysis)
-f(phase)h(to)f(run)h(the)626 2982 y(numerical)20 b(f)o(actorization)f
-(successfully)-5 b(.)485 3106 y(INFO\(8\))15 b(-)h(after)f(analysis:)22
+f(phase)h(to)f(run)h(the)626 3826 y(numerical)20 b(f)o(actorization)f
+(successfully)-5 b(.)485 3950 y(INFO\(8\))15 b(-)h(after)f(analysis:)22
 b(Minimum)16 b(v)n(alue)h(of)f(MAXS)f(estimated)h(by)g(the)g(analysis)g
-(phase)h(to)e(run)h(the)g(numerical)626 3198 y(f)o(actorization)k
-(successfully)-5 b(.)485 3322 y(INFO\(9\))18 b(-)h(after)g(f)o
+(phase)h(to)e(run)h(the)g(numerical)626 4042 y(f)o(actorization)k
+(successfully)-5 b(.)485 4166 y(INFO\(9\))18 b(-)h(after)g(f)o
 (actorization:)k(Size)c(of)g(the)g(real)f(space)i(used)g(on)f(the)g
-(processor)h(to)f(store)g(the)g(f)o(actors.)485 3447
+(processor)h(to)f(store)g(the)g(f)o(actors.)485 4291
 y(INFO\(10\))g(-)f(after)h(f)o(actorization:)24 b(Size)18
 b(of)h(the)g(inte)o(ger)g(space)h(used)f(on)h(the)f(processor)h(to)e
-(store)h(the)g(f)o(actors.)485 3571 y(INFO\(11\))g(-)f(after)h(f)o
+(store)h(the)g(f)o(actors.)485 4415 y(INFO\(11\))g(-)f(after)h(f)o
 (actorization:)24 b(Order)19 b(of)g(the)g(lar)o(gest)f(frontal)h
-(matrix)g(processed)h(on)f(the)g(processor)l(.)485 3696
+(matrix)g(processed)h(on)f(the)g(processor)l(.)485 4540
 y(INFO\(12\))k(-)g(after)g(f)o(actorization:)33 b(Number)24
 b(of)f(of)n(f-diagonal)i(pi)n(v)o(ots)e(selected)h(on)g(the)f
-(processor)h(if)f(SYM=0)h(or)626 3787 y(number)k(of)f(ne)o(gati)n(v)o
+(processor)h(if)f(SYM=0)h(or)626 4631 y(number)k(of)f(ne)o(gati)n(v)o
 (e)g(pi)n(v)o(ots)g(on)h(the)f(processor)g(if)g(SYM=1)g(or)g(2.)46
 b(If)27 b(ICNTL\(13\)=0)f(\(the)h(def)o(ault\),)i(this)626
-3878 y(e)o(xcludes)i(pi)n(v)o(ots)f(from)f(the)h(parallel)f(root)h
+4722 y(e)o(xcludes)i(pi)n(v)o(ots)f(from)f(the)h(parallel)f(root)h
 (node)g(treated)g(by)g(ScaLAP)-7 b(A)m(CK.)27 b(\(This)i(means)i(that)e
-(the)g(user)626 3970 y(should)21 b(set)e(ICNTL\(13\)=1)g(or)h(use)g(a)f
+(the)g(user)626 4814 y(should)21 b(set)e(ICNTL\(13\)=1)g(or)h(use)g(a)f
 (single)h(processor)h(in)e(order)h(to)f(get)h(the)g(e)o(xact)f(number)i
-(of)f(of)n(f-diagonal)626 4061 y(or)25 b(ne)o(gati)n(v)o(e)f(pi)n(v)o
+(of)f(of)n(f-diagonal)626 4905 y(or)25 b(ne)o(gati)n(v)o(e)f(pi)n(v)o
 (ots)h(rather)f(than)g(a)h(lo)n(wer)f(bound.\))40 b(Note)24
 b(that)g(if)g(SYM=1)g(or)h(2,)g(INFO\(12\))f(will)f(be)i(0)f(for)626
-4152 y(comple)o(x)c(symmetric)f(matrices.)485 4277 y(INFO\(13\))g(-)f
+4996 y(comple)o(x)c(symmetric)f(matrices.)485 5121 y(INFO\(13\))g(-)f
 (after)h(f)o(actorization:)24 b(The)19 b(number)h(of)f(uneliminated)h
 (v)n(ariables,)f(corresponding)i(to)e(delayed)h(pi)n(v)o(ots,)626
-4368 y(sent)h(to)f(the)g(f)o(ather)l(.)28 b(If)20 b(a)g(delayed)i(pi)n
+5212 y(sent)h(to)f(the)g(f)o(ather)l(.)28 b(If)20 b(a)g(delayed)i(pi)n
 (v)o(ot)e(is)g(subsequently)i(passed)f(to)g(the)f(f)o(ather)h(of)f(the)
-g(f)o(ather)m(,)h(it)e(is)h(counted)626 4459 y(a)f(second)h(time.)485
-4584 y(INFO\(14\))f(-)f(after)h(f)o(actorization:)24
-b(Number)19 b(of)g(memory)h(compresses)g(on)f(the)g(processor)l(.)485
-4709 y(INFO\(15\))28 b(-)f(after)h(analysis:)41 b(estimated)28
-b(total)g(size)g(\(in)f(millions)h(of)g(bytes\))g(of)g(all)f
-Fz(MUMPS)g FA(internal)h(data)g(for)626 4800 y(running)21
-b(numerical)e(f)o(actorization.)485 4924 y(INFO\(16\))j(-)g(after)g(f)o
+g(f)o(ather)m(,)h(it)e(is)h(counted)626 5303 y(a)f(second)h(time.)1966
+5557 y Fv(22)p eop end
+%%Page: 23 23
+TeXDict begin 23 22 bop 485 291 a FA(INFO\(14\))19 b(-)f(after)h(f)o
+(actorization:)24 b(Number)19 b(of)g(memory)h(compresses)g(on)f(the)g
+(processor)l(.)485 415 y(INFO\(15\))28 b(-)f(after)h(analysis:)41
+b(estimated)28 b(total)g(size)g(\(in)f(millions)h(of)g(bytes\))g(of)g
+(all)f Fz(MUMPS)g FA(internal)h(data)g(for)626 506 y(running)21
+b(numerical)e(f)o(actorization.)485 630 y(INFO\(16\))j(-)g(after)g(f)o
 (actorization:)31 b(total)21 b(size)i(\(in)f(millions)g(of)g(bytes\))h
 (of)f(all)g Fz(MUMPS)f FA(internal)h(data)h(used)g(during)626
-5016 y(numerical)d(f)o(actorization.)485 5140 y(INFO\(18\))f(-)f
+721 y(numerical)d(f)o(actorization.)485 845 y(INFO\(18\))f(-)f
 (INFO\(22\))h(are)g(not)g(used)h(in)e(the)h(current)h(v)o(ersion.)j
-(Are)c(set)g(to)f(zero.)1966 5557 y Fv(22)p eop end
-%%Page: 23 23
-TeXDict begin 23 22 bop 485 291 a FA(INFO\(23\))27 b(-)g(after)g(f)o
+(Are)c(set)g(to)f(zero.)485 970 y(INFO\(23\))27 b(-)g(after)g(f)o
 (actorization:)40 b(total)27 b(number)h(of)g(pi)n(v)o(ots)f(eliminated)
 g(on)h(the)f(processor)l(.)49 b(In)28 b(the)f(case)h(of)f(a)626
-382 y(distrib)o(uted)d(solution)g(\(see)g(ICNTL\(21\)\),)f(this)g
+1061 y(distrib)o(uted)d(solution)g(\(see)g(ICNTL\(21\)\),)f(this)g
 (should)i(be)f(used)g(by)g(the)f(user)h(to)g(allocate)f(solution)h(v)o
-(ectors)626 473 y(ISOL)p 797 473 23 4 v 26 w(loc)17 b(and)f(SOL)p
-1196 473 V 27 w(loc)g(of)g(appropriate)h(dimensions)h(\(ISOL)p
-2313 473 V 25 w(LOC)e(of)g(size)g(INFO\(23\),)g(SOL)p
-3190 473 V 26 w(LOC)g(of)g(size)626 565 y(LSOL)p 818
-565 V 26 w(LOC)f Ft(\002)h FA(NRHS)e(where)j(LSOL)p 1686
-565 V 25 w(LOC)e Ft(\025)h FA(INFO\(23\)\))f(on)i(that)e(processor)m(,)
-j(between)e(the)g(f)o(actorization)626 656 y(and)k(solv)o(e)f(steps.)
-485 780 y(INFO\(24\))g(-)f(INFO\(40\))h(are)g(not)g(used)h(in)e(the)h
-(current)h(v)o(ersion.)444 1006 y Fl(6.2)99 b(Inf)n(ormation)25
-b(a)n(v)o(ailable)e(on)i(all)f(pr)n(ocessors)444 1148
-y FA(The)19 b(arrays)g(mumps)p 1003 1148 V 28 w(par\045RINFOG)f(and)i
-(mumps)p 1831 1148 V 28 w(par\045INFOG)e(:)444 1310 y(mumps)p
-667 1310 V 28 w(par\045)p FB(RINFOG)28 b FA(is)f(a)h(double)h
-(precision)g(array)f(of)g(dimension)h(20.)51 b(It)27
-b(contains)i(the)f(follo)n(wing)g(global)444 1401 y(information)19
-b(on)h(the)f(e)o(x)o(ecution)h(of)f Fz(MUMPS)p FA(:)485
-1526 y(RINFOG\(1\))i(-)g(after)g(analysis:)30 b(The)21
-b(estimated)h(number)h(of)e(\003oating-point)h(operations)h(\(on)f(all)
-f(processors\))i(for)626 1617 y(the)c(elimination)h(process.)485
-1742 y(RINFOG\(2\))i(-)h(after)f(f)o(actorization:)32
+(ectors)626 1152 y(ISOL)p 797 1152 23 4 v 26 w(loc)17
+b(and)f(SOL)p 1196 1152 V 27 w(loc)g(of)g(appropriate)h(dimensions)h
+(\(ISOL)p 2313 1152 V 25 w(LOC)e(of)g(size)g(INFO\(23\),)g(SOL)p
+3190 1152 V 26 w(LOC)g(of)g(size)626 1244 y(LSOL)p 818
+1244 V 26 w(LOC)f Ft(\002)h FA(NRHS)e(where)j(LSOL)p
+1686 1244 V 25 w(LOC)e Ft(\025)h FA(INFO\(23\)\))f(on)i(that)e
+(processor)m(,)j(between)e(the)g(f)o(actorization)626
+1335 y(and)k(solv)o(e)f(steps.)485 1459 y(INFO\(24\))g(-)f(INFO\(40\))h
+(are)g(not)g(used)h(in)e(the)h(current)h(v)o(ersion.)444
+1684 y Fl(6.2)99 b(Inf)n(ormation)25 b(a)n(v)o(ailable)e(on)i(all)f(pr)
+n(ocessors)444 1826 y FA(The)19 b(arrays)g(mumps)p 1003
+1826 V 28 w(par\045RINFOG)f(and)i(mumps)p 1831 1826 V
+28 w(par\045INFOG)e(:)444 1988 y(mumps)p 667 1988 V 28
+w(par\045)p FB(RINFOG)28 b FA(is)f(a)h(double)h(precision)g(array)f(of)
+g(dimension)h(20.)51 b(It)27 b(contains)i(the)f(follo)n(wing)g(global)
+444 2079 y(information)19 b(on)h(the)f(e)o(x)o(ecution)h(of)f
+Fz(MUMPS)p FA(:)485 2204 y(RINFOG\(1\))i(-)g(after)g(analysis:)30
+b(The)21 b(estimated)h(number)h(of)e(\003oating-point)h(operations)h
+(\(on)f(all)f(processors\))i(for)626 2295 y(the)c(elimination)h
+(process.)485 2419 y(RINFOG\(2\))i(-)h(after)f(f)o(actorization:)32
 b(The)23 b(total)f(number)i(of)f(\003oating-point)g(operations)h(\(on)g
-(all)e(processors\))i(for)626 1833 y(the)19 b(assembly)h(process.)485
-1957 y(RINFOG\(3\))i(-)h(after)f(f)o(actorization:)32
+(all)e(processors\))i(for)626 2511 y(the)19 b(assembly)h(process.)485
+2635 y(RINFOG\(3\))i(-)h(after)f(f)o(actorization:)32
 b(The)23 b(total)f(number)i(of)f(\003oating-point)g(operations)h(\(on)g
-(all)e(processors\))i(for)626 2049 y(the)19 b(elimination)h(process.)
-485 2173 y(RINFOG\(4\))k(to)g(RINFOG\(11\))g(-)g(after)h(solv)o(e)g
+(all)e(processors\))i(for)626 2726 y(the)19 b(elimination)h(process.)
+485 2850 y(RINFOG\(4\))k(to)g(RINFOG\(11\))g(-)g(after)h(solv)o(e)g
 (with)f(error)g(analysis:)35 b(Only)25 b(returned)g(if)f(ICNTL\(11\))g
-Ft(6)p Fs(=)g FA(0.)40 b(See)626 2265 y(description)20
-b(of)f(ICNTL\(11\).)485 2389 y(RINFOG\(12\))g(-)f(RINFOG\(20\))g(are)h
-(not)g(used)h(in)f(the)g(current)g(v)o(ersion.)444 2585
-y(mumps)p 667 2585 V 28 w(par\045)p FB(INFOG)e FA(is)g(an)g(inte)o(ger)
+Ft(6)p Fs(=)g FA(0.)40 b(See)626 2941 y(description)20
+b(of)f(ICNTL\(11\).)485 3065 y(RINFOG\(12\))g(-)f(RINFOG\(20\))g(are)h
+(not)g(used)h(in)f(the)g(current)g(v)o(ersion.)444 3261
+y(mumps)p 667 3261 V 28 w(par\045)p FB(INFOG)e FA(is)g(an)g(inte)o(ger)
 h(array)f(of)g(dimension)h(40.)23 b(It)17 b(contains)h(the)f(follo)n
-(wing)h(global)g(information)f(on)444 2676 y(the)i(e)o(x)o(ecution)h
-(of)f Fz(MUMPS)p FA(:)485 2800 y(INFOG\(1\))25 b(is)g(0)g(if)g(the)h
+(wing)h(global)g(information)f(on)444 3352 y(the)i(e)o(x)o(ecution)h
+(of)f Fz(MUMPS)p FA(:)485 3476 y(INFOG\(1\))25 b(is)g(0)g(if)g(the)h
 (call)f(to)g Fz(MUMPS)g FA(w)o(as)g(successful,)j(ne)o(gati)n(v)o(e)e
 (if)e(an)i(error)g(occurred)g(\(see)g(Section)f(7\),)i(or)626
-2892 y(positi)n(v)o(e)20 b(if)e(a)h(w)o(arning)h(is)e(returned.)485
-3016 y(INFOG\(2\))g(holds)i(additional)g(information)f(about)h(the)f
-(error)g(or)f(the)h(w)o(arning.)444 3141 y(The)h(dif)n(ference)g
+3568 y(positi)n(v)o(e)20 b(if)e(a)h(w)o(arning)h(is)e(returned.)485
+3692 y(INFOG\(2\))g(holds)i(additional)g(information)f(about)h(the)f
+(error)g(or)f(the)h(w)o(arning.)444 3816 y(The)h(dif)n(ference)g
 (between)h(INFOG\(1:2\))e(and)i(INFO\(1:2\))e(is)h(that)f(INFOG\(1:2\))
 h(is)f(the)h(same)g(on)h(all)e(processors.)27 b(It)444
-3232 y(has)22 b(the)h(v)n(alue)g(of)f(INFO\(1:2\))f(of)i(the)f
+3907 y(has)22 b(the)h(v)n(alue)g(of)f(INFO\(1:2\))f(of)i(the)f
 (processor)h(which)g(returned)g(with)f(the)g(most)g(ne)o(gati)n(v)o(e)h
-(INFO\(1\))f(v)n(alue.)33 b(F)o(or)444 3323 y(e)o(xample,)26
+(INFO\(1\))f(v)n(alue.)33 b(F)o(or)444 3999 y(e)o(xample,)26
 b(if)e(processor)i Fq(p)d FA(returns)i(with)f(INFO\(1\)=-13,)i(and)f
 (INFO\(2\)=10000,)h(then)f(all)f(other)h(processors)h(will)444
-3415 y(return)19 b(with)f(INFOG\(1\)=-13)h(and)h(INFOG\(2\)=10000,)f(b)
+4090 y(return)19 b(with)f(INFOG\(1\)=-13)h(and)h(INFOG\(2\)=10000,)f(b)
 o(ut)g(still)f(INFO\(1\)=-1)h(and)g(INFO\(2\)=)p Fq(p)p
-FA(.)485 3556 y(INFOG\(3\))26 b(-)h(after)f(analysis:)40
+FA(.)485 4231 y(INFOG\(3\))26 b(-)h(after)f(analysis:)40
 b(T)-6 b(otal)26 b(estimated)h(real/comple)o(x)h(w)o(orkspace)g(for)f
-(f)o(actors)g(on)h(all)e(processors.)48 b(If)626 3647
+(f)o(actors)g(on)h(all)e(processors.)48 b(If)626 4322
 y(ne)o(gati)n(v)o(e,)22 b(then)g(the)f(absolute)g(v)n(alue)h
 (corresponds)h(to)e Fm(millions)f FA(of)h(real/comple)o(x)h(entries)f
-(in)g(the)g(w)o(orkspace)626 3739 y(allocated)h(for)f(the)h(f)o
+(in)g(the)g(w)o(orkspace)626 4413 y(allocated)h(for)f(the)h(f)o
 (actors.)30 b(\(Note)21 b(that)g(for)g(symmetric)h(matrices)f(and)h(in)
 f(parallel,)g(this)g(can)h(be)f(lar)o(ger)g(than)626
-3830 y(INFOG\(20\).\))485 3954 y(INFOG\(4\))d(-)h(after)f(analysis:)24
+4505 y(INFOG\(20\).\))485 4629 y(INFOG\(4\))d(-)h(after)f(analysis:)24
 b(T)-6 b(otal)19 b(estimated)g(inte)o(ger)g(w)o(orkspace)h(for)f(f)o
-(actors)g(on)h(all)e(processors.)485 4079 y(INFOG\(5\))g(-)h(after)f
+(actors)g(on)h(all)e(processors.)485 4753 y(INFOG\(5\))g(-)h(after)f
 (analysis:)24 b(Estimated)19 b(maximum)g(front)g(size)g(in)g(the)g
-(complete)h(tree.)485 4203 y(INFOG\(6\))e(-)h(after)f(analysis:)24
+(complete)h(tree.)485 4877 y(INFOG\(6\))e(-)h(after)f(analysis:)24
 b(Number)c(of)f(nodes)h(in)e(the)h(complete)h(tree.)485
-4328 y(INFOG\(7\))e(-)h(after)f(analysis:)24 b(ordering)c(option)g(ef)n
-(fecti)n(v)o(ely)f(used)h(\(see)f(ICNTL\(7\)\).)485 4453
+5001 y(INFOG\(7\))e(-)h(after)f(analysis:)24 b(ordering)c(option)g(ef)n
+(fecti)n(v)o(ely)f(used)h(\(see)f(ICNTL\(7\)\).)485 5125
 y(INFOG\(8\))h(-)g(after)g(analysis:)27 b(structural)20
 b(symmetry)h(in)f(percent)h(\(100)g(:)26 b(symmetric,)21
-b(0)f(:)26 b(fully)21 b(unsymmetric\))g(of)626 4544 y(the)g
+b(0)f(:)26 b(fully)21 b(unsymmetric\))g(of)626 5216 y(the)g
 (\(permuted\))h(matrix.)28 b(\(-1)21 b(indicates)g(that)g(the)g
 (structural)g(symmetry)g(w)o(as)g(not)g(computed)h(which)g(will)d(be)
-626 4635 y(the)g(case)h(if)e(the)h(input)g(matrix)g(is)g(in)f
-(elemental)i(form.\))485 4760 y(INFOG\(9\))g(-)f(after)h(f)o
+626 5308 y(the)g(case)h(if)e(the)h(input)g(matrix)g(is)g(in)f
+(elemental)i(form.\))1966 5557 y Fv(23)p eop end
+%%Page: 24 24
+TeXDict begin 24 23 bop 485 291 a FA(INFOG\(9\))20 b(-)f(after)h(f)o
 (actorization:)26 b(T)-6 b(otal)20 b(real/comple)o(x)h(w)o(orkspace)g
 (to)f(store)h(the)f(LU)f(f)o(actors.)27 b(If)20 b(ne)o(gati)n(v)o(e,)g
-(then)626 4851 y(the)29 b(absolutie)f(v)n(alue)h(corresponds)h(to)e
-(the)g(size)g(in)g Fm(millions)f FA(of)h(real/comple)o(x)h(entries)f
-(used)h(to)f(store)g(the)626 4942 y(f)o(actors.)485 5067
-y(INFOG\(10\))19 b(-)f(after)h(f)o(actorization:)24 b(T)-6
-b(otal)18 b(inte)o(ger)h(space)h(to)f(store)g(the)g(LU)f(f)o(actors.)
-485 5191 y(INFOG\(11\))h(-)f(after)h(f)o(actorization:)24
-b(Order)19 b(of)g(lar)o(gest)f(frontal)h(matrix.)1966
-5557 y Fv(23)p eop end
-%%Page: 24 24
-TeXDict begin 24 23 bop 485 291 a FA(INFOG\(12\))29 b(-)f(after)g(f)o
-(actorization:)44 b(T)-6 b(otal)28 b(number)i(of)e(of)n(f-diagonal)i
-(pi)n(v)o(ots)f(if)f(SYM=0)h(or)g(total)f(number)i(of)626
-382 y(ne)o(gati)n(v)o(e)k(pi)n(v)o(ots)f(\(real)f(arithmetic\))h(if)f
+(then)626 382 y(the)29 b(absolutie)f(v)n(alue)h(corresponds)h(to)e(the)
+g(size)g(in)g Fm(millions)f FA(of)h(real/comple)o(x)h(entries)f(used)h
+(to)f(store)g(the)626 473 y(f)o(actors.)485 598 y(INFOG\(10\))19
+b(-)f(after)h(f)o(actorization:)24 b(T)-6 b(otal)18 b(inte)o(ger)h
+(space)h(to)f(store)g(the)g(LU)f(f)o(actors.)485 722
+y(INFOG\(11\))h(-)f(after)h(f)o(actorization:)24 b(Order)19
+b(of)g(lar)o(gest)f(frontal)h(matrix.)485 847 y(INFOG\(12\))29
+b(-)f(after)g(f)o(actorization:)44 b(T)-6 b(otal)28 b(number)i(of)e(of)
+n(f-diagonal)i(pi)n(v)o(ots)f(if)f(SYM=0)h(or)g(total)f(number)i(of)626
+938 y(ne)o(gati)n(v)o(e)k(pi)n(v)o(ots)f(\(real)f(arithmetic\))h(if)f
 (SYM=1)h(or)g(2.)66 b(If)32 b(ICNTL\(13\)=0)h(\(the)g(def)o(ault\))g
-(this)g(e)o(xcludes)626 473 y(pi)n(v)o(ots)27 b(from)f(the)g(parallel)g
-(root)g(node)h(treated)f(by)h(ScaLAP)-7 b(A)m(CK.)24
+(this)g(e)o(xcludes)626 1029 y(pi)n(v)o(ots)27 b(from)f(the)g(parallel)
+g(root)g(node)h(treated)f(by)h(ScaLAP)-7 b(A)m(CK.)24
 b(\(This)i(means)g(that)g(the)h(user)f(should)h(set)626
-565 y(ICNTL\(13\)=1)18 b(or)g(use)g(a)f(single)h(processor)h(in)f
+1121 y(ICNTL\(13\)=1)18 b(or)g(use)g(a)f(single)h(processor)h(in)f
 (order)g(to)g(get)f(the)h(e)o(xact)g(number)h(of)f(of)n(f-diagonal)h
-(or)e(ne)o(gati)n(v)o(e)626 656 y(pi)n(v)o(ots)26 b(rather)g(than)f(a)h
-(lo)n(wer)f(bound.\))45 b(Note)25 b(that)g(if)g(SYM=1)h(or)g(2,)g
-(INFOG\(12\))f(will)g(be)h(0)f(for)h(comple)o(x)626 747
-y(symmetric)20 b(matrices.)485 872 y(INFOG\(13\))f(-)f(after)h(f)o
+(or)e(ne)o(gati)n(v)o(e)626 1212 y(pi)n(v)o(ots)26 b(rather)g(than)f(a)
+h(lo)n(wer)f(bound.\))45 b(Note)25 b(that)g(if)g(SYM=1)h(or)g(2,)g
+(INFOG\(12\))f(will)g(be)h(0)f(for)h(comple)o(x)626 1303
+y(symmetric)20 b(matrices.)485 1428 y(INFOG\(13\))f(-)f(after)h(f)o
 (actorization:)24 b(T)-6 b(otal)18 b(number)i(of)f(delayed)h(pi)n(v)o
-(ots.)485 996 y(INFOG\(14\))f(-)f(after)h(f)o(actorization:)24
+(ots.)485 1552 y(INFOG\(14\))f(-)f(after)h(f)o(actorization:)24
 b(T)-6 b(otal)18 b(number)i(of)f(memory)h(compresses.)485
-1121 y(INFOG\(15\))f(-)f(after)h(solution:)24 b(Number)19
+1676 y(INFOG\(15\))f(-)f(after)h(solution:)24 b(Number)19
 b(of)g(steps)g(of)g(iterati)n(v)o(e)g(re\002nement.)485
-1245 y(INFOG\(16\))h(-)f(after)g(analysis:)26 b(Estimated)19
+1801 y(INFOG\(16\))h(-)f(after)g(analysis:)26 b(Estimated)19
 b(size)h(\(in)g(million)f(of)h(bytes\))g(of)g(all)f Fz(MUMPS)g
-FA(internal)h(data)g(for)g(running)626 1337 y(f)o(actorization)39
+FA(internal)h(data)g(for)g(running)626 1892 y(f)o(actorization)39
 b(\(v)n(alue)19 b(on)h(the)f(most)g(memory)g(consuming)i(processor\).)
-485 1461 y(INFOG\(17\))d(-)f(after)h(analysis:)23 b(Estimated)18
+485 2017 y(INFOG\(17\))d(-)f(after)h(analysis:)23 b(Estimated)18
 b(size)g(\(in)g(millions)g(of)g(bytes\))g(of)g(all)f
-Fz(MUMPS)g FA(internal)h(data)h(for)f(running)626 1553
+Fz(MUMPS)g FA(internal)h(data)h(for)f(running)626 2108
 y(f)o(actorization)39 b(\(sum)19 b(o)o(v)o(er)g(all)f(processors\).)485
-1677 y(INFOG\(18\))k(-)h(after)f(f)o(actorization:)31
+2232 y(INFOG\(18\))k(-)h(after)f(f)o(actorization:)31
 b(Size)22 b(in)h(millions)f(of)h(bytes)g(of)g(all)f Fz(MUMPS)f
-FA(internal)i(data)g(allocated)g(during)626 1768 y(f)o(actorization:)h
+FA(internal)i(data)g(allocated)g(during)626 2324 y(f)o(actorization:)h
 (v)n(alue)c(on)f(the)g(most)g(memory)h(consuming)h(processor)l(.)485
-1893 y(INFOG\(19\))h(-)h(after)f(f)o(actorization:)31
+2448 y(INFOG\(19\))h(-)h(after)f(f)o(actorization:)31
 b(Size)22 b(in)h(millions)f(of)h(bytes)g(of)g(all)f Fz(MUMPS)f
-FA(internal)i(data)g(allocated)g(during)626 1984 y(f)o(actorization:)h
-(sum)19 b(o)o(v)o(er)h(all)e(processors.)485 2109 y(INFOG\(20\))k(-)g
+FA(internal)i(data)g(allocated)g(during)626 2540 y(f)o(actorization:)h
+(sum)19 b(o)o(v)o(er)h(all)e(processors.)485 2664 y(INFOG\(20\))k(-)g
 (after)g(analysis:)31 b(Estimated)22 b(number)i(of)e(entries)h(in)f
 (the)g(f)o(actors.)34 b(If)22 b(ne)o(gati)n(v)o(e)h(the)g(absolute)g(v)
-n(alue)626 2200 y(corresponds)e(to)e Fm(millions)f FA(of)h(entries)g
-(in)g(the)g(f)o(actors.)485 2325 y(INFOG\(21\))41 b(-)h(after)f(f)o
+n(alue)626 2755 y(corresponds)e(to)e Fm(millions)f FA(of)h(entries)g
+(in)g(the)g(f)o(actors.)485 2880 y(INFOG\(21\))41 b(-)h(after)f(f)o
 (actorization:)69 b(Size)41 b(in)h(millions)f(of)g(bytes)i(of)e(memory)
-i(ef)n(fecti)n(v)o(ely)f(used)g(during)626 2416 y(f)o(actorization:)24
+i(ef)n(fecti)n(v)o(ely)f(used)g(during)626 2971 y(f)o(actorization:)24
 b(v)n(alue)c(on)f(the)g(most)g(memory)h(consuming)h(processor)l(.)485
-2540 y(INFOG\(22\))41 b(-)h(after)f(f)o(actorization:)69
+3096 y(INFOG\(22\))41 b(-)h(after)f(f)o(actorization:)69
 b(Size)41 b(in)h(millions)f(of)g(bytes)i(of)e(memory)i(ef)n(fecti)n(v)o
-(ely)f(used)g(during)626 2632 y(f)o(actorization:)24
-b(sum)19 b(o)o(v)o(er)h(all)e(processors.)485 2756 y(INFOG\(23\))h(-)f
+(ely)f(used)g(during)626 3187 y(f)o(actorization:)24
+b(sum)19 b(o)o(v)o(er)h(all)e(processors.)485 3311 y(INFOG\(23\))h(-)f
 (After)h(analysis:)k(v)n(alue)d(of)f(ICNTL\(6\))f(ef)n(fecti)n(v)o(ely)
-h(used.)485 2881 y(INFOG\(24\))g(-)f(After)h(analysis:)k(v)n(alue)d(of)
-f(ICNTL\(12\))f(ef)n(fecti)n(v)o(ely)h(used.)485 3005
+h(used.)485 3436 y(INFOG\(24\))g(-)f(After)h(analysis:)k(v)n(alue)d(of)
+f(ICNTL\(12\))f(ef)n(fecti)n(v)o(ely)h(used.)485 3560
 y(INFOG\(25\))g(-)f(After)h(f)o(actorization)g(:)k(number)d(of)f(tin)o
 (y)g(pi)n(v)o(ots)g(\(number)h(of)f(pi)n(v)o(ots)g(modi\002ed)g(by)g
-(static)g(pi)n(v)o(oting\))485 3130 y(INFOG\(26\))g(-)f(INFOG\(40\))h
+(static)g(pi)n(v)o(oting\))485 3685 y(INFOG\(26\))g(-)f(INFOG\(40\))h
 (are)g(not)g(used)g(in)g(the)g(current)h(v)o(ersion.)444
-3397 y Fu(7)119 b(Err)n(or)30 b(diagnostics)444 3566
+3952 y Fu(7)119 b(Err)n(or)30 b(diagnostics)444 4120
 y Fz(MUMPS)21 b FA(uses)i(the)f(follo)n(wing)h(mechanism)g(to)f
 (process)i(errors)e(that)g(may)h(occur)g(during)g(the)f(parallel)g(e)o
-(x)o(ecution)i(of)444 3657 y(the)d(code.)30 b(If,)21
+(x)o(ecution)i(of)444 4212 y(the)d(code.)30 b(If,)21
 b(during)h(a)f(call)f(to)h Fz(MUMPS)p FA(,)f(an)h(error)g(occurs)h(on)f
 (a)g(processor)m(,)i(this)d(processor)j(informs)e(all)f(the)h(other)444
-3748 y(processors)f(before)g(the)o(y)f(return)g(from)g(the)g(call.)k
+4303 y(processors)f(before)g(the)o(y)f(return)g(from)g(the)g(call.)k
 (In)c(parts)g(of)g(the)h(code)f(where)h(messages)g(are)f(sent)g
-(asynchronously)444 3840 y(\(for)e(e)o(xample)g(the)h(f)o(actorization)
+(asynchronously)444 4394 y(\(for)e(e)o(xample)g(the)h(f)o(actorization)
 f(and)h(solv)o(e)g(phases\),)g(the)f(processor)h(on)f(which)h(the)f
-(error)g(occurs)h(sends)g(a)f(message)444 3931 y(to)h(the)g(other)h
+(error)g(occurs)h(sends)g(a)f(message)444 4486 y(to)h(the)g(other)h
 (processors)g(with)f(a)g(speci\002c)g(error)g(tag.)23
 b(On)18 b(the)h(other)f(hand,)h(if)f(the)g(error)g(occurs)h(in)f(a)g
-(subroutine)i(that)444 4022 y(does)f(not)h(use)f(asynchronous)i
+(subroutine)i(that)444 4577 y(does)f(not)h(use)f(asynchronous)i
 (communication,)g(the)e(processor)h(propagates)g(the)f(error)g(to)f
-(the)h(other)h(processors.)556 4114 y(On)c(successful)i(completion,)f
+(the)h(other)h(processors.)556 4668 y(On)c(successful)i(completion,)f
 (a)g(call)f(to)g Fz(MUMPS)g FA(will)f(e)o(xit)i(with)f(the)g(parameter)
-h(mumps)p 2901 4114 23 4 v 28 w(par\045INFOG\(1\))g(set)f(to)444
-4205 y(zero.)23 b(A)18 b(ne)o(gati)n(v)o(e)g(v)n(alue)h(for)f(mumps)p
-1458 4205 V 28 w(par\045INFOG\(1\))g(indicates)h(that)f(an)g(error)h
-(has)f(been)h(detected)g(on)g(one)f(of)h(the)444 4296
+h(mumps)p 2901 4668 23 4 v 28 w(par\045INFOG\(1\))g(set)f(to)444
+4760 y(zero.)23 b(A)18 b(ne)o(gati)n(v)o(e)g(v)n(alue)h(for)f(mumps)p
+1458 4760 V 28 w(par\045INFOG\(1\))g(indicates)h(that)f(an)g(error)h
+(has)f(been)h(detected)g(on)g(one)f(of)h(the)444 4851
 y(processors.)34 b(F)o(or)22 b(e)o(xample,)i(if)d(processor)j
 Fq(s)e FA(returns)g(with)g(INFO\(1\))g Fs(=)f FA(\2268)i(and)g
-(INFO\(2\)=1000,)h(then)f(processor)444 4388 y Fq(s)d
+(INFO\(2\)=1000,)h(then)f(processor)444 4942 y Fq(s)d
 FA(ran)h(out)h(of)f(inte)o(ger)g(w)o(orkspace)h(during)g(the)f(f)o
 (actorization)h(and)f(the)g(size)g(of)g(the)g(w)o(orkspace)i(MAXIS)d
-(should)i(be)444 4479 y(increased)c(by)h(1000)g(at)e(least.)22
+(should)i(be)444 5034 y(increased)c(by)h(1000)g(at)e(least.)22
 b(The)c(other)g(processors)h(are)f(informed)g(about)h(this)e(error)h
-(and)g(return)g(with)f(INFO\(1\))g Fs(=)444 4570 y FA(\2261)j(\(i.e.,)e
+(and)g(return)g(with)f(INFO\(1\))g Fs(=)444 5125 y FA(\2261)j(\(i.e.,)e
 (an)i(error)g(occurred)h(on)f(another)g(processor\))h(and)f(INFO\(2\)=)
 p Fq(s)f FA(\(i.e.,)g(the)g(error)h(occurred)h(on)f(processor)h
-Fq(s)p FA(\).)444 4662 y(Processors)c(that)g(detected)h(a)f(local)g
+Fq(s)p FA(\).)444 5216 y(Processors)c(that)g(detected)h(a)f(local)g
 (error)m(,)h(do)f(not)h(o)o(v)o(erwrite)f(INFO\(1\),)f(i.e.,)g(only)i
-(processors)g(that)f(did)h(not)f(produce)444 4753 y(an)i(error)g(will)f
+(processors)g(that)f(did)h(not)f(produce)444 5308 y(an)i(error)g(will)f
 (set)g(INFO\(1\))h(to)f(\2261)i(and)f(INFO\(2\))g(to)f(the)h(processor)
-h(ha)o(ving)g(the)f(most)g(ne)o(gati)n(v)o(e)g(error)g(code.)556
-4844 y(The)35 b(beha)o(viour)h(is)e(slightly)h(dif)n(ferent)h(for)e
-(INFOG\(1\))h(and)g(INFOG\(2\):)55 b(in)35 b(the)g(pre)n(vious)h(e)o
-(xample,)j(all)444 4936 y(processors)20 b(w)o(ould)g(return)f(with)f
-(INFOG\(1\))g Fs(=)h FA(\2268)g(and)h(INFOG\(2\)=1000.)556
-5027 y(The)f(possible)g(error)g(codes)h(returned)g(in)e(INFO\(1\))h
-(\(and)g(INFOG\(1\)\))f(ha)o(v)o(e)h(the)g(follo)n(wing)h(meaning:)444
-5168 y FB(\2261)42 b FA(An)19 b(error)g(occurred)h(on)f(processor)h
-(INFO\(2\).)444 5293 y FB(\2262)42 b FA(NZ)18 b(is)h(out)g(of)g(range.)
-24 b(INFO\(2\)=NZ.)1966 5557 y Fv(24)p eop end
+h(ha)o(ving)g(the)f(most)g(ne)o(gati)n(v)o(e)g(error)g(code.)1966
+5557 y Fv(24)p eop end
 %%Page: 25 25
-TeXDict begin 25 24 bop 444 291 a FB(\2263)42 b Fz(MUMPS)30
-b FA(w)o(as)h(called)h(with)f(an)g(in)m(v)n(alid)h(v)n(alue)g(for)f
-(JOB.)f(This)h(may)h(happen)g(for)f(e)o(xample)h(if)f(the)g(analysis)
-626 382 y(\(JOB=1\))40 b(w)o(as)g(not)g(performed)h(before)f(the)g(f)o
+TeXDict begin 25 24 bop 556 291 a FA(The)35 b(beha)o(viour)h(is)e
+(slightly)h(dif)n(ferent)h(for)e(INFOG\(1\))h(and)g(INFOG\(2\):)55
+b(in)35 b(the)g(pre)n(vious)h(e)o(xample,)j(all)444 382
+y(processors)20 b(w)o(ould)g(return)f(with)f(INFOG\(1\))g
+Fs(=)h FA(\2268)g(and)h(INFOG\(2\)=1000.)556 473 y(The)f(possible)g
+(error)g(codes)h(returned)g(in)e(INFO\(1\))h(\(and)g(INFOG\(1\)\))f(ha)
+o(v)o(e)h(the)g(follo)n(wing)h(meaning:)444 614 y FB(\2261)42
+b FA(An)19 b(error)g(occurred)h(on)f(processor)h(INFO\(2\).)444
+739 y FB(\2262)42 b FA(NZ)18 b(is)h(out)g(of)g(range.)24
+b(INFO\(2\)=NZ.)444 863 y FB(\2263)42 b Fz(MUMPS)30 b
+FA(w)o(as)h(called)h(with)f(an)g(in)m(v)n(alid)h(v)n(alue)g(for)f(JOB.)
+f(This)h(may)h(happen)g(for)f(e)o(xample)h(if)f(the)g(analysis)626
+955 y(\(JOB=1\))40 b(w)o(as)g(not)g(performed)h(before)f(the)g(f)o
 (actorization)h(\(JOB=2\),)j(or)c(the)g(f)o(actorization)g(w)o(as)g
-(not)626 473 y(performed)22 b(before)e(the)g(solv)o(e)h(\(JOB=3\),)f
+(not)626 1046 y(performed)22 b(before)e(the)g(solv)o(e)h(\(JOB=3\),)f
 (or)g(the)g(initialization)g(phase)h(\(JOB=-1\))f(w)o(as)g(performed)h
-(a)f(second)626 565 y(time)d(on)h(an)g(instance)g(not)f(freed)h
+(a)f(second)626 1137 y(time)d(on)h(an)g(instance)g(not)f(freed)h
 (\(JOB=-2\).)k(See)17 b(description)h(of)f(JOB)g(in)g(Section)h(3.)k
-(This)17 b(error)h(also)f(occurs)626 656 y(if)i(JOB)f(does)i(not)f
+(This)17 b(error)h(also)f(occurs)626 1229 y(if)i(JOB)f(does)i(not)f
 (contain)h(the)f(same)g(v)n(alue)h(on)f(all)f(processes)i(on)g(entry)f
-(to)g Fz(MUMPS)p FA(.)444 780 y FB(\2264)42 b FA(Error)25
+(to)g Fz(MUMPS)p FA(.)444 1353 y FB(\2264)42 b FA(Error)25
 b(in)g(user)o(-pro)o(vided)h(permutation)g(array)g(PERM)p
-2036 780 23 4 v 26 w(IN)f(in)g(position)h(INFO\(2\).)41
-b(This)25 b(error)g(occurs)h(on)g(the)626 872 y(host)20
-b(only)-5 b(.)444 996 y FB(\2265)42 b FA(Problem)19 b(of)g(REAL)f(w)o
-(orkspace)i(allocation)f(of)g(size)g(INFO\(2\))f(during)i(analysis.)444
-1121 y FB(\2266)42 b FA(Matrix)19 b(is)g(singular)g(in)g(structure.)444
-1245 y FB(\2267)42 b FA(Problem)19 b(of)g(INTEGER)e(w)o(orkspace)k
-(allocation)e(of)g(size)g(INFO\(2\))f(during)i(analysis.)444
-1370 y FB(\2268)42 b FA(MAXIS)25 b(too)h(small)f(for)h(f)o
-(actorization.)43 b(This)25 b(may)h(happen,)j(for)c(e)o(xample,)j(if)d
-(numerical)h(pi)n(v)o(oting)g(leads)g(to)626 1461 y(signi\002cantly)21
+2036 1353 23 4 v 26 w(IN)f(in)g(position)h(INFO\(2\).)41
+b(This)25 b(error)g(occurs)h(on)g(the)626 1445 y(host)20
+b(only)-5 b(.)444 1569 y FB(\2265)42 b FA(Problem)19
+b(of)g(REAL)f(w)o(orkspace)i(allocation)f(of)g(size)g(INFO\(2\))f
+(during)i(analysis.)444 1694 y FB(\2266)42 b FA(Matrix)19
+b(is)g(singular)g(in)g(structure.)444 1818 y FB(\2267)42
+b FA(Problem)19 b(of)g(INTEGER)e(w)o(orkspace)k(allocation)e(of)g(size)
+g(INFO\(2\))f(during)i(analysis.)444 1943 y FB(\2268)42
+b FA(MAXIS)25 b(too)h(small)f(for)h(f)o(actorization.)43
+b(This)25 b(may)h(happen,)j(for)c(e)o(xample,)j(if)d(numerical)h(pi)n
+(v)o(oting)g(leads)g(to)626 2034 y(signi\002cantly)21
 b(more)g(\002ll-in)e(than)i(w)o(as)g(predicted)g(by)g(the)f(analysis.)
 29 b(The)20 b(user)h(should)g(increase)g(the)g(v)n(alue)g(of)626
-1553 y(ICNTL\(14\))e(or)f(the)h(v)n(alue)h(of)f(MAXIS)f(before)i
+2125 y(ICNTL\(14\))e(or)f(the)h(v)n(alue)h(of)f(MAXIS)f(before)i
 (recalling)f(the)g(f)o(actorization)h(\(JOB=2\).)444
-1677 y FB(\2269)42 b FA(MAXS)16 b(too)g(small)g(for)g(f)o
+2250 y FB(\2269)42 b FA(MAXS)16 b(too)g(small)g(for)g(f)o
 (actorization.)23 b(The)16 b(user)g(should)h(increase)g(the)f(v)n(alue)
-h(of)f(ICNTL\(14\))f(or)h(MAXS)g(before)626 1768 y(recalling)k(the)f(f)
-o(actorization)g(\(JOB=2\).)444 1893 y FB(\22610)42 b
-FA(Numerically)20 b(singular)f(matrix.)444 2017 y FB(\22611)42
+h(of)f(ICNTL\(14\))f(or)h(MAXS)g(before)626 2341 y(recalling)k(the)f(f)
+o(actorization)g(\(JOB=2\).)444 2466 y FB(\22610)42 b
+FA(Numerically)20 b(singular)f(matrix.)444 2590 y FB(\22611)42
 b FA(MAXS)19 b(too)g(small)g(for)f(solution.)24 b(See)19
-b(error)g(INFO\(1\))f Fs(=)g FA(\2269.)444 2142 y FB(\22612)42
+b(error)g(INFO\(1\))f Fs(=)g FA(\2269.)444 2715 y FB(\22612)42
 b FA(MAXS)19 b(too)g(small)g(for)f(iterati)n(v)o(e)h(re\002nement.)k
-(See)c(error)g(INFO\(1\))f Fs(=)g FA(\2269.)444 2267
+(See)c(error)g(INFO\(1\))f Fs(=)g FA(\2269.)444 2839
 y FB(\22613)42 b FA(Error)19 b(in)g(a)f(F)o(ortran)h(ALLOCA)-8
 b(TE)17 b(statement.)23 b(INFO\(2\))18 b(contains)i(the)f(size)g(that)f
-(the)h(package)i(requested.)444 2391 y FB(\22614)42 b
+(the)h(package)i(requested.)444 2964 y FB(\22614)42 b
 FA(MAXIS)19 b(too)g(small)g(for)f(solution.)24 b(See)19
-b(error)f(INFO\(1\))h Fs(=)f FA(\2268.)444 2516 y FB(\22615)42
+b(error)f(INFO\(1\))h Fs(=)f FA(\2268.)444 3088 y FB(\22615)42
 b FA(MAXIS)19 b(too)g(small)g(for)f(iterati)n(v)o(e)h(re\002nement)g
 (and/or)h(error)f(analysis.)k(See)c(error)g(INFO\(1\))f
-Fs(=)g FA(\2268.)444 2640 y FB(\22616)42 b FA(N)19 b(is)g(out)g(of)g
-(range.)k(INFO\(2\)=N.)444 2765 y FB(\22617)42 b FA(The)25
+Fs(=)g FA(\2268.)444 3213 y FB(\22616)42 b FA(N)19 b(is)g(out)g(of)g
+(range.)k(INFO\(2\)=N.)444 3337 y FB(\22617)42 b FA(The)25
 b(internal)g(send)h(b)o(uf)n(fer)f(that)f(w)o(as)i(allocated)f
 (dynamically)h(by)f Fz(MUMPS)f FA(on)i(the)f(processor)h(is)e(too)h
-(small.)626 2856 y(The)19 b(user)g(should)h(increase)g(the)f(v)n(alue)h
+(small.)626 3429 y(The)19 b(user)g(should)h(increase)g(the)f(v)n(alue)h
 (of)e(ICNTL\(14\))h(before)g(recalling)g(the)g(analysis)h(\(JOB=1\).)
-444 2980 y FB(\22618)42 b FA(MAXIS)19 b(too)g(small)g(to)f(process)i
+444 3553 y FB(\22618)42 b FA(MAXIS)19 b(too)g(small)g(to)f(process)i
 (root)f(node.)24 b(See)19 b(error)g(INFO\(1\))f Fs(=)g
-FA(\2268.)444 3105 y FB(\22619)42 b FA(MAXS)19 b(too)g(small)g(to)f
+FA(\2268.)444 3678 y FB(\22619)42 b FA(MAXS)19 b(too)g(small)g(to)f
 (process)i(root)f(node.)24 b(See)19 b(error)g(INFO\(1\))f
-Fs(=)g FA(\2269.)444 3230 y FB(\22620)42 b FA(The)30
+Fs(=)g FA(\2269.)444 3802 y FB(\22620)42 b FA(The)30
 b(internal)f(reception)i(b)o(uf)n(fer)e(that)g(w)o(as)h(allocated)g
 (dynamically)h(by)f Fz(MUMPS)e FA(on)i(the)g(processor)g(is)f(too)626
-3321 y(small.)22 b(INFO\(2\))16 b(holds)i(the)f(minimum)g(size)g(of)f
+3894 y(small.)22 b(INFO\(2\))16 b(holds)i(the)f(minimum)g(size)g(of)f
 (the)h(reception)h(b)o(uf)n(fer)e(required)i(\(in)e(bytes\).)23
-b(The)17 b(user)g(should)626 3412 y(increase)j(the)f(v)n(alue)h(of)e
+b(The)17 b(user)g(should)626 3985 y(increase)j(the)f(v)n(alue)h(of)e
 (ICNTL\(14\))h(before)g(recalling)g(the)g(analysis)h(\(JOB=1\).)444
-3537 y FB(\22621)42 b FA(V)-8 b(alue)16 b(of)h(P)-7 b(AR=0)15
+4110 y FB(\22621)42 b FA(V)-8 b(alue)16 b(of)h(P)-7 b(AR=0)15
 b(is)h(not)h(allo)n(wed)f(because)i(only)e(one)h(processor)h(is)d(a)o
 (v)n(ailable;)i(INFO\(2\))f(is)f(set)h(to)g(the)h(number)626
-3628 y(of)30 b(processors,)i(1.)54 b(Running)31 b Fz(MUMPS)d
+4201 y(of)30 b(processors,)i(1.)54 b(Running)31 b Fz(MUMPS)d
 FA(in)h(host-node)h(mode)g(\(the)g(host)f(is)g(not)g(a)g(sla)o(v)o(e)g
-(processor)i(itself\))626 3719 y(requires)c(at)e(least)h(tw)o(o)g
+(processor)i(itself\))626 4292 y(requires)c(at)e(least)h(tw)o(o)g
 (processors.)44 b(The)26 b(user)g(should)h(either)f(set)f(P)-7
 b(AR)25 b(to)h(1)g(or)g(increase)g(the)g(number)h(of)626
-3811 y(processors.)444 3935 y FB(\22622)42 b FA(A)19
+4384 y(processors.)444 4508 y FB(\22622)42 b FA(A)19
 b(pointer)g(array)h(is)e(pro)o(vided)i(by)g(the)f(user)g(that)g(is)f
-(either)702 4060 y Ft(\017)42 b FA(not)19 b(associated,)g(or)702
-4168 y Ft(\017)42 b FA(has)19 b(insuf)n(\002cient)g(size,)g(or)702
-4276 y Ft(\017)42 b FA(is)18 b(associated)i(and)g(should)f(not)h(be)f
+(either)702 4633 y Ft(\017)42 b FA(not)19 b(associated,)g(or)702
+4741 y Ft(\017)42 b FA(has)19 b(insuf)n(\002cient)g(size,)g(or)702
+4848 y Ft(\017)42 b FA(is)18 b(associated)i(and)g(should)f(not)h(be)f
 (associated)h(\(for)e(e)o(xample,)i(RHS)e(on)h(non-host)h
-(processors\).)626 4400 y(INFO\(2\))f(points)g(to)g(the)g(pointer)g
+(processors\).)626 4973 y(INFO\(2\))f(points)g(to)g(the)g(pointer)g
 (array)g(ha)o(ving)h(the)f(wrong)g(format)g(in)g(the)g(table)g(belo)n
 (w:)1966 5557 y Fv(25)p eop end
 %%Page: 26 26
@@ -5027,35 +5039,35 @@ y(unsymmetric)20 b(solv)o(ers.)27 b Fm(Comput.)19 b(Methods)h(Appl.)e
 b(A.)e(Guermouche,)i(J.-Y)-10 b(.)19 b(L)-7 b('Excellent,)19
 b(and)h(S.)f(Pralet.)28 b(Hybrid)20 b(scheduling)i(for)d(the)h
 (parallel)610 2491 y(solution)f(of)g(linear)g(systems.)27
-b Fm(P)-6 b(ar)o(allel)19 b(Computing)p FA(,)g(2005.)28
-b(T)-6 b(o)19 b(appear)l(.)481 2611 y([9])42 b(M.)24
-b(Arioli,)i(J.)e(Demmel,)i(and)f(I.)f(S.)g(Duf)n(f.)45
-b(Solving)25 b(sparse)h(linear)e(systems)h(with)g(sparse)g(backw)o(ard)
-h(error)l(.)610 2703 y Fm(SIAM)19 b(J)n(ournal)h(on)f(Matrix)g
-(Analysis)g(and)h(Applications)p FA(,)f(10:165\226190,)i(1989.)444
-2823 y([10])42 b(L.)g(S.)g(Blackford,)49 b(J.)43 b(Choi,)49
-b(A.)42 b(Cleary)-5 b(,)49 b(E.)42 b(D'Aze)n(v)o(edo,)50
-b(J.)43 b(Demmel,)49 b(I.)42 b(Dhillon,)49 b(J.)43 b(Dongarra,)610
-2914 y(S.)17 b(Hammarling,)h(G.)f(Henry)-5 b(,)19 b(A.)e(Petitet,)g(K.)
-g(Stanle)o(y)-5 b(,)18 b(D.)f(W)-6 b(alk)o(er)m(,)18
-b(and)g(R.)g(C.)f(Whale)o(y)-5 b(.)25 b Fm(ScaLAP)-7
-b(A)n(CK)17 b(User)o(s')610 3006 y(Guide)p FA(.)27 b(SIAM)18
-b(Press,)h(1997.)444 3126 y([11])42 b(A.)19 b(R.)f(Curtis)h(and)h(J.)f
-(K.)g(Reid.)28 b(On)20 b(the)f(automatic)h(scaling)g(of)g(matrices)f
-(for)g(Gaussian)h(elimination.)29 b Fm(J)n(.)19 b(Inst.)610
-3218 y(Maths.)g(Applics.)p FA(,)f(10:118\226124,)j(1972.)444
-3338 y([12])42 b(J.)21 b(J.)g(Dongarra,)i(J.)e(Du)h(Croz,)g(I.)f(S.)g
-(Duf)n(f,)h(and)g(S.)f(Hammarling.)37 b(Algorithm)21
-b(679.)i(A)e(set)h(of)f(Le)n(v)o(el)h(3)g(Basic)610 3430
-y(Linear)c(Algebra)i(Subprograms.)28 b Fm(A)n(CM)18 b(T)l(r)o
-(ansactions)i(on)f(Mathematical)h(Softwar)m(e)p FA(,)f(16:1\22617,)h
-(1990.)444 3550 y([13])42 b(J.)21 b(J.)g(Dongarra,)i(J.)e(Du)h(Croz,)g
-(I.)f(S.)g(Duf)n(f,)h(and)g(S.)f(Hammarling.)37 b(Algorithm)21
-b(679.)i(A)e(set)h(of)f(Le)n(v)o(el)h(3)g(Basic)610 3641
-y(Linear)28 b(Algebra)h(Subprograms:)43 b(model)29 b(implementation)g
-(and)g(test)f(programs.)58 b Fm(A)n(CM)27 b(T)l(r)o(ansactions)i(on)610
-3733 y(Mathematical)20 b(Softwar)m(e)p FA(,)f(16:18\22628,)h(1990.)444
-3853 y([14])42 b(I.)16 b(S.)g(Duf)n(f)g(and)i(J.)e(K)m(oster)l(.)23
+b Fm(P)-6 b(ar)o(allel)19 b(Computing)p FA(,)g(32\(2\):136\226156,)j
+(2006.)481 2611 y([9])42 b(M.)24 b(Arioli,)i(J.)e(Demmel,)i(and)f(I.)f
+(S.)g(Duf)n(f.)45 b(Solving)25 b(sparse)h(linear)e(systems)h(with)g
+(sparse)g(backw)o(ard)h(error)l(.)610 2703 y Fm(SIAM)19
+b(J)n(ournal)h(on)f(Matrix)g(Analysis)g(and)h(Applications)p
+FA(,)f(10:165\226190,)i(1989.)444 2823 y([10])42 b(L.)g(S.)g
+(Blackford,)49 b(J.)43 b(Choi,)49 b(A.)42 b(Cleary)-5
+b(,)49 b(E.)42 b(D'Aze)n(v)o(edo,)50 b(J.)43 b(Demmel,)49
+b(I.)42 b(Dhillon,)49 b(J.)43 b(Dongarra,)610 2914 y(S.)17
+b(Hammarling,)h(G.)f(Henry)-5 b(,)19 b(A.)e(Petitet,)g(K.)g(Stanle)o(y)
+-5 b(,)18 b(D.)f(W)-6 b(alk)o(er)m(,)18 b(and)g(R.)g(C.)f(Whale)o(y)-5
+b(.)25 b Fm(ScaLAP)-7 b(A)n(CK)17 b(User)o(s')610 3006
+y(Guide)p FA(.)27 b(SIAM)18 b(Press,)h(1997.)444 3126
+y([11])42 b(A.)19 b(R.)f(Curtis)h(and)h(J.)f(K.)g(Reid.)28
+b(On)20 b(the)f(automatic)h(scaling)g(of)g(matrices)f(for)g(Gaussian)h
+(elimination.)29 b Fm(J)n(.)19 b(Inst.)610 3218 y(Maths.)g(Applics.)p
+FA(,)f(10:118\226124,)j(1972.)444 3338 y([12])42 b(J.)21
+b(J.)g(Dongarra,)i(J.)e(Du)h(Croz,)g(I.)f(S.)g(Duf)n(f,)h(and)g(S.)f
+(Hammarling.)37 b(Algorithm)21 b(679.)i(A)e(set)h(of)f(Le)n(v)o(el)h(3)
+g(Basic)610 3430 y(Linear)c(Algebra)i(Subprograms.)28
+b Fm(A)n(CM)18 b(T)l(r)o(ansactions)i(on)f(Mathematical)h(Softwar)m(e)p
+FA(,)f(16:1\22617,)h(1990.)444 3550 y([13])42 b(J.)21
+b(J.)g(Dongarra,)i(J.)e(Du)h(Croz,)g(I.)f(S.)g(Duf)n(f,)h(and)g(S.)f
+(Hammarling.)37 b(Algorithm)21 b(679.)i(A)e(set)h(of)f(Le)n(v)o(el)h(3)
+g(Basic)610 3641 y(Linear)28 b(Algebra)h(Subprograms:)43
+b(model)29 b(implementation)g(and)g(test)f(programs.)58
+b Fm(A)n(CM)27 b(T)l(r)o(ansactions)i(on)610 3733 y(Mathematical)20
+b(Softwar)m(e)p FA(,)f(16:18\22628,)h(1990.)444 3853
+y([14])42 b(I.)16 b(S.)g(Duf)n(f)g(and)i(J.)e(K)m(oster)l(.)23
 b(The)16 b(design)i(and)f(use)g(of)g(algorithms)g(for)g(permuting)h
 (lar)o(ge)e(entries)h(to)g(the)g(diagonal)610 3945 y(of)i(sparse)g
 (matrices.)27 b Fm(SIAM)19 b(J)n(ournal)h(on)f(Matrix)g(Analysis)g(and)

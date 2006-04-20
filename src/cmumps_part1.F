@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE CMUMPS( id )
       USE CMUMPS_OOC
@@ -268,13 +268,8 @@ C
      *            id%ICNTL(12) .NE. 1) ) THEN
                 id%MAXIS1 = 11 * N
              ELSE
-#if !defined(GRIDTLSEV0only)
               id%MAXIS1 = 10 * N
-#else
-              id%MAXIS1 = 10 * N
-              if (id%ICNTL(6) .NE. 0) id%MAXIS1 = 11 * N
-#endif
-            END IF
+             END IF
           ELSE
             id%MAXIS1 = 6 * N + 2 * NELT + 2
           ENDIF
@@ -1955,7 +1950,7 @@ C
      *    NSTK_S,NBPROCFILS, PROCNODE_STEPS, SLAVEF, COMM,MYID,
      *    BUFR, LBUFR, LBUFR_BYTES, NBFIN, IPOOL, LPOOL, LEAF,
      *    PERM, 
-     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE 
+     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE, JOBASS, ETATASS 
      *    )
       USE CMUMPS_BUFFER
       USE CMUMPS_LOAD
@@ -1973,6 +1968,7 @@ C
       INTEGER IFLAG,IERROR,INODE,MAXFRW,
      *        LRLU, IPTRLU,IWPOS, LRLUS,
      *        POSFAC, IWPOSCB, COMP, IERR_MPI
+      INTEGER JOBASS,ETATASS 
       LOGICAL SON_LEVEL2
       COMPLEX A(LA)
       DOUBLE PRECISION  OPASSW, OPELIW
@@ -2036,6 +2032,32 @@ C
       ENDIF
       NSLAVES = 0
       HF = 6 + NSLAVES
+      IF (JOBASS.EQ.0) THEN
+        ETATASS= 0 ! default is  full assembly
+      ELSE
+        ETATASS= 2 ! Assemble only Schur
+        IOLDPS = PTLUST_S(STEP(INODE)) 
+        NFRONT = IW(IOLDPS) 
+        NASS1  = IABS(IW(IOLDPS + 2))
+        ICT11 = IOLDPS + HF - 1 + NFRONT
+        SSARBR=CMUMPS_167(STEP(INODE),PROCNODE_STEPS,
+     &                        SLAVEF)
+        NUMORG = 0
+        DO WHILE (IN.GT.0)
+          NUMORG = NUMORG + 1
+          IN = FILS(IN)
+        ENDDO
+        NUMSTK = 0
+        IFSON = -IN
+        ISON = IFSON
+        IF (ISON .NE. 0) THEN
+         DO WHILE (ISON .GT. 0)
+           NUMSTK = NUMSTK + 1
+           ISON = FRERE(STEP(ISON))
+         ENDDO
+        ENDIF
+        GOTO 123
+      ENDIF
       NUMORG = 0
       DO WHILE (IN.GT.0)
         NUMORG = NUMORG + 1
@@ -2094,7 +2116,7 @@ C
         IWPOS = IWPOS - ((2*NFRONT)-(2*NFRONT_EFF))
         NFRONT = NFRONT_EFF
         ELSE
-         Write(*,*) ' ERROR 1 during ass_niv1'
+         Write(*,*) ' ERROR 1 during ass_niv1', NFRONT, NFRONT_EFF
          GOTO 270
         ENDIF
       ENDIF
@@ -2135,11 +2157,20 @@ C
         LAPOS2 = POSELT + LAELL - 1
         A(POSELT:LAPOS2) = CMPLX(ZERO)
       ELSE
-        APOS = POSELT
-        DO JJ = 0, NFRONT - 1
-          A(APOS:APOS+JJ) = CMPLX(ZERO)
+        IF (ETATASS.EQ.1) THEN
+         APOS = POSELT
+         DO JJ = 0, NFRONT - 1
+          J3 = MIN(JJ,NASS1-1) 
+          A(APOS:APOS+J3) = CMPLX(ZERO)
           APOS = APOS + NFRONT
-        END DO
+         END DO
+        ELSE
+         APOS = POSELT
+         DO JJ = 0, NFRONT - 1
+           A(APOS:APOS+JJ) = CMPLX(ZERO)
+           APOS = APOS + NFRONT
+         END DO
+        ENDIF
       END IF
 #endif
       PTRAST(STEP(INODE)) = POSELT
@@ -2151,6 +2182,7 @@ C
       IW(IOLDPS + 3) = -NASS1
       IW(IOLDPS + 4) = STEP(INODE)
       IW(IOLDPS+5)   = NSLAVES
+ 123  CONTINUE  ! jump in case of assembly of Schur only
       IF (NUMSTK.NE.0) THEN
         ISON = IFSON
         DO 220 IELL = 1, NUMSTK
@@ -2183,7 +2215,7 @@ C
            END IF
            J2 = J1 + NELIM - 1
           ENDIF
-          OPASSW = OPASSW + DBLE(SIZFR)
+          IF (JOBASS.EQ.0) OPASSW = OPASSW + DBLE(SIZFR)
           IACHK = PAMASTER(STEP(ISON))
           IF ( KEEP(50) .eq. 0 ) THEN
             POSEL1 = PTRAST(STEP(INODE)) - NFRONT
@@ -2206,12 +2238,12 @@ C
             CALL CMUMPS_178(
      *           A( PTRAST(STEP( INODE )) ), NFRONT, NASS1,
      *           A( IACHK ), LDA_SON,
-     *           IW( J1 ), J2 - J1 + 1, NELIM
+     *           IW( J1 ), J2 - J1 + 1, NELIM, ETATASS
      *          )
           ENDIF
   205     IF (LEVEL1) THEN 
            IF (SAME_PROC) ISTCHK = PTRIST(STEP(ISON))
-           IF (SAME_PROC) THEN
+           IF ((SAME_PROC).AND.ETATASS.NE.1) THEN
              IF (KEEP(50).NE.0) THEN
               J2 = J1 + LSTK - 1
               DO JJ = J1, J2
@@ -2321,6 +2353,7 @@ C
   210   ISON = FRERE(STEP(ISON))
   220 CONTINUE
       END IF
+      IF (ETATASS.EQ.2) GOTO 500
       POSELT = PTRAST(STEP(INODE))
       IBROT = INODE
       DO 260 IORG = 1, NUMORG
@@ -2459,10 +2492,12 @@ C
       DATA ZERO /0.0E0/
       INTEGER NELT, LPTRAR, NCBSON_MAX
       logical :: force_cand
+       INTEGER ETATASS
       INTEGER APOSMAX
       REAL  MAXARR
       INTEGER INIV2, SIZE_TMP_SLAVES_LIST, allocok
       INTEGER, ALLOCATABLE, DIMENSION(:) :: TMP_SLAVES_LIST
+      ETATASS = 0  ! only full assembly possible
       IN = INODE
       NBPROCFILS(STEP(IN)) = 0
       NSTEPS = NSTEPS + 1
@@ -2702,7 +2737,7 @@ C
             CALL CMUMPS_178(
      *           A( POSELT ), LDAFS, NASS1,
      *           A( IACHK ), LDA_SON,
-     *           IW( J1 ), NELIM, NELIM
+     *           IW( J1 ), NELIM, NELIM, ETATASS
      *          )
           ENDIF
   210     ISON = FRERE(STEP(ISON))
@@ -3295,22 +3330,26 @@ C
       SUBROUTINE CMUMPS_178(
      *             AFATH, NFRONT, NASS1,
      *             ACB, NCOLS,
-     *             IW, NROWS, NELIM )
+     *             IW, NROWS, NELIM, ETATASS )
       IMPLICIT NONE
       INTEGER NFRONT, NASS1
       COMPLEX AFATH( NFRONT * NFRONT )
       INTEGER NCOLS, NROWS, NELIM
       INTEGER IW( NCOLS )
       COMPLEX ACB( NCOLS, NROWS )
+      INTEGER ETATASS
       INTEGER APOS, POSELT, I, J
-      DO I = 1, NELIM
+      IF ((ETATASS.EQ.0) .OR. (ETATASS.EQ.1)) THEN
+       DO I = 1, NELIM
         POSELT = ( IW( I ) - 1 ) * NFRONT
         DO J = 1, I
           APOS = POSELT + IW( J )
           AFATH( APOS ) = AFATH( APOS ) + ACB(J, I)
         END DO
-      END DO
-      DO I = NELIM + 1, NROWS
+       END DO
+      ENDIF
+      IF ((ETATASS.EQ.0).OR.(ETATASS.EQ.1)) THEN
+       DO I = NELIM + 1, NROWS
         POSELT = IW( I )
         IF (POSELT.LE.NASS1) THEN 
          DO J = 1, NELIM
@@ -3324,12 +3363,33 @@ C
            AFATH( APOS ) = AFATH( APOS ) + ACB(J, I)
          END DO
         ENDIF
-        POSELT = ( IW( I ) - 1 ) * NFRONT
-        DO J = NELIM + 1, I
+        IF (ETATASS.EQ.1) THEN
+               POSELT = ( IW( I ) - 1 ) * NFRONT
+               DO J = NELIM + 1, I
+                IF (IW(J).GT.NASS1) EXIT
+                APOS = POSELT + IW( J )
+                AFATH( APOS ) = AFATH( APOS ) + ACB( J, I )
+               END DO
+              ELSE
+         POSELT = ( IW( I ) - 1 ) * NFRONT
+         DO J = NELIM + 1, I
           APOS = POSELT + IW( J )
           AFATH( APOS ) = AFATH( APOS ) + ACB( J, I )
-        END DO
-      END DO
+         END DO
+              ENDIF
+       END DO
+      ELSE  ! Case of ETATASS=2, assembly of Schur only
+       DO I= NROWS, NELIM+1, -1
+        POSELT = IW( I )
+        IF (POSELT.LE.NASS1) EXIT
+        POSELT = ( IW( I ) - 1 ) * NFRONT
+        DO J=I,NELIM+1, -1
+          IF (IW(J).LE.NASS1) EXIT
+          APOS = POSELT + IW( J )
+          AFATH(APOS) = AFATH(APOS)+ACB(J,I)
+        ENDDO
+       ENDDO
+      ENDIF
       RETURN
       END SUBROUTINE CMUMPS_178
       SUBROUTINE CMUMPS_530(N, ISON, INODE, IWPOSCB,
@@ -4015,7 +4075,7 @@ C
      *                           NPVW,
      *                           KEEP,KEEP8, STEP,
      *                           PROCNODE_STEPS, MYID, SLAVEF, SEUIL,
-     *                           AVOID_DELAYED)
+     *                           AVOID_DELAYED, ETATASS)
       IMPLICIT NONE
       INTEGER N, INODE, LIW, LA, IFLAG, NOFFW, NPVW
       INTEGER IW( LIW )
@@ -4026,6 +4086,7 @@ C
       INTEGER PROCNODE_STEPS( KEEP(28) ), STEP(N)
       REAL UU, SEUIL
       LOGICAL AVOID_DELAYED
+      INTEGER ETATASS
       INTEGER INOPV, IFINB, NFRONT, NPIV, IBEG_BLOCK
       INTEGER NASS, NEL1, NPIVB, NPIVE, NBTLKJ
       REAL UUTEMP
@@ -4107,7 +4168,7 @@ C
         IBEG_BLOCK = NPIV
         IF (NASS.EQ.NPIV) GOTO 500
  120    CALL CMUMPS_220(NFRONT,NASS,N,INODE,IW,LIW,A,LA,INOPV,NOFFW,
-     *                IOLDPS,POSELT,UU)
+     *                IOLDPS,POSELT,UU,SEUIL)
         IF (INOPV.NE.1) THEN
          NPVW = NPVW + 1
          CALL CMUMPS_228(NFRONT,NASS,N,INODE,IW,LIW,A,LA,

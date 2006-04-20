@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.1
-# This Version was built on Fri Feb 17 14:27:51 2006
+# This file is part of MUMPS VERSION 4.6.2
+# This Version was built on Fri Apr 14 14:59:20 2006
 #
 #
 
@@ -26,32 +26,32 @@ include ../Makefile.inc
 clean:
 	$(RM) *.o ssimpletest dsimpletest csimpletest zsimpletest c_example
 
-dsimpletest: ../lib/libdmumps.a dsimpletest.o
-	$(FL) -o dsimpletest $(OPTL) dsimpletest.o ../lib/libdmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
-c_example: ../lib/libdmumps.a c_example.o
-	$(FL) -o c_example $(OPTL) c_example.o ../lib/libdmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
+dsimpletest: ../lib/libdmumps$(PLAT).a dsimpletest.o
+	$(FL) -o dsimpletest $(OPTL) dsimpletest.o ../lib/libdmumps$(PLAT).a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
+c_example: ../lib/libdmumps$(PLAT).a c_example.o
+	$(FL) -o c_example $(OPTL) c_example.o ../lib/libdmumps$(PLAT).a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
-ssimpletest: ../lib/libsmumps.a ssimpletest.o
-	$(FL) -o ssimpletest $(OPTL) ssimpletest.o ../lib/libsmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
+ssimpletest: ../lib/libsmumps$(PLAT).a ssimpletest.o
+	$(FL) -o ssimpletest $(OPTL) ssimpletest.o ../lib/libsmumps$(PLAT).a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
-zsimpletest: ../lib/libzmumps.a zsimpletest.o
-	$(FL) -o zsimpletest $(OPTL) zsimpletest.o ../lib/libzmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
+zsimpletest: ../lib/libzmumps$(PLAT).a zsimpletest.o
+	$(FL) -o zsimpletest $(OPTL) zsimpletest.o ../lib/libzmumps$(PLAT).a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
-csimpletest: ../lib/libcmumps.a csimpletest.o
-	$(FL) -o csimpletest $(OPTL) csimpletest.o ../lib/libcmumps.a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
+csimpletest: ../lib/libcmumps$(PLAT).a csimpletest.o
+	$(FL) -o csimpletest $(OPTL) csimpletest.o ../lib/libcmumps$(PLAT).a $(LIB) $(LIBBLAS) $(LIBOTHERS) $(LORDERINGS)
 
 
-../lib/libsmumps.a:
-	@ echo 'Error: you should build the library ../lib/libsmumps.a first'
+../lib/libsmumps$(PLAT).a:
+	@ echo 'Error: you should build the library ../lib/libsmumps$(PLAT).a first'
 	exit -1
-../lib/libdmumps.a:
-	@ echo 'Error: you should build the library ../lib/libdmumps.a first'
+../lib/libdmumps$(PLAT).a:
+	@ echo 'Error: you should build the library ../lib/libdmumps$(PLAT).a first'
 	exit -1
-../lib/libcmumps.a:
-	@ echo 'Error: you should build the library ../lib/libcmumps.a first'
+../lib/libcmumps$(PLAT).a:
+	@ echo 'Error: you should build the library ../lib/libcmumps$(PLAT).a first'
 	exit -1
-../lib/libzmumps.a:
-	@ echo 'Error: you should build the library ../lib/libzmumps.a first'
+../lib/libzmumps$(PLAT).a:
+	@ echo 'Error: you should build the library ../lib/libzmumps$(PLAT).a first'
 	exit -1
 
 

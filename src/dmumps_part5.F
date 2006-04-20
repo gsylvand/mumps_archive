@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE DMUMPS_250(N, NZ, NSTEPS, A, LA,
      * IW, LIW, PERM, NA, LNA, NE_STEPS,
@@ -256,7 +256,7 @@ C
       IORD = ICNTL(7)
       IF (PROK) WRITE( MP, 220 )
       IF (PROKG.AND.(MPG .NE. MP)) WRITE( MPG, 220 )
- 220  FORMAT( /' DMUMPS Version 4.6.1 -- February 2006' )
+ 220  FORMAT( /' DMUMPS Version 4.6.2.1 -- April 2006' )
       IF ( PROK ) THEN
         IF ( KEEP(50) .eq. 0 ) THEN
           WRITE(MP, '(A)') 'L U Solver for unsymmetric matrices'
@@ -317,6 +317,7 @@ C
       END IF
       KEEP(10)=KEEP(85)
       IF ( id%MYID.EQ.MASTER ) THEN
+        KEEP(201)=ICNTL(22)
         IF ( IORD .EQ.1 ) THEN
           IF ( .not. ASSOCIATED( id%PERM_IN ) ) THEN
             id%INFO(1) = -22
@@ -423,7 +424,6 @@ C
           ENDIF
           KEEP(95) = 1
         END IF
-#if !defined(GRIDTLSEV0only)
         IF ( (KEEP(23) .NE. 0) .AND. (IORD .EQ. 1) ) THEN
           KEEP(23) = 0
           KEEP(95) = 1
@@ -432,7 +432,6 @@ C
      *  ' ** Max-trans not allowed because ordering is given'
           END IF
         END IF
-#endif
         IF (KEEP(54) .NE. 0) THEN
            IF( KEEP(23) .NE. 0 ) THEN
               IF (MPG.GT.0) THEN
@@ -520,12 +519,12 @@ C
         CALL MPI_BCAST( id%NBLOCK, 1,
      *                 MPI_INTEGER, MASTER, id%COMM, IERR )
       ENDIF
- 334  CONTINUE
       CALL DMUMPS_276( ICNTL, INFO,
      *                  id%COMM, id%MYID )
       IF ( INFO(1) .LT. 0 ) RETURN
       CALL MPI_BCAST( KEEP(54), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
       CALL MPI_BCAST( KEEP(69), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
+      CALL MPI_BCAST( KEEP(201), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
       IF ( ASSOCIATED(id%MEM_DIST) ) DEALLOCATE( id%MEM_DIST )
       ALLOCATE( id%MEM_DIST( 0:id%NSLAVES-1 ), STAT=IERR )
       IF ( IERR .GT. 0 ) THEN
@@ -677,16 +676,6 @@ C
         ENDIF
         IF (KEEP(55) .EQ. 0) THEN
           IF ( IORD .eq. 1 ) THEN
-            LIW = 2 * id%NZ + 3 * id%N + 2
-            IF (ICNTL(39).NE.1.AND.ICNTL(39).NE.2) THEN 
-              IF ( LIW > 2000000/KEEP(34) ) THEN
-                KEEP(106)=2
-              ELSE
-                KEEP(106)=1
-              END IF
-            ELSE
-              KEEP(106)=ICNTL(39)
-            ENDIF
              LIW = 2 * id%NZ + 3 * id%N + 2
           ELSE
             LIW = 2 * id%NZ + 3 * id%N + 2
@@ -2149,7 +2138,8 @@ C
       EXTERNAL DMUMPS_167,DMUMPS_283
       LOGICAL DMUMPS_508
       EXTERNAL DMUMPS_508, DMUMPS_509
-      INTEGER MAXFRW, NPVW, NOFFW, NELVAW, COMP
+      INTEGER MAXFRW, NPVW, NOFFW, NELVAW, COMP,
+     &        JOBASS, ETATASS
       DOUBLE PRECISION    OPASSW, OPELIW
       DATA ZERO /0.0D0/
        ASS_IRECV = MPI_REQUEST_NULL
@@ -2168,6 +2158,8 @@ C
       OPASSW = ZERO
       OPELIW = ZERO
       IWPOSCB = NIRBDU    
+      JOBASS  = 0
+      ETATASS = 0
       NBFIN = NBRTOT
       NBROOT_TRAITEES = 0
       NBPROCFILS(1:KEEP(28)) = 0
@@ -2361,6 +2353,7 @@ C
      *    BUFR, LBUFR, LBUFR_BYTES, NBFIN, IPOOL, LPOOL, LEAF,
      *    PERM, ISTEP_TO_INIV2, TAB_POS_IN_PERE )
         ELSE
+         JOBASS = 0
          CALL DMUMPS_252(COMM_LOAD, ASS_IRECV, 
      *        N,INODE,IW,LIW,A,LA,
      *        IFLAG,IERROR,ND,NIRBDU,
@@ -2375,7 +2368,8 @@ C
      *    COMM_NODES, MYID_NODES,
      *    BUFR, LBUFR, LBUFR_BYTES, NBFIN, IPOOL, LPOOL, LEAF,
      *    PERM, 
-     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE )
+     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+     *    JOBASS,ETATASS )
         ENDIF
        IF ( IFLAG .LT. 0 ) GOTO 640
         IF ((NBPROCFILS(STEP(INODE)).GT.0).OR.(SON_LEVEL2)) GOTO 20
@@ -2440,14 +2434,53 @@ C
      *               IFLAG, UU, NOFFW, NPVW,
      *               KEEP,KEEP8,
      *               STEP, PROCNODE_STEPS, MYID_NODES, SLAVEF,
-     *               SEUIL, AVOID_DELAYED)
+     *               SEUIL, AVOID_DELAYED, ETATASS)
+         JOBASS = ETATASS
+         IF (JOBASS.EQ.1) THEN
+           CALL DMUMPS_252(COMM_LOAD, ASS_IRECV, 
+     *        N,INODE,IW,LIW,A,LA,
+     *        IFLAG,IERROR,ND,NIRBDU,
+     *        FILS,FRERE,MAXFRW,root,OPASSW, OPELIW,
+     *      PTRIST,PTLUST_S,PTRFAC,PTRAST,STEP,PIMASTER,PAMASTER,
+     *        PTRARW,PTRAIW,
+     *        ITLOC, NSTEPS, SON_LEVEL2,
+     *        COMP, LRLU, IPTRLU,
+     *        IWPOS,IWPOSCB, POSFAC, LRLUS,
+     *        ICNTL, KEEP,KEEP8, INTARR, DBLARR,
+     *    NSTK_STEPS,NBPROCFILS, PROCNODE_STEPS, SLAVEF,
+     *    COMM_NODES, MYID_NODES,
+     *    BUFR, LBUFR, LBUFR_BYTES, NBFIN, IPOOL, LPOOL, LEAF,
+     *    PERM, 
+     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+     *    JOBASS,ETATASS )
+         ENDIF
       ELSE
          IW( IOLDPS+4 ) = 1
          CALL DMUMPS_140( N, INODE, IW, LIW, A, LA,
-     *               IOLDPS, POSELT,
-     *               IFLAG, UU, NOFFW, NPVW,
-     *               KEEP,KEEP8, MYID_NODES, SEUIL, AVOID_DELAYED )
+     *           IOLDPS, POSELT,
+     *           IFLAG, UU, NOFFW, NPVW,
+     *           KEEP,KEEP8, MYID_NODES, SEUIL, AVOID_DELAYED, 
+     *           ETATASS)
          IW( IOLDPS+4 ) = STEP(INODE)
+         JOBASS = ETATASS  ! ETATASS=1 indicates
+         IF (JOBASS.EQ.1) THEN
+           CALL DMUMPS_252(COMM_LOAD, ASS_IRECV, 
+     *        N,INODE,IW,LIW,A,LA,
+     *        IFLAG,IERROR,ND,NIRBDU,
+     *        FILS,FRERE,MAXFRW,root,OPASSW, OPELIW,
+     *      PTRIST,PTLUST_S,PTRFAC,PTRAST,STEP,PIMASTER,PAMASTER,
+     *        PTRARW,PTRAIW,
+     *        ITLOC, NSTEPS, SON_LEVEL2,
+     *        COMP, LRLU, IPTRLU,
+     *        IWPOS,IWPOSCB, POSFAC, LRLUS,
+     *        ICNTL, KEEP,KEEP8, INTARR, DBLARR,
+     *    NSTK_STEPS,NBPROCFILS, PROCNODE_STEPS, SLAVEF,
+     *    COMM_NODES, MYID_NODES,
+     *    BUFR, LBUFR, LBUFR_BYTES, NBFIN, IPOOL, LPOOL, LEAF,
+     *    PERM, 
+     *    ISTEP_TO_INIV2, TAB_POS_IN_PERE,
+     *    JOBASS,ETATASS )
+         ENDIF
       ENDIF
       IF (IFLAG.LT.0) GOTO 635
  130  CONTINUE
@@ -3651,7 +3684,6 @@ C
      *               KEEP(46) .eq. 1 ) )
         IF (id%MYID .EQ. MASTER) THEN
           KEEP(201)=id%ICNTL(22)
-          IF (KEEP(201).NE.1) KEEP(201)=0
         ENDIF
         CALL MPI_BCAST( KEEP(12), 1, MPI_INTEGER,
      *                  MASTER, id%COMM, IERR )
@@ -3665,6 +3697,8 @@ C
           CALL MPI_BCAST( KEEP(99), 1, MPI_INTEGER,
      *                  MASTER, id%COMM, IERR )
           CALL MPI_BCAST( KEEP(205), 1, MPI_INTEGER,
+     *                  MASTER, id%COMM, IERR )
+          CALL MPI_BCAST( KEEP(211), 1, MPI_INTEGER,
      *                  MASTER, id%COMM, IERR )
         ENDIF
         IF ( KEEP(50) .eq. 1 ) THEN

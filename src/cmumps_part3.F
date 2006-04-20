@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       RECURSIVE SUBROUTINE CMUMPS_210( COMM_LOAD, ASS_IRECV,
      *  BUFR, LBUFR, LBUFR_BYTES,
@@ -1100,35 +1100,51 @@ C
            IF ( IW( IPS + 2 ) < 0 ) THEN
              NFRONT = IW( IPS )
              IPSIZE = 6 + 2 * NFRONT + IW( IPS + 5 )
+#if ! defined(SIMULATE_OOC_FAC)
              IF(KEEP(201).EQ.0)THEN
                 PTRFAC(IW( IPS + 4 )) = PTRFAC(IW( IPS + 4 )) - SIZECB
              ELSE
+#endif
                 PTRFAC(IW( IPS + 4 )) = PTRFAC(IW( IPS + 4 )) -
      $               SIZECB - SIZELU
+#if ! defined(SIMULATE_OOC_FAC)
              ENDIF
+#endif
              MOVEPTRAST = .TRUE.
+#if ! defined(SIMULATE_OOC_FAC)
              IF(KEEP(201).EQ.0)THEN
                 PTRAST(IW( IPS + 4 )) = PTRAST(IW( IPS + 4 )) - SIZECB
              ELSE
+#endif
                 PTRAST(IW( IPS + 4 )) = PTRAST(IW( IPS + 4 )) - SIZECB
      $               - SIZELU
+#if ! defined(SIMULATE_OOC_FAC)
              ENDIF
+#endif
            ELSE IF ( IW( IPS ) < 0 ) THEN
              IPSIZE = - IW( IPS ) + IW ( IPS + 1 ) + 4
+#if ! defined(SIMULATE_OOC_FAC)
              IF(KEEP(201).EQ.0)THEN
                 PTRFAC(IW(IPS+3)) = PTRFAC(IW(IPS+3))-SIZECB
              ELSE
+#endif
                 PTRFAC(IW(IPS+3)) = PTRFAC(IW(IPS+3))-SIZECB-SIZELU
+#if ! defined(SIMULATE_OOC_FAC)
              ENDIF
+#endif
            ELSE
              NFRONT = IW( IPS ) + IW( IPS + 3 )
              IPSIZE = 6 + 2 * NFRONT + IW( IPS + 5 )
+#if ! defined(SIMULATE_OOC_FAC)
              IF(KEEP(201).EQ.0)THEN
                 PTRFAC(IW( IPS + 4 )) = PTRFAC(IW( IPS + 4 )) - SIZECB
              ELSE
+#endif
                 PTRFAC(IW( IPS + 4 )) = PTRFAC(IW( IPS + 4 )) - SIZECB
      $               - SIZELU
+#if ! defined(SIMULATE_OOC_FAC)
              ENDIF
+#endif
            END IF
            IPS = IPS + IPSIZE
          END DO
@@ -5222,6 +5238,7 @@ C
       INTEGER NBPROCFILS(KEEP(28)), NSTK_S(KEEP(28))
       INTEGER PROCNODE_STEPS(KEEP(28))
       INTEGER BUFR( LBUFR )
+      INTEGER ETATASS
       INTEGER CMUMPS_275, CMUMPS_330
       EXTERNAL CMUMPS_275, CMUMPS_330
       INTEGER LP, HS, HF
@@ -5253,6 +5270,7 @@ C
       LOGICAL  CMUMPS_167, SSARBR
       EXTERNAL CMUMPS_167
       NFS4FATHER = -1
+      ETATASS    = 0  ! full assembly, only option for element format
       IN = INODE
       NBPROCFILS(STEP(IN)) = 0
       LEVEL = CMUMPS_330(STEP(INODE),PROCNODE_STEPS,SLAVEF)
@@ -5442,7 +5460,7 @@ C
             CALL CMUMPS_178(
      *           A( PTRAST(STEP(INODE)) ), NFRONT, NASS1,
      *           A( IACHK ), LDA_SON,
-     *           IW( J1 ), J2 - J1 + 1, NELIM
+     *           IW( J1 ), J2 - J1 + 1, NELIM, ETATASS
      *          )
           ENDIF
   205     IF (LEVEL1) THEN 
@@ -5700,6 +5718,7 @@ C
       INTEGER IZERO 
       INTEGER IDUMMY(1)
       INTEGER PDEST1(1)
+      INTEGER ETATASS
       PARAMETER( IZERO = 0 )
       INTEGER CMUMPS_275, CMUMPS_330
       EXTERNAL CMUMPS_275, CMUMPS_330
@@ -5707,6 +5726,7 @@ C
       REAL DATA_SIZE
       REAL ZERO
       DATA ZERO /0.0E0/
+      ETATASS = 0  ! full assembly (only option available here)
       IN = INODE
       NBPROCFILS(STEP(IN)) = 0
       NSTEPS = NSTEPS + 1
@@ -5957,7 +5977,7 @@ C
             CALL CMUMPS_178(
      *           A( POSELT ), LDAFS, NASS1,
      *           A( IACHK ), LDA_SON,
-     *           IW( J1 ), NELIM, NELIM
+     *           IW( J1 ), NELIM, NELIM, ETATASS
      *          )
           ENDIF
   210     ISON = FRERE_STEPS(STEP(ISON))
@@ -6126,24 +6146,19 @@ C
             CALL CMUMPS_211( COMM_LOAD, ASS_IRECV, 
      *      BUFR, LBUFR, LBUFR_BYTES,
      *      INODE, ISON, NSLAVES, IW( PTLUST_S(STEP(INODE)) + 6 ),
-     *      NFRONT, NASS1, NFS4FATHER,NCBSON, 
-     *           IW( PTRCOL ),
+     *      NFRONT, NASS1, NFS4FATHER,NCBSON, IW( PTRCOL ),
      *      PROCNODE_STEPS,
      *      SLAVEF, POSFAC, IWPOS, IWPOSCB, IPTRLU, LRLU,
-     *      LRLUS, N, IW,
-     *      LIW, A, LA, NIRBDU,
+     *      LRLUS, N, IW, LIW, A, LA, NIRBDU,
      *      PTRIST, PTLUST_S, PTRFAC, PTRAST, STEP,
      *      PIMASTER, PAMASTER, NSTK_S, COMP,
      *      IFLAG, IERROR, MYID, COMM, NBPROCFILS, 
-     *      IPOOL, LPOOL, LEAF,
-     *      ICNTL, KEEP,KEEP8, root,
+     *      IPOOL, LPOOL, LEAF, ICNTL, KEEP,KEEP8, root,
      *      OPASSW, OPELIW,
      *      ITLOC, FILS, PTRARW, PTRAIW, INTARR, DBLARR,
      *      ND, FRERE_STEPS, NELT+1, NELT, 
      *      FRT_PTR, FRT_ELT, 
-     *       
-     *      ISTEP_TO_INIV2, TAB_POS_IN_PERE
-     *      )
+     *      ISTEP_TO_INIV2, TAB_POS_IN_PERE )
            IF ( IFLAG .LT. 0 ) GOTO 500
           ELSE
            IERR = -1

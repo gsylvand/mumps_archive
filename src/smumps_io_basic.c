@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,11 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: smumps_io_basic.c,v 1.40 2006/02/16 14:27:00 aguermou Exp $  */
+/*    $Id: smumps_io_basic.c,v 1.79 2006/04/13 11:02:26 jylexcel Exp $  */
 
 #include "smumps_io_basic_var.h"
 #include "smumps_io_err_extern.h"
@@ -53,12 +53,16 @@ int _smumps_next_file(){
   /* Defines the pattern for the file name. The last 6 'X' will be replaced
      so as to name were unique */
   char name[150];
+  int ret_code;
+
+
 #ifndef _WIN32
   strcpy(name,smumps_ooc_file_prefix);
   mkstemp(name);
 #else
   sprintf(name,"%s_%d",smumps_ooc_file_prefix,smumps_io_current_file_number+1);
 #endif
+  
   if (smumps_io_current_file_number >= smumps_io_nb_file-1){
     /* Exception : probably thrown because of a bad estimation
        of number of files. */
@@ -77,7 +81,7 @@ int _smumps_next_file(){
     if(smumps_io_pfile_name==NULL){
       sprintf(error_str,"Allocation problem in low-level OOC layer\n");
       return -13;
-    }    
+    }
   }
   
 
@@ -94,11 +98,7 @@ int _smumps_next_file(){
   strcpy(*(smumps_io_pfile_name+smumps_io_current_file_number),name);
   /* See smumps_io_basic.h for comments on the I/O flags passed to open */
 #ifndef _WIN32
-  if(smumps_io_flag_async){
-    *(smumps_io_pfile_pointer_array+smumps_io_current_file_number)=open(name,SMUMPS_IO_FLAGS);
-  }else{
-    *(smumps_io_pfile_pointer_array+smumps_io_current_file_number)=open(name,O_RDWR);
-  }
+  *(smumps_io_pfile_pointer_array+smumps_io_current_file_number)=open(name,smumps_flag_open);
   if(*(smumps_io_pfile_pointer_array+smumps_io_current_file_number)==-1){
     smumps_io_build_err_str(errno,-90,"Unable to open OOC file",error_str,200);
     return -90;
@@ -115,8 +115,9 @@ int _smumps_next_file(){
   
   smumps_io_current_file=(smumps_io_pfile_pointer_array+smumps_io_current_file_number);
   smumps_io_last_file_opened++;
-  /*  if(*(smumps_io_pfile_pointer_array+smumps_io_current_file_number)==NULL){ */
+  /*  if(*(smumps_io_pfile_pointer_array+smumps_io_current_file_number)==NULL) */
   smumps_io_write_pos=0;
+  /*  printf("new file created %d\n",smumps_io_current_file_number);*/
   return 0;
 }
 
@@ -166,10 +167,10 @@ int smumps_io_do_write_block(void * address_block,
 		     int * ierr){   
   /* Type of fwrite : size_t fwrite(const void *ptr, size_t size, 
                                     *size_t nmemb, FILE *stream); */
-  size_t ret_code,write_size;
+  size_t write_size;
   int i;
   int nb_concerned_files=0;
-  int file_number_loc,pos_in_file_loc;
+  int ret_code,file_number_loc,pos_in_file_loc;
   double to_be_written;
 #ifndef _WIN32
   int* file;
@@ -179,7 +180,6 @@ int smumps_io_do_write_block(void * address_block,
   int where;
   void* loc_addr;
 
-
   loc_addr=address_block;
   _smumps_compute_nb_concerned_files(block_size,&nb_concerned_files);
   to_be_written=((double)smumps_elementary_data_size)*((double)(*block_size));
@@ -187,20 +187,21 @@ int smumps_io_do_write_block(void * address_block,
     *file_number=smumps_io_current_file_number;
     return 0;
   }
+
   for(i=0;i<nb_concerned_files;i++){
 
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
     if(smumps_io_flag_async==IO_ASYNC_TH){
       smumps_io_protect_pointers();
     }
 #endif
 #endif
     ret_code=_smumps_prepare_pointers_for_write(to_be_written,&pos_in_file_loc,&file_number_loc);
-
-    if((int)ret_code<0){
+    
+    if(ret_code<0){
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
     if(smumps_io_flag_async==IO_ASYNC_TH){
       smumps_io_unprotect_pointers();
     }
@@ -228,34 +229,21 @@ int smumps_io_do_write_block(void * address_block,
     file=smumps_io_current_file;
     where=smumps_io_write_pos;
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
     if(smumps_io_flag_async==IO_ASYNC_TH){
       smumps_io_unprotect_pointers();
     }
 #endif
 #endif
-
-#ifndef _WIN32
-#ifndef WITHOUT_PFUNC
-    ret_code=pwrite(*file,loc_addr,write_size,where);
-#else
-  /*in this case all the I/O's are made by the I/O thread => we don't
-    need to protect the file pointer.*/
-    ret_code=write(*file,loc_addr,write_size);
-#endif
-    if(((int)ret_code==-1)||(ret_code!=write_size)){
-      smumps_io_build_err_str(errno,-90,"Problem with low level write",error_str,200);
-      return -90;
+    /* printf("1 write -> size = %d | off = %d | file = %d\n",(int)write_size,where,*file_number);*/
+    ret_code=smumps_io_write__(file,loc_addr,write_size,where);
+    
+    if(ret_code<0){
+      return ret_code;
     }
-#else
-    ret_code=fwrite(loc_addr,smumps_elementary_data_size, write_size,*file);
-    if(ret_code!=write_size){
-      sprintf(error_str,"Problem with I/O operation\n");
-      return -90;
-    }
-#endif  
+    
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
     if(smumps_io_flag_async==IO_ASYNC_TH){
       smumps_io_protect_pointers();
     }
@@ -267,13 +255,14 @@ int smumps_io_do_write_block(void * address_block,
     to_be_written=to_be_written-((int)write_size);
     loc_addr=(void*)((size_t)loc_addr+write_size);
 #else
+    /* fread and write */
     smumps_io_write_pos=smumps_io_write_pos+((int)write_size*smumps_elementary_data_size);
     to_be_written=to_be_written-((int)write_size*smumps_elementary_data_size);
-    loc_addr=loc_addr+((int)write_size*smumps_elementary_data_size);
+    loc_addr=(void*)((size_t)loc_addr+(size_t)((int)write_size*smumps_elementary_data_size));
 #endif
 
 #ifndef _WIN32
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
     if(smumps_io_flag_async==IO_ASYNC_TH){
       smumps_io_unprotect_pointers();
     }
@@ -293,7 +282,7 @@ int smumps_io_do_read_block(void * address_block,
                     int * from_where,
 		    int * file_number,
                     int * ierr){
-  size_t ret_code;
+  int ret_code;
   size_t size;
 #ifndef _WIN32
   int* file;
@@ -303,7 +292,6 @@ int smumps_io_do_read_block(void * address_block,
   double read_size;
   int local_fnum,local_offset;
   void *loc_addr;
-  int err;
   /*  if(((double)(*block_size))*((double)(smumps_elementary_data_size))>(double)MAX_FILE_SIZE){
     sprintf(error_str,"Internal error in low-level I/O operation (requested size too big for file system) \n");
     return -90;
@@ -331,31 +319,23 @@ int smumps_io_do_read_block(void * address_block,
     }else{
       size=(size_t)read_size;
     }
-#ifndef WITHOUT_PFUNC
-    ret_code=pread(*file,loc_addr,size,local_offset);
-#else
-    lseek(*file,(long) local_offset,SEEK_SET);
-    ret_code=read(*file,loc_addr,size);
-#endif
-    if(((int) ret_code==-1)||(ret_code!=size)){
-      smumps_io_build_err_str(errno,-90,"Problem with low level read",error_str,200);
-      return -90;
-    }
 #else
     if(read_size+(double)local_offset>(double)MAX_FILE_SIZE){
       size=((size_t)MAX_FILE_SIZE-(size_t)local_offset)/(size_t)smumps_elementary_data_size;
     }else{
       size=(size_t)(read_size/smumps_elementary_data_size);
     }
+#endif
+    ret_code=smumps_io_read__(file,loc_addr,size,local_offset);
 
-    fseek(*file,(long) local_offset,SEEK_SET);
-    ret_code=fread(loc_addr,smumps_elementary_data_size,size,*file);
-    if(ret_code!=size){
-      sprintf(error_str,"Problem with I/O operation\n");
-      return -90;
+    if(ret_code<0){
+      return ret_code;
     }
+
+#ifdef _WIN32
     size=size*smumps_elementary_data_size;
 #endif
+
     read_size=read_size-(double)size;
     loc_addr=(void*)((size_t)loc_addr+size);
     local_fnum++;
@@ -370,7 +350,9 @@ int smumps_io_do_read_block(void * address_block,
 int smumps_free_file_pointers(){
   int i,ierr;
   for(i=0;i<=smumps_io_last_file_opened;i++){
-#ifndef _WIN32    
+#ifndef _WIN32
+#ifdef SOLVE_CRAY
+#endif
     ierr=close(*(smumps_io_pfile_pointer_array+i));
     if(ierr==-1){
       smumps_io_build_err_str(errno,-90,"Problem while closing OOC file",error_str,200);
@@ -394,7 +376,15 @@ int smumps_free_file_pointers(){
 int smumps_init_file_structure(int* _myid, int* total_size_io,int* size_element){
   /* Computes the number of files needed. Uses ceil value. */
   int ierr;
+#ifndef _WIN32
+  int k211_loc;
+#endif
+
   smumps_io_nb_file=(int)((((double)(*total_size_io))*((double)(*size_element)))/(double)MAX_FILE_SIZE)+1;
+
+  smumps_directio_flag=0;
+
+
   smumps_io_myid=*_myid;
 
   smumps_elementary_data_size=*size_element;
@@ -413,7 +403,7 @@ int smumps_init_file_structure(int* _myid, int* total_size_io,int* size_element)
 int smumps_init_file_name(char* smumps_dir,char* smumps_file,
 			 int* smumps_dim_dir,int* smumps_dim_file,int* _myid){
   int i;
-  char *tmp_dir,*tmp_fname,*var_dir,*var_fname;
+  char *tmp_dir,*tmp_fname;
   char base_name[20];
   int dir_flag=0,file_flag=0;
   char smumps_base[10]="smumps_";
@@ -542,10 +532,18 @@ int smumps_io_alloc_pointers(int * dim){
 }
 
 int smumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* async_arg){
+
+#ifndef _WIN32
+  int k211_loc;
+#endif
+
+
+  smumps_directio_flag=0;
   smumps_io_nb_file=*nb_file_arg;
   smumps_io_myid=*myid_arg;
   smumps_elementary_data_size=*size_element;
   smumps_io_flag_async=*async_arg;
+
   return 0;
 }
 
@@ -563,13 +561,15 @@ int smumps_io_set_file_name(int* indice,char* name,int* length){
 
 int smumps_io_open_files_for_read(){
   int i;
+
+#ifdef IRIX64_
+  struct dioattr dio;
+#endif
+
   for(i=0;i<smumps_io_nb_file;i++){
 #ifndef _WIN32
-    if(smumps_io_flag_async){
-      *(smumps_io_pfile_pointer_array+i)=open(*(smumps_io_pfile_name+i),SMUMPS_IO_FLAGS);
-    }else{
-      *(smumps_io_pfile_pointer_array+i)=open(*(smumps_io_pfile_name+i),O_RDWR);
-    }
+    *(smumps_io_pfile_pointer_array+i)=open(*(smumps_io_pfile_name+i),smumps_flag_open);
+    
     if(*(smumps_io_pfile_pointer_array+i)==-1){
       smumps_io_build_err_str(errno,-90,"Problem while opening OOC file",error_str,200);
       return -90;
@@ -591,7 +591,7 @@ int smumps_io_set_last_file(int* dim){
 }
 
 #ifndef _WIN32  
-#ifndef WITHOUT_PFUNC
+#ifdef WITH_PFUNC
 
 int smumps_io_protect_pointers(){
   pthread_mutex_lock(&smumps_io_pwrite_mutex);
@@ -611,6 +611,108 @@ int smumps_io_destroy_pointers_lock(){
   return 0;
 }
 
-#endif /*WITHOUT_PFUNC*/
+#endif /*WITH_PFUNC*/
 #endif /*_WIN32*/
+
+int smumps_io_read__(void * file,void * loc_addr,size_t size,int local_offset){
+  int ret_code;
+#ifndef _WIN32
+  if(!smumps_directio_flag){
+    ret_code=smumps_io_read_os_buff__(file,loc_addr, size,local_offset);
+    if(ret_code<0){
+      return ret_code;
+    }
+  }
+#else
+  ret_code=smumps_io_read_win32__(file,loc_addr, size,local_offset);
+  if(ret_code<0){
+    return ret_code;
+  }
+#endif  
+  return 0;
+}
+
+#ifndef _WIN32
+int smumps_io_read_os_buff__(void * file,void * loc_addr,size_t size,int local_offset){
+  size_t ret_code;
+  /*  printf("Read with buff %d %d %d\n",(int) size, local_offset,*((int *)file));*/
+#ifdef WITH_PFUNC
+  ret_code=pread(*(int *)file,loc_addr,size,local_offset);
+#else
+  lseek(*(int *)file,(long) local_offset,SEEK_SET);
+  ret_code=read(*(int *)file,loc_addr,size);
+#endif
+  if((int) ret_code==-1){
+    smumps_io_build_err_str(errno,-90,"Problem with low level read",error_str,200);
+    return -90;
+  }
+  return 0;
+}
+
+#endif
+
+#ifdef _WIN32
+int smumps_io_read_win32__(void * file,void * loc_addr,size_t size,int local_offset){
+  size_t ret_code;
+  fseek(*(FILE **)file,(long) local_offset,SEEK_SET);
+  ret_code=fread(loc_addr,smumps_elementary_data_size,size,*(FILE **)file);
+  if(ret_code!=size){
+    sprintf(error_str,"Problem with I/O operation\n");
+    return -90;
+  }
+  return 0;
+}
+#endif
+
+int smumps_io_write__(void *file, void *loc_addr, size_t write_size, int where){
+  int ret_code;
+#ifndef _WIN32
+  if(!smumps_directio_flag){
+    ret_code=smumps_io_write_os_buff__(file,loc_addr, write_size,where);
+    if(ret_code<0){
+      return ret_code;
+    }
+  }
+#else
+  ret_code=smumps_io_write_win32__(file,loc_addr, write_size,where);
+  if(ret_code<0){
+    return ret_code;
+  }
+#endif
+  return 0;
+}
+
+#ifndef _WIN32
+int smumps_io_write_os_buff__(void *file, void *loc_addr, size_t write_size, int where){
+  size_t ret_code;
+#ifdef WITH_PFUNC
+  ret_code=pwrite(*(int *)file,loc_addr,write_size,where);
+#else
+  /*in this case all the I/O's are made by the I/O thread => we don't
+    need to protect the file pointer.*/
+  lseek(*(int *)file,(long)where,SEEK_SET); 
+  ret_code=write(*(int *)file,loc_addr,write_size);
+#endif
+  if(((int)ret_code==-1)||(ret_code!=write_size)){
+    smumps_io_build_err_str(errno,-90,"Problem with low level write",error_str,200);
+    return -90;
+  }
+  return 0;
+}
+
+#endif
+
+#ifdef _WIN32
+int smumps_io_write_win32__(void *file, void *loc_addr, size_t write_size, int where){
+  size_t ret_code;
+  fseek(*(FILE **)file,(long)where,SEEK_SET);  
+  ret_code=fwrite(loc_addr,smumps_elementary_data_size, write_size,*(FILE**)file);
+  if(ret_code!=write_size){
+    sprintf(error_str,"Problem with I/O operation\n");
+    return -90;
+  }
+  return 0;
+}
+#endif
+
 

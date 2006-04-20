@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF SMUMPS VERSION 4.6.1
-!   This Version was built on Fri Feb 17 14:27:51 2006
+!   THIS FILE IS PART OF SMUMPS VERSION 4.6.2
+!   This Version was built on Fri Apr 14 14:59:20 2006
 !
 !
 !  This version of SMUMPS is provided to you free of charge. It is public
@@ -39,10 +39,10 @@
 !   Vol 23, No 1, pp 15-41 (2001).
 !
 !   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-!   S. Pralet (2005), Hybrid scheduling for the parallel solution
-!   of linear systems. Accepted to Parallel Computing.
+!   S. Pralet, Hybrid scheduling for the parallel solution of linear
+!   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 !
-!     $Id: smumps_struc.h,v 1.60 2005/12/08 11:16:42 jylexcel Exp $
+!     $Id: smumps_struc.h,v 1.61 2006/03/01 13:42:48 jylexcel Exp $
       INCLUDE 'smumps_root.h'
       TYPE SMUMPS_STRUC
         SEQUENCE
@@ -153,7 +153,7 @@
 !    Schur
 !    -----
          INTEGER NPROW, NPCOL, MBLOCK, NBLOCK
-	 INTEGER SCHUR_MLOC, SCHUR_NLOC, SCHUR_LLD
+         INTEGER SCHUR_MLOC, SCHUR_NLOC, SCHUR_LLD
          INTEGER SIZE_SCHUR
          INTEGER, DIMENSION(:), POINTER :: LISTVAR_SCHUR
          REAL, DIMENSION(:), POINTER :: SCHUR
@@ -176,7 +176,7 @@
          INTEGER MAXIS, MAXS
          INTEGER MAXIS1
          INTEGER KEEP(500)
-	 INTEGER*8 KEEP8(150)
+         INTEGER*8 KEEP8(150)
 !        IS is used for the factors + workspace for contrib. blocks
          INTEGER, DIMENSION(:), POINTER :: IS
 !        is1 (maxis1) contains working arrays computed 

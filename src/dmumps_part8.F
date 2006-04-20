@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE DMUMPS_301( id)
       USE DMUMPS_STRUC_DEF
@@ -103,7 +103,8 @@ C
       INTEGER soln_drive_class, glob_comm_ini, perm_scal_ini, soln_dist,
      &        soln_assem, perm_scal_post
 #endif
-      LOGICAL I_AM_SLAVE
+      LOGICAL I_AM_SLAVE, MAXSUPDATED
+      INTEGER MAXSSAVED
       INTEGER DMUMPS_275
       EXTERNAL DMUMPS_275
       N    =>id%N
@@ -120,6 +121,9 @@ C
       ICNTL=>id%ICNTL
       INFO =>id%INFO
       RINFOG =>id%RINFOG
+      MAXSSAVED   = MAXS
+      MAXSUPDATED = .FALSE.
+      NB_K133     = 2     ! Max level of recursivity to evaluate MINLWC
 #if defined(V_T)
       CALL VTCLASSDEF( 'Soln driver',soln_drive_class,ierr)
       CALL VTFUNCDEF( 'glob_comm_ini',soln_drive_class,
@@ -153,7 +157,13 @@ C
       CALL MPI_BCAST(NBRHS,1,MPI_INTEGER,MASTER,
      *               id%COMM,IERR)
         IF (id%KEEP(201).NE.0) THEN
-          KEEP(107) = MAX(0,KEEP(107))
+          IF (id%MYID .eq. MASTER) THEN
+             KEEP(107) = MAX(0,KEEP(107))
+             IF ((KEEP(107).EQ.0).AND.(KEEP(209).EQ.0).AND.
+     &            (KEEP(204).EQ.0).AND.(KEEP(211).EQ.0) ) THEN
+              KEEP(209) = 1
+             ENDIF
+          ENDIF
           CALL MPI_BCAST( KEEP(107), 1, MPI_INTEGER,
      *                  MASTER, id%COMM, IERR )
           CALL MPI_BCAST( KEEP(204), 1, MPI_INTEGER,
@@ -162,7 +172,28 @@ C
      *                  MASTER, id%COMM, IERR )
         ENDIF
       IF ( I_AM_SLAVE ) THEN
-        NB_K133 = 2
+        MINLWC = NB_K133*KEEP(133)
+        IF (id%KEEP(201).NE.0) THEN
+           IF ( (KEEP(209).GT.0) .AND. (KEEP(209).LT.MAXS) ) THEN
+             MAXSUPDATED = .TRUE.
+             MAXS = MAX(KEEP(209), MINLWC*NBRHS + KEEP(203)+1)
+             IF ( ASSOCIATED (id%S) ) THEN
+               DEALLOCATE (id%S)
+               NULLIFY (id%S)
+             ENDIF
+           ELSE 
+            KEEP(209) = 0
+           ENDIF
+           IF (.NOT. ASSOCIATED(id%S)) THEN
+               ALLOCATE (id%S(MAXS), stat = allocok)
+               IF ( allocok .GT. 0 ) THEN
+                WRITE(*,*) ' Problem reallocation of MAXS '
+                INFO(1) = -13
+                INFO(2) = MAXS
+               ENDIF
+           ENDIF
+           S => id%S
+        ENDIF
         IF ( KEEP( 38 ) .NE. 0 .OR. KEEP( 20 ) .NE. 0 ) THEN 
           IF ( KEEP( 38 ) .ne. 0 ) THEN
             MASTER_ROOT = DMUMPS_275(id%STEP( KEEP(38)),
@@ -175,28 +206,28 @@ C
               NB_K133 = NB_K133 + 1
           END IF
         ENDIF
-        MINLWC = NBRHS*NB_K133*KEEP(133)
         IF(KEEP(201).EQ.0)THEN
-          IF (PROK) THEN
-             WRITE (MPG,*) ' Max size of factors     :', KEEP(203)
-          ENDIF
            LA  = KEEP(31)
            LWC = MAXS - LA
-        ELSE
-           IF ( id%MAXS .LT. KEEP(133)*NB_K133 + KEEP(203) ) THEN
+           IF (LWC.LT.MINLWC) THEN
              INFO(1) = -11
-             INFO(2) = KEEP(133)*NB_K133 + KEEP(203) - id%MAXS
+             INFO(2) = MINLWC + KEEP(31) - MAXS
+           ENDIF
+        ELSE
+           IF ( id%MAXS .LT. MINLWC + KEEP(203) ) THEN
+             INFO(1) = -11
+             INFO(2) = MINLWC + KEEP(203) - id%MAXS
            ENDIF
            LWC = MIN(id%MAXS - KEEP(203),
-     *               MAX( INT(DBLE(id%MAXS*0.05)), NB_K133*KEEP(133) ))
+     *               MAX( INT(DBLE(id%MAXS*0.05)), MINLWC ))
            LA  = id%MAXS-LWC
            IF(LA.GT.(KEEP(31)+KEEP(203)*(KEEP(107)+1)))THEN
               LA=KEEP(31)+KEEP(203)*(KEEP(107)+1)
               LWC=id%MAXS-LA
            ENDIF
         ENDIF
-        IF ( LWC .LT. MINLWC ) THEN
-           NBRHS =  LWC / (NB_K133*KEEP(133))
+        IF ( LWC .LT. NBRHS*MINLWC ) THEN
+           NBRHS =  LWC / MINLWC
         ENDIF
       ENDIF
       CALL DMUMPS_276( ICNTL, INFO,
@@ -1286,6 +1317,8 @@ C
           DEALLOCATE(scaling_data%SCALING_LOC)
         ENDIF
       ENDIF
+      IF (MAXSUPDATED)
+     &  id%MAXS= MAXSSAVED ! restore original value of MAXS
       DEALLOCATE (RHSSOL)
       RETURN
  65   FORMAT (//' ERROR ANALYSIS AFTER ITERATIVE REFINEMENT')
@@ -1557,10 +1590,19 @@ C
         IF(KEEP(38).NE.0)THEN
            IF(KEEP(60).EQ.0)THEN
               CALL DMUMPS_598(KEEP(38),
-     $             PTRFAC,KEEP(28))
+     $             PTRFAC,KEEP(28),A,LA,IERR)
+              IF(IERR.LT.0)THEN
+                 INFO(1)=IERR
+                 INFO(2)=0
+                 RETURN
+              ENDIF
            ENDIF
         ENDIF
         CALL DMUMPS_583(PTRFAC,KEEP(28))
+        IF(KEEP(38).NE.0)THEN
+           CALL DMUMPS_598(KEEP(38),
+     $          PTRFAC,KEEP(28),A,LA,IERR)
+        ENDIF 
       ENDIF
       IF ( KEEP( 50 ) .eq. 0 ) THEN
         MTYPE_LOC = MTYPE
@@ -1992,7 +2034,7 @@ C
      *           PLEFTWCB, POSIWCB,
      *           PTRICB,
      *           INFO, KEEP,KEEP8, STEP, PROCNODE_STEPS, W1 )
-      USE DMUMPS_OOC
+      USE DMUMPS_OOC 
       USE DMUMPS_BUFFER 
       IMPLICIT NONE
       INTEGER LBUFR, LBUFR_BYTES
@@ -2053,9 +2095,9 @@ C
             INFO( 2 ) = LONG
             GOTO 260
           END IF
-          IF ( POSWCB - PLEFTWCB + 1 .LT. LONG ) THEN
+          IF ( POSWCB - PLEFTWCB + 1 .LT. LONG * NRHS) THEN
             INFO( 1 ) = -11
-            INFO( 2 ) = PLEFTWCB - POSWCB - 1 + LONG
+            INFO( 2 ) = PLEFTWCB - POSWCB - 1 + LONG * NRHS
             GOTO 260
           END IF
           IF (LONG .GT. 0) THEN
@@ -2155,9 +2197,15 @@ C
      *                WCB( PTRX), NPIV, ONE,
      *                WCB( PTRY), NCV )
           ENDIF
-        IF (KEEP(201).NE.0) THEN
-         CALL DMUMPS_598(FINODE,PTRFAC,KEEP(28))
-        ENDIF
+          IF (KEEP(201).NE.0) THEN
+             CALL DMUMPS_598(FINODE,PTRFAC,
+     $            KEEP(28),A,LA,IERR)
+             IF(IERR.LT.0)THEN
+                INFO(1)=IERR
+                INFO(2)=0
+                GOTO 260
+             ENDIF
+          ENDIF
           PLEFTWCB = PLEFTWCB - NPIV * NRHS
           PDEST = DMUMPS_275( STEP(FPERE),
      *            PROCNODE_STEPS, SLAVEF )
@@ -2462,9 +2510,6 @@ C
           END IF
         END IF
       END IF
-      IF (KEEP(201).NE.0) THEN
-        CALL DMUMPS_598(INODE,PTRFAC,KEEP(28))
-      END IF
       IFR = PPIV_COURANT - 1
       IF ( KEEP(50) .eq. 0 ) THEN
         DO 150 JJ = J1, J3
@@ -2503,6 +2548,15 @@ C
               IFR = IFR+1
            ENDIF
         ENDDO
+      END IF
+      IF (KEEP(201).NE.0) THEN
+        CALL DMUMPS_598(INODE,PTRFAC,KEEP(28),
+     $        A,LA,IERR)
+        IF(IERR.LT.0)THEN
+           INFO(1)=IERR
+           INFO(2)=0
+           GOTO 260
+        ENDIF
       END IF
       FPERE = DAD(STEP(INODE))
       IF ( FPERE .EQ. 0 ) THEN
@@ -3130,7 +3184,13 @@ C
   150 CONTINUE
   160 CONTINUE
       IF (KEEP(201).NE.0) THEN
-       CALL DMUMPS_598(INODE,PTRFAC,KEEP(28))
+         CALL DMUMPS_598(INODE,PTRFAC,KEEP(28),
+     $        A,LA,IERR)
+         IF(IERR.LT.0)THEN
+            INFO(1)=IERR
+            INFO(2)=0
+            GOTO 330
+         ENDIF
       ENDIF
       IN = INODE
   170 IN = FILS(IN)
@@ -3351,7 +3411,13 @@ C
       ENDDO
   280 CONTINUE
       IF (KEEP(201).NE.0) THEN
-       CALL DMUMPS_598(INODE,PTRFAC,KEEP(28))
+       CALL DMUMPS_598(INODE,PTRFAC,KEEP(28),A,
+     $        LA,IERR)
+         IF(IERR.LT.0)THEN
+            INFO(1)=IERR
+            INFO(2)=0
+            GOTO 330
+         ENDIF
       ENDIF
       IN = INODE
   290 IN = FILS(IN)
@@ -3610,7 +3676,7 @@ C
            CALL DMUMPS_95(NRHS, N, KEEP(28), IWCB,
      *          LIWW, W, LWC,
      *          POSWCB, POSIWCB, PTRICB, PTRACB)
-           IF ( POSWCB - LONG .LT. PLEFTW - 1 ) THEN
+           IF ( POSWCB - LONG*NRHS .LT. PLEFTW - 1 ) THEN
              INFO(1) = -11
              INFO(2) = LONG * NRHS- POSWCB
              GOTO 260
@@ -3635,7 +3701,13 @@ C
      *                NPIV )
         END IF
         IF (KEEP(201).NE.0) THEN
-         CALL DMUMPS_598(INODE,PTRFAC,KEEP(28))
+         CALL DMUMPS_598(INODE,PTRFAC,KEEP(28),
+     $          A,LA,IERR)
+         IF(IERR.LT.0)THEN
+            INFO(1)=IERR
+            INFO(2)=0
+            GOTO 260
+         ENDIF
         ENDIF
         PLEFTW = PLEFTW - NROW_L * NRHS
  100    CALL DMUMPS_63( NRHS, INODE, W(P_UPDATE),
@@ -3663,7 +3735,7 @@ C
           INFO( 2 ) = NPIV * KEEP(35) + 2 * KEEP(34)
           GOTO 260
         END IF
-        PLEFTW = PLEFTW - NPIV
+        PLEFTW = PLEFTW - NPIV * NRHS
       ELSE IF ( MSGTAG .EQ. BACKSLV_UPDATERHS ) THEN
         POSITION = 0
         CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
@@ -3738,7 +3810,13 @@ C
      *                   W(PTRACB(STEP(INODE))),LIELL)
           END IF
         IF (KEEP(201).NE.0)THEN
-        CALL DMUMPS_598(INODE,PTRFAC,KEEP(28))
+           CALL DMUMPS_598(INODE,PTRFAC,KEEP(28),
+     $          A,LA,IERR)
+           IF(IERR.LT.0)THEN
+              INFO(1)=IERR
+              INFO(2)=0
+              GOTO 260
+           ENDIF
         ENDIF
           IPOS = PTRIST(STEP(INODE)) + 5
           IPOS = IW( IPOS ) + IPOS + 1

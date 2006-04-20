@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
 #if defined(try_null_space)
       SUBROUTINE ZMUMPS_295
@@ -5982,7 +5982,7 @@ C
             ENDDO
             NUMTOT = NUMTOT + PATH_LENGTH - 2
             MARKED(CUR_EL_PATH) = -1
-         ENDIF	
+         ENDIF
       ENDDO
       DO I=1,N
          IF(MARKED(I) .LT. 0) THEN
@@ -6072,3 +6072,240 @@ C
          ZMUMPS_METRIC2x2 = VAL
       ENDIF
       END FUNCTION 
+      SUBROUTINE ZMUMPS_622(NA, NCMP,
+     *      PERM,IPERM, 
+     *      LISTVAR_SCHUR, SIZE_SCHUR, AOTOA)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN):: SIZE_SCHUR, LISTVAR_SCHUR(SIZE_SCHUR)
+      INTEGER, INTENT(IN):: NA, NCMP
+      INTEGER, INTENT(IN):: AOTOA(NCMP), IPERM(NCMP)
+      INTEGER, INTENT(OUT):: PERM(NA) ! not used a input
+      INTEGER CMP_POS, IO, I, K, IPOS
+      DO CMP_POS=1, NCMP
+        IO              = IPERM(CMP_POS)
+        PERM(AOTOA(IO)) = CMP_POS
+      ENDDO
+      IPOS = NCMP
+      DO K =1,  SIZE_SCHUR
+        I       = LISTVAR_SCHUR(K)
+        IPOS    = IPOS+1
+        PERM(I) = IPOS
+      ENDDO
+      RETURN
+      END SUBROUTINE ZMUMPS_622
+      SUBROUTINE ZMUMPS_623
+     * (NA,N,NZ, IRN, ICN, IW, LW, IPE, LEN,
+     * IQ, FLAG, IWFR,
+     * NRORM, NIORM, IFLAG,IERROR, ICNTL, 
+     * symmetry, SYM, MedDens, NBQD, AvgDens, 
+     * LISTVAR_SCHUR, SIZE_SCHUR, ATOAO, AOTOA)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN)  :: NA,N,NZ,LW
+      INTEGER, INTENT(IN)  :: SIZE_SCHUR, LISTVAR_SCHUR(SIZE_SCHUR)
+      INTEGER, INTENT(IN)  :: IRN(NZ), ICN(NZ) 
+      INTEGER, INTENT(IN)  :: ICNTL(40), SYM
+      INTEGER, INTENT(OUT) :: IFLAG,IERROR,NRORM,NIORM,IWFR
+      INTEGER, INTENT(OUT) :: AOTOA(N)
+      INTEGER, INTENT(OUT) :: ATOAO(NA)  ! only used internallly
+      INTEGER, INTENT(OUT) :: LEN(N), IPE(N+1)
+      INTEGER, INTENT(OUT) :: symmetry, 
+     &                        MedDens, NBQD, AvgDens
+      INTEGER, INTENT(OUT)  :: FLAG(N), IW(LW), IQ(N)
+      INTEGER MP, MPG, NAO
+      INTEGER I,K,J,N1,LAST,NDUP,K1,K2,L
+      INTEGER NBERR, THRESH, IAO
+      INTEGER NZOFFA, NDIAGA
+      DOUBLE PRECISION RSYM
+      INTRINSIC NINT
+      ATOAO(1:NA) = 0
+      DO I = 1, SIZE_SCHUR
+        ATOAO(LISTVAR_SCHUR(I)) = -1
+      ENDDO
+      IAO = 0  
+      DO I= 1, NA
+        IF (ATOAO(I).LT.0) CYCLE
+        IAO = IAO +1   
+        ATOAO(I)   = IAO
+        AOTOA(IAO) = I
+      ENDDO
+      MP = ICNTL(2)
+      MPG= ICNTL(3)
+      NIORM  = 3*N
+      NDIAGA = 0
+      IERROR = 0
+      IPE(1:N+1) = 0
+      DO K=1,NZ
+        I = IRN(K)
+        J = ICN(K)
+        IF ((I.GT.NA).OR.(J.GT.NA).OR.(I.LT.1)
+     *                          .OR.(J.LT.1)) THEN
+           IERROR = IERROR + 1
+        ELSE
+          I = ATOAO(I)
+          J = ATOAO(J)
+          IF ((I.LT.0).OR.(J.LT.0)) CYCLE  ! in schur
+          IF (I.NE.J) THEN
+           IPE(I) = IPE(I) + 1
+           IPE(J) = IPE(J) + 1
+           NIORM  = NIORM + 1
+          ELSE
+           NDIAGA = NDIAGA + 1
+          ENDIF
+        ENDIF
+      ENDDO
+      NZOFFA  = NIORM - 3*N
+      IF (IERROR.GE.1) THEN
+         NBERR  = 0
+         IFLAG  = IFLAG+1
+         IF ((MP.GT.0).AND.(ICNTL(4).GE.2))  THEN 
+          WRITE (MP,99999) 
+          DO 70 K=1,NZ
+           I = IRN(K)
+           J = ICN(K)
+           IF ((I.GT.NA).OR.(J.GT.NA).OR.(I.LT.1)
+     *                            .OR.(J.LT.1)) THEN
+            NBERR = NBERR + 1
+            IF (NBERR.LE.10)  THEN
+               IF (MOD(K,10).GT.3 .OR. MOD(K,10).EQ.0 .OR.
+     *             (10.LE.K .AND. K.LE.20)) THEN
+                 WRITE (MP,'(I8,A,I8,A,I8,A)')
+     *             K,'th entry (in row',I,' and column',J,') ignored'
+               ELSE
+                 IF (MOD(K,10).EQ.1) WRITE(MP,'(I8,A,I8,A,I8,A)')
+     *             K,'st entry (in row',I,' and column',J,') ignored'
+                 IF (MOD(K,10).EQ.2) WRITE(MP,'(I8,A,I8,A,I8,A)')
+     *             K,'nd entry (in row',I,' and column',J,') ignored'
+                 IF (MOD(K,10).EQ.3) WRITE(MP,'(I8,A,I8,A,I8,A)')
+     *             K,'rd entry (in row',I,' and column',J,') ignored'
+               ENDIF
+            ELSE
+               GO TO 100
+            ENDIF
+           ENDIF
+   70     CONTINUE
+         ENDIF
+      ENDIF
+  100 NRORM = NIORM - 2*N
+      IQ(1) = 1
+      N1 = N - 1
+      IF (N1.GT.0) THEN
+        DO 110 I=1,N1
+            IQ(I+1) = IPE(I) + IQ(I) 
+  110   CONTINUE
+      ENDIF
+      LAST = MAX(IPE(N)+IQ(N)-1,IQ(N))
+      FLAG(1:N) = 0
+      IPE(1:N)  = IQ(1:N)
+      IW(1:LAST) = 0
+      IWFR = LAST + 1
+      DO 200 K=1,NZ
+         I = IRN(K)
+         J = ICN(K)
+         IF ((I.GT.NA).OR.(J.GT.NA).OR.(I.LT.1)
+     *                          .OR.(J.LT.1)) CYCLE
+         I = ATOAO(I)
+         J = ATOAO(J)
+         IF ((I.LT.0).OR.(J.LT.0)) CYCLE  ! in schur
+         IF (I.NE.J) THEN
+          IF (I.LT.J) THEN
+             IW(IQ(I)) = -J
+             IQ(I)     = IQ(I) + 1 
+          ELSE
+             IW(IQ(J)) = -I
+             IQ(J)     = IQ(J) + 1
+          ENDIF
+         ENDIF
+  200 CONTINUE
+      NDUP = 0
+      DO 260 I=1,N
+        K1 = IPE(I) 
+        K2 = IQ(I) -1
+        IF (K1.GT.K2) THEN
+         LEN(I) = 0
+         IQ(I)  = 0
+        ELSE
+         DO 240 K=K1,K2
+           J     = -IW(K)
+           IF (J.LE.0) GO TO 250
+           L     = IQ(J) 
+           IQ(J) = L + 1
+           IF (FLAG(J).EQ.I) THEN
+            NDUP = NDUP + 1
+            IW(L) = 0
+            IW(K) = 0
+           ELSE
+            IW(L)   = I
+            IW(K)   = J
+            FLAG(J) = I
+           ENDIF
+  240    CONTINUE
+  250    IQ(I) = IQ(I) - IPE(I)
+         IF (NDUP.EQ.0) LEN(I) = IQ(I)
+        ENDIF
+  260 CONTINUE
+      IF (NDUP.NE.0) THEN
+       IWFR = 1
+       DO 280 I=1,N
+         IF (IQ(I).EQ.0) THEN
+             LEN(I) = 0
+            IPE(I) = IWFR
+            GOTO 280
+         ENDIF
+         K1 = IPE(I) 
+         K2 = K1 + IQ(I) - 1
+         L = IWFR
+         IPE(I) = IWFR
+         DO 270 K=K1,K2
+           IF (IW(K).NE.0) THEN
+            IW(IWFR) = IW(K)
+            IWFR     = IWFR + 1
+           ENDIF
+  270    CONTINUE
+         LEN(I) = IWFR - L 
+  280  CONTINUE
+      ENDIF
+      IPE(N+1) = IPE(N) + LEN(N)
+      IWFR = IPE(N+1)
+      IF (SYM.EQ.0) THEN
+      RSYM =  DBLE(NDIAGA+2*NZOFFA - (IWFR-1))/
+     *            DBLE(NZOFFA+NDIAGA) 
+      symmetry = NINT (100.0*RSYM)
+         IF (MPG .GT. 0)
+     &  write(MPG,'(A,I5)') 
+     &  ' ... Structural symmetry (in percent)=', symmetry
+        IF (MP.GT.0 .AND. MPG.NE.MP)
+     &  write(MP,'(A,I5)') 
+     &  ' ... Structural symmetry (in percent)=', symmetry
+      ELSE
+       symmetry = 100
+      ENDIF
+      AvgDens = NINT(DBLE(IWFR-1)/DBLE(N))
+      THRESH  = AvgDens*50 - AvgDens/10 + 1
+      NBQD    = 0
+      IF (N.GT.2) THEN
+        IQ(1:N) = 0
+        DO I= 1, N
+          K = MAX(LEN(I),1)
+          IQ(K) = IQ(K) + 1
+          IF (K.GT.THRESH) NBQD = NBQD+1
+        ENDDO
+        K = 0
+        MedDens = 0
+        DO WHILE (K .LT. (N/2))
+         MedDens = MedDens + 1
+         K       = K+IQ(MedDens)
+        ENDDO
+      ELSE
+        MedDens = AvgDens
+      ENDIF
+         IF (MPG .GT. 0)
+     &  write(MPG,'(A,3I5)') 
+     &  ' Density: NBdense, Average, Median   =',
+     &  NBQD, AvgDens, MedDens
+        IF (MP.GT.0 .AND. MPG.NE.MP)
+     &  write(MP,'(A,3I5)') 
+     &  ' Density: NBdense, Average, Median   =',
+     &  NBQD, AvgDens, MedDens
+      RETURN
+99999 FORMAT (/'*** Warning message from analysis routine ***')
+      END SUBROUTINE ZMUMPS_623

@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,11 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: smumps_orderings.c,v 1.20 2005/12/21 14:22:35 jylexcel Exp $ */
+/* $Id: smumps_orderings.c,v 1.21 2006/03/27 16:46:59 jylexcel Exp $ */
 /*
  * This file contains interfaces to external ordering packages.
  * At the moment, PORD (J. Schulze) and SCOTCH are interfaced.
@@ -58,21 +58,21 @@
 
 /************************************************************
 smumps_pord is used in usedbyanalysis.F
-	permutation and inverse permutation not set in output,
-	but may be printed in default file: "perm_pord" and "iperm_pord",
-	if associated part uncommneted.
-	But, if uncommetnted a bug occurs in psl_ma41_analysi.F
-******************************************************************/	
+        permutation and inverse permutation not set in output,
+        but may be printed in default file: "perm_pord" and "iperm_pord",
+        if associated part uncommneted.
+        But, if uncommetnted a bug occurs in psl_ma41_analysi.F
+******************************************************************/
 
 /*********************************************************/
 
 int smumps_pord
 ( 
-	int 	nvtx, 
-	int	nedges,
-	int	*xadj_pe,
-	int	*adjncy,
-	int	*nv
+   int nvtx, 
+   int nedges,
+   int *xadj_pe,
+   int *adjncy,
+   int *nv
 )
 {
 /**********************************
@@ -80,28 +80,28 @@ Argument Comments:
 
 input:
 -----
-- nvtx 		: dimension of the Problem (N)
-- nedges	: number of entries (NZ)
-- adjncy	: non-zeros entries (IW input)
+- nvtx          : dimension of the Problem (N)
+- nedges        : number of entries (NZ)
+- adjncy        : non-zeros entries (IW input)
 
 input/output:
 -------------
-- xadj_pe		: pointer through beginning of column non-zeros entries (PTRAR)
+- xadj_pe       : pointer through beginning of column non-zeros entries (PTRAR)
 - on exit, "father array" (PE)
 
 ouput:
 ------
-- nv		: "nfront array" (NV)
+- nv            : "nfront array" (NV)
 *************************************/
 
-	graph_t    	*G;
- 	elimtree_t 	*T;
-	timings_t  cpus[12];
-	options_t  options[] = { SPACE_ORDTYPE, SPACE_NODE_SELECTION1,
+  graph_t    *G;
+  elimtree_t *T;
+  timings_t  cpus[12];
+  options_t  options[] = { SPACE_ORDTYPE, SPACE_NODE_SELECTION1,
                     SPACE_NODE_SELECTION2, SPACE_NODE_SELECTION3,
                     SPACE_DOMAIN_SIZE, 0 };
-	int *ncolfactor, *ncolupdate, *parent, *vtx2front;
-  	int *first, *link, nfronts, J, K, u, vertex, vertex_root, count;
+  int *ncolfactor, *ncolupdate, *parent, *vtx2front;
+  int *first, *link, nfronts, J, K, u, vertex, vertex_root, count;
       
       /**************************************************
        declaration to uncomment if printing ordering 
@@ -114,62 +114,52 @@ ouput:
 /*** decalage des indices couteux dans un premier temps:
 ****  A modifier dans une version ulterieure de MA41GD  */
   
-	for (u = nvtx; u >= 0; u--)
-	{
-		xadj_pe[u] = xadj_pe[u] - 1;
-	}
-	for (K = nedges-1; K >= 0; K--)
-	{
-		adjncy[K] = adjncy[K] - 1;
-	}
-	
-	
-	
- /* initialization of the graph */	
-	
-	mymalloc(G, 1, graph_t);
-	G->xadj			= xadj_pe;
-	G->adjncy		= adjncy;
-	
-	
-	mymalloc(G->vwght, nvtx, int);
-	G->nvtx = nvtx;
-  	G->nedges = nedges;
-  	G->type = UNWEIGHTED;
-  	G->totvwght = nvtx;
-  	for (u = 0; u < nvtx; u++)
-    		G->vwght[u] = 1;
-			
+  for (u = nvtx; u >= 0; u--)
+   {
+     xadj_pe[u] = xadj_pe[u] - 1;
+   }
+   for (K = nedges-1; K >= 0; K--)
+   {
+      adjncy[K] = adjncy[K] - 1;
+   }
+
+ /* initialization of the graph */
+   mymalloc(G, 1, graph_t);
+   G->xadj   = xadj_pe;
+   G->adjncy = adjncy;
+   mymalloc(G->vwght, nvtx, int);
+   G->nvtx = nvtx;
+   G->nedges = nedges;
+   G->type = UNWEIGHTED;
+   G->totvwght = nvtx;
+   for (u = 0; u < nvtx; u++)
+     G->vwght[u] = 1;
 
   /* main function of the Ordering */
-	T = SPACE_ordering(G, options, cpus);
-
-	
-  	nfronts = T->nfronts;
-  	ncolfactor = T->ncolfactor;
-  	ncolupdate = T->ncolupdate;
-  	parent = T->parent;
+   T = SPACE_ordering(G, options, cpus);
+   nfronts = T->nfronts;
+   ncolfactor = T->ncolfactor;
+   ncolupdate = T->ncolupdate;
+   parent = T->parent;
   /*    firstchild = T->firstchild; */
-	vtx2front = T->vtx2front;
-	
-	
-	
+   vtx2front = T->vtx2front;
+
     /* -----------------------------------------------------------
      store the vertices/columns of a front in a bucket structure
      ----------------------------------------------------------- */
-  	mymalloc(first, nfronts, int);
-  	mymalloc(link, nvtx, int);
+   mymalloc(first, nfronts, int);
+   mymalloc(link, nvtx, int);
 
 
-  	for (J = 0; J < nfronts; J++)
-    	  first[J] = -1;
-  	
-	for (u = nvtx-1; u >= 0; u--)
-   	{ 
-	  J = vtx2front[u];
-	  link[u] = first[J];
-	  first[J] = u;
-   	}
+   for (J = 0; J < nfronts; J++)
+      first[J] = -1;
+
+   for (u = nvtx-1; u >= 0; u--)
+      { 
+        J = vtx2front[u];
+        link[u] = first[J];
+        first[J] = u;
+      }
 
   /* -----------------------------------------------------------
      fill the two arrays corresponding to the MUMPS tree structure
@@ -178,27 +168,27 @@ ouput:
    
   for (K = firstPostorder(T); K != -1; K = nextPostorder(T, K))
      {
-  	vertex_root = first[K];
-	if (vertex_root == -1)
+       vertex_root = first[K];
+       if (vertex_root == -1)
           {
             /* JY: I think this cannot happen */
             printf(" Internal error in smumps_pord (cf JY), %d\n",K);
             exit(-1);
           }
 
-	/* for the principal column of the supervariable */
-	if (parent[K] == -1)
+       /* for the principal column of the supervariable */
+       if (parent[K] == -1)
           xadj_pe[vertex_root] = 0; /* root of the tree */
-	else
-	  xadj_pe[vertex_root] = - (first[parent[K]]+1);
-	nv[vertex_root] = ncolfactor[K] + ncolupdate[K];
-	count++;
-	for (vertex = link[vertex_root]; vertex != -1; vertex = link[vertex])
+       else
+          xadj_pe[vertex_root] = - (first[parent[K]]+1);
+          nv[vertex_root] = ncolfactor[K] + ncolupdate[K];
+          count++;
+       for (vertex = link[vertex_root]; vertex != -1; vertex = link[vertex])
         /* for the secondary columns of the supervariable */
-	{ 
-        	xadj_pe[vertex] = - (vertex_root+1);
-		nv[vertex] = 0;
-		count++;
+       { 
+         xadj_pe[vertex] = - (vertex_root+1);
+         nv[vertex] = 0;
+         count++;
         }
   
   }
@@ -211,8 +201,7 @@ ouput:
   free(G->vwght);
   free(G);
   freeElimTree(T);
-	
-	return (0);
+  return (0);
 }
 
 
@@ -220,12 +209,12 @@ ouput:
 
 FORTRAN (
  SMUMPS_PORDF, smumps_pordf, (
-int 	*nvtx, 		\
-int	*nedges,	\
-int	*xadj,		\
-int	*adjncy,	\
-int	*nv,		\
-int	*ncmpa
+int *nvtx,              \
+int *nedges,            \
+int *xadj,              \
+int *adjncy,            \
+int *nv,                \
+int *ncmpa
 ),
 (nvtx, nedges, xadj, adjncy, nv, ncmpa))
 {
@@ -239,12 +228,12 @@ int	*ncmpa
 
 int smumps_pord_wnd
 ( 
-	int 	nvtx, 
-	int	nedges,
-	int	*xadj_pe,
-	int	*adjncy,
-	int	*nv,
-	int *totw
+        int nvtx, 
+        int nedges,
+        int *xadj_pe,
+        int *adjncy,
+        int *nv,
+        int *totw
 )
 {
 /**********************************
@@ -252,30 +241,30 @@ Argument Comments:
 
 input:
 -----
-- nvtx 		: dimension of the Problem (N)
-- nedges	: number of entries (NZ)
-- adjncy	: non-zeros entries (IW input)
-- totw : sum of the weigth of the vertices
+- nvtx   : dimension of the Problem (N)
+- nedges : number of entries (NZ)
+- adjncy : non-zeros entries (IW input)
+- totw   : sum of the weigth of the vertices
 
 input/output:
 -------------
-- xadj_pe		: pointer through beginning of column non-zeros entries (PTRAR)
+- xadj_pe : pointer through beginning of column non-zeros entries (PTRAR)
 - on exit, "father array" (PE)
 
 ouput:
 ------
-- nv		: weight of the vertices
+- nv      : weight of the vertices
 - on exit "nfront array" (NV)
 *************************************/
 
-	graph_t    	*G;
- 	elimtree_t 	*T;
-	timings_t  cpus[12];
-	options_t  options[] = { SPACE_ORDTYPE, SPACE_NODE_SELECTION1,
+        graph_t    *G;
+        elimtree_t *T;
+        timings_t  cpus[12];
+        options_t  options[] = { SPACE_ORDTYPE, SPACE_NODE_SELECTION1,
                     SPACE_NODE_SELECTION2, SPACE_NODE_SELECTION3,
                     SPACE_DOMAIN_SIZE, 0 };
-	int *ncolfactor, *ncolupdate, *parent, *vtx2front;
-  	int *first, *link, nfronts, J, K, u, vertex, vertex_root, count;
+        int *ncolfactor, *ncolupdate, *parent, *vtx2front;
+        int *first, *link, nfronts, J, K, u, vertex, vertex_root, count;
       
       /**************************************************
        declaration to uncomment if printing ordering 
@@ -288,62 +277,55 @@ ouput:
 /*** decalage des indices couteux dans un premier temps:
 ****  A modifier dans une version ulterieure de MA41GD  */
   
-	for (u = nvtx; u >= 0; u--)
-	{
-		xadj_pe[u] = xadj_pe[u] - 1;
-	}
-	for (K = nedges-1; K >= 0; K--)
-	{
-		adjncy[K] = adjncy[K] - 1;
-	}
-	
-	
-	
- /* initialization of the graph */	
-	
-	mymalloc(G, 1, graph_t);
-	G->xadj			= xadj_pe;
-	G->adjncy		= adjncy;
-	
-	
-	mymalloc(G->vwght, nvtx, int);
-	G->nvtx = nvtx;
-  	G->nedges = nedges;
-  	G->type = WEIGHTED;
-  	G->totvwght = (*totw);
-  	for (u = 0; u < nvtx; u++)
-    		G->vwght[u] = nv[u];
-			
+        for (u = nvtx; u >= 0; u--)
+        {
+          xadj_pe[u] = xadj_pe[u] - 1;
+        }
+        for (K = nedges-1; K >= 0; K--)
+        {
+          adjncy[K] = adjncy[K] - 1;
+        }
+
+ /* initialization of the graph */
+
+        mymalloc(G, 1, graph_t);
+        G->xadj  = xadj_pe;
+        G->adjncy= adjncy;
+
+        mymalloc(G->vwght, nvtx, int);
+        G->nvtx = nvtx;
+        G->nedges = nedges;
+        G->type = WEIGHTED;
+        G->totvwght = (*totw);
+        for (u = 0; u < nvtx; u++)
+          G->vwght[u] = nv[u];
 
   /* main function of the Ordering */
-	T = SPACE_ordering(G, options, cpus);
+        T = SPACE_ordering(G, options, cpus);
 
-	
-  	nfronts = T->nfronts;
-  	ncolfactor = T->ncolfactor;
-  	ncolupdate = T->ncolupdate;
-  	parent = T->parent;
+
+        nfronts = T->nfronts;
+        ncolfactor = T->ncolfactor;
+        ncolupdate = T->ncolupdate;
+        parent = T->parent;
   /*    firstchild = T->firstchild; */
-	vtx2front = T->vtx2front;
-	
-	
-	
+        vtx2front = T->vtx2front;
+
     /* -----------------------------------------------------------
      store the vertices/columns of a front in a bucket structure
      ----------------------------------------------------------- */
-  	mymalloc(first, nfronts, int);
-  	mymalloc(link, nvtx, int);
+        mymalloc(first, nfronts, int);
+        mymalloc(link, nvtx, int);
 
 
-  	for (J = 0; J < nfronts; J++)
-    	  first[J] = -1;
-  	
-	for (u = nvtx-1; u >= 0; u--)
-   	{ 
-	  J = vtx2front[u];
-	  link[u] = first[J];
-	  first[J] = u;
-   	}
+        for (J = 0; J < nfronts; J++)
+          first[J] = -1;
+        for (u = nvtx-1; u >= 0; u--)
+        { 
+          J = vtx2front[u];
+          link[u] = first[J];
+          first[J] = u;
+        }
 
   /* -----------------------------------------------------------
      fill the two arrays corresponding to the MUMPS tree structure
@@ -352,27 +334,27 @@ ouput:
    
   for (K = firstPostorder(T); K != -1; K = nextPostorder(T, K))
      {
-  	vertex_root = first[K];
-	if (vertex_root == -1)
+        vertex_root = first[K];
+        if (vertex_root == -1)
           {
             /* JY: I think this cannot happen */
             printf(" Internal error in smumps_pord (cf JY), %d\n",K);
             exit(-1);
           }
 
-	/* for the principal column of the supervariable */
-	if (parent[K] == -1)
+         /* for the principal column of the supervariable */
+        if (parent[K] == -1)
           xadj_pe[vertex_root] = 0; /* root of the tree */
-	else
-	  xadj_pe[vertex_root] = - (first[parent[K]]+1);
-	nv[vertex_root] = ncolfactor[K] + ncolupdate[K];
-	count++;
-	for (vertex = link[vertex_root]; vertex != -1; vertex = link[vertex])
-        /* for the secondary columns of the supervariable */
-	{ 
-        	xadj_pe[vertex] = - (vertex_root+1);
-		nv[vertex] = 0;
-		count++;
+        else
+          xadj_pe[vertex_root] = - (first[parent[K]]+1);
+          nv[vertex_root] = ncolfactor[K] + ncolupdate[K];
+          count++;
+          for (vertex = link[vertex_root]; vertex != -1; vertex = link[vertex])
+          /* for the secondary columns of the supervariable */
+            { 
+              xadj_pe[vertex] = - (vertex_root+1);
+              nv[vertex] = 0;
+              count++;
         }
   
   }
@@ -384,18 +366,17 @@ ouput:
   free(G->vwght);
   free(G);
   freeElimTree(T);
-	
-	return (0);
+  return (0);
 }
 
 FORTRAN (
  SMUMPS_PORDF_WND, smumps_pordf_wnd, (
-int 	*nvtx, 		\
-int	*nedges,	\
-int	*xadj,		\
-int	*adjncy,	\
-int	*nv,		\
-int	*ncmpa, \
+int *nvtx, \
+int *nedges,\
+int *xadj, \
+int *adjncy,\
+int *nv,\
+int *ncmpa, \
 int *totw
 ),
 (nvtx, nedges, xadj, adjncy, nv, ncmpa,totw))
@@ -426,9 +407,9 @@ FORTRAN (                                               \
         int * const                 elentab,            \
         int * const                 lasttab,            \
         int * const                 ncmpa),             \
-	(n, iwlen, petab, pfree, lentab, iwtab, nvtab, elentab, lasttab, ncmpa))
+        (n, iwlen, petab, pfree, lentab, iwtab, nvtab, elentab, lasttab, ncmpa))
 {
-	  *ncmpa = esmumps (*n, *iwlen, petab, *pfree, lentab, iwtab, nvtab, elentab, lasttab);
+     *ncmpa = esmumps (*n, *iwlen, petab, *pfree, lentab, iwtab, nvtab, elentab, lasttab);
 }
 #endif
 

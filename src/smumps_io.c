@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,11 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: smumps_io.c,v 1.39 2006/02/16 14:27:00 aguermou Exp $    */
+/*    $Id: smumps_io.c,v 1.47 2006/04/06 09:40:29 aguermou Exp $    */
 
 #include "smumps_io_basic_extern.h"
 #include "smumps_io_err_extern.h"
@@ -61,7 +61,7 @@ double smumps_time_spent_in_sync;
 
 double read_op_vol,write_op_vol,total_vol;
 
-int smumps_is_there_finished_request(int* flag, int* ierr){
+int MUMPS_CALL smumps_is_there_finished_request(int* flag, int* ierr){
   /* Checks if there is a finished request in the queue of finished requests */
   /* On return flag=1 if there a finished request (flag=0 otherwise)         */
 #ifndef _WIN32
@@ -73,7 +73,7 @@ int smumps_is_there_finished_request(int* flag, int* ierr){
     printf("smumps_is_there_finished_request should not be called with strategy %d\n",smumps_io_flag_async);
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_is_there_finished_request_th(flag);
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -93,7 +93,7 @@ int smumps_is_there_finished_request(int* flag, int* ierr){
   return 0;
 }
 
-int smumps_clean_request(int* request_id,int *ierr){
+int MUMPS_CALL smumps_clean_request(int* request_id,int *ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -103,7 +103,7 @@ int smumps_clean_request(int* request_id,int *ierr){
     printf("smumps_clean_request should not be called with strategy %d\n",smumps_io_flag_async);
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_clean_request_th(request_id);
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -123,7 +123,7 @@ int smumps_clean_request(int* request_id,int *ierr){
   return 0;
 }
 
-int smumps_test_request(int* request_id,int *flag,int* ierr){
+int MUMPS_CALL smumps_test_request(int* request_id,int *flag,int* ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -133,7 +133,7 @@ int smumps_test_request(int* request_id,int *flag,int* ierr){
     printf("smumps_test_request should not be called with strategy %d\n",smumps_io_flag_async);
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_test_request_th(request_id,flag);
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -153,7 +153,7 @@ int smumps_test_request(int* request_id,int *flag,int* ierr){
   return 0;
 }
 
-int smumps_wait_request(int *request_id,int* ierr){
+int MUMPS_CALL smumps_wait_request(int *request_id,int* ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -165,7 +165,7 @@ int smumps_wait_request(int *request_id,int* ierr){
     printf("smumps_wait_request should not be called with strategy %d\n",smumps_io_flag_async);
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_wait_request_th(request_id);
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -178,7 +178,7 @@ int smumps_wait_request(int *request_id,int* ierr){
     smumps_io_prop_err_info(*ierr);
     return *ierr;
     /*    printf("Error: unknown I/O strategy : %d\n",smumps_io_flag_async);
-	  exit (-3);*/
+          exit (-3);*/
   }
 #ifndef _WIN32
   gettimeofday(&end_time,NULL);
@@ -187,7 +187,7 @@ int smumps_wait_request(int *request_id,int* ierr){
   return 0;
 }
 
-int smumps_wait_all_requests(int *ierr){
+int MUMPS_CALL smumps_wait_all_requests(int *ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -197,7 +197,7 @@ int smumps_wait_all_requests(int *ierr){
     printf("smumps_wait_all_requests should not be called with strategy %d\n",smumps_io_flag_async);
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_wait_all_requests_th();
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -217,10 +217,10 @@ int smumps_wait_all_requests(int *ierr){
   return 0;
 }
 
-int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
-			       int* async, char* smumps_dir, char* smumps_file,
-			       int* smumps_dim_dir, int* smumps_dim_file,
-			       int* ierr){
+int MUMPS_CALL smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
+                                          int* async, int* k211, char* smumps_dir, char* smumps_file,
+                                          int* smumps_dim_dir, int* smumps_dim_file,
+                                          int* ierr, smumps_ftnlen l1, smumps_ftnlen l2){
   /* Computes the number of files needed. Uses ceil value. */
   smumps_io_nb_file=0;
   smumps_io_last_file_opened=-1;
@@ -236,6 +236,7 @@ int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element
 #endif
   total_vol=0;
   smumps_io_flag_async=*async;
+  smumps_io_k211=*k211;
   *ierr=smumps_init_file_name(smumps_dir,smumps_file,smumps_dim_dir,smumps_dim_file,_myid);
   if(*ierr<0){
     smumps_io_prop_err_info(*ierr);
@@ -257,11 +258,11 @@ int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element
       printf("smumps_low_level_init_ooc_c should not be called with strategy %d\n",smumps_io_flag_async);
       break;
 #ifndef _WIN32
-    case IO_ASYNC_TH:	
+    case IO_ASYNC_TH:
       smumps_low_level_init_ooc_c_th(async,ierr);
       if(*ierr<0){
-	smumps_io_prop_err_info(*ierr);
-	return *ierr;
+        smumps_io_prop_err_info(*ierr);
+        return *ierr;
       }
       break;
 #endif
@@ -281,14 +282,14 @@ int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element
 /**
  * Writes a contigous block of central memory to the disk.
  */
-int smumps_low_level_write_ooc_c(const int * strat_IO, 
-				void * address_block,
-				int * block_size,
-				int * pos_in_file,
-				int * file_number,
-				int * inode,
-				int * request_arg,
-				int * ierr){
+int MUMPS_CALL smumps_low_level_write_ooc_c(const int * strat_IO, 
+                                void * address_block,
+                                int * block_size,
+                                int * pos_in_file,
+                                int * file_number,
+                                int * inode,
+                                int * request_arg,
+                                int * ierr){
    int ret_code=0;
 #ifndef _WIN32
    struct timeval start_time,end_time;
@@ -300,8 +301,8 @@ int smumps_low_level_write_ooc_c(const int * strat_IO,
      case IO_ASYNC_TH:
        ret_code=smumps_async_write_th(strat_IO, address_block, block_size,pos_in_file,file_number,inode,request_arg,ierr);       
        if(ret_code<0){
-	 *ierr=ret_code;
-	 smumps_io_prop_err_info(ret_code);
+         *ierr=ret_code;
+         smumps_io_prop_err_info(ret_code);
        }
        break;
 #endif
@@ -330,14 +331,14 @@ int smumps_low_level_write_ooc_c(const int * strat_IO,
 /**
  * Writes a contigous block of central memory to the disk.
  **/
-int smumps_low_level_read_ooc_c(const int * strat_IO, 
-			        void * address_block,
-				int * block_size,
-				int * from_where,
-				int * file_number,
-				int * inode,
-				int * request_arg,
-				int * ierr){
+int MUMPS_CALL smumps_low_level_read_ooc_c(const int * strat_IO, 
+                                          void * address_block,
+                                          int * block_size,
+                                          int * from_where,
+                                          int * file_number,
+                                          int * inode,
+                                          int * request_arg,
+                                          int * ierr){
   int ret_code=0;
 #ifndef _WIN32
   struct timeval start_time,end_time;
@@ -346,20 +347,20 @@ int smumps_low_level_read_ooc_c(const int * strat_IO,
   if(smumps_io_flag_async){
       switch(*strat_IO){
 #ifndef _WIN32
-      case IO_ASYNC_TH:	
-	ret_code=smumps_async_read_th(strat_IO,address_block,block_size,from_where,file_number,inode,request_arg,ierr);
-	if(ret_code<0){
-	  *ierr=ret_code;
-	  smumps_io_prop_err_info(ret_code);
-	}
-	break;
+      case IO_ASYNC_TH:
+        ret_code=smumps_async_read_th(strat_IO,address_block,block_size,from_where,file_number,inode,request_arg,ierr);
+        if(ret_code<0){
+          *ierr=ret_code;
+          smumps_io_prop_err_info(ret_code);
+        }
+        break;
 #endif
       default: 
-	ret_code=-91;
-	*ierr=ret_code;
-	sprintf(error_str,"Error: unknown I/O strategy : %d\n",*strat_IO);
-	smumps_io_prop_err_info(ret_code);
-	return ret_code;
+        ret_code=-91;
+        *ierr=ret_code;
+        sprintf(error_str,"Error: unknown I/O strategy : %d\n",*strat_IO);
+        smumps_io_prop_err_info(ret_code);
+        return ret_code;
       }
   }else{
     ret_code=smumps_io_do_read_block(address_block,block_size,from_where,file_number,ierr);
@@ -377,38 +378,39 @@ int smumps_low_level_read_ooc_c(const int * strat_IO,
   return ret_code;
 }
 
-int smumps_low_level_direct_read(void * address_block,
-				int * block_size,
-				int * from_where,
-				int * file_number,
-				int * ierr){
+int MUMPS_CALL smumps_low_level_direct_read(void * address_block,
+                                int * block_size,
+                                int * from_where,
+                                int * file_number,
+                                int * ierr){
   int ret_code=0;
-
+  
 #ifndef _WIN32
-  if(smumps_io_flag_async==IO_ASYNC_TH||smumps_io_flag_async==0){
+    if(smumps_io_flag_async==IO_ASYNC_TH||smumps_io_flag_async==0){
 #else
-  if(smumps_io_flag_async==0){
+    if(smumps_io_flag_async==0){
 #endif
-    ret_code=smumps_io_do_read_block(address_block,block_size,from_where,file_number,ierr);
-    if(ret_code<0){
-      *ierr=ret_code;
-      smumps_io_prop_err_info(ret_code);
+      ret_code=smumps_io_do_read_block(address_block,block_size,from_where,file_number,ierr);
+      if(ret_code<0){
+         *ierr=ret_code;
+	 smumps_io_prop_err_info(ret_code);
+	 return ret_code;
+      }
+    }else{
     }
-  }else{
-  }
-  read_op_vol=read_op_vol+((*block_size)*smumps_elementary_data_size);
-  return ret_code;
+    read_op_vol=read_op_vol+((*block_size)*smumps_elementary_data_size);
+    return ret_code;
 }
 
-
-int smumps_clean_io_data_c(int * myid,int *ierr){
+  
+int MUMPS_CALL smumps_clean_io_data_c(int * myid,int *ierr){
   /* cleans the thread/io management data*/
   if(!smumps_io_is_init_called) return -1;
   switch(smumps_io_flag_async){
   case IO_SYNC: 
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *ierr=smumps_clean_io_data_c_th(myid);
     if(*ierr<0){
       smumps_io_prop_err_info(*ierr);
@@ -428,7 +430,7 @@ int smumps_clean_io_data_c(int * myid,int *ierr){
   return 0;
 }
 
-int smumps_ooc_print_stats(){
+int MUMPS_CALL smumps_ooc_print_stats(){
 #ifndef _WIN32
   printf("%d: total time spent in i/o mode = %lf\n",smumps_io_myid,smumps_time_spent_in_sync);
 #endif
@@ -438,13 +440,13 @@ int smumps_ooc_print_stats(){
   printf("%d: Total i/o volume = %lf\n",smumps_io_myid,total_vol);
   return 0; 
 }
-int smumps_get_max_nb_req(int *max,int *ierr){
+int MUMPS_CALL smumps_get_max_nb_req(int *max,int *ierr){
   switch(smumps_io_flag_async){
   case IO_SYNC: 
     *max=1;
     break;
 #ifndef _WIN32
-  case IO_ASYNC_TH:	
+  case IO_ASYNC_TH:
     *max=MAX_FINISH_REQ+MAX_IO;
     break;
 #endif
@@ -457,20 +459,20 @@ int smumps_get_max_nb_req(int *max,int *ierr){
   return 0;
 }
 
-int smumps_get_max_file_size(double * max_ooc_file_size){
+int MUMPS_CALL smumps_get_max_file_size(double * max_ooc_file_size){
   *max_ooc_file_size=(double)(MAX_FILE_SIZE);
   return 0;
 }
 
-int smumps_ooc_get_nb_files(int* nb_files){
+int MUMPS_CALL smumps_ooc_get_nb_files(int* nb_files){
   return smumps_io_get_nb_files(nb_files);
 }
 
-int smumps_ooc_get_file_name(int* indice,char* name,int* length){
+int MUMPS_CALL smumps_ooc_get_file_name(int* indice,char* name,int* length, smumps_ftnlen l1){
   return smumps_io_get_file_name(indice,name,length);
 }
 
-int smumps_ooc_set_file_name(int* indice,char* name,int* length,int *ierr){
+int MUMPS_CALL smumps_ooc_set_file_name(int* indice,char* name,int* length,int *ierr, smumps_ftnlen l1){
   *ierr=smumps_io_set_file_name(indice,name,length);
   if(*ierr<0){
     smumps_io_prop_err_info(*ierr);
@@ -478,7 +480,7 @@ int smumps_ooc_set_file_name(int* indice,char* name,int* length,int *ierr){
   return *ierr;
 }
 
-int smumps_ooc_alloc_pointers(int* dim,int* ierr){
+int MUMPS_CALL smumps_ooc_alloc_pointers(int* dim,int* ierr){
   int ret_code;
   ret_code=smumps_io_alloc_pointers(dim);
   if(ret_code<0){
@@ -491,14 +493,15 @@ int smumps_ooc_alloc_pointers(int* dim,int* ierr){
 }
 
 
-int smumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
-			int* size_element,int* async,
-			char* smumps_dir, char* smumps_file,
-			int* smumps_dim_dir, int* smumps_dim_file,
-			int *ierr){
+int MUMPS_CALL smumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
+                        int* size_element,int* async, int* k211,
+                        char* smumps_dir, char* smumps_file,
+                        int* smumps_dim_dir, int* smumps_dim_file,
+                        int *ierr, smumps_ftnlen l1, smumps_ftnlen l2){
 #ifndef _WIN32
   smumps_time_spent_in_sync=0;
 #endif
+  smumps_io_k211=*k211;
   *ierr=smumps_init_file_name(smumps_dir,smumps_file,smumps_dim_dir,smumps_dim_file,myid_arg);
   if(*ierr<0){
     smumps_io_prop_err_info(*ierr);
@@ -507,7 +510,7 @@ int smumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
   return smumps_io_init_vars(myid_arg, nb_file_arg,size_element,async);
 }
 
-int smumps_ooc_start_low_level(int *ierr){
+int MUMPS_CALL smumps_ooc_start_low_level(int *ierr){
 
   read_op_vol=0;
   write_op_vol=0;
@@ -521,11 +524,11 @@ int smumps_ooc_start_low_level(int *ierr){
     case IO_SYNC: 
       break;
 #ifndef _WIN32
-    case IO_ASYNC_TH:	
+    case IO_ASYNC_TH:
       smumps_low_level_init_ooc_c_th(&smumps_io_flag_async,ierr);
       if(*ierr<0){
-	smumps_io_prop_err_info(*ierr);
-	return *ierr;
+        smumps_io_prop_err_info(*ierr);
+        return *ierr;
       }
       break;
 #endif
@@ -540,7 +543,7 @@ int smumps_ooc_start_low_level(int *ierr){
   return *ierr;
 }
 
-int smumps_ooc_remove_file(char *name,int *ierr){
+int MUMPS_CALL smumps_ooc_remove_file(char *name,int *ierr, smumps_ftnlen l1){
   *ierr=remove(name);
   if(*ierr<0){
 #ifndef _WIN32
@@ -555,3 +558,6 @@ int smumps_ooc_remove_file(char *name,int *ierr){
   return 0;
 }
 
+int MUMPS_CALL smumps_ooc_end_write(int *ierr){
+  return 0;
+}

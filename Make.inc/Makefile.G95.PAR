@@ -39,32 +39,33 @@ IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
 
 #End orderings
 ########################################################################
-########################################################################
+################################################################################
 
-PLAT    =
 RM      = /bin/rm -f
-CC      = cc
-FC = f90
-FL = f90
+CC      = gcc
+FC = g95
+FL = g95
 AR = ar vr
 RANLIB  = echo
-SCALAP  = -L/usr/lib64 -lscalapack64 -lmpiblacs64
-INCPAR = -I/usr/include/
-LIBPAR = $(SCALAP)  -L/usr/lib64/ -lmpi
+
+SCALAP  = /usr/local/SCALAPACK/libscalapack.a /usr/local/BLACS/LIB/blacsCinit_MPI-LINUX-0.a /usr/local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a /usr/local/BLACS/LIB/blacs_MPI-LINUX-0.a 
+INCPAR = -I/usr/local/mpich-1.2.7p1/include
+LIBPAR = $(SCALAP)  -L/usr/local/mpich-1.2.7p1/lib -lfmpich -lmpich
+
 INCSEQ = -I../libseq
 LIBSEQ  =  -L../libseq -lmpiseq
-LIBBLAS = -lblas
-LIBOTHERS = -lphtread
-#Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS   = -DAdd_
 
+LIBBLAS =/usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /usr/local/ATLAS/lib/Linux_P4SSE2/libatlas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a -lg2c -lpthread
+
+#Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
+CDEFS   = -DAdd__
 
 #Begin Optimization options
-OPTF   = -Dsgi -O -OPT:Olimit=0 -mips4 -64 -align64 -DALLOW_NON_INIT
-OPTL    = -O -OPT:Olimit=0 -mips4 -64 -align64
-OPTC    = -O -OPT:Olimit=0 -mips4 -64 -align64
-NOOPT   = -Dsgi -mips4 -64 -align64
+OPTF   = -O -i4
+OPTL   = -O  
+OPTC   = -O -DMAIN_COMP 
 #End Optimization options
+
  
 
 INC = $(INCPAR)

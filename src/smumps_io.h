@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,34 +40,34 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: smumps_io.h,v 1.13 2006/02/08 08:00:18 pamestoy Exp $ */
+/*    $Id: smumps_io.h,v 1.20 2006/03/27 16:46:59 jylexcel Exp $ */
 
-#if defined(Add_)
-#define smumps_is_there_finished_request smumps_is_there_finished_request_
-#define smumps_clean_request smumps_clean_request_
-#define smumps_test_request smumps_test_request_
-#define smumps_wait_request smumps_wait_request_
-#define smumps_wait_all_requests smumps_wait_all_requests_
-#define smumps_low_level_init_ooc_c smumps_low_level_init_ooc_c_
-#define smumps_low_level_write_ooc_c smumps_low_level_write_ooc_c_
-#define smumps_low_level_read_ooc_c smumps_low_level_read_ooc_c_
-#define smumps_low_level_direct_read smumps_low_level_direct_read_
-#define smumps_clean_io_data_c smumps_clean_io_data_c_
-#define smumps_get_max_nb_req smumps_get_max_nb_req_
-#define smumps_get_max_file_size smumps_get_max_file_size_ 
-#define smumps_ooc_get_nb_files smumps_ooc_get_nb_files_
-#define smumps_ooc_get_file_name smumps_ooc_get_file_name_
-#define smumps_ooc_set_file_name smumps_ooc_set_file_name_
-#define smumps_ooc_init_vars smumps_ooc_init_vars_
-#define smumps_ooc_start_low_level smumps_ooc_start_low_level_
-#define smumps_ooc_alloc_pointers smumps_ooc_alloc_pointers_
-#define smumps_ooc_print_stats smumps_ooc_print_stats_
-#define smumps_ooc_remove_file smumps_ooc_remove_file_
-#define smumps_ooc_init_vars smumps_ooc_init_vars_
+#if defined(_WIN32) || defined (UPPER)
+#define smumps_is_there_finished_request SMUMPS_IS_THERE_FINISHED_REQUEST
+#define smumps_clean_request SMUMPS_CLEAN_REQUEST
+#define smumps_test_request SMUMPS_TEST_REQUEST
+#define smumps_wait_request SMUMPS_WAIT_REQUEST
+#define smumps_wait_all_requests SMUMPS_WAIT_ALL_REQUESTS
+#define smumps_low_level_init_ooc_c SMUMPS_LOW_LEVEL_INIT_OOC_C
+#define smumps_low_level_write_ooc_c SMUMPS_LOW_LEVEL_WRITE_OOC_C
+#define smumps_low_level_read_ooc_c SMUMPS_LOW_LEVEL_READ_OOC_C
+#define smumps_low_level_direct_read SMUMPS_LOW_LEVEL_DIRECT_READ
+#define smumps_clean_io_data_c SMUMPS_CLEAN_IO_DATA_C
+#define smumps_get_max_nb_req SMUMPS_GET_MAX_NB_REQ
+#define smumps_get_max_file_size SMUMPS_GET_MAX_FILE_SIZE
+#define smumps_ooc_get_nb_files SMUMPS_OOC_GET_NB_FILES
+#define smumps_ooc_get_file_name SMUMPS_OOC_GET_FILE_NAME
+#define smumps_ooc_set_file_name SMUMPS_OOC_SET_FILE_NAME
+#define smumps_ooc_start_low_level SMUMPS_OOC_START_LOW_LEVEL
+#define smumps_ooc_alloc_pointers SMUMPS_OOC_ALLOC_POINTERS
+#define smumps_ooc_print_stats SMUMPS_OOC_PRINT_STATS
+#define smumps_ooc_remove_file SMUMPS_OOC_REMOVE_FILE
+#define smumps_ooc_init_vars SMUMPS_OOC_INIT_VARS
+#define smumps_ooc_end_write SMUMPS_OOC_END_WRITE
 #elif defined(Add__)
 #define smumps_is_there_finished_request smumps_is_there_finished_request__
 #define smumps_clean_request smumps_clean_request__
@@ -84,98 +84,110 @@
 #define smumps_ooc_get_nb_files smumps_ooc_get_nb_files__
 #define smumps_ooc_get_file_name smumps_ooc_get_file_name__
 #define smumps_ooc_set_file_name smumps_ooc_set_file_name__
-#define smumps_ooc_init_vars smumps_ooc_init_vars__
 #define smumps_ooc_start_low_level smumps_ooc_start_low_level__
 #define smumps_ooc_alloc_pointers smumps_ooc_alloc_pointers__
 #define smumps_ooc_print_stats smumps_ooc_print_stats__
 #define smumps_ooc_remove_file smumps_ooc_remove_file__
 #define smumps_ooc_init_vars smumps_ooc_init_vars__
-#elif defined(UPPER)
-#define smumps_is_there_finished_request SMUMPS_IS_THERE_FINISHED_REQUEST
-#define smumps_clean_request SMUMPS_CLEAN_REQUEST
-#define smumps_test_request SMUMPS_TEST_REQUEST
-#define smumps_wait_request SMUMPS_WAIT_REQUEST
-#define smumps_wait_all_requests SMUMPS_WAIT_ALL_REQUESTS
-#define smumps_low_level_init_ooc_c SMUMPS_LOW_LEVEL_INIT_OOC_C
-#define smumps_low_level_write_ooc_c SMUMPS_LOW_LEVEL_WRITE_OOC_C
-#define smumps_low_level_read_ooc_c SMUMPS_LOW_LEVEL_READ_OOC_C
-#define smumps_low_level_direct_read SMUMPS_LOW_LEVEL_DIRECT_READ
-#define smumps_clean_io_data_c SMUMPS_CLEAN_IO_DATA_C
-#define smumps_get_max_nb_req SMUMPS_GET_MAX_NB_REQ
-#define smumps_get_max_file_size SMUMPS_GET_MAX_FILE_SIZE
-#define smumps_ooc_get_nb_files SMUMPS_OOC_GET_NB_FILES
-#define smumps_ooc_get_file_name SMUMPS_OOC_GET_FILE_NAME
-#define smumps_ooc_set_file_name SMUMPS_OOC_SET_FILE_NAME
-#define smumps_ooc_init_vars SMUMPS_OOC_INIT_VARS
-#define smumps_ooc_start_low_level SMUMPS_OOC_START_LOW_LEVEL
-#define smumps_ooc_alloc_pointers SMUMPS_OOC_ALLOC_POINTERS
-#define smumps_ooc_print_stats SMUMPS_OOC_PRINT_STATS
-#define smumps_ooc_remove_file SMUMPS_OOC_REMOVE_FILE
-#define smumps_ooc_init_vars SMUMPS_OOC_INIT_VARS
+#define smumps_ooc_end_write smumps_ooc_end_write__
+#elif defined(Add_)
+#define smumps_is_there_finished_request smumps_is_there_finished_request_
+#define smumps_clean_request smumps_clean_request_
+#define smumps_test_request smumps_test_request_
+#define smumps_wait_request smumps_wait_request_
+#define smumps_wait_all_requests smumps_wait_all_requests_
+#define smumps_low_level_init_ooc_c smumps_low_level_init_ooc_c_
+#define smumps_low_level_write_ooc_c smumps_low_level_write_ooc_c_
+#define smumps_low_level_read_ooc_c smumps_low_level_read_ooc_c_
+#define smumps_low_level_direct_read smumps_low_level_direct_read_
+#define smumps_clean_io_data_c smumps_clean_io_data_c_
+#define smumps_get_max_nb_req smumps_get_max_nb_req_
+#define smumps_get_max_file_size smumps_get_max_file_size_ 
+#define smumps_ooc_get_nb_files smumps_ooc_get_nb_files_
+#define smumps_ooc_get_file_name smumps_ooc_get_file_name_
+#define smumps_ooc_set_file_name smumps_ooc_set_file_name_
+#define smumps_ooc_start_low_level smumps_ooc_start_low_level_
+#define smumps_ooc_alloc_pointers smumps_ooc_alloc_pointers_
+#define smumps_ooc_print_stats smumps_ooc_print_stats_
+#define smumps_ooc_remove_file smumps_ooc_remove_file_
+#define smumps_ooc_init_vars smumps_ooc_init_vars_
+#define smumps_ooc_end_write smumps_ooc_end_write_
 #endif
 
-int smumps_is_there_finished_request(int* flag,int* ierr);
+#if defined(_WIN32)
+/*
+ * Next line May be needed depending on your Windows environment:
+ * #define MUMPS_CALL __stdcall
+ */
+#else
+#define MUMPS_CALL
+#endif
 
-int smumps_clean_request(int* request_id,int* ierr);
+#define smumps_ftnlen int
 
-int smumps_test_request(int* request_id,int* flag,int* ierr);
+int MUMPS_CALL smumps_is_there_finished_request(int* flag,int* ierr);
 
-int smumps_wait_request(int* request_id,int* ierr);
+int MUMPS_CALL smumps_clean_request(int* request_id,int* ierr);
 
-int smumps_wait_all_requests(int* ierr);
+int MUMPS_CALL smumps_test_request(int* request_id,int* flag,int* ierr);
 
-int smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
-			       int* async,char* smumps_dir, char* smumps_file,
-			       int* smumps_dim_dir, int* smumps_dim_file,
-			       int* ierr);
+int MUMPS_CALL smumps_wait_request(int* request_id,int* ierr);
 
-int smumps_low_level_write_ooc_c( const int * strat_IO, 
-				 void * address_block,
-				 int * block_size,
-				 int * pos_in_file,
-				 int * file_number,
-				 int * inode,
-				 int * request_arg,
-				 int * ierr);
+int MUMPS_CALL smumps_wait_all_requests(int* ierr);
 
-int smumps_low_level_read_ooc_c( const int * strat_IO, 
-			        void * address_block,
-				int * block_size,
-				int * from_where,
-				int * file_number,
-				int * inode,
-				int * request_arg,
-				int * ierr);
+int MUMPS_CALL smumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
+                               int* async, int* k211, char* smumps_dir, char* smumps_file,
+                               int* smumps_dim_dir, int* smumps_dim_file,
+                               int* ierr, smumps_ftnlen l1, smumps_ftnlen l2);
 
-int smumps_low_level_direct_read(void * address_block,
-				   int * block_size,
-				   int * from_where,
-				   int * file_number,
-				   int * ierr);
+int MUMPS_CALL smumps_low_level_write_ooc_c( const int * strat_IO, 
+                                 void * address_block,
+                                 int * block_size,
+                                 int * pos_in_file,
+                                 int * file_number,
+                                 int * inode,
+                                 int * request_arg,
+                                 int * ierr);
 
-int smumps_clean_io_data_c(int* myid,int* ierr);
+int MUMPS_CALL smumps_low_level_read_ooc_c( const int * strat_IO, 
+                                 void * address_block,
+                                 int * block_size,
+                                 int * from_where,
+                                 int * file_number,
+                                 int * inode,
+                                 int * request_arg,
+                                 int * ierr);
 
-int smumps_get_max_nb_req(int *max,int* ierr);
+int MUMPS_CALL smumps_low_level_direct_read(void * address_block,
+                                 int * block_size,
+                                 int * from_where,
+                                 int * file_number,
+                                 int * ierr);
 
-int smumps_get_max_file_size(double * max_ooc_file_size);
+int MUMPS_CALL smumps_clean_io_data_c(int* myid,int* ierr);
 
-int smumps_ooc_get_nb_files(int* nb_files);
+int MUMPS_CALL smumps_get_max_nb_req(int *max,int* ierr);
 
-int smumps_ooc_get_file_name(int* indice,char* name,int* length);
+int MUMPS_CALL smumps_get_max_file_size(double * max_ooc_file_size);
 
-int smumps_ooc_set_file_name(int* indice,char* name,int* length,int* ierr);
+int MUMPS_CALL smumps_ooc_get_nb_files(int* nb_files);
 
-int smumps_ooc_alloc_pointers(int* dim,int* ierr);
+int MUMPS_CALL smumps_ooc_get_file_name(int* indice,char* name,int* length, smumps_ftnlen l1);
 
-int smumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
-			int* size_element,int* async,
-			char* smumps_dir, char* smumps_file,
-			int* smumps_dim_dir, int* smumps_dim_file,
-			int *ierr);
+int MUMPS_CALL smumps_ooc_set_file_name(int* indice,char* name,int* length,int* ierr, smumps_ftnlen l1);
 
-int smumps_ooc_start_low_level(int* ierr);
+int MUMPS_CALL smumps_ooc_alloc_pointers(int* dim,int* ierr);
 
-int smumps_ooc_print_stats();
+int MUMPS_CALL smumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
+                                   int* size_element,int* async, int* k211,
+                                   char* smumps_dir, char* smumps_file,
+                                   int* smumps_dim_dir, int* smumps_dim_file,
+                                   int *ierr, smumps_ftnlen l1, smumps_ftnlen l2);
 
-int smumps_ooc_remove_file(char *name,int* ierr);
+int MUMPS_CALL smumps_ooc_start_low_level(int* ierr);
 
+int MUMPS_CALL smumps_ooc_print_stats();
+
+int MUMPS_CALL smumps_ooc_remove_file(char *name,int* ierr, smumps_ftnlen l1);
+
+int MUMPS_CALL smumps_ooc_end_write(int *ierr);

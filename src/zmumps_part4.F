@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-C   This Version was built on Fri Feb 17 14:27:51 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+C   This Version was built on Fri Apr 14 14:59:20 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -39,8 +39,8 @@ C   scheduling, SIAM Journal of Matrix Analysis and Applications,
 C   Vol 23, No 1, pp 15-41 (2001).
 C
 C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-C   S. Pralet (2005), Hybrid scheduling for the parallel solution
-C   of linear systems. Accepted to Parallel Computing.
+C   S. Pralet, Hybrid scheduling for the parallel solution of linear
+C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
       SUBROUTINE ZMUMPS_246(MYID, N, STEP, FRERE, FILS,
      *     NA, LNA, NE, DAD, ND, PROCNODE, SLAVEF,
@@ -1469,7 +1469,6 @@ C
       INTEGER  IOLDPS, POSELT
       INTEGER KEEP(500)
       INTEGER*8 KEEP8(150)
-       include 'mpif.h'
       COMPLEX*16 SWOP
       INTEGER APOS
       DOUBLE PRECISION AMROW
@@ -1518,11 +1517,11 @@ C
               RMAX = MAX(ABS(A(JJ)),RMAX)
   360       CONTINUE
   370       IDIAG = APOS + IPIV - NPIVP1
-            IF (ABS(A(IDIAG)).GT. MAX(UU*RMAX,SEUIL)) THEN
+            IF (ABS(A(IDIAG)).GE. MAX(UU*RMAX,SEUIL)) THEN
               JMAX = IPIV - NPIV
               GO TO 380
             ENDIF
-            IF (AMROW.LE. MAX(UU*RMAX,SEUIL)) GO TO 460
+            IF (AMROW.LT. MAX(UU*RMAX,SEUIL)) GO TO 460
             NOFFW = NOFFW + 1
   380       IF (IPIV.EQ.NPIVP1) GO TO 400
             J1 = POSELT + NPIV*NFRONT
@@ -1569,9 +1568,10 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_221
       SUBROUTINE ZMUMPS_220(NFRONT,NASS,N,INODE,IW,LIW,A,LA,
-     *   INOPV,NOFFW,IOLDPS,POSELT,UU)
+     *   INOPV,NOFFW,IOLDPS,POSELT,UU,SEUIL)
+      IMPLICIT NONE
       INTEGER NFRONT,NASS,N,LIW,LA,INODE,INOPV
-      DOUBLE PRECISION UU
+      DOUBLE PRECISION UU, SEUIL
       COMPLEX*16 A(LA)
       INTEGER IW(LIW)
       DOUBLE PRECISION AMROW
@@ -1606,9 +1606,11 @@ C
   360       CONTINUE
   370       IF (RMAX.EQ.ZERO) GO TO 460
             IDIAG = APOS + (IPIV - NPIVP1)*NFRONT
-            IF (ABS(A(IDIAG)).GE.UU*RMAX) JMAX = IPIV - NPIV
-            IF (ABS(A(IDIAG)).GE.UU*RMAX) GO TO 380
-            IF (AMROW.LT.UU*RMAX) GO TO 460
+            IF (ABS(A(IDIAG)).GE.MAX(UU*RMAX,SEUIL)) THEN
+              JMAX = IPIV - NPIV
+              GO TO 380
+            ENDIF
+            IF (AMROW.LT.MAX(UU*RMAX,SEUIL)) GO TO 460
             NOFFW = NOFFW + 1
   380       IF (IPIV.EQ.NPIVP1) GO TO 400
             J1 = POSELT + NPIV

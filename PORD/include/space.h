@@ -42,12 +42,12 @@
 #include "mpi.h"
 #endif
 
-#include <const.h>
-#include <params.h>
-#include <macros.h>
-#include <types.h>
-#include <protos.h>
-#include <eval.h>
+#include "const.h"
+#include "params.h"
+#include "macros.h"
+#include "types.h"
+#include "protos.h"
+#include "eval.h"
 
 #define FORTRAN(nu,nl,pl,pc)                     \
 void nu ();                                      \

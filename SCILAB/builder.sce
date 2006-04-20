@@ -1,12 +1,12 @@
-// $Id: builder_source.sce,v 1.2 2005/12/22 15:09:55 jylexcel Exp $
+// $Id: builder_source.sce,v 1.3 2006/04/04 12:18:37 jylexcel Exp $
 
 
 //******************* VARIABLE PART TO COSTUMIZE ***************************//
 
 // -- MUMPS:
 
-MUMPS_DIR = home + "/MUMPS_4.5.6/"
-MUMPS_INC_DIR = MUMPS_DIR+"include/"; //path until dmumps_c.h
+MUMPS_DIR = home + "/MUMPS_4.6.2/";
+MUMPS_INC_DIR = MUMPS_DIR+"include/"; //path until dmumps_c.h and zmumps_c.h
 MUMPS_LIB_DIR = MUMPS_DIR+"lib/";     //path until libdmumps.a, libzmumps.a and libpord.a
 DMUMPS_LIB = MUMPS_LIB_DIR+"libdmumps.a";
 ZMUMPS_LIB = MUMPS_LIB_DIR+"libzmumps.a";
@@ -14,7 +14,7 @@ LIB_MPISEQ = MUMPS_LIB_DIR+"../libseq/libmpiseq.a";
 
 // -- SCILAB: Path to scilab routines
 
-SCI_DIR_INC = "/usr/lib/scilab/routines/";
+SCI_DIR_INC = SCI + "/routines/";
 
 // -- BLAS library, if not already included in Scilab:
 
@@ -26,19 +26,20 @@ PORD_LIB =  MUMPS_LIB_DIR+"libpord.a";
 METIS_LIB = "/home/afevre/metis-4.0/libmetis.a";  
 ORDERINGS_LIB = PORD_LIB+" "+METIS_LIB;
 
+// -- PTHREAD lib required by MUMPS versions > 4.6
+PTHREAD_LIB="-lpthread";
+
+COMPILER_= "gcc -c -O";    
 // -- FORTRAN COMPILER AND RUNTIME LIBRARIES
 
 //---- g95 
-COMPILER_= "gcc -c -O";    
 FORT_LIB_DIR = "/home/afevre/compil/g95-install/lib/gcc-lib/i686-pc-linux-gnu/4.0.1/";
 FORT_LIB = FORT_LIB_DIR+"libf95.a"+" "+FORT_LIB_DIR+"libgcc.a";
 //+" "+FORT_LIB_DIR+"crtbegin.o"+" "+FORT_LIB_DIR+"crtend.o"+" "+FORT_LIB_DIR+"crtendS.o"+" "+FORT_LIB_DIR+"libgcc_s.so"+" "+FORT_LIB_DIR+"libgcc_s.so.1";
  
 // --  ifort compiler 
-//COMPILER_ = "ifort -c -O";
 //FORT_LIB_DIR = "/opt/intel/fc/9.0/lib/";
 //FORT_LIB = FORT_LIB_DIR+"libifcore.a"+" "+FORT_LIB_DIR+"libimf.a"+" "+FORT_LIB_DIR+"libguide.a"+" "+FORT_LIB_DIR+"libirc.a";
-
 
 //**************************************************************************//
 //******************* DON't EDIT BELOW (Normally) **************************//
@@ -69,5 +70,6 @@ mfprintf(fd,"		\""%s\"" ; \n",LIB_MPISEQ)
 mfprintf(fd,"		\""%s\"" ; \n",PORD_LIB)
 mfprintf(fd,"		\""%s\"" ; \n",METIS_LIB)
 mfprintf(fd,"		\""%s\"" ; \n",BLAS_LIB)
-mfprintf(fd,"		\""%s\"" ]; \n",FORT_LIB)
+mfprintf(fd,"		\""%s\"" ; \n",FORT_LIB)
+mfprintf(fd,"		\""%s\"" ]; \n",PTHREAD_LIB)
 mclose(fd);

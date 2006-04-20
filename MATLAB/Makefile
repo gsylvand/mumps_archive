@@ -8,7 +8,7 @@ INCMUMPS = -I../include
 LIBMUMPS = -L../lib -ldmumps -lzmumps 
 
 INCTOT = $(IORDERINGS) $(INCSEQ) $(INCMUMPS)
-LIBTOT = $(LIBMUMPS) $(LORDERINGS) $(LIBSEQ) $(LIBFORT) 
+LIBTOT = $(LIBMUMPS) $(LORDERINGS) $(LIBSEQ) $(LIBFORT) -lpthread
 
 all:
 	$(MEX) $(OPTC) dmumpsmex.c $(INCTOT) $(LIBTOT)

@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.1
-   This Version was built on Fri Feb 17 14:27:51 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.2
+   This Version was built on Fri Apr 14 14:59:20 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -40,11 +40,11 @@
    Vol 23, No 1, pp 15-41 (2001).
 
    [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
-   S. Pralet (2005), Hybrid scheduling for the parallel solution
-   of linear systems. Accepted to Parallel Computing.
+   S. Pralet, Hybrid scheduling for the parallel solution of linear
+   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: smumps_c.h,v 1.23 2005/10/13 09:51:11 jylexcel Exp $ */
+/* $Id: smumps_c.h,v 1.26 2006/03/27 16:46:59 jylexcel Exp $ */
 /* Mostly written in march 2002 (JYL) */
 
 #if ( ! defined SMUMPS_C_H )
@@ -68,8 +68,8 @@ typedef struct
     F_DOUBLE2 cntl[5];
     F_INT n;
    
-		F_INT nz_alloc; /* used in matlab interface to decide if
-											 we free + malloc when we have large variation */
+    F_INT nz_alloc; /* used in matlab interface to decide if
+                       we free + malloc when we have large variation */
 
     /* Assembled entry */
     F_INT nz; F_INT *irn; F_INT *jcn; F_DOUBLE *a;
@@ -106,7 +106,7 @@ typedef struct
   } SMUMPS_STRUC_C;
 
 
-#if defined(UPPER)
+#if defined(UPPER) || defined(_WIN32)
 #define smumps_f77_ SMUMPS_F77
 #define smumps_affect_mapping_ SMUMPS_AFFECT_MAPPING
 #define smumps_affect_nullspace_ SMUMPS_AFFECT_NULLSPACE
@@ -153,23 +153,32 @@ typedef struct
 #define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca
 #endif
 
-void smumps_c(SMUMPS_STRUC_C * smumps_par);
-void smumps_affect_mapping_(F_INT * f77mapping);
-void smumps_affect_nullspace_(F_DOUBLE * f77nullspace);
-void smumps_affect_uns_perm_(F_INT * f77sym_perm);
-void smumps_affect_sym_perm_(F_INT * f77uns_perm);
-void smumps_nullify_c_mapping_();
-void smumps_nullify_c_nullspace_();
-void smumps_nullify_c_sym_perm_();
-void smumps_nullify_c_uns_perm_();
-#ifdef return_scaling
-void smumps_affect_colsca_(F_DOUBLE * f77colsca);
-void smumps_affect_rowsca_(F_DOUBLE * f77rowsca);
-void smumps_nullify_c_colsca_();
-void smumps_nullify_c_rowsca_();
+#if defined(_WIN32)
+/* 
+ * Next line May be needed depending on your Windows environment:
+ * #define MUMPS_CALL __stdcall
+ */
+#else
+#define MUMPS_CALL
 #endif
 
-void smumps_f77_(F_INT *job, F_INT *sym, F_INT *par, F_INT * comm_fortran,
+void MUMPS_CALL smumps_c(SMUMPS_STRUC_C * smumps_par);
+void MUMPS_CALL smumps_affect_mapping_(F_INT * f77mapping);
+void MUMPS_CALL smumps_affect_nullspace_(F_DOUBLE * f77nullspace);
+void MUMPS_CALL smumps_affect_uns_perm_(F_INT * f77sym_perm);
+void MUMPS_CALL smumps_affect_sym_perm_(F_INT * f77uns_perm);
+void MUMPS_CALL smumps_nullify_c_mapping_();
+void MUMPS_CALL smumps_nullify_c_nullspace_();
+void MUMPS_CALL smumps_nullify_c_sym_perm_();
+void MUMPS_CALL smumps_nullify_c_uns_perm_();
+#ifdef return_scaling
+void MUMPS_CALL smumps_affect_colsca_(F_DOUBLE * f77colsca);
+void MUMPS_CALL smumps_affect_rowsca_(F_DOUBLE * f77rowsca);
+void MUMPS_CALL smumps_nullify_c_colsca_();
+void MUMPS_CALL smumps_nullify_c_rowsca_();
+#endif
+
+void MUMPS_CALL smumps_f77_(F_INT *job, F_INT *sym, F_INT *par, F_INT * comm_fortran,
 F_INT *n, F_INT *icntl,
 F_DOUBLE2 *cntl, F_INT *nz, F_INT *irn, F_INT *irn_avail,
 F_INT *jcn, F_INT *jcn_avail, F_DOUBLE *a, F_INT *a_avail,

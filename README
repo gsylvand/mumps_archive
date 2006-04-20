@@ -1,8 +1,8 @@
 ===========================================
-MUMPS version 4.6.1
+MUMPS version 4.6.2
 ===========================================
 
-MUMPS 4.6.1 solves a sparse system of linear equations A x = b
+MUMPS 4.6.2 solves a sparse system of linear equations A x = b
 using Gaussian elimination. Please read this README file and
 the documentation (in ./doc/) for a complete list of
 functionalities. Documentation and publications related to
@@ -65,8 +65,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.6.1.tar.gz
-% cd MUMPS_4.6.1
+% tar zxvf MUMPS_4.6.2.tar.gz
+% cd MUMPS_4.6.2
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -183,7 +183,7 @@ Otherwise some derived datatypes may not match.
 Platform dependencies
 ---------------------
 
-Versions of MUMPS_4.6.1 have been tested on CRAY, IBM, SGI,
+Versions of MUMPS_4.6.2 have been tested on CRAY, IBM, SGI,
 COMPAQ, and Linux systems.  We could potentially generate
 versions for any other platform with Fortran 90, MPI, BLACS,
 and ScaLAPACK installed, but the code has only been tested
@@ -225,6 +225,8 @@ of more than 1 processor.
 Release history
 ---------------
 
+Release 4.6.2.1         : April 2006 (Patched version)
+Release 4.6.2           : April 2006
 Release 4.6.1           : February 2006
 Release 4.6             : January 2006
 Release 4.5.6           : December 2005, internal release
@@ -264,6 +266,15 @@ Version 2.0.4     : Mar 24, 1998
 Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
+
+Changes from Version 4.6.2 to Version 4.6.2.1
+* Patch to update the deallocation of contribution blocs
+  during assembly
+
+Changes from Version 4.6.1 to Version 4.6.2
+* Metis ordering now available with Schur option
+* Schur functionality correctly working with Scilab interface
+* Occasional SIGBUS problem on single precision versions corrected
 
 Changes from Version 4.6 to Version 4.6.1
 * Problem with hybrid scheduler and elemental matrix entry corrected

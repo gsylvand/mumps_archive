@@ -48,7 +48,7 @@ README
  to give the path to the libraries of your FORTRAN 90 compiler.
  If you are lucky the Makefile will work directly, but
  unfortunately you may have to change the Makefile 
- significantly even between 2 version of the same compiler
+ significantly even between 2 versions of the same compiler.
 
  You can use something like
  nm -o /opt/intel/compiler80/lib/*.a | grep <name of the routine>

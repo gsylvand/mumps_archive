@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io_err.h,v 1.7 2006/03/14 09:49:50 jylexcel Exp $  */
+/*    $Id: zmumps_io_err.h,v 1.8 2006/06/15 15:06:24 jylexcel Exp $  */
 
 #include <errno.h>
 
@@ -57,11 +57,15 @@
 #endif
 
 #ifdef _WIN32
-#define MUMPS_CALL __stdcall
+/*
+ * Next line May be needed depending on your Windows environment:
+ * #define MUMPS_CALL __stdcall
+ */
 #else
 #define MUMPS_CALL
 #endif
 
+#define zmumps_ftnlen int
 
 #ifndef _WIN32  
 
@@ -83,5 +87,5 @@ int zmumps_io_prop_err_info(int ierr);
 
 int zmumps_io_build_err_str(int errnum, int zmumps_err,const char* desc,char* buf,int size);
 
-int MUMPS_CALL zmumps_low_level_init_err_str(char* err_str,int* dim);
+void MUMPS_CALL zmumps_low_level_init_err_str(int* dim, char* err_str,zmumps_ftnlen l1);
 

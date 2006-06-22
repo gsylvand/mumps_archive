@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io_err.c,v 1.6 2006/01/18 14:32:33 aguermou Exp $  */
+/*    $Id: zmumps_io_err.c,v 1.7 2006/06/15 15:06:24 jylexcel Exp $  */
 
 #include "zmumps_io_err_var.h"
 #include "zmumps_io_basic_extern.h"
@@ -104,12 +104,12 @@ int zmumps_io_build_err_str(int errnum, int zmumps_err,const char* desc,char* bu
   return 0;
 }
 
-int zmumps_low_level_init_err_str(char* err_str,int* dim){
+void zmumps_low_level_init_err_str(int * dim, char* err_str, zmumps_ftnlen l1){
   /* Keeps a C pointer to store error description string that will be
      displayed by the fortran layers*/
   zmumps_err=err_str;
   dim_mumps_err=dim;
   err_flag=0;
-  return 0;
+  return;
 }
 

@@ -34,8 +34,8 @@ if id.JOB == -1 then
 	end
 	// call the C routine dmumpsc
 	[inform,rinform,sol,inst,schu,def,nullspace,sym_perm,uns_perm] = dmumpsc(id.SYM,id.JOB,id.ICNTL,id.CNTL,id.PERM_IN,id.COLSCA,id.ROWSCA,id.RHS,id.VAR_SCHUR,id.INST);
-        id.INFO = inform;
-	id.RINFO = rinform;
+        id.INFOG = inform;
+	id.RINFOG = rinform;
 	id.SOL = sol;
 	id.INST = inst;
 	id.SCHUR = schu;
@@ -61,8 +61,8 @@ if id.TYPE ~= prectype then
 end
 
 [inform,rinform,sol,inst,schu,def,nullspace,sym_perm,uns_perm] = dmumpsc(id.SYM,id.JOB,id.ICNTL,id.CNTL,id.PERM_IN,id.COLSCA,id.ROWSCA,id.RHS,id.VAR_SCHUR,id.INST,mat);
-id.INFO = inform;
-id.RINFO = rinform;
+id.INFOG = inform;
+id.RINFOG = rinform;
 id.SOL = sol;
 id.INST = inst;
 if (id.JOB == 2|id.JOB==4|id.JOB==6) then

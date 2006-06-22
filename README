@@ -1,8 +1,8 @@
 ===========================================
-MUMPS version 4.6.2
+MUMPS version 4.6.3
 ===========================================
 
-MUMPS 4.6.2 solves a sparse system of linear equations A x = b
+MUMPS 4.6.3 solves a sparse system of linear equations A x = b
 using Gaussian elimination. Please read this README file and
 the documentation (in ./doc/) for a complete list of
 functionalities. Documentation and publications related to
@@ -65,8 +65,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.6.2.tar.gz
-% cd MUMPS_4.6.2
+% tar zxvf MUMPS_4.6.3.tar.gz
+% cd MUMPS_4.6.3
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -183,7 +183,7 @@ Otherwise some derived datatypes may not match.
 Platform dependencies
 ---------------------
 
-Versions of MUMPS_4.6.2 have been tested on CRAY, IBM, SGI,
+Versions of MUMPS_4.6.3 have been tested on CRAY, IBM, SGI,
 COMPAQ, and Linux systems.  We could potentially generate
 versions for any other platform with Fortran 90, MPI, BLACS,
 and ScaLAPACK installed, but the code has only been tested
@@ -212,6 +212,12 @@ not be used on mumps_cv.F as it seems to create erroneous code.
 lam version 6.5.6 or later is required for the double complex
 version of MUMPS to work correctly.
 
+* MPICH
+  -----
+MUMPS has been tested and works correctly with various versions of MPICH.
+The double complex version does not work correctly with MPICH2 v 1.0.3,
+due to truncated messages when using double complex types.
+
 * CRAY
   ----
 On the CRAY, we recommend to link with the standard BLACS
@@ -225,7 +231,7 @@ of more than 1 processor.
 Release history
 ---------------
 
-Release 4.6.2.1         : April 2006 (Patched version)
+Release 4.6.3           : June 2006
 Release 4.6.2           : April 2006
 Release 4.6.1           : February 2006
 Release 4.6             : January 2006
@@ -267,9 +273,17 @@ Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
 
-Changes from Version 4.6.2 to Version 4.6.2.1
-* Patch to update the deallocation of contribution blocs
-  during assembly
+Changes from Version 4.6.2 to Version 4.6.3
+* Reduced memory usage for symmetric matrices (compressed CB)
+* Reduced memory allocation for parallel executions
+* Scheduler parameters for parallel executions modified
+* Memory estimates (that were too large) corrected with
+  2Dcyclic Schur complement option
+* Portability improved (C/Fortran interfacing for strings)
+* The situation leading to Warning "RHS associated in MUMPS_301"
+  no more occurs.
+* Parameters INFO/RINFO from the Scilab/Matlab API are now called
+  INFOG/RINFOG in order to match the MUMPS user's guide.
 
 Changes from Version 4.6.1 to Version 4.6.2
 * Metis ordering now available with Schur option

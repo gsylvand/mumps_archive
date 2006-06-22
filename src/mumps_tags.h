@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -42,7 +42,7 @@ C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet, Hybrid scheduling for the parallel solution of linear
 C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
-C     $Id: mumps_tags.h,v 1.4 2003/12/24 10:55:59 jylexcel Exp $
+C     $Id: mumps_tags.h,v 1.5 2006/05/18 14:55:10 spralet Exp $
 C -----------------------------------------
 C  This file contains the definition
 C  of all tags.
@@ -154,3 +154,6 @@ C   To send Schur
 C   To clean up IRECV
       INTEGER TAG_DUMMY
       PARAMETER( TAG_DUMMY = 39 )
+C   To send zero pivot indices
+      INTEGER ZERO_PIV
+      PARAMETER( ZERO_PIV = 40 )

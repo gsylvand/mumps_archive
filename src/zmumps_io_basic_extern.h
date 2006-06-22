@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -52,25 +52,27 @@
 #include <pthread.h>
 extern pthread_mutex_t zmumps_io_pwrite_mutex;
 #endif
-extern int* zmumps_io_pfile_pointer_array;
-extern int* zmumps_io_current_file;
-#else /*_WIN32*/
-extern FILE** zmumps_io_current_file;
-extern FILE** zmumps_io_pfile_pointer_array;
+/* extern int* zmumps_io_pfile_pointer_array; */
+/* extern int* zmumps_io_current_file; */
+/* #else /\*_WIN32*\/ */
+/* extern FILE** zmumps_io_current_file; */
+/* extern FILE** zmumps_io_pfile_pointer_array; */
 #endif /*_WIN32*/
 
+/*extern zmumps_file_struct* zmumps_io_pfile_pointer_array;
+  extern zmumps_file_struct* zmumps_io_current_file;*/
+extern zmumps_file_type* zmumps_files;
 
-
-extern int zmumps_io_current_file_number;
+/* extern int zmumps_io_current_file_number; */
 extern char* zmumps_ooc_file_prefix;
-extern char** zmumps_io_pfile_name;
-extern int zmumps_io_current_file_position;
-extern int zmumps_io_write_pos;
-extern int zmumps_io_last_file_opened;
+/* extern char** zmumps_io_pfile_name; */
+/* extern int zmumps_io_current_file_position; */
+/* extern int zmumps_io_write_pos; */
+/* extern int zmumps_io_last_file_opened; */
 extern int zmumps_elementary_data_size;
 extern int zmumps_io_is_init_called;
 extern int zmumps_io_myid;
-extern int zmumps_io_nb_file;
+/* extern int zmumps_io_nb_file; */
 extern int zmumps_io_flag_async;
 extern int zmumps_io_k211;
 extern int zmumps_flag_open;

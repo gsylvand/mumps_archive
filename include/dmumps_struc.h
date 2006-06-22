@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF DMUMPS VERSION 4.6.2
-!   This Version was built on Fri Apr 14 14:59:20 2006
+!   THIS FILE IS PART OF DMUMPS VERSION 4.6.3
+!   This Version was built on Thu Jun 22 13:22:44 2006
 !
 !
 !  This version of DMUMPS is provided to you free of charge. It is public
@@ -42,7 +42,7 @@
 !   S. Pralet, Hybrid scheduling for the parallel solution of linear
 !   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 !
-!     $Id: dmumps_struc.h,v 1.61 2006/03/01 13:42:48 jylexcel Exp $
+!     $Id: dmumps_struc.h,v 1.65 2006/06/10 17:43:54 jylexcel Exp $
       INCLUDE 'dmumps_root.h'
       TYPE DMUMPS_STRUC
         SEQUENCE
@@ -158,6 +158,10 @@
          INTEGER, DIMENSION(:), POINTER :: LISTVAR_SCHUR
          DOUBLE PRECISION, DIMENSION(:), POINTER :: SCHUR
          DOUBLE PRECISION, DIMENSION(:), POINTER :: SCHUR_CINTERFACE
+!    -----------
+!    Out-of-core
+!    -----------
+         CHARACTER(LEN=150) :: OOC_TMPDIR, OOC_PREFIX
 !
 !
 ! **********************
@@ -229,7 +233,6 @@
          INTEGER, DIMENSION(:),   POINTER :: DEPTH_FIRST
          DOUBLE PRECISION, DIMENSION(:),   POINTER :: COST_TRAV
          INTEGER NBSA_LOCAL
-         INTEGER MEMORY_MD
          INTEGER MAX_SURF_MASTER
 !    For simulating parallel out-of-core stack.
          INTEGER, DIMENSION(:),POINTER ::CB_SON_SIZE
@@ -242,7 +245,13 @@
          INTEGER OOC_NB_FILES
          CHARACTER,DIMENSION(:,:), POINTER :: OOC_FILE_NAMES  
          INTEGER,DIMENSION(:), POINTER :: OOC_FILE_NAME_LENGTH
-         CHARACTER(LEN=150) DMUMPS_OOC_TMPDIR,DMUMPS_OOC_PREFIX
 !    Other internal data
          LOGICAL PB_ALLOC_ON_EXIT
+!    Indices of nul pivots
+         INTEGER,DIMENSION(:), POINTER :: PIVNUL_LIST
+!    Internal control array
+         DOUBLE PRECISION DKEEP(30)
+C    Array needed to manage additionnal candidate processor 
+C    when using -DNEW_MAPPING
+         INTEGER, DIMENSION(:,:), POINTER :: SUP_PROC
       END TYPE DMUMPS_STRUC

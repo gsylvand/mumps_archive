@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,114 +44,121 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: cmumps_io_basic.c,v 1.79 2006/04/13 11:02:26 jylexcel Exp $  */
+/*    $Id: cmumps_io_basic.c,v 1.83 2006/06/16 13:11:50 aguermou Exp $  */
 
 #include "cmumps_io_basic_var.h"
 #include "cmumps_io_err_extern.h"
 
-int _cmumps_next_file(){
+int _cmumps_next_file(int type){
   /* Defines the pattern for the file name. The last 6 'X' will be replaced
      so as to name were unique */
   char name[150];
   int ret_code;
-
+  cmumps_file_struct  *cmumps_io_pfile_pointer_array;
 
 #ifndef _WIN32
   strcpy(name,cmumps_ooc_file_prefix);
   mkstemp(name);
 #else
-  sprintf(name,"%s_%d",cmumps_ooc_file_prefix,cmumps_io_current_file_number+1);
+  sprintf(name,"%s_%d",cmumps_ooc_file_prefix,((cmumps_files+type)->cmumps_io_current_file_number)+1);
 #endif
   
-  if (cmumps_io_current_file_number >= cmumps_io_nb_file-1){
+  if ((cmumps_files+type)->cmumps_io_current_file_number >= ((cmumps_files+type)->cmumps_io_nb_file)-1){
     /* Exception : probably thrown because of a bad estimation
        of number of files. */
     /* We increase the number of file needed and then realloc. */
-    cmumps_io_nb_file++;
-#ifndef _WIN32
-    cmumps_io_pfile_pointer_array=realloc((void *)cmumps_io_pfile_pointer_array,cmumps_io_nb_file*sizeof(int));
-#else
-    cmumps_io_pfile_pointer_array=realloc((void *)cmumps_io_pfile_pointer_array,cmumps_io_nb_file*sizeof(FILE*));
-#endif
-    if(cmumps_io_pfile_pointer_array==NULL){
+    ((cmumps_files+type)->cmumps_io_nb_file)++;
+/* #ifndef _WIN32 */
+/*     cmumps_io_pfile_pointer_array=realloc((void *)cmumps_io_pfile_pointer_array,cmumps_io_nb_file*sizeof(int)); */
+/* #else */
+/*     cmumps_io_pfile_pointer_array=realloc((void *)cmumps_io_pfile_pointer_array,cmumps_io_nb_file*sizeof(FILE*)); */
+/* #endif */
+    (cmumps_files+type)->cmumps_io_pfile_pointer_array=realloc((void *)(cmumps_files+type)->cmumps_io_pfile_pointer_array,((cmumps_files+type)->cmumps_io_nb_file)*sizeof(cmumps_file_struct));
+    if((cmumps_files+type)->cmumps_io_pfile_pointer_array==NULL){
       sprintf(error_str,"Allocation problem in low-level OOC layer\n");
       return -13;
     }
-    cmumps_io_pfile_name=realloc((void*)cmumps_io_pfile_name,(cmumps_io_nb_file)*sizeof(char *));
-    if(cmumps_io_pfile_name==NULL){
-      sprintf(error_str,"Allocation problem in low-level OOC layer\n");
-      return -13;
-    }
+/*     cmumps_io_pfile_name=realloc((void*)cmumps_io_pfile_name,(cmumps_io_nb_file)*sizeof(char *)); */
+/*     if(cmumps_io_pfile_name==NULL){ */
+/*       sprintf(error_str,"Allocation problem in low-level OOC layer\n"); */
+/*       return -13; */
+/*     } */
   }
-  
+  cmumps_io_pfile_pointer_array=(cmumps_files+type)->cmumps_io_pfile_pointer_array;
 
 
   /* Do change the current file */
-  cmumps_io_current_file_number++;
+  ((cmumps_files+type)->cmumps_io_current_file_number)++;
   /*  *(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)=fopen(name,"w+"); */
-  *(cmumps_io_pfile_name+cmumps_io_current_file_number)=(char *)malloc((strlen(name)+1)*sizeof(char));
+/*   *(cmumps_io_pfile_name+cmumps_io_current_file_number)=(char *)malloc((strlen(name)+1)*sizeof(char)); */
 
-  if(*(cmumps_io_pfile_name+cmumps_io_current_file_number)==NULL){
-    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
-    return -13;
-  }
-  strcpy(*(cmumps_io_pfile_name+cmumps_io_current_file_number),name);
+/*   if(*(cmumps_io_pfile_name+cmumps_io_current_file_number)==NULL){ */
+/*     sprintf(error_str,"Allocation problem in low-level OOC layer\n"); */
+/*     return -13; */
+/*   } */
+
+  strcpy((cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number)->name,name);
   /* See cmumps_io_basic.h for comments on the I/O flags passed to open */
 #ifndef _WIN32
-  *(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)=open(name,cmumps_flag_open);
-  if(*(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)==-1){
+  (cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number)->file=open(name,cmumps_flag_open);
+  if((cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number)->file==-1){
     cmumps_io_build_err_str(errno,-90,"Unable to open OOC file",error_str,200);
     return -90;
   }
 #else
-  *(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)=fopen(name,"w");
-  if(*(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)==NULL){
+  (cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number)->file=fopen(name,"w");
+  if((cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number)->file==NULL){
     /*    cmumps_io_build_err_str(errno,-90,"Unable to open OOC file",error_str,200); */
     sprintf(error_str,"Problem while opening OOC file");
     return -90;
    }
 #endif
-  cmumps_io_current_file=(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number);
+
   
-  cmumps_io_current_file=(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number);
-  cmumps_io_last_file_opened++;
+  (cmumps_files+type)->cmumps_io_current_file=(cmumps_io_pfile_pointer_array+(cmumps_files+type)->cmumps_io_current_file_number);
+  ((cmumps_files+type)->cmumps_io_last_file_opened)++;
   /*  if(*(cmumps_io_pfile_pointer_array+cmumps_io_current_file_number)==NULL) */
-  cmumps_io_write_pos=0;
+  ((cmumps_files+type)->cmumps_io_current_file)->write_pos=0;
   /*  printf("new file created %d\n",cmumps_io_current_file_number);*/
   return 0;
 }
 
-void _cmumps_update_current_file_position(){
-    cmumps_io_current_file_position=cmumps_io_write_pos;
+void _cmumps_update_current_file_position(cmumps_file_struct* file_arg){
+  file_arg->current_pos=file_arg->write_pos;
+/*   cmumps_io_current_file_position=cmumps_io_write_pos; */
 }
 
 
-int _cmumps_compute_where_to_write(const double to_be_written){
+int _cmumps_compute_where_to_write(const double to_be_written,const int type){
   /* Check if the current file has enough memory to receive the whole block*/
   double size;
   int ret_code;
-  _cmumps_update_current_file_position();
-  size=(double)MAX_FILE_SIZE-((double)cmumps_io_current_file_position+to_be_written);
+  cmumps_file_struct *current_file;
+  current_file=(cmumps_files+type)->cmumps_io_current_file;
+  _cmumps_update_current_file_position(current_file);
+  size=(double)MAX_FILE_SIZE-((double)current_file->current_pos+to_be_written);
   if (size > 0){
   }else{
-    ret_code=_cmumps_next_file();
+    ret_code=_cmumps_next_file(type);
     if(ret_code<0){
       return ret_code;
     }
-    _cmumps_update_current_file_position();
+    current_file=(cmumps_files+type)->cmumps_io_current_file;
+    _cmumps_update_current_file_position(current_file);
   }
 
   return 0;
 }
 
-int _cmumps_prepare_pointers_for_write(double to_be_written,int * pos_in_file, int * file_number ){
+int _cmumps_prepare_pointers_for_write(double to_be_written,int * pos_in_file, int * file_number,const int type){
   int ret_code;
-  ret_code=_cmumps_compute_where_to_write(to_be_written);
+  ret_code=_cmumps_compute_where_to_write(to_be_written,type);
   if(ret_code<0){
     return ret_code;
   }
-  *pos_in_file=cmumps_io_current_file_position;
-  *file_number=cmumps_io_current_file_number;
+  *pos_in_file=((cmumps_files+type)->cmumps_io_current_file)->current_pos;
+  /* should be modified to take into account the file arg */
+  *file_number=(cmumps_files+type)->cmumps_io_current_file_number;
   return 0;
 }
 
@@ -179,12 +186,13 @@ int cmumps_io_do_write_block(void * address_block,
 #endif
   int where;
   void* loc_addr;
+  int type=0;
 
   loc_addr=address_block;
   _cmumps_compute_nb_concerned_files(block_size,&nb_concerned_files);
   to_be_written=((double)cmumps_elementary_data_size)*((double)(*block_size));
   if((nb_concerned_files==0)&&(to_be_written==0)){
-    *file_number=cmumps_io_current_file_number;
+    *file_number=(cmumps_files+type)->cmumps_io_current_file_number;
     return 0;
   }
 
@@ -197,7 +205,7 @@ int cmumps_io_do_write_block(void * address_block,
     }
 #endif
 #endif
-    ret_code=_cmumps_prepare_pointers_for_write(to_be_written,&pos_in_file_loc,&file_number_loc);
+    ret_code=_cmumps_prepare_pointers_for_write(to_be_written,&pos_in_file_loc,&file_number_loc,type);
     
     if(ret_code<0){
 #ifndef _WIN32
@@ -218,16 +226,16 @@ int cmumps_io_do_write_block(void * address_block,
 	*file_number=-file_number_loc;
       }
     }
-    if((double)(MAX_FILE_SIZE-cmumps_io_write_pos)>to_be_written){
+    if((double)(MAX_FILE_SIZE-((cmumps_files+type)->cmumps_io_current_file)->write_pos)>to_be_written){
       write_size=(size_t)to_be_written;
     }else{
-      write_size=(size_t)((double)(MAX_FILE_SIZE-cmumps_io_write_pos));
+      write_size=(size_t)((double)(MAX_FILE_SIZE-((cmumps_files+type)->cmumps_io_current_file)->write_pos));
     }
 #if defined (_WIN32)
     write_size=(size_t)(int)((write_size)/cmumps_elementary_data_size);
 #endif
-    file=cmumps_io_current_file;
-    where=cmumps_io_write_pos;
+    file=&(((cmumps_files+type)->cmumps_io_current_file)->file);
+    where=((cmumps_files+type)->cmumps_io_current_file)->write_pos;
 #ifndef _WIN32
 #ifdef WITH_PFUNC
     if(cmumps_io_flag_async==IO_ASYNC_TH){
@@ -251,14 +259,20 @@ int cmumps_io_do_write_block(void * address_block,
 #endif
 
 #ifndef _WIN32
-    cmumps_io_write_pos=cmumps_io_write_pos+((int)write_size);
+    ((cmumps_files+type)->cmumps_io_current_file)->write_pos=((cmumps_files+type)->cmumps_io_current_file)->write_pos+((int)write_size);
     to_be_written=to_be_written-((int)write_size);
     loc_addr=(void*)((size_t)loc_addr+write_size);
+/*     cmumps_io_write_pos=cmumps_io_write_pos+((int)write_size); */
+/*     to_be_written=to_be_written-((int)write_size); */
+/*     loc_addr=(void*)((size_t)loc_addr+write_size); */
 #else
     /* fread and write */
-    cmumps_io_write_pos=cmumps_io_write_pos+((int)write_size*cmumps_elementary_data_size);
+    ((cmumps_files+type)->cmumps_io_current_file)->write_pos=((cmumps_files+type)->cmumps_io_current_file)->write_pos+((int)write_size*cmumps_elementary_data_size);
     to_be_written=to_be_written-((int)write_size*cmumps_elementary_data_size);
     loc_addr=(void*)((size_t)loc_addr+(size_t)((int)write_size*cmumps_elementary_data_size));
+/*     cmumps_io_write_pos=cmumps_io_write_pos+((int)write_size*cmumps_elementary_data_size); */
+/*     to_be_written=to_be_written-((int)write_size*cmumps_elementary_data_size); */
+/*     loc_addr=(void*)((size_t)loc_addr+(size_t)((int)write_size*cmumps_elementary_data_size)); */
 #endif
 
 #ifndef _WIN32
@@ -292,6 +306,8 @@ int cmumps_io_do_read_block(void * address_block,
   double read_size;
   int local_fnum,local_offset;
   void *loc_addr;
+  int type=0;
+
   /*  if(((double)(*block_size))*((double)(cmumps_elementary_data_size))>(double)MAX_FILE_SIZE){
     sprintf(error_str,"Internal error in low-level I/O operation (requested size too big for file system) \n");
     return -90;
@@ -312,7 +328,7 @@ int cmumps_io_do_read_block(void * address_block,
   loc_addr=address_block;
 
   while(read_size>0){
-    file=(cmumps_io_pfile_pointer_array+(local_fnum));
+    file=&((((cmumps_files+type)->cmumps_io_pfile_pointer_array)+local_fnum)->file);
 #ifndef _WIN32
     if(read_size+(double)local_offset>(double)MAX_FILE_SIZE){
       size=(size_t)MAX_FILE_SIZE-(size_t)local_offset;
@@ -340,36 +356,47 @@ int cmumps_io_do_read_block(void * address_block,
     loc_addr=(void*)((size_t)loc_addr+size);
     local_fnum++;
     local_offset=0;
-    if(local_fnum>cmumps_io_nb_file){
+    if(local_fnum>(cmumps_files+type)->cmumps_io_nb_file){
       sprintf(error_str,"Internal error (2) in low level read op\n");
       return -90;
     }
   }
   return 0;
 }
-int cmumps_free_file_pointers(){
-  int i,ierr;
-  for(i=0;i<=cmumps_io_last_file_opened;i++){
+int cmumps_free_file_pointers(int *step){
+  int i,j,bound,ierr;
+  if(*step==0){
+    /* factorization */
+    bound=NB_FILE_TYPE_FACTO;
+  }else{
+    /* solve */
+    bound=NB_FILE_TYPE_SOLVE;
+  }
+  for(j=0;j<bound;j++){
+    for(i=0;i<=(cmumps_files+j)->cmumps_io_last_file_opened;i++){
 #ifndef _WIN32
 #ifdef SOLVE_CRAY
 #endif
-    ierr=close(*(cmumps_io_pfile_pointer_array+i));
-    if(ierr==-1){
-      cmumps_io_build_err_str(errno,-90,"Problem while closing OOC file",error_str,200);
-      return -90;
-    }
+      ierr=close((((cmumps_files+j)->cmumps_io_pfile_pointer_array)+i)->file);
+      if(ierr==-1){
+	cmumps_io_build_err_str(errno,-90,"Problem while closing OOC file",error_str,200);
+	return -90;
+      }
 #else
-    ierr=fclose(*(cmumps_io_pfile_pointer_array+i));
-    if(ierr==-1){
-      sprintf(error_str,"Problem while opening OOC file\n");
-      return -90;
-    }    
+      ierr=fclose((((cmumps_files+j)->cmumps_io_pfile_pointer_array)+i)->file);
+      if(ierr==-1){
+	sprintf(error_str,"Problem while opening OOC file\n");
+	return -90;
+      }    
 #endif
-    free(*(cmumps_io_pfile_name+i));
-  } 
-  free(cmumps_io_pfile_name);
-  free(cmumps_io_pfile_pointer_array);
-  free(cmumps_ooc_file_prefix);
+      /*     free(*(cmumps_io_pfile_name+i)); */
+    } 
+    free((cmumps_files+j)->cmumps_io_pfile_pointer_array);
+  }
+/*   free(cmumps_io_pfile_name); */
+  free(cmumps_files);
+/*   Free prefix only for facto  */
+  if (*step == 0) free(cmumps_ooc_file_prefix);
   return 0;
 }
 
@@ -379,25 +406,41 @@ int cmumps_init_file_structure(int* _myid, int* total_size_io,int* size_element)
 #ifndef _WIN32
   int k211_loc;
 #endif
-
+  int i,nb;
+  int cmumps_io_nb_file;
   cmumps_io_nb_file=(int)((((double)(*total_size_io))*((double)(*size_element)))/(double)MAX_FILE_SIZE)+1;
 
   cmumps_directio_flag=0;
+
+#ifndef _WIN32 
+  cmumps_flag_open=O_RDWR;
+#endif
+
 
 
   cmumps_io_myid=*_myid;
 
   cmumps_elementary_data_size=*size_element;
   /* Allocates the memory necessary to handle the file pointer array.*/
-  ierr=cmumps_io_alloc_file_struct(&cmumps_io_nb_file);
-  if(ierr<0){
-    return ierr;
+  cmumps_files=(cmumps_file_type *)malloc(NB_FILE_TYPE_FACTO*sizeof(cmumps_file_type));
+  if(cmumps_files==NULL){
+    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
+    return -13;
+  }
+  nb=cmumps_io_nb_file;
+  for(i=0;i<NB_FILE_TYPE_FACTO;i++){
+    (cmumps_files+i)->cmumps_io_nb_file=nb;
+    ierr=cmumps_io_alloc_file_struct(&nb,i);
+    if(ierr<0){
+      return ierr;
+    }
+    ierr=_cmumps_next_file(i);
+    if(ierr<0){
+      return ierr;
+    }
+    nb=1;
   }
   /* Init the current file.*/
-  ierr=_cmumps_next_file();
-  if(ierr<0){
-    return ierr;
-  }
   return 0;
 }
 int cmumps_init_file_name(char* cmumps_dir,char* cmumps_file,
@@ -484,51 +527,63 @@ int cmumps_init_file_name(char* cmumps_dir,char* cmumps_file,
   return 0;
 }
 
-int cmumps_io_alloc_file_struct(int* nb){
-#ifndef _WIN32  
-  cmumps_io_pfile_pointer_array=(int *)malloc((*nb)*sizeof(int));
-  if(cmumps_io_pfile_pointer_array==NULL){
+int cmumps_io_alloc_file_struct(int* nb,int which){
+  /* allocate structure for files corresponding to factors */
+  (cmumps_files+which)->cmumps_io_pfile_pointer_array=(cmumps_file_struct *)malloc((*nb)*sizeof(cmumps_file_struct));
+  if((cmumps_files+which)->cmumps_io_pfile_pointer_array==NULL){
     sprintf(error_str,"Allocation problem in low-level OOC layer\n");
     return -13;
   }
-#else  
-  cmumps_io_pfile_pointer_array=(FILE **)malloc((*nb)*sizeof(FILE*));
-  if(cmumps_io_pfile_pointer_array==NULL){
-    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
-    return -13;
-  }
-#endif
+  
 
-  cmumps_io_pfile_name=(char **)malloc((*nb)*sizeof(char *));
-  if(cmumps_io_pfile_name==NULL){
-#ifndef _WIN32      
-    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
-#else
-    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
-#endif    
-    return -13;
-    /*    return -1;*/
-  }
-  cmumps_io_current_file_number = -1;
-  cmumps_io_last_file_opened=-1;
+
+/*   cmumps_io_pfile_name=(char **)malloc((*nb)*sizeof(char *)); */
+/*   if(cmumps_io_pfile_name==NULL){ */
+/* #ifndef _WIN32       */
+/*     sprintf(error_str,"Allocation problem in low-level OOC layer\n"); */
+/* #else */
+/*     sprintf(error_str,"Allocation problem in low-level OOC layer\n"); */
+/* #endif     */
+/*     return -13; */
+/*     /\*    return -1;*\/ */
+/*   } */
+  (cmumps_files+which)->cmumps_io_current_file_number = -1;
+  (cmumps_files+which)->cmumps_io_last_file_opened=-1;
   return 0;
 }
 
-int cmumps_io_get_nb_files(int* nb_files){
-  *nb_files=cmumps_io_last_file_opened+1;
+int cmumps_io_get_nb_files(int* nb_files,int* type){
+  *nb_files=((cmumps_files+*type)->cmumps_io_last_file_opened)+1;
   return 0;
 }
 
-int cmumps_io_get_file_name(int* indice,char* name,int* length){
+int cmumps_io_get_file_name(int* indice,char* name,int* length,int* type){
   int i;
   i=(*indice)-1;
-  strcpy(name,*(cmumps_io_pfile_name+i));
+  strcpy(name,(((cmumps_files+*type)->cmumps_io_pfile_pointer_array)+i)->name);
   *length=strlen(name)+1;
   return 0;  
 }
 
 int cmumps_io_alloc_pointers(int * dim){
-  return cmumps_io_alloc_file_struct(dim);
+  int ierr;
+  int i;
+  /* This is called by solve step, we have only one type of files */
+  cmumps_files=(cmumps_file_type *)malloc(sizeof(cmumps_file_type));
+  cmumps_files->cmumps_io_nb_file=*dim;  
+  if(cmumps_files==NULL){
+    sprintf(error_str,"Allocation problem in low-level OOC layer\n");
+    return -13;
+  }
+  /* FIXME : This loop must be modified when NB_FILE_TYPE_SOLVE is
+     greater than 1 (the dim parameter is not good) */
+  for(i=0;i<NB_FILE_TYPE_SOLVE;i++){
+    ierr=cmumps_io_alloc_file_struct(dim,i);
+    if(ierr<0){
+      return ierr;
+    }
+  }
+  return 0;
 }
 
 int cmumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* async_arg){
@@ -536,10 +591,14 @@ int cmumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* a
 #ifndef _WIN32
   int k211_loc;
 #endif
-
-
   cmumps_directio_flag=0;
-  cmumps_io_nb_file=*nb_file_arg;
+
+#ifndef _WIN32 
+  cmumps_flag_open=O_RDWR;
+#endif
+
+  /* must be changed when we will have more than one file type during solve step */
+
   cmumps_io_myid=*myid_arg;
   cmumps_elementary_data_size=*size_element;
   cmumps_io_flag_async=*async_arg;
@@ -547,46 +606,48 @@ int cmumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* a
   return 0;
 }
 
-int cmumps_io_set_file_name(int* indice,char* name,int* length){
+int cmumps_io_set_file_name(int* indice,char* name,int* length,int* type){
   int i;
   i=(*indice)-1;
-  *(cmumps_io_pfile_name+i)=(char *) malloc((*length)*strlen(name));
-  if(*(cmumps_io_pfile_name+i)==NULL){
-    sprintf(error_str,"Allocation problem in low-level OOC layer");
-    return -13;
-  }
-  strcpy(*(cmumps_io_pfile_name+i),name);
+/*   *(cmumps_io_pfile_name+i)=(char *) malloc((*length)*strlen(name)); */
+/*   if(*(cmumps_io_pfile_name+i)==NULL){ */
+/*     sprintf(error_str,"Allocation problem in low-level OOC layer"); */
+/*     return -13; */
+/*   } */
+  strcpy((((cmumps_files+*type)->cmumps_io_pfile_pointer_array)+i)->name,name);
   return 0;  
 }
 
 int cmumps_io_open_files_for_read(){
-  int i;
-
+  int i,j;
+  cmumps_file_struct  *cmumps_io_pfile_pointer_array;
 #ifdef IRIX64_
   struct dioattr dio;
 #endif
-
-  for(i=0;i<cmumps_io_nb_file;i++){
+  for(j=0;j<NB_FILE_TYPE_SOLVE;j++){
+    cmumps_io_pfile_pointer_array=(cmumps_files+j)->cmumps_io_pfile_pointer_array;  
+    for(i=0;i<(cmumps_files+j)->cmumps_io_nb_file;i++){
 #ifndef _WIN32
-    *(cmumps_io_pfile_pointer_array+i)=open(*(cmumps_io_pfile_name+i),cmumps_flag_open);
-    
-    if(*(cmumps_io_pfile_pointer_array+i)==-1){
-      cmumps_io_build_err_str(errno,-90,"Problem while opening OOC file",error_str,200);
-      return -90;
-    }
+      (cmumps_io_pfile_pointer_array+i)->file=open((cmumps_io_pfile_pointer_array+i)->name,cmumps_flag_open);
+      
+      if((cmumps_io_pfile_pointer_array+i)->file==-1){
+	cmumps_io_build_err_str(errno,-90,"Problem while opening OOC file",error_str,200);
+	return -90;
+      }
 #else
-    *(cmumps_io_pfile_pointer_array+i)=fopen(*(cmumps_io_pfile_name+i),"a+");
-    if(*(cmumps_io_pfile_pointer_array+i)==NULL){
-      sprintf(error_str,"Problem while opening OOC file");
-      return -90;
-    }
+      (cmumps_io_pfile_pointer_array+i)->file=fopen((cmumps_io_pfile_pointer_array+i)->name,"a+");
+      if((cmumps_io_pfile_pointer_array+i)->file==NULL){
+	sprintf(error_str,"Problem while opening OOC file");
+	return -90;
+      }
 #endif
+    }
   }
   return 0;
 }
 
-int cmumps_io_set_last_file(int* dim){
-  cmumps_io_last_file_opened=*dim-1;
+int cmumps_io_set_last_file(int* dim,int* type){
+  (cmumps_files+*type)->cmumps_io_last_file_opened=*dim-1;
   return 0;
 }
 

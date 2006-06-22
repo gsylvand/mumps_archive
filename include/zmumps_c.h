@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: zmumps_c.h,v 1.26 2006/03/27 16:46:59 jylexcel Exp $ */
+/* $Id: zmumps_c.h,v 1.28 2006/06/13 11:06:00 jylexcel Exp $ */
 /* Mostly written in march 2002 (JYL) */
 
 #if ( ! defined ZMUMPS_C_H )
@@ -103,6 +103,9 @@ typedef struct
     F_INT size_schur; F_INT *listvar_schur; F_DOUBLE *schur;
     /* Internal parameters */
     F_INT instance_number;
+    /* For out-of-core */
+    char ooc_tmpdir[151];
+    char ooc_prefix[151];
   } ZMUMPS_STRUC_C;
 
 
@@ -199,7 +202,11 @@ F_INT *jcn, F_INT *jcn_avail, F_DOUBLE *a, F_INT *a_avail,
   F_INT * isol_loc, F_INT * isol_loc_avail, F_INT * nz_rhs, F_INT * lsol_loc
   ,F_INT * schur_mloc, F_INT *schur_nloc, F_INT * schur_lld,
   F_INT * schur_mblock, F_INT * schur_nblock, F_INT * schur_nprow,
-  F_INT * schur_npcol
+  F_INT * schur_npcol,
+  F_INT * ooc_tmpdir,
+  F_INT * ooc_prefix,
+  F_INT * ooc_tmpdirlen,
+  F_INT * ooc_prefixlen
   );
 #endif
 

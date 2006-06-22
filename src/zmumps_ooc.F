@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -216,18 +216,19 @@ C
       IF(STRAT_IO_ASYNC)THEN
          ASYNC=1
       ENDIF
-      CALL ZMUMPS_LOW_LEVEL_INIT_ERR_STR(ERR_STR_OOC,DIM_ERR_STR_OOC)
-      DIM_DIR=LEN(TRIM(id%ZMUMPS_OOC_TMPDIR))
-      DIM_FILE=LEN(TRIM(id%ZMUMPS_OOC_PREFIX))
+      CALL ZMUMPS_LOW_LEVEL_INIT_ERR_STR(DIM_ERR_STR_OOC,ERR_STR_OOC)
+      DIM_DIR=LEN(TRIM(id%OOC_TMPDIR))
+      DIM_FILE=LEN(TRIM(id%OOC_PREFIX))
       CALL ZMUMPS_589(TMP_DIR(1),
-     $     id%ZMUMPS_OOC_TMPDIR)
+     $     id%OOC_TMPDIR)
       CALL ZMUMPS_589(TMP_FILE(1),
-     $     id%ZMUMPS_OOC_PREFIX)
+     $     id%OOC_PREFIX)
+      CALL ZMUMPS_LOW_LEVEL_INIT_PREFIX(DIM_FILE, TMP_FILE)
+      CALL ZMUMPS_LOW_LEVEL_INIT_TMPDIR(DIM_DIR, TMP_DIR)
       IERR=0
       CALL ZMUMPS_LOW_LEVEL_INIT_OOC_C(MYID_OOC,id%MAXS,
      $     id%KEEP(35),LOW_LEVEL_STRAT_IO,id%KEEP(211),
-     $     TMP_DIR,TMP_FILE,DIM_DIR,
-     $     DIM_FILE,IERR)
+     $     IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': PB in ZMUMPS_LOW_LEVEL_INIT_OOC_C'
          WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
@@ -466,8 +467,6 @@ C
 #endif
             RETURN
          ELSE
-            WRITE(*,*)MYID_OOC,': INODE (',INODE,') is
-     $           too big for buffer',I_CUR_HBUF_NEXTPOS
             CALL DB_DO_IO_AND_CHANGE_HBUF(IERR)
             IF(IERR.LT.0)THEN
                RETURN
@@ -579,7 +578,7 @@ C
       USE ZMUMPS_STRUC_DEF
       IMPLICIT NONE
       TYPE(ZMUMPS_STRUC), TARGET :: id
-      INTEGER IERR,I
+      INTEGER IERR,I,SOLVE_OR_FACTO
       IERR=0
       IF(WITH_BUF)THEN
          IF(ALLOCATED(BUF_IO))THEN
@@ -621,7 +620,8 @@ C
          RETURN
       ENDIF
       IERR=0
-      CALL ZMUMPS_CLEAN_IO_DATA_C(MYID_OOC,IERR)
+      SOLVE_OR_FACTO=0
+      CALL ZMUMPS_CLEAN_IO_DATA_C(MYID_OOC,SOLVE_OR_FACTO,IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
          RETURN
@@ -631,6 +631,7 @@ C
       SUBROUTINE ZMUMPS_588(id,IERR)
       USE ZMUMPS_STRUC_DEF
       IMPLICIT NONE
+      EXTERNAL ZMUMPS_OOC_REMOVE_FILE
       TYPE(ZMUMPS_STRUC), TARGET :: id
       INTEGER IERR
       INTEGER I,J
@@ -642,7 +643,7 @@ C
             DO J=1,id%OOC_FILE_NAME_LENGTH(I)
                TMP_NAME(J)=id%OOC_FILE_NAMES(I,J)
             ENDDO
-            CALL ZMUMPS_OOC_REMOVE_FILE(TMP_NAME(1),IERR)
+            CALL ZMUMPS_OOC_REMOVE_FILE(IERR, TMP_NAME(1))
             IF(IERR.LT.0)THEN
                WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
                RETURN
@@ -770,7 +771,7 @@ C
       IF(ASSOCIATED(SIZE_OF_BLOCK))THEN
          NULLIFY(SIZE_OF_BLOCK)
       ENDIF
-      CALL ZMUMPS_LOW_LEVEL_INIT_ERR_STR(ERR_STR_OOC,DIM_ERR_STR_OOC)
+      CALL ZMUMPS_LOW_LEVEL_INIT_ERR_STR(DIM_ERR_STR_OOC,ERR_STR_OOC)
       CALL ZMUMPS_614(id)
       IF(id%INFO(1).LT.0)THEN
          RETURN
@@ -1232,14 +1233,6 @@ C
          ENDDO
          POS_HOLE_T(ZONE)=TMP
  666     CONTINUE
-         IF((POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE)).OR.
-     $        (POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
-     $        (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
-            CURRENT_POS_B(ZONE)=-9999
-            POS_HOLE_B(ZONE)=-9999
-            LRLU_SOLVE_B(ZONE)=0
-            POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
-         ENDIF
       ELSEIF(WHICH.EQ.0)THEN
          J=MAX(PDEB_SOLVE_Z(ZONE),POS_HOLE_B(ZONE))
          J=MIN(J,PDEB_SOLVE_Z(ZONE)+MAX_NB_NODES_FOR_ZONE-1)
@@ -1259,13 +1252,6 @@ C
          ENDDO
          POS_HOLE_B(ZONE)=TMP
  777     CONTINUE
-         IF((POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
-     $        (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
-            CURRENT_POS_B(ZONE)=-9999
-            POS_HOLE_B(ZONE)=-9999
-            LRLU_SOLVE_B(ZONE)=0
-            POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
-         ENDIF
       ENDIF
 #else
       IF((TMP.EQ.CURRENT_POS_T(ZONE)-1).OR.
@@ -1309,6 +1295,7 @@ C
  777     CONTINUE
       ENDIF
 #endif
+ 222  CONTINUE
       IERR=0
       IF(NB_Z.GT.1)THEN
          CALL ZMUMPS_601(ZONE)
@@ -1533,6 +1520,14 @@ C
       IF(LRLU_SOLVE_T(ZONE).EQ.SIZE_SOLVE_Z(ZONE))THEN
          GOTO 50
       ENDIF
+      IF((POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE)).OR.
+     $     (POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
+     $     (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
+         CURRENT_POS_B(ZONE)=-9999
+         POS_HOLE_B(ZONE)=-9999
+         LRLU_SOLVE_B(ZONE)=0
+         POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
+      ENDIF
       FREE_HOLE=0
       FREE_SIZE=0
       FREE_HOLE_FLAG=0      
@@ -1562,6 +1557,11 @@ C
             CALL ZMUMPS_ABORT()
          ENDIF
       ENDDO
+      IF(POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE))THEN
+         IF(FREE_HOLE_FLAG.EQ.0)THEN
+            FREE_HOLE_FLAG=1
+         ENDIF
+      ENDIF
       IF(FREE_HOLE_FLAG.EQ.1)THEN
          IF(POS_HOLE_T(ZONE)-1.GT.PDEB_SOLVE_Z(ZONE))THEN
             I=POS_HOLE_T(ZONE)-1
@@ -1633,6 +1633,14 @@ C
       FLAG=0
       IF(LRLU_SOLVE_B(ZONE).EQ.SIZE_SOLVE_Z(ZONE))THEN
          GOTO 50
+      ENDIF
+      IF((POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE)).OR.
+     $     (POS_HOLE_T(ZONE).LE.POS_HOLE_B(ZONE)).OR.
+     $     (POS_HOLE_T(ZONE).EQ.POS_HOLE_B(ZONE)+1))THEN
+         CURRENT_POS_B(ZONE)=-9999
+         POS_HOLE_B(ZONE)=-9999
+         LRLU_SOLVE_B(ZONE)=0
+         POS_HOLE_T(ZONE)=PDEB_SOLVE_Z(ZONE)
       ENDIF
       FREE_HOLE=0
       FREE_SIZE=0
@@ -1789,6 +1797,10 @@ C
          CALL ZMUMPS_ABORT()
       ENDIF
       CURRENT_POS_T(ZONE)=CURRENT_POS_T(ZONE)+1
+      IF(POS_HOLE_T(ZONE).EQ.PDEB_SOLVE_Z(ZONE))THEN
+         POS_HOLE_B(ZONE)=MAX(CURRENT_POS_T(ZONE)-2,PDEB_SOLVE_Z(ZONE))
+         CURRENT_POS_B(ZONE)=POS_HOLE_B(ZONE)
+      ENDIF
       POS_HOLE_T(ZONE)=CURRENT_POS_T(ZONE)
       POSFAC_SOLVE(ZONE)=POSFAC_SOLVE(ZONE)+
      $     SIZE_OF_BLOCK(STEP_OOC(INODE))
@@ -2275,16 +2287,6 @@ C
      $              .NE.0).OR.
      $              (IO_REQ(STEP_OOC(OOC_INODE_SEQUENCE(I))).GE.0))THEN
                   IF(.NOT.ALREADY)THEN
-                     TMP=ABS(
-     $                    INODE_TO_POS(STEP_OOC(OOC_INODE_SEQUENCE(I))))
-                     IF(TMP.GT.((N_OOC+1)*NB_Z))THEN
-                        TMP=TMP-((N_OOC+1)*NB_Z)
-                     ENDIF
-                     IF((POS_IN_MEM(TMP).LT.0).AND.
-     $                    (POS_IN_MEM(TMP).GT.-(N_OOC+1)*NB_Z))THEN
-                        CALL ZMUMPS_599(
-     $                       OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
-                     ENDIF
                      CUR_POS_SEQUENCE=CUR_POS_SEQUENCE+1
                      I=I+1
                      CYCLE
@@ -2334,16 +2336,6 @@ C
      $              .NE.0).OR.
      $              (IO_REQ(STEP_OOC(OOC_INODE_SEQUENCE(I))).GE.0))THEN
                   IF(.NOT.ALREADY)THEN
-                     TMP=ABS(INODE_TO_POS(
-     $                    STEP_OOC(OOC_INODE_SEQUENCE(I))))
-                     IF(TMP.GT.((N_OOC+1)*NB_Z))THEN
-                        TMP=TMP-((N_OOC+1)*NB_Z)
-                     ENDIF
-                     IF((POS_IN_MEM(TMP).LT.0).AND.
-     $                    (POS_IN_MEM(TMP).GT.-(N_OOC+1)*NB_Z))THEN
-                        CALL ZMUMPS_599(
-     $                       OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
-                     ENDIF
                      I=I-1
                      CUR_POS_SEQUENCE=CUR_POS_SEQUENCE-1
                      CYCLE
@@ -2384,7 +2376,7 @@ C
       END SUBROUTINE ZMUMPS_602
       SUBROUTINE ZMUMPS_582(IERR)
       IMPLICIT NONE
-      INTEGER IERR
+      INTEGER SOLVE_OR_FACTO,IERR
       IERR=0
       IF(ALLOCATED(LRLUS_SOLVE))THEN
          DEALLOCATE(LRLUS_SOLVE)
@@ -2446,7 +2438,8 @@ C
       IF(ALLOCATED(REQ_ID))THEN
          DEALLOCATE(REQ_ID)
       ENDIF
-      CALL ZMUMPS_CLEAN_IO_DATA_C(MYID_OOC,IERR)
+      SOLVE_OR_FACTO=1
+      CALL ZMUMPS_CLEAN_IO_DATA_C(MYID_OOC,SOLVE_OR_FACTO,IERR)
       END SUBROUTINE ZMUMPS_582
       SUBROUTINE ZMUMPS_612(PTRFAC,NSTEPS)
       IMPLICIT NONE
@@ -2466,7 +2459,10 @@ C
      $                 ZONE,PTRFAC,NSTEPS)
                   PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=SAVE_PTR
                   IF(ZONE.EQ.NB_Z)THEN
-                     EXIT
+                     IF(.NOT.((OOC_INODE_SEQUENCE(I).EQ.KEEP_OOC(38))
+     $                    .AND.(KEEP_OOC(38).NE.0)))THEN
+                        EXIT
+                     ENDIF
                   ENDIF
                   CALL ZMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
@@ -2488,7 +2484,10 @@ C
      $                 PTRFAC,NSTEPS)
                   PTRFAC(STEP_OOC(OOC_INODE_SEQUENCE(I)))=SAVE_PTR
                   IF(ZONE.EQ.NB_Z)THEN
-                     EXIT
+                     IF(.NOT.((OOC_INODE_SEQUENCE(I).EQ.KEEP_OOC(38))
+     $                    .AND.(KEEP_OOC(38).NE.0)))THEN
+                        EXIT
+                     ENDIF
                   ENDIF
                   CALL ZMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
@@ -2555,7 +2554,7 @@ C
          RETURN
       ENDIF
       DO I=1,id%OOC_NB_FILES
-         CALL ZMUMPS_OOC_GET_FILE_NAME(I,TMP_NAME(1),DIM)
+         CALL ZMUMPS_OOC_GET_FILE_NAME(I,DIM, TMP_NAME(1))
          DO J=1,DIM+1
             id%OOC_FILE_NAMES(I,J)=TMP_NAME(J)
          ENDDO
@@ -2568,8 +2567,7 @@ C
       TYPE(ZMUMPS_STRUC), TARGET :: id
       CHARACTER*1 TMP_NAME(150)
       INTEGER I,J,K,L,DIM,NB_FILES,IERR
-      CHARACTER*1 TMP_DIR(150),TMP_FILE(150)
-      INTEGER DIM_DIR,DIM_FILE,K211
+      INTEGER K211
       IERR=0
       NB_FILES=id%OOC_NB_FILES
       I=id%MYID
@@ -2577,20 +2575,13 @@ C
       K=id%KEEP(35)
       L=MOD(id%KEEP(204),3)
       K211=id%KEEP(211)
-      CALL ZMUMPS_589(TMP_DIR(1),
-     $     id%ZMUMPS_OOC_TMPDIR)
-      CALL ZMUMPS_589(TMP_FILE(1),
-     $     id%ZMUMPS_OOC_PREFIX)
-      DIM_DIR=LEN(TRIM(id%ZMUMPS_OOC_TMPDIR))
-      DIM_FILE=LEN(TRIM(id%ZMUMPS_OOC_PREFIX))
-      CALL ZMUMPS_OOC_INIT_VARS(I,J,K,L,K211,TMP_DIR,TMP_FILE,DIM_DIR,
-     $     DIM_FILE,IERR)
+      CALL ZMUMPS_OOC_ALLOC_POINTERS(NB_FILES,IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
          id%INFO(1)=IERR
          RETURN
       ENDIF
-      CALL ZMUMPS_OOC_ALLOC_POINTERS(NB_FILES,IERR)
+      CALL ZMUMPS_OOC_INIT_VARS(I,J,K,L,K211,IERR)
       IF(IERR.LT.0)THEN
          WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
          id%INFO(1)=IERR
@@ -2601,7 +2592,7 @@ C
          DO J=1,DIM
             TMP_NAME(J)=id%OOC_FILE_NAMES(I,J)
          ENDDO
-         CALL ZMUMPS_OOC_SET_FILE_NAME(I,TMP_NAME(1),DIM,IERR)
+         CALL ZMUMPS_OOC_SET_FILE_NAME(I,DIM,IERR,TMP_NAME(1))
          IF(IERR.LT.0)THEN
             WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
             id%INFO(1)=IERR

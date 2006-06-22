@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -948,7 +948,6 @@ C
       MTYPE=MTYPE_SAVE
       RETURN
       END SUBROUTINE DMUMPS_296
-#endif
       SUBROUTINE DMUMPS_297(N,A)
       INTEGER N
       DOUBLE PRECISION A( N, N )
@@ -960,6 +959,10 @@ C
       END DO
       RETURN
       END SUBROUTINE DMUMPS_297
+#endif
+      SUBROUTINE DMUMPS_625()
+      RETURN
+      END SUBROUTINE DMUMPS_625
       SUBROUTINE DMUMPS_85(NN,A,LDA,NULL,
      *  COLNO,DEFICIENCY,QR_TAU,IPIV,WR01,LWK)
       IMPLICIT NONE
@@ -1026,8 +1029,8 @@ C
       END
 #endif
       SUBROUTINE DMUMPS_84( id )
+      USE DMUMPS_STRUC_DEF
       IMPLICIT NONE
-      INCLUDE 'dmumps_struc.h'
       TYPE (DMUMPS_STRUC), TARGET :: id
       INCLUDE 'mpif.h'
       INTEGER LIW, LA
@@ -3623,6 +3626,8 @@ C
       INTEGER BUFR(LBUFR)
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
+      INTEGER XSIZE
+      PARAMETER(XSIZE=3)
       INTEGER MP, LDIAG, LWC_LOC
       INTEGER K,I,NN
       INTEGER LPOOL,MYLEAF
@@ -3671,7 +3676,7 @@ C
             IF ( KEEP(38) .NE. 0 ) THEN
               SIZE_ROOT    = root%TOT_ROOT_SIZE
             ELSE
-              SIZE_ROOT    = IW( PTRIST(STEP( KEEP(20) ) ))
+              SIZE_ROOT    = IW( PTRIST(STEP( KEEP(20) ) +XSIZE))
             END IF
             IPT_NULL_ROOT = LWC - SIZE_ROOT + 1
             LWC_LOC = LWC_LOC - SIZE_ROOT
@@ -3684,9 +3689,9 @@ C
 #ifdef try_null_space_not_tested
       IF ( KEEP( 38 ) .NE. 0 .and. root%yes ) THEN
         IOLDPS = PTRIST(STEP( KEEP(38) ))
-        LOCAL_M = IW( IOLDPS + 2 )
-        LOCAL_N = IW( IOLDPS + 1 )
-        IAPOS   = PTRFAC(IW( IOLDPS + 4 ))
+        LOCAL_M = IW( IOLDPS + 2 +XSIZE )
+        LOCAL_N = IW( IOLDPS + 1 +XSIZE )
+        IAPOS   = PTRFAC(IW( IOLDPS + 4 + XSIZE ))
         CALL DCOPY(root%TOT_ROOT_SIZE,NULL,1,W(IPT_NULL_ROOT),1)
       END IF
 #endif
@@ -3766,7 +3771,7 @@ C
       ELSE
 #endif
         IF ( MYID_NODES .eq. MASTER_ROOT ) THEN
-          IROOTPOS = IW( PTRIST(STEP( KEEP(20) )) + 4 )
+          IROOTPOS = IW( PTRIST(STEP( KEEP(20) )) + 4 + XSIZE )
         ELSE
           IROOTPOS = 1
         END IF
@@ -3923,6 +3928,8 @@ C
       INTEGER INFO( 2 ), LDLT, QR
       DOUBLE PRECISION A( LA )
       INTEGER IOLDPS, IAPOS
+      INTEGER XSIZE
+      PARAMETER(XSIZE=3)
       INTEGER LOCAL_M, LOCAL_N, LPIV, IERR, allocok,i
       INTEGER JJ,ROW,NR,IDIST
       integer deficiency,rsrc,csrc,lrindx,lcindx
@@ -3987,7 +3994,7 @@ C
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DL
       DOUBLE PRECISION, DIMENSION(:), POINTER :: GROW, GCOS, GSIN
       IF ( root%yes ) THEN
-        IOLDPS  = PTLUST_S(STEP(IROOT))
+        IOLDPS  = PTLUST_S(STEP(IROOT)) + XSIZE
         IAPOS   = PTRAST(STEP(IROOT))
         LOCAL_M = IW( IOLDPS + 2 )
         LOCAL_N = IW( IOLDPS + 1 )
@@ -5230,6 +5237,8 @@ C
       DOUBLE PRECISION A( LA )
       INTEGER IOLDPS, IAPOS
       INTEGER LOCAL_M, LOCAL_N, LPIV, IERR, allocok,i
+      INTEGER XSIZE
+      PARAMETER(XSIZE=3)
         IF ( .NOT. root%yes ) RETURN
         IF ( KEEP(60) .NE. 0 ) THEN
           IF ((LDLT == 1 .OR. LDLT == 2) .AND. KEEP(60) == 3 ) THEN
@@ -5241,7 +5250,7 @@ C
           ENDIF
         RETURN
         ENDIF
-        IOLDPS  = PTLUST_S(STEP(IROOT))
+        IOLDPS  = PTLUST_S(STEP(IROOT))+XSIZE
         IAPOS   = PTRAST(STEP(IROOT))
         LOCAL_M = IW( IOLDPS + 2 )
         LOCAL_N = IW( IOLDPS + 1 )

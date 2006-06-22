@@ -38,8 +38,8 @@ if(id.JOB == -1)
          return;
      end
      [inform,rinform,sol,inst,schur,def,nullspace,sym_perm,uns_perm] = dmumpsmex(id.SYM,id.JOB,id.ICNTL,id.CNTL,id.PERM_IN,id.COLSCA,id.ROWSCA,id.RHS,id.VAR_SCHUR,id.INST);
-     id.INFO = inform;
-     id.RINFO = rinform;
+     id.INFOG = inform;
+     id.RINFOG = rinform;
      id.SOL = sol;
      id.INST = inst;
      id.SCHUR = schur;
@@ -62,8 +62,8 @@ if(id.TYPE ~= prectype)
 end
 
 [inform,rinform,sol,inst,schur,def,nullspace,sym_perm,uns_perm] = dmumpsmex(id.SYM,id.JOB,id.ICNTL,id.CNTL,id.PERM_IN,id.COLSCA,id.ROWSCA,id.RHS,id.VAR_SCHUR,id.INST,mat);
-id.INFO = inform;
-id.RINFO = rinform;
+id.INFOG = inform;
+id.RINFOG = rinform;
 id.SOL = sol;
 id.INST = inst;
 if(id.JOB == 2 | id.JOB == 4 | id.JOB == 6)

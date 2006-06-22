@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.2
-# This Version was built on Fri Apr 14 14:59:20 2006
+# This file is part of MUMPS VERSION 4.6.3
+# This Version was built on Thu Jun 22 13:22:44 2006
 #
 #
 #Begin orderings
@@ -52,7 +52,8 @@ RANLIB  = echo
 INCSEQ = -I../libseq
 LIBSEQ  =  -L../libseq -lmpiseq
 
-LIBBLAS =/usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /usr/local/ATLAS/lib/Linux_P4SSE2/libatlas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a -lg2c -lpthread
+LIBBLAS =/usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /usr/local/ATLAS/lib/Linux_P4SSE2/libatlas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libcblas.a /usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a -lg2c
+LIBOTHERS = -lpthread
 
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
 CDEFS   = -DAdd__

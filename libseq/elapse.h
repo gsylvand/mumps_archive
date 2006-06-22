@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -45,7 +45,16 @@
 
 */
 #if defined(_WIN32)
-void __stdcall ELAPSE(double *val);
+/*
+ *   Next line May be needed depending on your Windows environment:
+ *   #define MUMPS_CALL __stdcall
+ */
+#else
+#define MUMPS_CALL
+#endif
+
+#if defined(_WIN32)
+void MUMPS_CALL ELAPSE(double *val);
 #else
 void elapse(double *val);
 void elapse_(double *val);

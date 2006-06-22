@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io.h,v 1.20 2006/03/27 16:46:59 jylexcel Exp $ */
+/*    $Id: zmumps_io.h,v 1.26 2006/06/13 13:32:03 jylexcel Exp $ */
 
 #if defined(_WIN32) || defined (UPPER)
 #define zmumps_is_there_finished_request ZMUMPS_IS_THERE_FINISHED_REQUEST
@@ -52,6 +52,8 @@
 #define zmumps_test_request ZMUMPS_TEST_REQUEST
 #define zmumps_wait_request ZMUMPS_WAIT_REQUEST
 #define zmumps_wait_all_requests ZMUMPS_WAIT_ALL_REQUESTS
+#define zmumps_low_level_init_prefix ZMUMPS_LOW_LEVEL_INIT_PREFIX
+#define zmumps_low_level_init_tmpdir ZMUMPS_LOW_LEVEL_INIT_TMPDIR
 #define zmumps_low_level_init_ooc_c ZMUMPS_LOW_LEVEL_INIT_OOC_C
 #define zmumps_low_level_write_ooc_c ZMUMPS_LOW_LEVEL_WRITE_OOC_C
 #define zmumps_low_level_read_ooc_c ZMUMPS_LOW_LEVEL_READ_OOC_C
@@ -74,6 +76,8 @@
 #define zmumps_test_request zmumps_test_request__
 #define zmumps_wait_request zmumps_wait_request__
 #define zmumps_wait_all_requests zmumps_wait_all_requests__
+#define zmumps_low_level_init_prefix zmumps_low_level_init_prefix__
+#define zmumps_low_level_init_tmpdir zmumps_low_level_init_tmpdir__
 #define zmumps_low_level_init_ooc_c zmumps_low_level_init_ooc_c__
 #define zmumps_low_level_write_ooc_c zmumps_low_level_write_ooc_c__
 #define zmumps_low_level_read_ooc_c zmumps_low_level_read_ooc_c__
@@ -96,6 +100,8 @@
 #define zmumps_test_request zmumps_test_request_
 #define zmumps_wait_request zmumps_wait_request_
 #define zmumps_wait_all_requests zmumps_wait_all_requests_
+#define zmumps_low_level_init_prefix zmumps_low_level_init_prefix_
+#define zmumps_low_level_init_tmpdir zmumps_low_level_init_tmpdir_
 #define zmumps_low_level_init_ooc_c zmumps_low_level_init_ooc_c_
 #define zmumps_low_level_write_ooc_c zmumps_low_level_write_ooc_c_
 #define zmumps_low_level_read_ooc_c zmumps_low_level_read_ooc_c_
@@ -125,22 +131,35 @@
 
 #define zmumps_ftnlen int
 
-int MUMPS_CALL zmumps_is_there_finished_request(int* flag,int* ierr);
+/*
+ *  Two character arrays that are used by low_level_init_prefix
+ *  and low_level_init_tmpdir to store intermediate file names.
+ *  They are passed to zmumps_io_basic.c inside the routine
+ *  zmumps_low_level_init_ooc_c.
+ *  Note that both low_level_init_prefix and low_level_init_prefix
+ *  MUST be called before low_level_init_ooc_c.
+ * 
+ */
+static char zmumps_ooc_store_prefix[150]; static int zmumps_ooc_store_prefixlen=-1;
+static char zmumps_ooc_store_tmpdir[150]; static int zmumps_ooc_store_tmpdirlen=-1;
 
-int MUMPS_CALL zmumps_clean_request(int* request_id,int* ierr);
+void MUMPS_CALL zmumps_low_level_init_prefix(int * dim, char * str, zmumps_ftnlen l1);
+void MUMPS_CALL zmumps_low_level_init_tmpdir(int * dim, char * str, zmumps_ftnlen l1);
+void MUMPS_CALL zmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
+                               int* async, int* k211, int* ierr);
 
-int MUMPS_CALL zmumps_test_request(int* request_id,int* flag,int* ierr);
 
-int MUMPS_CALL zmumps_wait_request(int* request_id,int* ierr);
+void MUMPS_CALL zmumps_is_there_finished_request(int* flag,int* ierr);
 
-int MUMPS_CALL zmumps_wait_all_requests(int* ierr);
+void MUMPS_CALL zmumps_clean_request(int* request_id,int* ierr);
 
-int MUMPS_CALL zmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
-                               int* async, int* k211, char* zmumps_dir, char* zmumps_file,
-                               int* zmumps_dim_dir, int* zmumps_dim_file,
-                               int* ierr, zmumps_ftnlen l1, zmumps_ftnlen l2);
+void MUMPS_CALL zmumps_test_request(int* request_id,int* flag,int* ierr);
 
-int MUMPS_CALL zmumps_low_level_write_ooc_c( const int * strat_IO, 
+void MUMPS_CALL zmumps_wait_request(int* request_id,int* ierr);
+
+void MUMPS_CALL zmumps_wait_all_requests(int* ierr);
+
+void MUMPS_CALL zmumps_low_level_write_ooc_c( const int * strat_IO, 
                                  void * address_block,
                                  int * block_size,
                                  int * pos_in_file,
@@ -149,7 +168,7 @@ int MUMPS_CALL zmumps_low_level_write_ooc_c( const int * strat_IO,
                                  int * request_arg,
                                  int * ierr);
 
-int MUMPS_CALL zmumps_low_level_read_ooc_c( const int * strat_IO, 
+void MUMPS_CALL zmumps_low_level_read_ooc_c( const int * strat_IO, 
                                  void * address_block,
                                  int * block_size,
                                  int * from_where,
@@ -158,36 +177,34 @@ int MUMPS_CALL zmumps_low_level_read_ooc_c( const int * strat_IO,
                                  int * request_arg,
                                  int * ierr);
 
-int MUMPS_CALL zmumps_low_level_direct_read(void * address_block,
+void MUMPS_CALL zmumps_low_level_direct_read(void * address_block,
                                  int * block_size,
                                  int * from_where,
                                  int * file_number,
                                  int * ierr);
 
-int MUMPS_CALL zmumps_clean_io_data_c(int* myid,int* ierr);
+void MUMPS_CALL zmumps_clean_io_data_c(int* myid,int* step,int* ierr);
 
-int MUMPS_CALL zmumps_get_max_nb_req(int *max,int* ierr);
+void MUMPS_CALL zmumps_get_max_nb_req(int *max,int* ierr);
 
-int MUMPS_CALL zmumps_get_max_file_size(double * max_ooc_file_size);
+void MUMPS_CALL zmumps_get_max_file_size(double * max_ooc_file_size);
 
-int MUMPS_CALL zmumps_ooc_get_nb_files(int* nb_files);
+void MUMPS_CALL zmumps_ooc_get_nb_files(int* nb_files);
 
-int MUMPS_CALL zmumps_ooc_get_file_name(int* indice,char* name,int* length, zmumps_ftnlen l1);
+void MUMPS_CALL zmumps_ooc_get_file_name(int* indice, int * length, char* name, zmumps_ftnlen l1);
 
-int MUMPS_CALL zmumps_ooc_set_file_name(int* indice,char* name,int* length,int* ierr, zmumps_ftnlen l1);
+void MUMPS_CALL zmumps_ooc_set_file_name(int* indice, int* length, int* ierr, char* name, zmumps_ftnlen l1);
 
-int MUMPS_CALL zmumps_ooc_alloc_pointers(int* dim,int* ierr);
+void MUMPS_CALL zmumps_ooc_alloc_pointers(int* dim,int* ierr);
 
-int MUMPS_CALL zmumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
+void MUMPS_CALL zmumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
                                    int* size_element,int* async, int* k211,
-                                   char* zmumps_dir, char* zmumps_file,
-                                   int* zmumps_dim_dir, int* zmumps_dim_file,
-                                   int *ierr, zmumps_ftnlen l1, zmumps_ftnlen l2);
+                                   int *ierr);
 
-int MUMPS_CALL zmumps_ooc_start_low_level(int* ierr);
+void MUMPS_CALL zmumps_ooc_start_low_level(int* ierr);
 
-int MUMPS_CALL zmumps_ooc_print_stats();
+void MUMPS_CALL zmumps_ooc_print_stats();
 
-int MUMPS_CALL zmumps_ooc_remove_file(char *name,int* ierr, zmumps_ftnlen l1);
+void MUMPS_CALL zmumps_ooc_remove_file(int *ierr, char *name, zmumps_ftnlen l1);
 
-int MUMPS_CALL zmumps_ooc_end_write(int *ierr);
+void MUMPS_CALL zmumps_ooc_end_write(int *ierr);

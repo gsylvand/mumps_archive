@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,10 +44,11 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: cmumps_c.c,v 1.22 2006/03/27 16:46:59 jylexcel Exp $ */
+/* $Id: cmumps_c.c,v 1.26 2006/06/15 15:12:05 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
 #include "cmumps_c.h"
 #include <stdio.h>
+#include <string.h>
 
 /* Special case of mapping and nullspace -- allocated from MUMPS */
 static F_INT * mapping;
@@ -97,11 +98,17 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     F_INT *info; F_INT *infog;
     F_DOUBLE2 *rinfo; F_DOUBLE2 *rinfog;
 
+    F_INT ooc_tmpdir[150]; F_INT ooc_prefix[150];
 
     /* Other local variables */
 
     F_INT idummy; F_INT *idummyp;
     F_DOUBLE rdummy; F_DOUBLE *rdummyp;
+
+    /* String lengths to be passed to Fortran by address */
+    int ooc_tmpdirlen;
+    int ooc_prefixlen;
+    int i;
 
     const static F_INT no = 0;
     const static F_INT yes = 1;
@@ -122,6 +129,8 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
       { /* job = -1: we just reset all pointers to 0 */
         cmumps_par->irn=0; cmumps_par->jcn=0; cmumps_par->a=0; cmumps_par->rhs=0;
         cmumps_par->eltptr=0; cmumps_par->eltvar=0; cmumps_par->a_elt=0; cmumps_par->perm_in=0; cmumps_par->sym_perm=0; cmumps_par->uns_perm=0; cmumps_par->irn_loc=0;cmumps_par->jcn_loc=0;cmumps_par->a_loc=0; cmumps_par->listvar_schur=0;cmumps_par->schur=0;cmumps_par->mapping=0;cmumps_par->nullspace=0;cmumps_par->colsca=0;cmumps_par->rowsca=0; cmumps_par->rhs_sparse=0; cmumps_par->irhs_sparse=0; cmumps_par->sol_loc=0; cmumps_par->irhs_ptr=0; cmumps_par->isol_loc=0;
+        strcpy(cmumps_par->ooc_tmpdir,"NAME_NOT_INITIALIZED");
+        strcpy(cmumps_par->ooc_prefix,"NAME_NOT_INITIALIZED");
 
         /* Next line initializes scalars to arbitrary values.
          * Some of those will anyway be overwritten during the
@@ -129,6 +138,9 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
         cmumps_par->n=0; cmumps_par->nz=0; cmumps_par->nz_loc=0; cmumps_par->nelt=0;cmumps_par->instance_number=0;cmumps_par->deficiency=0;cmumps_par->size_schur=0;cmumps_par->lrhs=0; cmumps_par->nrhs=0; cmumps_par->nz_rhs=0; cmumps_par->lsol_loc=0;
  cmumps_par->schur_mloc=0; cmumps_par->schur_nloc=0; cmumps_par->schur_lld=0; cmumps_par->mblock=0; cmumps_par->nblock=0; cmumps_par->nprow=0; cmumps_par->npcol=0;
       }
+
+     ooc_tmpdirlen=strlen(cmumps_par->ooc_tmpdir);
+     ooc_prefixlen=strlen(cmumps_par->ooc_prefix);
 
     /*
      * Extract info from the C structure to call the F77 interface. The
@@ -189,6 +201,10 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     infog = cmumps_par->infog;
     rinfo = cmumps_par->rinfo;
     rinfog = cmumps_par->rinfog;
+    for(i=0;i<110;i++){
+      ooc_tmpdir[i]=(int)cmumps_par->ooc_tmpdir[i];
+      ooc_prefix[i]=(int)cmumps_par->ooc_prefix[i];
+    }
 
     /* Call F77 interface */
     cmumps_f77_(&(cmumps_par->job), &(cmumps_par->sym), &(cmumps_par->par), &(cmumps_par->comm_fortran),
@@ -212,7 +228,11 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
           , &(cmumps_par->nblock)
           , &(cmumps_par->nprow)
           , &(cmumps_par->npcol)
-);
+	  , ooc_tmpdir
+	  , ooc_prefix
+	  , &ooc_tmpdirlen
+	  , &ooc_prefixlen
+    );
 
     /*
      * mapping and nullspace are usually 0 except if
@@ -235,56 +255,56 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
 #endif
 }
 
-void cmumps_affect_mapping_(F_INT * f77mapping)
+void MUMPS_CALL cmumps_affect_mapping_(F_INT * f77mapping)
 {
   mapping = f77mapping;
 }
-void cmumps_nullify_c_mapping_()
+void MUMPS_CALL cmumps_nullify_c_mapping_()
 {
   mapping = 0;
 }
 
-void cmumps_affect_nullspace_(F_DOUBLE * f77nullspace)
+void MUMPS_CALL cmumps_affect_nullspace_(F_DOUBLE * f77nullspace)
 {
   nullspace = f77nullspace;
 }
-void cmumps_nullify_c_nullspace_()
+void MUMPS_CALL cmumps_nullify_c_nullspace_()
 {
   nullspace = 0;
 }
 
-void cmumps_affect_sym_perm_(F_INT * f77sym_perm)
+void MUMPS_CALL cmumps_affect_sym_perm_(F_INT * f77sym_perm)
 {
   sym_perm = f77sym_perm;
 }
-void cmumps_nullify_c_sym_perm_()
+void MUMPS_CALL cmumps_nullify_c_sym_perm_()
 {
   sym_perm = 0;
 }
 
-void cmumps_affect_uns_perm_(F_INT * f77uns_perm)
+void MUMPS_CALL cmumps_affect_uns_perm_(F_INT * f77uns_perm)
 {
   uns_perm = f77uns_perm;
 }
-void cmumps_nullify_c_uns_perm_()
+void MUMPS_CALL cmumps_nullify_c_uns_perm_()
 {
   uns_perm = 0;
 }
 
 #ifdef return_scaling
-void cmumps_affect_colsca_(F_DOUBLE * f77colsca)
+void MUMPS_CALL cmumps_affect_colsca_(F_DOUBLE * f77colsca)
 {
   colsca_static = f77colsca;
 }
-void cmumps_nullify_c_colsca_()
+void MUMPS_CALL cmumps_nullify_c_colsca_()
 {
   colsca_static = 0;
 }
-void cmumps_affect_rowsca_(F_DOUBLE * f77rowsca)
+void MUMPS_CALL cmumps_affect_rowsca_(F_DOUBLE * f77rowsca)
 {
   rowsca_static = f77rowsca;
 }
-void cmumps_nullify_c_rowsca_()
+void MUMPS_CALL cmumps_nullify_c_rowsca_()
 {
   rowsca_static = 0;
 }

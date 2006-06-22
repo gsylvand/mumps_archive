@@ -24,7 +24,7 @@
 %
 % - id.SCHUR: if id.VAR\_SCHUR is provided of size SIZE\_SCHUR, then id.SCHUR corresponds to a dense array of size (SIZE\_SCHUR,SIZE\_SCHUR) that holds the Schur complement matrix (see Section ``Input and output parameters'' of the MUMPS user's guide for more details). The user does not have to initialize it.
 %
-% - id.INFO and id.RINFO: information parameters (see Section ``Information parameters'' of the MUMPS user's guide ).
+% - id.INFOG and id.RINFOG: information parameters (see Section ``Information parameters'' of the MUMPS user's guide ).
 %
 % - id.SYM\_PERM: corresponds to a symmetric permutation of the variables (see discussion regarding ICNTL(7) in Section ``Control parameters'' of the MUMPS user's guide ). This permutation is computed during the analysis and is followed by the numerical factorization except when numerical pivoting occurs.
 %

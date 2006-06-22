@@ -1,15 +1,15 @@
-# This file is part of MUMPS VERSION 4.6.2
-# This Version was built on Fri Apr 14 14:59:20 2006
+# This file is part of MUMPS VERSION 4.6.3
+# This Version was built on Thu Jun 22 13:22:44 2006
 #
 #
 .PHONY: double simple cmplx cmplx16
+
+include ../Makefile.inc
 
 double:../lib/libdmumps$(PLAT).a
 simple:../lib/libsmumps$(PLAT).a
 cmplx16:../lib/libzmumps$(PLAT).a
 cmplx:../lib/libcmumps$(PLAT).a
-
-include ../Makefile.inc
 
 .SUFFIXES: .F .o
 .F.o:

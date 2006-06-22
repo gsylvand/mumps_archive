@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.2
-# This Version was built on Fri Apr 14 14:59:20 2006
+# This file is part of MUMPS VERSION 4.6.3
+# This Version was built on Thu Jun 22 13:22:44 2006
 #
 #
 #Begin orderings
@@ -49,7 +49,7 @@ FL = ifort
 AR = ar vr
 #RANLIB = ranlib
 RANLIB  = echo
-SCALAP  = /local/SCALAPACK/libscalapack.a  /local/BLACS/LIB/blacs_MPI-LINUX-0.a  /local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a  /local/BLACS/LIB/blacs_MPI-LINUX-0.a  /local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a
+SCALAP  = /local/SCALAPACK/libscalapack.a /local/BLACS/LIB/blacs_MPI-LINUX-0.a   /local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a  /local/BLACS/LIB/blacs_MPI-LINUX-0.a
 INCPAR = -I/usr/local/include
 # LIBPAR = $(SCALAP)  -L/usr/local/lib/ -llamf77mpi -lmpi -llam
 LIBPAR = $(SCALAP)  -L/usr/local/lib/ -llammpio -llamf77mpi -lmpi -llam -lutil -ldl -lpthread

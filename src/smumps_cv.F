@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1478,10 +1478,8 @@ C
 #if (check_mumps_cv >= 3) 
       if (cv_nodetype(inode) .gt. 0) then
          doit=.FALSE.
-#if (check_mumps_cv >= 3)
          write(*,*) 'node',inode,'already splitted, doit =',
      *        doit
-#endif
          istat = 0
          return
       endif

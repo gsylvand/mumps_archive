@@ -1,5 +1,5 @@
-C This file is part of SMUMPS VERSION 4.6.2
-C This Version was built on Fri Apr 14 14:59:20 2006
+C This file is part of SMUMPS VERSION 4.6.3
+C This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
       PROGRAM SMUMPS_TEST

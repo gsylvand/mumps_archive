@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io_basic.h,v 1.45 2006/04/13 11:54:15 jylexcel Exp $  */
+/*    $Id: zmumps_io_basic.h,v 1.46 2006/06/05 14:54:49 aguermou Exp $  */
 
 #define MAX_FILE_SIZE 1879048192 /* (2^31)-1-(2^27) */
 
@@ -99,24 +99,48 @@
 
 #define SEPARATOR "/"
 
-int _zmumps_next_file();
-void _zmumps_update_current_file_position();
-int _zmumps_compute_where_to_write(const double to_be_written);
-int _zmumps_prepare_pointers_for_write(double to_be_written,int * pos_in_file, int * file_number);
+#define NB_FILE_TYPE_FACTO 1
+#define NB_FILE_TYPE_SOLVE 1
+
+typedef struct __mumps_file_struct{
+  int write_pos;
+  int current_pos;
+#ifndef _WIN32  
+  int file;
+#else
+  FILE** file;
+#endif
+  char name[150];
+}zmumps_file_struct;
+
+
+typedef struct __mumps_file_type{
+  int zmumps_io_current_file_number;
+  int zmumps_io_last_file_opened;
+  int zmumps_io_nb_file;
+  zmumps_file_struct* zmumps_io_pfile_pointer_array;
+  zmumps_file_struct* zmumps_io_current_file;
+}zmumps_file_type;
+
+
+int _zmumps_next_file(int type);
+void _zmumps_update_current_file_position(zmumps_file_struct* file_arg);
+int _zmumps_compute_where_to_write(const double to_be_written,const int type);
+int _zmumps_prepare_pointers_for_write(double to_be_written,int * pos_in_file, int * file_number,const int type);
 int zmumps_io_do_write_block(void * address_block,int * block_size,int * pos_in_file,int * file_number,int * ierr);
 int zmumps_io_do_read_block(void * address_block,int * block_size,int * from_where,int * file_number,int * ierr);
 int _zmumps_compute_nb_concerned_files(int * block_size, int * nb_concerned_files);
 int zmumps_free_file_pointers();
 int zmumps_init_file_structure(int* _myid, int* total_size_io,int* size_element);
 int zmumps_init_file_name(char* zmumps_dir,char* zmumps_file,int* zmumps_dim_dir,int* zmumps_dim_file,int* _myid);
-int zmumps_io_alloc_file_struct(int* nb);
-int zmumps_io_get_nb_files(int* nb_files);
-int zmumps_io_get_file_name(int* indice,char* name,int* length);
+int zmumps_io_alloc_file_struct(int* nb,int which);
+int zmumps_io_get_nb_files(int* nb_files,int* type);
+int zmumps_io_get_file_name(int* indice,char* name,int* length,int* type);
 int zmumps_io_alloc_pointers(int * dim);
 int zmumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* async_arg);
-int zmumps_io_set_file_name(int* indice,char* name,int* length);
+int zmumps_io_set_file_name(int* indice,char* name,int* length,int* type);
 int zmumps_io_open_files_for_read();
-int zmumps_io_set_last_file(int* dim);
+int zmumps_io_set_last_file(int* dim,int* type);
 
 int zmumps_io_write__(void *file, void *loc_add, size_t write_size, int where);
 

@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -71,7 +71,7 @@ C
      *       ALLOCATABLE, SAVE, PRIVATE :: LOAD_FLOPS
       INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PRIVATE :: BUF_LOAD_RECV
       INTEGER, SAVE, PRIVATE :: LBUF_LOAD_RECV, LBUF_LOAD_RECV_BYTES
-      INTEGER, SAVE, PRIVATE :: K50, K69, K35
+      INTEGER, SAVE, PRIVATE :: K50, K69, K35,MAX_SURF_MASTER
       LOGICAL, SAVE, PRIVATE :: BDC_MEM, BDC_POOL, BDC_SBTR, 
      $     BDC_POOL_MNG,
      $     BDC_M2_MEM,BDC_M2_FLOPS,BDC_MD,REMOVE_NODE_FLAG,
@@ -305,18 +305,20 @@ C
       ENDIF
       RETURN
       END SUBROUTINE SMUMPS_499
-      SUBROUTINE SMUMPS_185( id )
+      SUBROUTINE SMUMPS_185( id, MEMORY_MD_ARG )
       USE SMUMPS_BUFFER
       USE SMUMPS_STRUC_DEF
       IMPLICIT NONE
       TYPE(SMUMPS_STRUC), TARGET :: id
+      INTEGER, intent(in) :: MEMORY_MD_ARG
       INTEGER K34_LOC,K35_LOC
       INTEGER allocok, IERR, I, BUF_LOAD_SIZE
       INTEGER MAX_SBTR
       DOUBLE PRECISION ZERO
+      DOUBLE PRECISION MEMORY_SENT
       INTEGER,DIMENSION(:),POINTER:: KEEP
       PARAMETER( ZERO=0.0 )
-      INTEGER MEMORY_MD,la,WHAT,MAX_SURF_MASTER
+      INTEGER MEMORY_MD,la,WHAT
       STEP_TO_NIV2_LOAD=>id%ISTEP_TO_INIV2
       CAND_LOAD=>id%CANDIDATES
       ND_LOAD=>id%ND_STEPS
@@ -331,9 +333,10 @@ C
       NE_LOAD=>id%NE_STEPS
       N_LOAD=id%N
       ROOT_CURRENT_SUBTREE=-9999
-      MEMORY_MD=id%MEMORY_MD
-      la=id%MAXS
-      MAX_SURF_MASTER=id%MAX_SURF_MASTER
+      MEMORY_MD=MEMORY_MD_ARG
+      LA=id%MAXS
+      MAX_SURF_MASTER=id%MAX_SURF_MASTER+
+     & INT(DBLE(id%KEEP(12))*DBLE(id%MAX_SURF_MASTER)/100.0E0)
       K69  = KEEP(69)
       IF ( KEEP(47) .le. 0 .OR. KEEP(47) .gt. 4 ) THEN
         write(*,*) "Internal error 1 in SMUMPS_185"
@@ -620,14 +623,20 @@ C
      *        FUTURE_NIV2,
 #endif
      *        DBLE(MEMORY_MD),DBLE(0) ,MYID, iERR  )
-         TAB_MAXS(MYID)=LA-MAX_SURF_MASTER-MAX_SBTR
          WHAT=9
+         MEMORY_SENT = DBLE(LA-MAX_SURF_MASTER-MAX_SBTR)
+     *      - MAX( DBLE(LA) * DBLE(3) / DBLE(100),
+     *      DBLE(2) * DBLE(MAX(KEEP(5),KEEP(6))) * DBLE(KEEP(127)))
+         IF (KEEP(12) > 25) THEN
+           MEMORY_SENT=MEMORY_SENT - DBLE(KEEP(12))*0.2E0*DBLE(LA)
+         ENDIF
+         TAB_MAXS(MYID)=MEMORY_SENT
          CALL SMUMPS_460( WHAT,
      *        COMM_LD, NPROCS,
 #if ! defined(OLD_LOAD_MECHANISM)
      *        FUTURE_NIV2,
 #endif
-     *        DBLE(LA-MAX_SURF_MASTER-MAX_SBTR),
+     *        MEMORY_SENT,
      $        DBLE(0),MYID, iERR  )
       ENDIF
       END SUBROUTINE SMUMPS_185
@@ -679,9 +688,13 @@ C
                GOTO 888
 #endif               
             ELSE
-               WRITE(*,*)MYID,':Remove node cost must be
-     $              smaller than inc_load '
-               CALL SMUMPS_ABORT()
+#if ! defined(OLD_LOAD_MECHANISM)
+               DELTA_LOAD = DELTA_LOAD -
+     $              (REMOVE_NODE_COST-INC_LOAD)
+               GOTO 888
+#else
+               GOTO 888
+#endif               
             ENDIF
          ENDIF
          GOTO 333
@@ -827,9 +840,9 @@ C
      $              (INC_MEM-REMOVE_NODE_COST_MEM)
                GOTO 888               
             ELSE
-               WRITE(*,*)MYID,':Remove node cost must be
-     $              smaller than inc_load '
-               CALL SMUMPS_ABORT()
+               DELTA_MEM = DELTA_MEM -
+     $              (REMOVE_NODE_COST_MEM-INC_MEM)
+               GOTO 888
             ENDIF
          ENDIF
          GOTO 333
@@ -847,9 +860,7 @@ C
             IF(INC_MEM.EQ.REMOVE_NODE_COST_MEM)THEN               
                GOTO 333
             ELSEIF(INC_MEM.LT.REMOVE_NODE_COST_MEM)THEN
-               WRITE(*,*)MYID,':Remove node cost must be
-     $              smaller than inc_load '
-               CALL SMUMPS_ABORT()
+               GOTO 333
             ENDIF
          ENDIF
       ENDIF
@@ -1084,7 +1095,7 @@ C
       INTEGER POSITION, IERR, WHAT, NSLAVES, I
       DOUBLE PRECISION LOAD_RECEIVED
       INTEGER INODE_RECEIVED,K,J,SON,NSLAVES_TEMP,POS_TEMP,
-     $     NCB_RECEIVED
+     $     NCB_RECEIVED,SURF
       INTEGER, POINTER, DIMENSION (:) :: LIST_SLAVES
       DOUBLE PRECISION, POINTER, DIMENSION (:) :: LOAD_INCR
       LOGICAL FLAG_LEADER
@@ -1220,7 +1231,11 @@ C
       ELSE IF (WHAT == 4) THEN
         FUTURE_NIV2(MSGSOU+1)=0
         IF(BDC_MD)THEN
+           CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
+     *          SURF, 1, MPI_INTEGER,
+     *          COMM_LD, IERR )
           MD_MEM(MSGSOU)=999999999
+          TAB_MAXS(MSGSOU)=TAB_MAXS(MSGSOU)+SURF
         ENDIF
 #endif
         IF(BDC_M2_MEM.OR.BDC_M2_FLOPS)THEN
@@ -1595,7 +1610,7 @@ C
       IF ( FUTURE_NIV2(MYID + 1) == 0 ) THEN
  112    CONTINUE
         CALL SMUMPS_502(COMM,MYID,SLAVEF,
-     *       IERR)
+     *       MAX_SURF_MASTER,IERR)
         IF (IERR == -1 ) THEN
           CALL SMUMPS_467(COMM_LD, KEEP)
           GOTO 112
@@ -1603,6 +1618,7 @@ C
           WRITE(*,*) "Internal Error in SMUMPS_461"
           CALL SMUMPS_ABORT()
         ENDIF
+      TAB_MAXS(MYID) = TAB_MAXS(MYID) + MAX_SURF_MASTER
       ENDIF
 #endif
       IF ( NSLAVES /= TAB_POS(SLAVEF + 2) ) THEN
@@ -4384,6 +4400,16 @@ C
                        ENDIF
                        IF(ADDITIONNAL_ROWS.EQ.0)GOTO 889
                     ENDDO
+                    DO I=1,NUMBER_OF_PROCS
+                       IDWLOAD(I)=I
+                       AFFECTED=INT(K10/(NCB+1))-1
+                       BANDE_K10=AFFECTED*NFRONT
+                       IF(HAVE_TYPE1_SON)THEN
+                          AFFECTED=INT((K10-NFRONT)/(NFRONT+1))
+                          BANDE_K10=AFFECTED*NFRONT
+                       ENDIF                          
+                       WLOAD(I)=(BANDE_K10-(NB_ROWS(I)*NFRONT))
+                    ENDDO
                     CALL SMUMPS_558(NUMBER_OF_PROCS, WLOAD,
      $                   IDWLOAD)
                     NB_SAT=0
@@ -4396,6 +4422,7 @@ C
                           AFFECTED=INT((K10-NFRONT)/(NFRONT+1))
                           BANDE_K10=AFFECTED*NFRONT
                        ENDIF
+                       MAX_MEM_ALLOW=BANDE_K10
                        KMAX=INT(MAX_MEM_ALLOW/(NFRONT))
                        IF(NB_ROWS(IDWLOAD(I)).LT.KMAX)THEN
                           IF((NB_ROWS(IDWLOAD(I))+X).LT.KMAX)THEN
@@ -4413,6 +4440,7 @@ C
                        ENDIF
                        IF(ADDITIONNAL_ROWS.EQ.0) GOTO 889
                     ENDDO
+                    GOTO 994
                  ELSE
                     ACC=0
                     CHOSEN=0

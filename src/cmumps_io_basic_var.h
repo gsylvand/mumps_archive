@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -52,25 +52,28 @@
 #include <pthread.h>
 pthread_mutex_t cmumps_io_pwrite_mutex;
 #endif
-int* cmumps_io_pfile_pointer_array;
-int* cmumps_io_current_file;
-#else /*_WIN32*/
-FILE** cmumps_io_current_file;
-FILE** cmumps_io_pfile_pointer_array;
+/* int* cmumps_io_pfile_pointer_array; */
+/* int* cmumps_io_current_file; */
+/* #else /\*_WIN32*\/ */
+/* FILE** cmumps_io_current_file; */
+/* FILE** cmumps_io_pfile_pointer_array; */
 #endif /*_WIN32*/
 
+/* cmumps_file_struct* cmumps_io_pfile_pointer_array;
+   cmumps_file_struct* cmumps_io_current_file; */
 
+cmumps_file_type* cmumps_files;
 
-int cmumps_io_current_file_number;
+/* int cmumps_io_current_file_number; */
 char* cmumps_ooc_file_prefix;
-char** cmumps_io_pfile_name;
-int cmumps_io_current_file_position;
-int cmumps_io_write_pos;
-int cmumps_io_last_file_opened;
+/* char** cmumps_io_pfile_name; */
+/* int cmumps_io_current_file_position; */
+/* int cmumps_io_write_pos; */
+/* int cmumps_io_last_file_opened; */
 int cmumps_elementary_data_size;
 int cmumps_io_is_init_called;
 int cmumps_io_myid;
-int cmumps_io_nb_file;
+/* int cmumps_io_nb_file; */
 int cmumps_io_flag_async;
 int cmumps_io_k211;
 int cmumps_flag_open;

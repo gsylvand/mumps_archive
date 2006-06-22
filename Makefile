@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.2
-# This Version was built on Fri Apr 14 14:59:20 2006
+# This file is part of MUMPS VERSION 4.6.3
+# This Version was built on Thu Jun 22 13:22:44 2006
 #
 #
 default: double
@@ -32,7 +32,7 @@ libseqneeded:
 	if [ "$(LPORDDIR)" != "" ] ; then \
 	cd src; cd $(LPORDDIR); make CC="$(CC)" CFLAGS="$(OPTC)" AR="$(AR)" ARFUNCT= RANLIB="$(RANLIB)"; fi;
 	if [ "$(LPORDDIR)" != "" ] ; then \
-	cd src; cp $(LPORDDIR)/libpord$(PLAT).a ../lib/libpord$(PLAT).a; fi;
+	cd src; cp $(LPORDDIR)/libpord.a ../lib/libpord$(PLAT).a; fi;
 
 double: requiredobj
 	(cd src ; make double)
@@ -49,7 +49,7 @@ cmplx16: requiredobj
 clean:
 	(cd src; make clean)
 	(cd test; make clean)
-	(cd lib; $(RM) *.a)
+	(cd lib; $(RM) *$(PLAT).a)
 	(cd libseq; make clean)
 	if [ $(LPORDDIR) != "" ] ; then \
 	cd src; cd $(LPORDDIR); make realclean; fi;

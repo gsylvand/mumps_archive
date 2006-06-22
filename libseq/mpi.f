@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -46,8 +46,36 @@ C
 C  This file contains dummy MPI/BLACS/ScaLAPACK libraries to allow
 C  linking/running MUMPS on a platform where MPI is not installed.
 C
-
-
+C******************************************************************
+      SUBROUTINE MPI_GATHER( SENDBUF, COUNT, 
+     *         DATATYPE, RECVBUF, RECCOUNT, RECTYPE,
+     *         ROOT, COMM, IERR )
+      IMPLICIT NONE
+      INCLUDE 'mpif.h'
+      INTEGER COUNT, DATATYPE, RECCOUNT, RECTYPE,
+     *        ROOT, COMM, IERR
+      INTEGER SENDBUF(* ), RECVBUF( * )
+      IF ( DATATYPE .EQ. MPI_INTEGER ) THEN
+        CALL MUMPS_COPY_INTEGER( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_REAL ) THEN
+        CALL MUMPS_COPY_REAL( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_DOUBLE_PRECISION ) THEN
+        CALL MUMPS_COPY_DOUBLE_PRECISION( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_COMPLEX ) THEN
+        CALL MUMPS_COPY_COMPLEX( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_DOUBLE_COMPLEX ) THEN
+        CALL MUMPS_COPY_DOUBLE_COMPLEX( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_2DOUBLE_PRECISION) THEN
+        CALL MUMPS_COPY_2DOUBLE_PRECISION( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_2INTEGER) THEN
+        CALL MUMPS_COPY_2INTEGER( SENDBUF, RECVBUF, COUNT )
+      ELSE
+        WRITE(*,*) 'ERROR in MPI_GATHER=',DATATYPE
+        STOP
+      END IF
+      IERR = 0
+      RETURN
+      END
 C***********************************************************************
       SUBROUTINE MPI_ALLREDUCE( SENDBUF, RECVBUF, COUNT, DATATYPE,
      *                          OPERATION, COMM, IERR )

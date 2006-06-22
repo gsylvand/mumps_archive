@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-   This Version was built on Fri Apr 14 14:59:20 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+   This Version was built on Thu Jun 22 13:22:44 2006
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: dmumps_io.c,v 1.47 2006/04/06 09:40:29 aguermou Exp $    */
+/*    $Id: dmumps_io.c,v 1.52 2006/06/13 13:32:03 jylexcel Exp $    */
 
 #include "dmumps_io_basic_extern.h"
 #include "dmumps_io_err_extern.h"
@@ -61,7 +61,7 @@ double dmumps_time_spent_in_sync;
 
 double read_op_vol,write_op_vol,total_vol;
 
-int MUMPS_CALL dmumps_is_there_finished_request(int* flag, int* ierr){
+void MUMPS_CALL dmumps_is_there_finished_request(int* flag, int* ierr){
   /* Checks if there is a finished request in the queue of finished requests */
   /* On return flag=1 if there a finished request (flag=0 otherwise)         */
 #ifndef _WIN32
@@ -84,16 +84,16 @@ int MUMPS_CALL dmumps_is_there_finished_request(int* flag, int* ierr){
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 #ifndef _WIN32
   gettimeofday(&end_time,NULL);
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_clean_request(int* request_id,int *ierr){
+void MUMPS_CALL dmumps_clean_request(int* request_id,int *ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -114,16 +114,16 @@ int MUMPS_CALL dmumps_clean_request(int* request_id,int *ierr){
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 #ifndef _WIN32
   gettimeofday(&end_time,NULL);
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_test_request(int* request_id,int *flag,int* ierr){
+void MUMPS_CALL dmumps_test_request(int* request_id,int *flag,int* ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -144,22 +144,22 @@ int MUMPS_CALL dmumps_test_request(int* request_id,int *flag,int* ierr){
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }  
 #ifndef _WIN32
   gettimeofday(&end_time,NULL);
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_wait_request(int *request_id,int* ierr){
+void MUMPS_CALL dmumps_wait_request(int *request_id,int* ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
 #endif
   if(*request_id==-1)
-    return 0;
+    return;
   switch(dmumps_io_flag_async){
   case IO_SYNC: 
     printf("dmumps_wait_request should not be called with strategy %d\n",dmumps_io_flag_async);
@@ -176,7 +176,7 @@ int MUMPS_CALL dmumps_wait_request(int *request_id,int* ierr){
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
     /*    printf("Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
           exit (-3);*/
   }
@@ -184,10 +184,10 @@ int MUMPS_CALL dmumps_wait_request(int *request_id,int* ierr){
   gettimeofday(&end_time,NULL);
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_wait_all_requests(int *ierr){
+void MUMPS_CALL dmumps_wait_all_requests(int *ierr){
 #ifndef _WIN32
   struct timeval start_time,end_time;
   gettimeofday(&start_time,NULL);
@@ -208,22 +208,39 @@ int MUMPS_CALL dmumps_wait_all_requests(int *ierr){
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 #ifndef _WIN32
   gettimeofday(&end_time,NULL);
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
-                                          int* async, int* k211, char* dmumps_dir, char* dmumps_file,
-                                          int* dmumps_dim_dir, int* dmumps_dim_file,
-                                          int* ierr, dmumps_ftnlen l1, dmumps_ftnlen l2){
-  /* Computes the number of files needed. Uses ceil value. */
-  dmumps_io_nb_file=0;
-  dmumps_io_last_file_opened=-1;
+void MUMPS_CALL dmumps_low_level_init_prefix(int * dim, char * str, dmumps_ftnlen l1){
+  int i;
+  dmumps_ooc_store_prefixlen=*dim;
+  if (*dim>150) dmumps_ooc_store_prefixlen=150;
+  for(i=0;i<dmumps_ooc_store_prefixlen;i++){
+    dmumps_ooc_store_prefix[i]=str[i];
+  }
+}
+
+void MUMPS_CALL dmumps_low_level_init_tmpdir(int * dim, char * str, dmumps_ftnlen l1){
+  int i;
+  dmumps_ooc_store_tmpdirlen=*dim;
+  if (*dim>150) dmumps_ooc_store_tmpdirlen=150;
+  for(i=0;i<dmumps_ooc_store_tmpdirlen;i++){
+    dmumps_ooc_store_tmpdir[i]=str[i];
+  }
+}
+
+
+void MUMPS_CALL dmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* size_element,
+                                           int* async, int* k211, int* ierr){
+/* Computes the number of files needed. Uses ceil value. */
+/*   dmumps_io_nb_file=0; */
+/*   dmumps_io_last_file_opened=-1; */
 #ifdef _WIN32
   printf("inside %d\n",*async);
   if(*async==IO_ASYNC_AIO||*async==IO_ASYNC_TH){
@@ -231,21 +248,40 @@ int MUMPS_CALL dmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* s
     sprintf(error_str,"Error: Forbidden value of Async flag with _WIN32\n");
     *ierr=-92;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 #endif
   total_vol=0;
   dmumps_io_flag_async=*async;
   dmumps_io_k211=*k211;
-  *ierr=dmumps_init_file_name(dmumps_dir,dmumps_file,dmumps_dim_dir,dmumps_dim_file,_myid);
+  if (dmumps_ooc_store_prefixlen==-1) {
+    printf(error_str,"Error: prefix not initialized\n");
+    *ierr=-92;
+    dmumps_io_prop_err_info(*ierr);
+    return;
+  }
+  if (dmumps_ooc_store_tmpdirlen==-1) {
+    printf(error_str,"Error: tmpdir not initialized\n");
+    *ierr=-92;
+    dmumps_io_prop_err_info(*ierr);
+    return;
+  }
+  *ierr=dmumps_init_file_name(dmumps_ooc_store_tmpdir, dmumps_ooc_store_prefix,
+		             &dmumps_ooc_store_tmpdirlen, &dmumps_ooc_store_prefixlen, _myid);
   if(*ierr<0){
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
+  /* Re-initialize lenghts to -1 in order to enable the
+   * check on initialization next time this routine is called
+   */
+  dmumps_ooc_store_prefixlen=-1;
+  dmumps_ooc_store_tmpdirlen=-1;
+
   *ierr=dmumps_init_file_structure(_myid,total_size_io,size_element);
   if(*ierr<0){
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 #ifndef _WIN32
   dmumps_time_spent_in_sync=0;
@@ -262,7 +298,7 @@ int MUMPS_CALL dmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* s
       dmumps_low_level_init_ooc_c_th(async,ierr);
       if(*ierr<0){
         dmumps_io_prop_err_info(*ierr);
-        return *ierr;
+        return;
       }
       break;
 #endif
@@ -270,19 +306,19 @@ int MUMPS_CALL dmumps_low_level_init_ooc_c(int* _myid, int* total_size_io,int* s
       /*      printf("Error: unknown I/O strategy : %d\n",*async);*/
       *ierr=-92;
       dmumps_io_prop_err_info(*ierr);
-      return *ierr;
+      return;
       /*      exit (-3);*/
     }
   }
   dmumps_io_is_init_called=1;
-  return 0;
+  return;
 }
 
 
 /**
  * Writes a contigous block of central memory to the disk.
  */
-int MUMPS_CALL dmumps_low_level_write_ooc_c(const int * strat_IO, 
+void MUMPS_CALL dmumps_low_level_write_ooc_c(const int * strat_IO, 
                                 void * address_block,
                                 int * block_size,
                                 int * pos_in_file,
@@ -311,7 +347,7 @@ int MUMPS_CALL dmumps_low_level_write_ooc_c(const int * strat_IO,
        *ierr=ret_code;
        sprintf(error_str,"Error: unknown I/O strategy : %d\n",*strat_IO);
        dmumps_io_prop_err_info(ret_code);
-       return ret_code;
+       return;
      }
    }else{
      ret_code=dmumps_io_do_write_block(address_block,block_size,pos_in_file,file_number,ierr);   
@@ -325,13 +361,13 @@ int MUMPS_CALL dmumps_low_level_write_ooc_c(const int * strat_IO,
    dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
    write_op_vol=write_op_vol+((*block_size)*dmumps_elementary_data_size);
-   return ret_code;
+   return;
 }
 
 /**
  * Writes a contigous block of central memory to the disk.
  **/
-int MUMPS_CALL dmumps_low_level_read_ooc_c(const int * strat_IO, 
+void MUMPS_CALL dmumps_low_level_read_ooc_c(const int * strat_IO, 
                                           void * address_block,
                                           int * block_size,
                                           int * from_where,
@@ -360,7 +396,7 @@ int MUMPS_CALL dmumps_low_level_read_ooc_c(const int * strat_IO,
         *ierr=ret_code;
         sprintf(error_str,"Error: unknown I/O strategy : %d\n",*strat_IO);
         dmumps_io_prop_err_info(ret_code);
-        return ret_code;
+        return;
       }
   }else{
     ret_code=dmumps_io_do_read_block(address_block,block_size,from_where,file_number,ierr);
@@ -375,10 +411,10 @@ int MUMPS_CALL dmumps_low_level_read_ooc_c(const int * strat_IO,
   dmumps_time_spent_in_sync=dmumps_time_spent_in_sync+((double)end_time.tv_sec+((double)end_time.tv_usec/1000000))-((double)start_time.tv_sec+((double)start_time.tv_usec/1000000));
 #endif
   read_op_vol=read_op_vol+((*block_size)*dmumps_elementary_data_size);
-  return ret_code;
+  return;
 }
 
-int MUMPS_CALL dmumps_low_level_direct_read(void * address_block,
+void MUMPS_CALL dmumps_low_level_direct_read(void * address_block,
                                 int * block_size,
                                 int * from_where,
                                 int * file_number,
@@ -394,18 +430,20 @@ int MUMPS_CALL dmumps_low_level_direct_read(void * address_block,
       if(ret_code<0){
          *ierr=ret_code;
 	 dmumps_io_prop_err_info(ret_code);
-	 return ret_code;
+	 return;
       }
     }else{
     }
     read_op_vol=read_op_vol+((*block_size)*dmumps_elementary_data_size);
-    return ret_code;
+    return;
 }
 
   
-int MUMPS_CALL dmumps_clean_io_data_c(int * myid,int *ierr){
+void MUMPS_CALL dmumps_clean_io_data_c(int * myid,int *step,int *ierr){
   /* cleans the thread/io management data*/
-  if(!dmumps_io_is_init_called) return -1;
+  if(!dmumps_io_is_init_called){
+    return;
+  }
   switch(dmumps_io_flag_async){
   case IO_SYNC: 
     break;
@@ -421,16 +459,16 @@ int MUMPS_CALL dmumps_clean_io_data_c(int * myid,int *ierr){
     *ierr=-91;
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
 
-  dmumps_free_file_pointers();
+  dmumps_free_file_pointers(step);
   dmumps_io_is_init_called=0;
 
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_print_stats(){
+void MUMPS_CALL dmumps_ooc_print_stats(){
 #ifndef _WIN32
   printf("%d: total time spent in i/o mode = %lf\n",dmumps_io_myid,dmumps_time_spent_in_sync);
 #endif
@@ -438,9 +476,10 @@ int MUMPS_CALL dmumps_ooc_print_stats(){
   printf("%d: Volume of write i/o = %lf\n",dmumps_io_myid,write_op_vol);
   total_vol=total_vol+read_op_vol+write_op_vol;
   printf("%d: Total i/o volume = %lf\n",dmumps_io_myid,total_vol);
-  return 0; 
+  return; 
 }
-int MUMPS_CALL dmumps_get_max_nb_req(int *max,int *ierr){
+void MUMPS_CALL dmumps_get_max_nb_req(int *max,int *ierr){
+  *ierr=0;
   switch(dmumps_io_flag_async){
   case IO_SYNC: 
     *max=1;
@@ -454,70 +493,72 @@ int MUMPS_CALL dmumps_get_max_nb_req(int *max,int *ierr){
     *ierr=-91;
     sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
     dmumps_io_prop_err_info(*ierr);    
-    return *ierr;
+    return;
   }
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_get_max_file_size(double * max_ooc_file_size){
+void MUMPS_CALL dmumps_get_max_file_size(double * max_ooc_file_size){
   *max_ooc_file_size=(double)(MAX_FILE_SIZE);
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_get_nb_files(int* nb_files){
-  return dmumps_io_get_nb_files(nb_files);
+void MUMPS_CALL dmumps_ooc_get_nb_files(int* nb_files){
+  int tmp=0;
+  int ret;
+  ret=dmumps_io_get_nb_files(nb_files,&tmp);
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_get_file_name(int* indice,char* name,int* length, dmumps_ftnlen l1){
-  return dmumps_io_get_file_name(indice,name,length);
+void MUMPS_CALL dmumps_ooc_get_file_name(int* indice,int* length, char* name, dmumps_ftnlen l1){
+  int tmp=0;
+  int ret;
+  ret=dmumps_io_get_file_name(indice,name,length,&tmp);
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_set_file_name(int* indice,char* name,int* length,int *ierr, dmumps_ftnlen l1){
-  *ierr=dmumps_io_set_file_name(indice,name,length);
+void MUMPS_CALL dmumps_ooc_set_file_name(int* indice,int* length, int *ierr, char* name, dmumps_ftnlen l1){
+  int tmp=0;
+  *ierr=dmumps_io_set_file_name(indice,name,length,&tmp);
   if(*ierr<0){
     dmumps_io_prop_err_info(*ierr);
   }
-  return *ierr;
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_alloc_pointers(int* dim,int* ierr){
+void MUMPS_CALL dmumps_ooc_alloc_pointers(int* dim,int* ierr){
   int ret_code;
+  int tmp=0;
   ret_code=dmumps_io_alloc_pointers(dim);
   if(ret_code<0){
     *ierr=ret_code;
     dmumps_io_prop_err_info(ret_code);
   }
   *ierr=ret_code;
-  dmumps_io_set_last_file(dim);
-  return ret_code;
+  ret_code=dmumps_io_set_last_file(dim,&tmp);
+  return;
 }
 
 
-int MUMPS_CALL dmumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
+void MUMPS_CALL dmumps_ooc_init_vars(int* myid_arg, int* nb_file_arg,
                         int* size_element,int* async, int* k211,
-                        char* dmumps_dir, char* dmumps_file,
-                        int* dmumps_dim_dir, int* dmumps_dim_file,
-                        int *ierr, dmumps_ftnlen l1, dmumps_ftnlen l2){
+                        int *ierr){
 #ifndef _WIN32
   dmumps_time_spent_in_sync=0;
 #endif
   dmumps_io_k211=*k211;
-  *ierr=dmumps_init_file_name(dmumps_dir,dmumps_file,dmumps_dim_dir,dmumps_dim_file,myid_arg);
-  if(*ierr<0){
-    dmumps_io_prop_err_info(*ierr);
-    return *ierr;
-  }
-  return dmumps_io_init_vars(myid_arg, nb_file_arg,size_element,async);
+  *ierr=dmumps_io_init_vars(myid_arg, nb_file_arg,size_element,async);
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_start_low_level(int *ierr){
+void MUMPS_CALL dmumps_ooc_start_low_level(int *ierr){
 
   read_op_vol=0;
   write_op_vol=0;
   *ierr=dmumps_io_open_files_for_read();
   if(*ierr<0){ 
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
   if(dmumps_io_flag_async){
     switch(dmumps_io_flag_async){
@@ -528,7 +569,7 @@ int MUMPS_CALL dmumps_ooc_start_low_level(int *ierr){
       dmumps_low_level_init_ooc_c_th(&dmumps_io_flag_async,ierr);
       if(*ierr<0){
         dmumps_io_prop_err_info(*ierr);
-        return *ierr;
+        return;
       }
       break;
 #endif
@@ -536,14 +577,14 @@ int MUMPS_CALL dmumps_ooc_start_low_level(int *ierr){
       *ierr=-91;
       sprintf(error_str,"Error: unknown I/O strategy : %d\n",dmumps_io_flag_async);
       dmumps_io_prop_err_info(*ierr);    
-      return *ierr;
+      return;
     }
   }
   dmumps_io_is_init_called=1;
-  return *ierr;
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_remove_file(char *name,int *ierr, dmumps_ftnlen l1){
+void MUMPS_CALL dmumps_ooc_remove_file(int *ierr, char *name, dmumps_ftnlen l1){
   *ierr=remove(name);
   if(*ierr<0){
 #ifndef _WIN32
@@ -553,11 +594,13 @@ int MUMPS_CALL dmumps_ooc_remove_file(char *name,int *ierr, dmumps_ftnlen l1){
 #endif
     *ierr=-90;
     dmumps_io_prop_err_info(*ierr);
-    return *ierr;
+    return;
   }
-  return 0;
+  return;
 }
 
-int MUMPS_CALL dmumps_ooc_end_write(int *ierr){
-  return 0;
+void MUMPS_CALL dmumps_ooc_end_write(int *ierr){
+/*  dmumps_io_flush_write__ is not defined in
+ *  the release or in _WIN32 mode */
+  return;
 }

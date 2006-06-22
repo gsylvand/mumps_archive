@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.2
-C   This Version was built on Fri Apr 14 14:59:20 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
+C   This Version was built on Thu Jun 22 13:22:44 2006
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -68,6 +68,7 @@ C
       REAL RSOL(1), ONE
       REAL ZERO
       PARAMETER( ZERO = 0.0E0, ONE = 1.0E0 )
+      REAL, DIMENSION(:), POINTER :: RHS_MUMPS
       REAL, ALLOCATABLE :: SAVERHS(:), RW1(:),
      *                                 RW2(:), SRW1(:), SRW3(:),
      *                                 Y(:), W(:), D(:), 
@@ -123,7 +124,7 @@ C
       RINFOG =>id%RINFOG
       MAXSSAVED   = MAXS
       MAXSUPDATED = .FALSE.
-      NB_K133     = 2     ! Max level of recursivity to evaluate MINLWC
+      NB_K133     = 3     ! Max level of recursivity to evaluate MINLWC
 #if defined(V_T)
       CALL VTCLASSDEF( 'Soln driver',soln_drive_class,ierr)
       CALL VTFUNCDEF( 'glob_comm_ini',soln_drive_class,
@@ -160,7 +161,7 @@ C
           IF (id%MYID .eq. MASTER) THEN
              KEEP(107) = MAX(0,KEEP(107))
              IF ((KEEP(107).EQ.0).AND.(KEEP(209).EQ.0).AND.
-     &            (KEEP(204).EQ.0).AND.(KEEP(211).EQ.0) ) THEN
+     &            (KEEP(204).EQ.0).AND.(KEEP(211).NE.1) ) THEN
               KEEP(209) = 1
              ENDIF
           ENDIF
@@ -174,15 +175,15 @@ C
       IF ( I_AM_SLAVE ) THEN
         MINLWC = NB_K133*KEEP(133)
         IF (id%KEEP(201).NE.0) THEN
-           IF ( (KEEP(209).GT.0) .AND. (KEEP(209).LT.MAXS) ) THEN
-             MAXSUPDATED = .TRUE.
-             MAXS = MAX(KEEP(209), MINLWC*NBRHS + KEEP(203)+1)
-             IF ( ASSOCIATED (id%S) ) THEN
-               DEALLOCATE (id%S)
-               NULLIFY (id%S)
-             ENDIF
+           IF ( (KEEP(209).GT.0)  .AND. (KEEP(209).LT.MAXS) ) THEN 
+              MAXSUPDATED = .TRUE.
+              MAXS = MAX(KEEP(209), MINLWC*NBRHS + KEEP(203)+1)
+              IF ( ASSOCIATED (id%S) ) THEN
+                 DEALLOCATE (id%S)
+                 NULLIFY (id%S)
+              ENDIF
            ELSE 
-            KEEP(209) = 0
+              KEEP(209) = 0
            ENDIF
            IF (.NOT. ASSOCIATED(id%S)) THEN
                ALLOCATE (id%S(MAXS), stat = allocok)
@@ -242,7 +243,7 @@ C
          RETURN
       ENDIF
       IF ( I_AM_SLAVE ) THEN
-        IF (KEEP(201).NE.0) THEN
+         IF (KEEP(201).NE.0) THEN
           CALL SMUMPS_590(LA)
           CALL SMUMPS_586(id)
           IF (INFO(1).LT.0) THEN
@@ -354,12 +355,7 @@ C
       IF ( id%MYID .NE. MASTER .or.
      *     (id%MYID .EQ. MASTER .AND.
      *      icntl20.ne.0 .and. icntl21.ne.0 )) THEN
-        IF ( associated(id%RHS) ) THEN
-          WRITE(*,*) id%MYID,
-     *    ": Warning: RHS associated in SMUMPS_301"
-          DEALLOCATE(id%RHS)
-        END IF
-        ALLOCATE(id%RHS(N*NBRHS),stat=ierr)
+        ALLOCATE(RHS_MUMPS(N*NBRHS),stat=ierr)
         IF ( ierr .GT. 0 ) THEN
           INFO(1)=-13
           INFO(2)=N*NBRHS
@@ -367,6 +363,8 @@ C
      *      WRITE(LP,*) 'ERREUR while allocating RHS on a slave'
           GOTO 111
         END IF
+      ELSE
+        RHS_MUMPS=>id%RHS
       ENDIF
       IF ( I_AM_SLAVE ) THEN
         LIWK_SOLVE = 5 * KEEP(28) + 2
@@ -546,11 +544,11 @@ C
               DO K = 1, NBRHS_EFF
                KDEC = IBEG+(K-1)*LD_RHS
                DO I = 1, N
-                RHSSOL(I+(K-1)*N)=id%RHS(I-1+KDEC)
+                RHSSOL(I+(K-1)*N)=RHS_MUMPS(I-1+KDEC)
                END DO
                DO I = 1, N
                 JPERM = id%UNS_PERM(I)
-                id%RHS(KDEC+I-1) = RHSSOL(JPERM+(K-1)*N)
+                RHS_MUMPS(KDEC+I-1) = RHSSOL(JPERM+(K-1)*N)
                END DO
               END DO
             ELSE
@@ -577,7 +575,7 @@ C
           DO K = 1, NBRHS_EFF
             KDEC = IBEG+(K-1)*LD_RHS
             DO I = 1, N
-              SAVERHS(I+(K-1)*N) = id%RHS(KDEC+I-1)
+              SAVERHS(I+(K-1)*N) = RHS_MUMPS(KDEC+I-1)
             END DO
           ENDDO
          ENDIF
@@ -588,14 +586,14 @@ C
             DO K =1, NBRHS_EFF 
              KDEC = (K-1) * LD_RHS + IBEG - 1
              DO I = 1, N
-              id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%ROWSCA(I)
+              RHS_MUMPS(KDEC+I) = RHS_MUMPS(KDEC+I) * id%ROWSCA(I)
              END DO
             ENDDO
           ELSE
             DO K =1, NBRHS_EFF 
              KDEC = (K-1) * LD_RHS + IBEG - 1
              DO I = 1, N
-              id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%COLSCA(I)
+              RHS_MUMPS(KDEC+I) = RHS_MUMPS(KDEC+I) * id%COLSCA(I)
              END DO
             ENDDO
           ENDIF
@@ -628,7 +626,7 @@ C
       IF (ICNTL20 == 0) THEN
        DO K= 1, NBRHS_EFF
         KDEC = (K-1) * LD_RHS + IBEG 
-        CALL MPI_BCAST(id%RHS(KDEC), N, MPI_REAL,
+        CALL MPI_BCAST(RHS_MUMPS(KDEC), N, MPI_REAL,
      *                MASTER,id%COMM,IERR)
        END DO
       ELSE
@@ -670,11 +668,11 @@ C
        IF ( I_AM_SLAVE ) THEN
          DO K = 1, NBRHS_EFF
           KDEC = (K-1) * LD_RHS + IBEG - 1
-          id%RHS(KDEC+1:KDEC+id%N)=REAL(ZERO)
+          RHS_MUMPS(KDEC+1:KDEC+id%N)=REAL(ZERO)
           DO IZ=id%IRHS_PTR(IRHS_PTR_BEG+K-1)-SHIFT_PTR,
      *          id%IRHS_PTR(IRHS_PTR_BEG+K)-1-SHIFT_PTR
             I=IRHS_SPARSE_COPY(IZ)
-            id%RHS(KDEC+I)= RHS_SPARSE_COPY(IZ)
+            RHS_MUMPS(KDEC+I)= RHS_SPARSE_COPY(IZ)
           ENDDO
          ENDDO
        END IF
@@ -702,7 +700,7 @@ C
         CALL SMUMPS_245(id%root, N, S(1), LA_PASSED,
      *    IS(1), LIW_PASSED,
      *    S(ISRW2), LWC, IS( LIW + 1 ),
-     *    LIWW, id%RHS(IBEG), LD_RHS, NBRHS_EFF, RHSSOL,
+     *    LIWW, RHS_MUMPS(IBEG), LD_RHS, NBRHS_EFF, RHSSOL,
      *    id%NA,id%LNA,id%NE_STEPS(1), SRW3, MTYPE,
      *    ICNTL, id%STEP(1), id%FRERE_STEPS(1), 
      *    id%DAD_STEPS(1), id%FILS(1),
@@ -735,13 +733,13 @@ C
         LIW_PASSED = MAX( LIW, 1 )
         IF ( .NOT.I_AM_SLAVE ) THEN
         CALL SMUMPS_521(id%NSLAVES,id%N, id%MYID, id%COMM,
-     *          MTYPE, RHSSOL, id%RHS(IBEG), LD_RHS, NBRHS_EFF,
+     *          MTYPE, RHSSOL, RHS_MUMPS(IBEG), LD_RHS, NBRHS_EFF,
      *          JDUMMY, id%KEEP(1), id%KEEP8(1), id%PROCNODE_STEPS(1),
      *          IDUMMY, 1,
      *          id%STEP(1), id%BUFR(1), id%LBUFR, id%LBUFR_BYTES)
         ELSE
         CALL SMUMPS_521(id%NSLAVES,id%N, id%MYID, id%COMM,
-     *          MTYPE, RHSSOL, id%RHS(IBEG), LD_RHS, NBRHS_EFF,
+     *          MTYPE, RHSSOL, RHS_MUMPS(IBEG), LD_RHS, NBRHS_EFF,
      *          id%PTLUST_S(1), id%KEEP(1), id%KEEP8(1),
      *          id%PROCNODE_STEPS(1),
      *          IS(1), LIW_PASSED,
@@ -773,14 +771,14 @@ C
              DO K= 1, NBRHS_EFF
               KDEC = (K-1) * LD_RHS + IBEG - 1
               DO I = 1, N
-                id%RHS(KDEC+ I) = id%RHS(KDEC+ I) * id%COLSCA(I)
+                RHS_MUMPS(KDEC+ I) = RHS_MUMPS(KDEC+ I) * id%COLSCA(I)
               END DO
              END DO
           ELSE
              DO K= 1, NBRHS_EFF
               KDEC = (K-1) * LD_RHS + IBEG - 1
               DO I = 1, N
-                id%RHS(KDEC+I) = id%RHS(KDEC+I) * id%ROWSCA(I)
+                RHS_MUMPS(KDEC+I) = RHS_MUMPS(KDEC+I) * id%ROWSCA(I)
               END DO
              END DO
           ENDIF
@@ -828,24 +826,24 @@ C
               IF (KEEP(55).EQ.0) THEN
                 CALL SMUMPS_278( ICNTL(9), N, NZ, id%A(1),
      *             id%IRN(1), id%JCN(1),
-     *             id%RHS(IBEG), SAVERHS, RW1, RW2, KEEP,KEEP8 )
+     *             RHS_MUMPS(IBEG), SAVERHS, RW1, RW2, KEEP,KEEP8 )
               ELSE
                 CALL SMUMPS_121( ICNTL(9), N, 
      *          id%NELT, id%ELTPTR, 
      *          id%LELTVAR, id%ELTVAR,
      *          id%NA_ELT, id%A_ELT,
-     *          id%RHS(IBEG), SAVERHS, RW1, RW2, KEEP,KEEP8 )
+     *          RHS_MUMPS(IBEG), SAVERHS, RW1, RW2, KEEP,KEEP8 )
               ENDIF
             END IF
           ELSE
-            CALL MPI_BCAST( id%RHS(IBEG), id%N,
+            CALL MPI_BCAST( RHS_MUMPS(IBEG), id%N,
      *              MPI_REAL, MASTER,
      *              id%COMM, IERR )
             IF ( I_AM_SLAVE .and.
      *           id%NZ_loc .NE. 0 ) THEN
               CALL SMUMPS_192( id%N, id%NZ_loc,
      *        id%IRN_loc, id%JCN_loc, id%A_loc,
-     *        id%RHS(IBEG), SRW1, KEEP(50), MTYPE )
+     *        RHS_MUMPS(IBEG), SRW1, KEEP(50), MTYPE )
             ELSE
               SRW1 = REAL(ZERO)
             END IF
@@ -881,7 +879,7 @@ C
           END IF
           IF ( id%MYID .EQ. MASTER )  THEN
             CALL SMUMPS_205(ICNTL(9),INFO(1),N,NZ,
-     *        id%RHS(IBEG), SAVERHS,RW1,RW2,GIVSOL,
+     *        RHS_MUMPS(IBEG), SAVERHS,RW1,RW2,GIVSOL,
      *        RSOL,RINFOG(4),RINFOG(5),RINFOG(6),MP,ICNTL,
      *        KEEP,KEEP8)
             DEALLOCATE(RW1)
@@ -989,7 +987,7 @@ C
             IF (ARRET .LT. 0.0E0) THEN
               ARRET = SQRT(EPSILON(0.0E0))
             END IF
-            CALL SMUMPS_206(NZ,N,SAVERHS,id%RHS(IBEG),
+            CALL SMUMPS_206(NZ,N,SAVERHS,RHS_MUMPS(IBEG),
      *      Y, D, W,
      *      IW1, KASE,RINFOG(7),
      *      RINFOG(9), JOBIREF, RINFOG(10), NITREF, NOITER, MP,
@@ -1006,17 +1004,17 @@ C
                CALL SMUMPS_122( MTYPE, N, 
      *            id%NELT, id%ELTPTR, id%LELTVAR,
      *            id%ELTVAR, id%NA_ELT, id%A_ELT,
-     *            SAVERHS, id%RHS(IBEG),
+     *            SAVERHS, RHS_MUMPS(IBEG),
      *            Y, W, KEEP(50))
               ELSE
                  IF ( MTYPE .eq. 1 ) THEN
                    CALL SMUMPS_208
-     *    (id%A(1), NZ, N, id%IRN(1), id%JCN(1), SAVERHS, id%RHS(IBEG),
-     *              Y, W, KEEP,KEEP8)
+     *    (id%A(1), NZ, N, id%IRN(1), id%JCN(1), SAVERHS,
+     *    RHS_MUMPS(IBEG), Y, W, KEEP,KEEP8)
                  ELSE
                    CALL SMUMPS_208
-     *    (id%A(1), NZ, N, id%JCN(1), id%IRN(1), SAVERHS, id%RHS(IBEG),
-     *              Y, W, KEEP,KEEP8)
+     *    (id%A(1), NZ, N, id%JCN(1), id%IRN(1), SAVERHS,
+     *    RHS_MUMPS(IBEG), Y, W, KEEP,KEEP8)
                  END IF
               ENDIF
               GOTO 22
@@ -1024,14 +1022,14 @@ C
           END IF
         ELSE
           IF ( KASE.eq.14 ) THEN
-            CALL MPI_BCAST( id%RHS(IBEG), id%N,
+            CALL MPI_BCAST( RHS_MUMPS(IBEG), id%N,
      *              MPI_REAL, MASTER,
      *              id%COMM, IERR )
             IF ( I_AM_SLAVE .and.
      *           id%NZ_loc .NE. 0 ) THEN
               CALL SMUMPS_192( id%N, id%NZ_loc,
      *        id%IRN_loc, id%JCN_loc, id%A_loc,
-     *        id%RHS(IBEG), SRW1, KEEP(50), MTYPE )
+     *        RHS_MUMPS(IBEG), SRW1, KEEP(50), MTYPE )
             ELSE
               SRW1 = REAL(ZERO)
             END IF
@@ -1048,7 +1046,7 @@ C
             IF ( I_AM_SLAVE .and. id%NZ_loc .NE. 0 ) THEN
               CALL SMUMPS_193( id%N, id%NZ_loc,
      *        id%IRN_loc, id%JCN_loc, id%A_loc,
-     *        id%RHS(IBEG), SRW1, KEEP(50), MTYPE )
+     *        RHS_MUMPS(IBEG), SRW1, KEEP(50), MTYPE )
             ELSE
               SRW1 = REAL(ZERO)
             END IF
@@ -1167,24 +1165,24 @@ C
             IF (KEEP(55).EQ.0) THEN
               CALL SMUMPS_278( MTYPE, N, NZ, id%A(1),
      *          id%IRN(1), id%JCN(1),
-     *          id%RHS(IBEG), SAVERHS, Y, D, KEEP,KEEP8 )
+     *          RHS_MUMPS(IBEG), SAVERHS, Y, D, KEEP,KEEP8 )
             ELSE
               CALL SMUMPS_121( MTYPE, N, 
      *          id%NELT, id%ELTPTR, 
      *          id%LELTVAR, id%ELTVAR,
      *          id%NA_ELT, id%A_ELT,
-     *          id%RHS(IBEG), SAVERHS, Y, D, KEEP,KEEP8 )
+     *          RHS_MUMPS(IBEG), SAVERHS, Y, D, KEEP,KEEP8 )
             ENDIF
           END IF
         ELSE
-            CALL MPI_BCAST( id%RHS(IBEG), id%N,
+            CALL MPI_BCAST( RHS_MUMPS(IBEG), id%N,
      *              MPI_REAL, MASTER, 
      *              id%COMM, IERR )
             IF ( I_AM_SLAVE .and.
      *           id%NZ_loc .NE. 0 ) THEN
               CALL SMUMPS_192( id%N, id%NZ_loc,
      *        id%IRN_loc, id%JCN_loc, id%A_loc,
-     *        id%RHS(IBEG), SRW1, KEEP(50), MTYPE ) 
+     *        RHS_MUMPS(IBEG), SRW1, KEEP(50), MTYPE ) 
             ELSE
               SRW1 = REAL(ZERO)
             END IF
@@ -1221,7 +1219,7 @@ C
          IF ((MPG .GT. 0) .AND. (NITREF .GT. 0)) WRITE( MPG, 65 ) 
          IF ((MPG .GT. 0) .AND. (NITREF .LE. 0)) WRITE( MPG, 170 ) 
          GIVSOL = .FALSE.
-         CALL SMUMPS_205(MTYPE,INFO(1),N,NZ,id%RHS(IBEG),
+         CALL SMUMPS_205(MTYPE,INFO(1),N,NZ,RHS_MUMPS(IBEG),
      *        SAVERHS,Y,D,GIVSOL,
      *        RSOL,RINFOG(4),RINFOG(5),RINFOG(6),MPG,ICNTL,
      *        KEEP,KEEP8)
@@ -1255,11 +1253,11 @@ C
           DO K = 1, NBRHS_EFF
            KDEC = (K-1)*LD_RHS+IBEG-1
            DO 70 I = 1, N
-            RW1(I) = id%RHS(KDEC+I)
+            RW1(I) = RHS_MUMPS(KDEC+I)
  70        CONTINUE
            DO 80 I = 1, N
             JPERM = id%UNS_PERM(I)
-            id%RHS( KDEC+JPERM ) = RW1( I )
+            RHS_MUMPS( KDEC+JPERM ) = RW1( I )
  80        CONTINUE
           END DO
           DEALLOCATE( RW1 )
@@ -1276,7 +1274,7 @@ C
           DO II=1, J
             WRITE(ICNTL(3),110) BEG_RHS+II-1
             WRITE(ICNTL(3),160)
-     *    (id%RHS(IBEG+(II-1)*LRHS+I-1),I=1,K)
+     *    (RHS_MUMPS(IBEG+(II-1)*LRHS+I-1),I=1,K)
           ENDDO
         END IF
       END IF
@@ -1302,13 +1300,13 @@ C
       IF ( id%MYID .eq. MASTER ) THEN
         IF (allocated(SAVERHS)) DEALLOCATE( SAVERHS)
         IF (ICNTL20 .ne. 0 .and. ICNTL21.ne.0) THEN
-          DEALLOCATE(id%RHS)
-          NULLIFY(id%RHS)
+          DEALLOCATE(RHS_MUMPS)
+          NULLIFY(RHS_MUMPS)
         ENDIF
       ELSE
-        IF (ASSOCIATED(id%RHS)) THEN
-          DEALLOCATE(id%RHS)
-          NULLIFY(id%RHS)
+        IF (ASSOCIATED(RHS_MUMPS)) THEN
+          DEALLOCATE(RHS_MUMPS)
+          NULLIFY(RHS_MUMPS)
         END IF
       END IF
       IF (I_AM_SLAVE) THEN
@@ -1395,6 +1393,8 @@ C
       REAL ZERO
       PARAMETER (IZERO = 0 )
       PARAMETER (ZERO = 0.0E0)
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       EXTERNAL SMUMPS_248, SMUMPS_249
       INTEGER SMUMPS_275
       EXTERNAL SMUMPS_275
@@ -1440,7 +1440,7 @@ C
             IF ( KEEP( 38 ) .NE. 0 ) THEN
               SIZE_ROOT    = root%TOT_ROOT_SIZE
             ELSE
-              SIZE_ROOT    = IW(PTRIST(STEP(KEEP(20))))
+              SIZE_ROOT    = IW(PTRIST(STEP(KEEP(20)))+XSIZE)
             END IF
             IPT_RHS_ROOT = LWC -NRHS * SIZE_ROOT + 1
             LWC_LOC = LWC_LOC - NRHS * SIZE_ROOT
@@ -1481,8 +1481,8 @@ C
       IF ( KEEP( 38 ) .NE. 0 ) THEN
         IF ( KEEP(60) == 0 ) THEN
         IOLDPS = PTRIST(STEP(KEEP(38)))
-        LOCAL_M = IW( IOLDPS + 2 )
-        LOCAL_N = IW( IOLDPS + 1 )
+        LOCAL_M = IW( IOLDPS + 2 + XSIZE)
+        LOCAL_N = IW( IOLDPS + 1 + XSIZE)
        IF(KEEP(201).NE.0) THEN
         IF(.NOT.SMUMPS_SOLVE_IS_INODE_IN_MEM(KEEP(38),
      $       PTRFAC,KEEP(28),A,LA,IERR))THEN
@@ -1498,7 +1498,8 @@ C
               INFO(2)=0
               RETURN
            ENDIF
-           CALL SMUMPS_577(A(PTRFAC(IW(IOLDPS+4))),KEEP(38),IERR)
+           CALL SMUMPS_577(
+     &           A(PTRFAC(IW(IOLDPS+4+ XSIZE))),KEEP(38),IERR)
            IF(IERR.LT.0)THEN
               INFO(1)=IERR
               INFO(2)=0
@@ -1512,7 +1513,7 @@ C
            ENDIF
         ENDIF
        ENDIF
-        IAPOS   = PTRFAC(IW( IOLDPS + 4 ))
+        IAPOS   = PTRFAC(IW( IOLDPS + 4 + XSIZE))
           IF ( .NOT. ASSOCIATED( root%QR_TAU ) )
      *          ALLOCATE( root%QR_TAU(1))
           IF ( .NOT. ASSOCIATED( root%GROW ) )
@@ -1569,7 +1570,9 @@ C
 #if defined(try_null_space)
          IF ( KEEP(60) .eq. 0 ) THEN
            CALL SMUMPS_296(
-     *     SIZE_ROOT,A( PTRFAC(IW( PTRIST(STEP(KEEP(20)))+4))),ROOT,
+     *     SIZE_ROOT,A( PTRFAC(
+              IW( PTRIST(STEP(KEEP(20)))+4+XSIZE))),
+     *     ROOT,
      *     W( IPT_RHS_ROOT ), W(1),LWC_LOC,KEEP,KEEP8,MTYPE,INFO)
          ELSE
 #endif
@@ -1665,6 +1668,8 @@ C
       INTEGER RECORD_SIZE_P_1, SIZE1, SIZE2
       INTEGER POS_BUF, N2SEND, IROW
       REAL ONE_ROW(NRHS)
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       INTEGER SMUMPS_275
       EXTERNAL SMUMPS_275
       N2SEND=0
@@ -1694,16 +1699,16 @@ C
               IF ( KEEP(38) .eq. INODE .OR.
      *             KEEP(20) .eq. INODE) THEN
                     IPOS = PTRIST(STEP(INODE)) 
-                    LIELL = IW(IPOS+3)
+                    LIELL = IW(IPOS+3+XSIZE)
                     NPIV = LIELL
-                    IPOS= PTRIST(STEP(INODE))+5
+                    IPOS= PTRIST(STEP(INODE))+5+XSIZE
               ELSE
-                  IPOS = PTRIST(STEP(INODE)) + 2
+                  IPOS = PTRIST(STEP(INODE)) + 2+ XSIZE
                   LIELL = IW(IPOS-2)+IW(IPOS+1)
                   IPOS= IPOS+1
                   NPIV = IW(IPOS)
                   IPOS= IPOS+1
-                  IPOS= IPOS+1+IW( PTRIST(STEP(INODE)) + 5 )
+                  IPOS= IPOS+1+IW( PTRIST(STEP(INODE)) + 5 +XSIZE)
               END IF
               IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
@@ -1797,6 +1802,8 @@ C
       INTEGER ISTEP, K
       INTEGER J1, IPOS, LIELL, NPIV, JJ
       LOGICAL ROOT
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       K=0
       DO ISTEP=1, KEEP(28)
           IF ( MYID_NODES == SMUMPS_275( ISTEP,
@@ -1805,17 +1812,17 @@ C
               IF (KEEP(38).ne.0) ROOT = STEP(KEEP(38))==ISTEP
               IF (KEEP(20).ne.0) ROOT = STEP(KEEP(20))==ISTEP
               IF ( ROOT ) THEN
-                    IPOS = PTRIST(ISTEP) 
+                    IPOS = PTRIST(ISTEP)+XSIZE
                     LIELL = IW(IPOS+3)
                     NPIV = LIELL
-                    IPOS= PTRIST(ISTEP)+5
+                    IPOS= PTRIST(ISTEP)+5+XSIZE
               ELSE
-                  IPOS = PTRIST(ISTEP) + 2
+                  IPOS = PTRIST(ISTEP) + 2 + XSIZE
                   LIELL = IW(IPOS-2)+IW(IPOS+1)
                   IPOS= IPOS+1
                   NPIV = IW(IPOS)
                   IPOS= IPOS+1
-                  IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 )
+                  IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 + XSIZE)
               END IF
               IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
@@ -1863,6 +1870,8 @@ C
       INTEGER JJ, J1, J2, ISTEP, K
       INTEGER IPOS, LIELL, NPIV
       LOGICAL ROOT
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       INTEGER SMUMPS_275
       EXTERNAL SMUMPS_275
       K=0
@@ -1873,17 +1882,17 @@ C
               IF (KEEP(38).ne.0) ROOT = STEP(KEEP(38))==ISTEP
               IF (KEEP(20).ne.0) ROOT = STEP(KEEP(20))==ISTEP
               IF ( ROOT ) THEN
-                    IPOS = PTRIST(ISTEP) 
+                    IPOS = PTRIST(ISTEP) + XSIZE
                     LIELL = IW(IPOS+3)
                     NPIV = LIELL
-                    IPOS= PTRIST(ISTEP)+5
+                    IPOS= PTRIST(ISTEP)+5+XSIZE
               ELSE
-                  IPOS = PTRIST(ISTEP) + 2
+                  IPOS = PTRIST(ISTEP) + 2 +XSIZE
                   LIELL = IW(IPOS-2)+IW(IPOS+1)
                   IPOS= IPOS+1
                   NPIV = IW(IPOS)
                   IPOS= IPOS+1
-                  IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 )
+                  IPOS= IPOS+1+IW( PTRIST(ISTEP) + 5 +XSIZE)
               END IF
               IF (MTYPE.eq.1 .AND. KEEP(50).EQ.0) THEN
                    J1=IPOS+1+LIELL
@@ -1979,7 +1988,7 @@ C
    50 CONTINUE
       IF (SLAVEF .EQ. 1) THEN
          CALL SMUMPS_574
-     &        ( IPOOL, LPOOL, III, LEAF, INODE,
+     &        ( IPOOL(1), LPOOL, III, LEAF, INODE,
      &          KEEP(208), MYID )
         GOTO 60
       ENDIF
@@ -1998,7 +2007,7 @@ C
       IF (.not. FLAG) THEN
          IF (III .NE. LEAF) THEN
             CALL SMUMPS_574
-     &           (IPOOL, LPOOL, III, LEAF, INODE,
+     &           (IPOOL(1), LPOOL, III, LEAF, INODE,
      &            KEEP(208), MYID )
             GOTO 60
          ENDIF
@@ -2062,6 +2071,8 @@ C
       INTEGER  SMUMPS_275
       REAL ALPHA, ONE
       PARAMETER( ONE = 1.0E0, ALPHA = -1.0E0 )
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       IF ( MSGTAG .EQ. RACINE_SOLVE ) THEN
           NBFIN = NBFIN - 1
           IF ( NBFIN .eq. 0 ) GOTO 270
@@ -2172,7 +2183,7 @@ C
                 GOTO 260
              ENDIF
              CALL SMUMPS_577(
-     $            A(PTRFAC(IW( PTRIST( STEP(FINODE)) + 3 ))),
+     $            A(PTRFAC(IW( PTRIST( STEP(FINODE)) + 3 +XSIZE))),
      $            FINODE,IERR)
              IF(IERR.LT.0)THEN
                 INFO(1)=IERR
@@ -2187,7 +2198,7 @@ C
              ENDIF
            ENDIF
           ENDIF
-          APOS = PTRFAC(IW( PTRIST( STEP(FINODE)) + 3 ))
+          APOS = PTRFAC(IW( PTRIST( STEP(FINODE)) + 3 + XSIZE ))
           IF ( NRHS == 1 ) THEN
             CALL SGEMV( 'T', NPIV, NCV, ALPHA, A(APOS), NPIV,
      *                WCB( PTRX ), 1, ONE,
@@ -2211,11 +2222,11 @@ C
      *            PROCNODE_STEPS, SLAVEF )
           IF ( PDEST .EQ. MYID ) THEN
             IF ( PTRICB(STEP(FINODE)) .EQ. 0 ) THEN
-              NCB = IW( PTRIST(STEP(FINODE)) + 2 )
+              NCB = IW( PTRIST(STEP(FINODE)) + 2 + XSIZE )
               PTRICB(STEP(FINODE)) = NCB + 1
             END IF
             DO I = 1, NCV
-              JJ=IW(PTRIST(STEP(FINODE))+3+I)
+              JJ=IW(PTRIST(STEP(FINODE))+3+I+ XSIZE )
               DO K=1, NRHS
                 W1(JJ,K)= W1(JJ,K) + WCB(PTRY+I-1+(K-1)*NCV)
               ENDDO
@@ -2236,8 +2247,8 @@ C
           ELSE
  210       CONTINUE
            CALL SMUMPS_78( NRHS, FINODE, FPERE,
-     *       IW(PTRIST(STEP( FINODE )) + 2 ), NCV, NCV,
-     *       IW(PTRIST(STEP(FINODE))+4),
+     *       IW(PTRIST(STEP( FINODE )) + 2 + XSIZE ), NCV, NCV,
+     *       IW(PTRIST(STEP(FINODE))+4+ XSIZE ),
      *       WCB( PTRY ), PDEST, ContVec, COMM, IERR )
             IF ( IERR .EQ. -1 ) THEN
               CALL SMUMPS_303( .FALSE., FLAG,
@@ -2326,21 +2337,23 @@ C
      *        NELIM, PLEFT, PCB_COURANT, PPIV_COURANT
       INTEGER Effective_CB_SIZE, NUPDATE, ISLAVE, PDEST, FirstIndex
       LOGICAL FLAG
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       INTEGER APOS2,POSWCB1,POSWCB2,J22
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER DUMMY( 1 )
       IF ( INODE .eq. KEEP(38 ) .OR. INODE .eq.KEEP( 20 ) ) THEN
-        LIELL = IW( PTRIST( STEP(INODE)) + 3 )
+        LIELL = IW( PTRIST( STEP(INODE)) + 3 + XSIZE)
         NPIV  = LIELL
         NELIM = 0
         NSLAVES = 0
-        IPOS = PTRIST( STEP(INODE)) + 5
+        IPOS = PTRIST( STEP(INODE)) + 5 + XSIZE
       ELSE
-        IPOS = PTRIST(STEP(INODE)) + 2
+        IPOS = PTRIST(STEP(INODE)) + 2 + XSIZE
         LIELL = IW(IPOS-2)+IW(IPOS+1)
         NELIM = IW(IPOS-1)
-        NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
+        NSLAVES = IW( PTRIST(STEP(INODE)) + 5 + XSIZE )
         IPOS = IPOS + 1
         NPIV = IW(IPOS)
         IPOS = IPOS + 1
@@ -2374,7 +2387,7 @@ C
          ENDIF
         ENDIF
         APOS = PTRFAC(IW(IPOS))
-        NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
+        NSLAVES = IW( PTRIST(STEP(INODE)) + 5 + XSIZE)
         IPOS = IPOS + 1 + NSLAVES
       END IF
       IF ( MTYPE .EQ. 1 .OR. KEEP(50) .NE. 0 ) THEN
@@ -2631,7 +2644,7 @@ C
       IF ( NSLAVES .NE. 0 .AND. MTYPE .eq. 1
      *     .and. NPIV .NE. 0 ) THEN
         DO ISLAVE = 1, NSLAVES
-          PDEST = IW( PTRIST(STEP(INODE)) + 5 + ISLAVE )
+          PDEST = IW( PTRIST(STEP(INODE)) + 5 + ISLAVE +XSIZE)
           CALL SMUMPS_49( 
      &                KEEP,KEEP8, INODE, STEP, N, SLAVEF,
      &                ISTEP_TO_INIV2, TAB_POS_IN_PERE,
@@ -2806,6 +2819,8 @@ C
       INTEGER DUMMY(1)
       INTEGER PLEFTW, LDA
       INTEGER Offset, EffectiveSize, ISLAVE, FirstIndex
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       LOGICAL DEJA_SEND( 0:SLAVEF-1 )
       LOGICAL SMUMPS_283
       INTEGER SMUMPS_330
@@ -2848,7 +2863,7 @@ C
      *     PLEFTW, KEEP,KEEP8,
      *     PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      *     RHSSOL, RHS, LRHS, NRHS )
-      IF ( INFO(1) .LT. 0 ) RETURN
+      IF ( INFO(1) .LT. 0 ) GOTO 340
       IF ( .NOT. FLAG ) THEN
         IF (III .NE. IIPOOL) THEN
           INODE = IPOOL(III)
@@ -2862,10 +2877,10 @@ C
       GOTO 50
    60 CONTINUE
       IF ( INODE .EQ. KEEP( 38 ) .OR. INODE .EQ. KEEP( 20 ) ) THEN
-        IPOS = PTRIST(STEP(INODE))
+        IPOS = PTRIST(STEP(INODE))+XSIZE
         LIELL = IW(IPOS+3)
         NPIV  = LIELL
-        IPOS =  PTRIST(STEP(INODE)) + 5
+        IPOS =  PTRIST(STEP(INODE)) + 5 + XSIZE
         IF ( MTYPE .EQ. 1 .AND. KEEP(50) .EQ. 0) THEN
           J1   = IPOS + LIELL + 1
           J2   = IPOS + LIELL + NPIV
@@ -2955,7 +2970,7 @@ C
         IISSAR = IISSAR + 1
         GO TO 50
       END IF
-      IPOS = PTRIST(STEP(INODE)) + 2
+      IPOS = PTRIST(STEP(INODE)) + 2 + XSIZE
       LIELL = IW(IPOS-2)+IW(IPOS+1)
       NELIM = IW(IPOS-1)
       IPOS = IPOS + 1
@@ -2991,7 +3006,7 @@ C
        ENDIF
       ENDIF
       APOS = PTRFAC(IW(IPOS))
-      NSLAVES = IW( PTRIST(STEP(INODE)) + 5 )
+      NSLAVES = IW( PTRIST(STEP(INODE)) + 5 + XSIZE )
       IPOS = IPOS + 1 + NSLAVES
       IFRR = 0
       LONG = 0
@@ -3100,7 +3115,7 @@ C
      &                NSLAVES, 
      &                EffectiveSize,
      &                FirstIndex )
- 500         DEST = IW( PTRIST(STEP(INODE))+5+ISLAVE)
+ 500         DEST = IW( PTRIST(STEP(INODE))+5+ISLAVE+XSIZE)
              CALL SMUMPS_63(NRHS, INODE,
      *             W(Offset+PTRACB(STEP(INODE))), EffectiveSize, LIELL,
      *             DEST,
@@ -3270,7 +3285,7 @@ C
   230 CONTINUE
       POSII = POSII - 1
       INODE = POOLSS( POSII )
-      IPOS = PTRIST(STEP(INODE)) + 2
+      IPOS = PTRIST(STEP(INODE)) + 2 + XSIZE
       LIELL = IW(IPOS-2)+IW(IPOS+1)
       IPOS = IPOS + 1
       NPIV = IW(IPOS)
@@ -3306,7 +3321,7 @@ C
       ENDIF
       IF (NPIV .EQ. 0) GOTO 280
       APOS = PTRFAC(IW(IPOS))
-      NSLAVES = IW( PTRIST(STEP(INODE)) +5 )
+      NSLAVES = IW( PTRIST(STEP(INODE)) +5 + XSIZE)
       IPOS = IPOS + 1 + NSLAVES
       IF ( MTYPE .EQ. 1 .OR. KEEP(50).NE.0 ) THEN
         J1 = IPOS + 1
@@ -3571,6 +3586,8 @@ C
       LOGICAL FLAG
       REAL ZERO, ALPHA, ONE
       PARAMETER( ZERO = 0.0E0, ALPHA = -1.0E0, ONE = 1.0E0)
+      INTEGER XSIZE
+      PARAMETER (XSIZE=3)
       LOGICAL DEJA_SEND( 0:SLAVEF-1 )
       INTEGER SMUMPS_275
       EXTERNAL SMUMPS_275, STRSV, STRSM, SGEMV, SGEMM
@@ -3634,7 +3651,7 @@ C
      *                   INODE, 1, MPI_INTEGER, COMM, IERR )
         CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
      *                   NROW_RECU, 1, MPI_INTEGER, COMM, IERR )
-        IPOS   = PTRIST( STEP(INODE) )
+        IPOS   = PTRIST( STEP(INODE) ) + XSIZE
         NPIV   = - IW( IPOS     )
         NROW_L =   IW( IPOS + 1 )
         IF (KEEP(201).NE.0) THEN
@@ -3710,7 +3727,8 @@ C
          ENDIF
         ENDIF
         PLEFTW = PLEFTW - NROW_L * NRHS
- 100    CALL SMUMPS_63( NRHS, INODE, W(P_UPDATE),
+ 100    CONTINUE
+        CALL SMUMPS_63( NRHS, INODE, W(P_UPDATE),
      *                               NPIV, NPIV,
      *                                MSGSOU, 
      *                                BACKSLV_UPDATERHS,
@@ -3740,7 +3758,7 @@ C
         POSITION = 0
         CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
      *                   INODE, 1, MPI_INTEGER, COMM, IERR )
-          IPOS  = PTRIST(STEP(INODE)) + 2
+          IPOS  = PTRIST(STEP(INODE)) + 2 + XSIZE
           LIELL = IW(IPOS-2)+IW(IPOS+1)
         CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
      *                   NPIV, 1, MPI_INTEGER, COMM, IERR )
@@ -3757,7 +3775,7 @@ C
         IWCB( PTRICB(STEP(INODE)) + 1 )
      *    = IWCB( PTRICB(STEP(INODE)) + 1 ) - 1
         IF ( IWCB( PTRICB(STEP(INODE)) + 1 ) .EQ. 1 ) THEN
-          IPOS  = PTRIST(STEP(INODE)) + 2
+          IPOS  = PTRIST(STEP(INODE)) + 2 + XSIZE
           LIELL = IW(IPOS-2)+IW(IPOS+1)
           IPOS  = IPOS + 1
           NPIV_CHECK = IW( IPOS )
@@ -3818,7 +3836,7 @@ C
               GOTO 260
            ENDIF
         ENDIF
-          IPOS = PTRIST(STEP(INODE)) + 5
+          IPOS = PTRIST(STEP(INODE)) + 5 + XSIZE
           IPOS = IW( IPOS ) + IPOS + 1
           DO I = 1, NPIV
             JJ = IW( IPOS + I - 1 )

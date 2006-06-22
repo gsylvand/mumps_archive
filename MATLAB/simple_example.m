@@ -16,9 +16,9 @@ id.ICNTL(6) = 0;
 id.RHS = ones(size(mat,1),1);
 %call to mumps
 id = dmumps(id,mat);
-% we see that there is a memory problem in INFO(1) and INFO(2)
-id.INFO(1)
-id.INFO(2)
+% we see that there is a memory problem in INFOG(1) and INFOG(2)
+id.INFOG(1)
+id.INFOG(2)
 % we activate the numerical maximun transversal 
 id.ICNTL(6) = 6;
 %%%%%%% END OPTIONAL PART %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,11 +1,11 @@
-// $Id: builder_source.sce,v 1.3 2006/04/04 12:18:37 jylexcel Exp $
+// $Id: builder_source.sce,v 1.5 2006/06/21 08:11:31 afevre Exp $
 
 
 //******************* VARIABLE PART TO COSTUMIZE ***************************//
 
 // -- MUMPS:
 
-MUMPS_DIR = home + "/MUMPS_4.6.2/";
+MUMPS_DIR = home + "/MUMPS_4.6.3/";
 MUMPS_INC_DIR = MUMPS_DIR+"include/"; //path until dmumps_c.h and zmumps_c.h
 MUMPS_LIB_DIR = MUMPS_DIR+"lib/";     //path until libdmumps.a, libzmumps.a and libpord.a
 DMUMPS_LIB = MUMPS_LIB_DIR+"libdmumps.a";
@@ -29,8 +29,10 @@ ORDERINGS_LIB = PORD_LIB+" "+METIS_LIB;
 // -- PTHREAD lib required by MUMPS versions > 4.6
 PTHREAD_LIB="-lpthread";
 
-COMPILER_= "gcc -c -O";    
-// -- FORTRAN COMPILER AND RUNTIME LIBRARIES
+// -- COMPILER FOR THE INTERFACE
+COMPILER_= "gcc -c -O";
+
+// -- FORTRAN RUNTIME LIBRARIES
 
 //---- g95 
 FORT_LIB_DIR = "/home/afevre/compil/g95-install/lib/gcc-lib/i686-pc-linux-gnu/4.0.1/";

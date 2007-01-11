@@ -2,6 +2,7 @@
 #include "stack-c.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "dmumps_c.h"
 
 #define double2 double

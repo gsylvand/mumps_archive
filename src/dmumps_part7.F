@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
-C   This Version was built on Thu Jun 22 13:22:44 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
+C   This Version was built on Thu Jan 11 13:32:35 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -29,7 +29,7 @@ C  in any scientific publication dependent upon the use of the
 C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
-C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
 C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
 C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
@@ -3626,8 +3626,7 @@ C
       INTEGER BUFR(LBUFR)
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      *        TAB_POS_IN_PERE(SLAVEF+2,MAX(1,KEEP(56)))
-      INTEGER XSIZE
-      PARAMETER(XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       INTEGER MP, LDIAG, LWC_LOC
       INTEGER K,I,NN
       INTEGER LPOOL,MYLEAF
@@ -3928,8 +3927,7 @@ C
       INTEGER INFO( 2 ), LDLT, QR
       DOUBLE PRECISION A( LA )
       INTEGER IOLDPS, IAPOS
-      INTEGER XSIZE
-      PARAMETER(XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       INTEGER LOCAL_M, LOCAL_N, LPIV, IERR, allocok,i
       INTEGER JJ,ROW,NR,IDIST
       integer deficiency,rsrc,csrc,lrindx,lcindx
@@ -5237,8 +5235,7 @@ C
       DOUBLE PRECISION A( LA )
       INTEGER IOLDPS, IAPOS
       INTEGER LOCAL_M, LOCAL_N, LPIV, IERR, allocok,i
-      INTEGER XSIZE
-      PARAMETER(XSIZE=3)
+      INCLUDE 'mumps_headers.h'
         IF ( .NOT. root%yes ) RETURN
         IF ( KEEP(60) .NE. 0 ) THEN
           IF ((LDLT == 1 .OR. LDLT == 2) .AND. KEEP(60) == 3 ) THEN
@@ -6165,7 +6162,7 @@ C
       NZOFFA  = NIORM - 3*N
       IF (IERROR.GE.1) THEN
          NBERR  = 0
-         IFLAG  = IFLAG+1
+         IF (MOD(IFLAG,2).EQ.0) IFLAG  = IFLAG+1
          IF ((MP.GT.0).AND.(ICNTL(4).GE.2))  THEN 
           WRITE (MP,99999) 
           DO 70 K=1,NZ

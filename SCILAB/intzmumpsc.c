@@ -2,6 +2,7 @@
 #include "stack-c.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "zmumps_c.h"
 
 #define dmumps_c      zmumps_c

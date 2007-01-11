@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
-C   This Version was built on Thu Jun 22 13:22:44 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
+C   This Version was built on Thu Jan 11 13:32:35 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -29,7 +29,7 @@ C  in any scientific publication dependent upon the use of the
 C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
-C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
 C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
 C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
@@ -59,8 +59,7 @@ C
       INTEGER NELIM, LCONT, NROW, NPIV, IAPOS, NSLAVES, ISLAVE
       INTEGER INODE, NCOL_L, NROW_L, NCB, BLSIZE, LASTBL
       INTEGER SIZELUMASTER, SIZELUSLAVE, NFRONT
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       ISLAVE = ID - MYID
       IF ( ISLAVE .LT. 1 ) ISLAVE = ISLAVE + SLAVEF 
       POSITION = 0
@@ -128,87 +127,45 @@ C
       INTEGER MYID
       LOGICAL SSARBR
       INTEGER SIZFI_BLOCK, SIZFR_BLOCK, SIZFI, SIZFR
-      INTEGER XSIZE, IPOSSHIFT
-      PARAMETER (XSIZE=3)
-      INTEGER XXI, XXR, XXS
-      PARAMETER(XXI=0,XXR=1,XXS=2)
+      INTEGER IPOSSHIFT
+      INTEGER SIZFR_BLOCK_EFF, SIZEHOLE
+      INCLUDE 'mumps_headers.h'
       IPOSSHIFT = IPOSBLOCK + XSIZE
-      IF ( IW( IPOSSHIFT ) .LT. 0 ) THEN
-        SIZFI_BLOCK = XSIZE + 2
-        SIZFR_BLOCK = - IW( IPOSSHIFT ) * IW( IPOSSHIFT + 1 ) 
+      SIZFI_BLOCK=IW(IPOSBLOCK+XXI)
+      SIZFR_BLOCK=IW(IPOSBLOCK+XXR)
+      IF (KEEP(216).eq.3) THEN
+        SIZFR_BLOCK_EFF=SIZFR_BLOCK
       ELSE
-        IF ( IW( IPOSSHIFT + 3 ) .LT. 0 ) THEN
-        SIZFI_BLOCK = XSIZE + 6 + IW( IPOSSHIFT )  +
-     *                IW( IPOSSHIFT + 2 ) +
-     *                IW( IPOSSHIFT + 5 )
-        ELSE
-        SIZFI_BLOCK = XSIZE + 6 + IW( IPOSSHIFT ) + 
-     *                IW( IPOSSHIFT + 2 ) +
-     *                IW( IPOSSHIFT + 3 ) + IW( IPOSSHIFT + 5 )
-        END IF
-        SIZFR_BLOCK = ( IW( IPOSSHIFT) + IW( IPOSSHIFT + 3 ) ) *
-     *                  IW( IPOSSHIFT + 2 )
-      END IF
-      IF (XSIZE.GE.3) THEN
-        SIZFI_BLOCK=IW(IPOSBLOCK+XXI)
-        SIZFR_BLOCK=IW(IPOSBLOCK+XXR)
+        CALL ZMUMPS_628( IW(IPOSBLOCK),
+     *                     LIW-IPOSBLOCK+1,
+     *                     SIZEHOLE)
+        SIZFR_BLOCK_EFF=SIZFR_BLOCK-SIZEHOLE
       ENDIF
       IF ( IPOSBLOCK .eq. IWPOSCB + 1 ) THEN
          IPTRLU  = IPTRLU  + SIZFR_BLOCK
          IWPOSCB = IWPOSCB + SIZFI_BLOCK
          LRLU    = LRLU  + SIZFR_BLOCK
-         LRLUS   = LRLUS + SIZFR_BLOCK
+         LRLUS   = LRLUS + SIZFR_BLOCK_EFF
       CALL ZMUMPS_471(SSARBR,.FALSE.,
-     *         LA-LRLUS,0,-SIZFR_BLOCK,KEEP,KEEP8,LRLU)
+     *         LA-LRLUS,0,-SIZFR_BLOCK_EFF,KEEP,KEEP8,LRLU)
  90      IF ( IWPOSCB .eq. NIRBDU ) GO TO 100
          IPOSSHIFT = IWPOSCB + XSIZE
-         IF ( IW( IPOSSHIFT + 1 ) .LT. 0 ) THEN
-           IF( IW( IPOSSHIFT + 1 ) .LT. -N ) THEN
-              SIZFI = XSIZE + 2 
-              SIZFR  = -( IW(IPOSSHIFT+1) + N )*IW(IPOSSHIFT+ 2)
-             IF (XSIZE.GE.3) THEN
-               SIZFI=IW(IWPOSCB+1+XXI)
-               SIZFR=IW(IWPOSCB+1+XXR)
-             ENDIF
+         SIZFI = IW( IWPOSCB+1+XXI )
+         SIZFR = IW( IWPOSCB+1+XXR )
+         IF ( IW( IWPOSCB+1+XXS ) .EQ. S_FREE ) THEN
               IPTRLU  = IPTRLU + SIZFR
-              LRLU   = LRLU + SIZFR
+              LRLU    = LRLU + SIZFR
               IWPOSCB = IWPOSCB + SIZFI
               GO TO 90
-           END IF
-         ELSE
-           IF ( IW(IPOSSHIFT + 5) .EQ. 0 ) THEN
-              IF ( IW(IPOSSHIFT + 4) .LT . 0 ) THEN
-                SIZFI = XSIZE + 6 + IW( IPOSSHIFT + 1 ) +
-     *            IW( IPOSSHIFT + 3 ) +
-     *            IW( IPOSSHIFT + 6 )
-              ELSE
-                SIZFI = XSIZE + 6 + IW( IPOSSHIFT + 1 ) +
-     *            IW( IPOSSHIFT + 3 ) +
-     *            IW( IPOSSHIFT + 4 ) + IW( IPOSSHIFT + 6 )
-              END IF
-              SIZFR = ( IW( IPOSSHIFT + 1 ) + IW(IPOSSHIFT + 4) )
-     *              * IW(IPOSSHIFT + 3)
-             IF (XSIZE.GE.3) THEN
-               SIZFI=IW(IWPOSCB+1+XXI)
-               SIZFR=IW(IWPOSCB+1+XXR)
-             ENDIF
-              IPTRLU  = IPTRLU + SIZFR
-              LRLU    = LRLU   + SIZFR
-              IWPOSCB = IWPOSCB + SIZFI
-              GOTO 90
-           END IF
          ENDIF
+ 100     CONTINUE
+         IW( IWPOSCB+1+XXP)=TOP_OF_STACK
       ELSE
-         IF ( SIZFI_BLOCK .eq. 2 + XSIZE ) THEN
-           IW( IPOSSHIFT ) = IW( IPOSSHIFT ) - N
-         ELSE
-           IW( IPOSSHIFT + 4 ) = 0
-         END IF
-         LRLUS = LRLUS + SIZFR_BLOCK
+         IW( IPOSBLOCK +XXS)=S_FREE
+         LRLUS = LRLUS + SIZFR_BLOCK_EFF
       CALL ZMUMPS_471(SSARBR,.FALSE.,
-     *            LA-LRLUS,0,-SIZFR_BLOCK,KEEP,KEEP8,LRLU)
+     *            LA-LRLUS,0,-SIZFR_BLOCK_EFF,KEEP,KEEP8,LRLU)
       END IF
- 100  CONTINUE
       RETURN
       END SUBROUTINE ZMUMPS_152
       SUBROUTINE ZMUMPS_144( COMM_LOAD, ASS_IRECV, 
@@ -266,8 +223,7 @@ C
       LOGICAL LASTBL 
       DOUBLE PRECISION UUTEMP
       INTEGER , ALLOCATABLE, DIMENSION ( : ) :: IPIV
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       EXTERNAL ZMUMPS_224, ZMUMPS_233, 
      *         ZMUMPS_225, ZMUMPS_232,
      *         ZMUMPS_294,
@@ -448,10 +404,9 @@ C
      *        IPOS_SON, NELIM_SON, NSLAVES_SON, HS,
      *        IROW_SON, ICOL_SON, ISLAVE, IERR, 
      *        NELIM_SENT
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
       INTEGER ZMUMPS_275
       EXTERNAL ZMUMPS_275
+      INCLUDE 'mumps_headers.h'
       INCLUDE 'mumps_tags.h'
       NB_CONTRI_GLOBAL = KEEP(41)
       NUMORG    = root%ROOT_SIZE
@@ -662,8 +617,7 @@ C
       INTEGER NRLOCAL, NCLOCAL
       LOGICAL SET_IRECV, BLOCKING, MESSAGE_RECEIVED
       INTEGER SIZE_MSG
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       LOGICAL FLAG
       ALLOCATE(PTRROW(root%NPROW + 1 ),  stat=allocok)
       if (allocok .GT. 0) THEN
@@ -912,7 +866,7 @@ C
      *          IW, LIW, A, LA, NIRBDU,
      *          LRLU, IPTRLU,
      *          IWPOS, IWPOSCB, PTRIST, PTRAST,
-     *          STEP, PIMASTER, PAMASTER, ITLOC)
+     *          STEP, PIMASTER, PAMASTER, ITLOC,KEEP(216),LRLUS)
                 COMP = COMP + 1
                 IF ( LRLU .NE. LRLUS ) THEN
                   WRITE(*,*) MYID,': Error in b&scbroot: pb compress'
@@ -1395,10 +1349,7 @@ C
      *  PAMASTER(KEEP(28))
       INTEGER ITLOC( N )
       INTEGER COMP, LRLUS, IFLAG, IERROR
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
-      INTEGER XXI, XXR, XXS
-      PARAMETER(XXI=0,XXR=1,XXS=2)
+      INCLUDE 'mumps_headers.h'
       INTEGER FILS( N ), PTRAIW(N), PTRARW( N )
       INTEGER INTARR(MAX(1,KEEP(14)))
       COMPLEX*16 DBLARR(MAX(1,KEEP(13)))
@@ -1421,16 +1372,11 @@ C
      *                     LRLU, IPTRLU,
      *                     IWPOS, IWPOSCB, PTRIST, PTRAST,
      *                     STEP, PIMASTER, PAMASTER, ITLOC, LREQI_ROOT,
-     *                     LREQA_ROOT, COMP,
+     *                     LREQA_ROOT, IROOT, S_NOTFREE, .TRUE., COMP,
      *                     LRLUS, IFLAG, IERROR )
             IF ( IFLAG .LT. 0 ) RETURN
             PTRIST  ( STEP(IROOT) ) = IWPOSCB + 1
             PAMASTER( STEP(IROOT) ) = IPTRLU  + 1
-            IF (XSIZE.GE.3) THEN
-              IW( IWPOSCB + 1 + XXI ) = LREQI_ROOT
-              IW( IWPOSCB + 1 + XXR ) = LREQA_ROOT
-              IW( IWPOSCB + 1 + XXS ) = -9999   ! Node STATUS not used yet
-            ENDIF
             IW( IWPOSCB + 1 + XSIZE) = - LOCAL_N
             IW( IWPOSCB + 2 + XSIZE) =   LOCAL_M
       RETURN
@@ -1570,10 +1516,7 @@ C
       INTEGER NOREAL, NOINT, INIV2
       DOUBLE PRECISION FLOP1
       LOGICAL PERETYPE2
-      INTEGER XSIZE
-      PARAMETER (XSIZE=3)
-      INTEGER XXI, XXR, XXS
-      PARAMETER(XXI=0,XXR=1,XXS=2)
+      INCLUDE 'mumps_headers.h'
       INTEGER  ZMUMPS_330
       EXTERNAL ZMUMPS_330
       POSITION = 0
@@ -1602,18 +1545,13 @@ C
      *   MYID,N,KEEP,KEEP8,IW,LIW,A,LA,NIRBDU,
      *   LRLU, IPTRLU,IWPOS,IWPOSCB,
      *   PTRIST,PTRAST,STEP, PIMASTER, PAMASTER, ITLOC,
-     *   NOINT, NOREAL,
+     *   NOINT, NOREAL, ISON, S_NOTFREE, .TRUE.,
      *   COMP, LRLUS, IFLAG, IERROR )
       IF ( IFLAG .LT. 0 ) THEN
         RETURN
       ENDIF
       PIMASTER(STEP( ISON )) = IWPOSCB + 1
       PAMASTER(STEP( ISON )) = IPTRLU  + 1
-      IF (XSIZE.GE.3) THEN
-        IW( IWPOSCB + 1 + XXI ) = NOINT
-        IW( IWPOSCB + 1 + XXR ) = NOREAL
-        IW( IWPOSCB + 1 + XXS ) = -9999  ! Node status not used yet
-      ENDIF
       IW( IWPOSCB + 1 + XSIZE ) = NCOL
       NELIM = NROW
       IW( IWPOSCB + 2 + XSIZE ) = NELIM
@@ -1730,11 +1668,7 @@ C
       END IF
       CNTL(2) = SQRT(EPSILON(0.0D0))
       CNTL(3) = -1.0D0
-      IF(KEEP(50).NE. 2) THEN
-         CNTL(4) = -1.0D0
-      ELSE
-         CNTL(4) = 0.0D0
-      ENDIF
+      CNTL(4) = -1.0D0
       CNTL(5) = 0.0D0
       KEEP(46) = PAR
       IF ( KEEP(46) .NE. 0 .AND.
@@ -1848,10 +1782,10 @@ C
         IF (NPROCS.GE.128) KEEP(9)=800
         IF (NPROCS.GE.256) KEEP(9)=900
       ELSE
-        KEEP(4)  = 24
-        KEEP(3) =  96
-        KEEP(5) =  16
-        KEEP(6) =  48
+        KEEP(4)  = 24 
+        KEEP(3)  = 96  
+        KEEP(5)  = 16
+        KEEP(6)  = 48
         KEEP(9)  = 400
         KEEP(85) = 100
         KEEP(62) = 100
@@ -1905,13 +1839,14 @@ C
       KEEP(82) = 5
       KEEP(83) = MIN(8,NPROCS/4)
       KEEP(83) = MAX(MIN(4,NPROCS),MAX(KEEP(83),1))
-      KEEP(84) = 8
+      KEEP(84) = -8
       KEEP(86)=1
       KEEP(87)=0
       KEEP(88)=0
       KEEP(90)=1
       KEEP(91)=MIN(8, NPROCS)
       KEEP(91) = MAX(MIN(4,NPROCS),MIN(KEEP(83),KEEP(91)))
+      KEEP(207)=1
       IF(NPROCS.LT.48)THEN
          KEEP(102)=150
       ELSEIF(NPROCS.LT.128)THEN
@@ -1927,9 +1862,15 @@ C
       KEEP(100)=0
       KEEP(204)=0
       KEEP(205)=0
+      KEEP(209)=-1 ! Size /strategy for MAXS for solve
       KEEP(104) = 16
       KEEP(107)=0
       KEEP(213)=201
+      KEEP(217)=0
+      KEEP(215)=0
+      KEEP(216)=1
+      KEEP(218)=50
+      KEEP(219)=1
       RETURN
       END SUBROUTINE ZMUMPS_20
       SUBROUTINE ZMUMPS_195(N, NZ, IRN, ICN, LIW, IKEEP, PTRAR,
@@ -1986,7 +1927,7 @@ C
      *        IERROR, KEEP,KEEP8, ICNTL)
          INTEGER N,NZ,NCMP,LW,IWFR,IERROR
          INTEGER ICNTL(40),KEEP(500)
-      INTEGER*8 KEEP8(150)
+         INTEGER*8 KEEP8(150)
          INTEGER IRN(NZ),ICN(NZ),IW(LW),PERM(N),IPE(N+1)
          INTEGER LEN(N),IQ(N),FLAG(N),ICMP(N) 
          END SUBROUTINE ZMUMPS_547
@@ -2144,10 +2085,14 @@ C
       MTRANS = KEEP(23)
       COMPRESS = KEEP(95) - 1
       IF(COMPRESS .GT. 0 .AND. KEEP(52) .EQ. -2) THEN
-         IF(id%CNTL(4) .GT. 0.0D0) THEN
-            KEEP(97) = 1
-            KEEP(1) = 16
-            WRITE(*,*) 'Setting static pivoting ON, COMPRESS =',
+         IF(id%CNTL(4) .GE. 0.0D0) THEN
+            IF (KEEP(1).LE.8) THEN
+             KEEP(1) = 16   
+            ELSE
+             KEEP(1) = 2*KEEP(1)
+            ENDIF
+            IF (PROK) 
+     *       WRITE(MP,*) 'Setting static pivoting ON, COMPRESS =',
      *           COMPRESS
          ENDIF
       ENDIF
@@ -2723,7 +2668,7 @@ C
       NZOFFA  = NIORM - 3*N
       IF (IERROR.GE.1) THEN
          NBERR  = 0
-         IFLAG  = IFLAG+1
+         IF (MOD(IFLAG,2).EQ.0) IFLAG  = IFLAG+1
          IF ((MP.GT.0).AND.(ICNTL(4).GE.2))  THEN 
           WRITE (MP,99999) 
           DO 70 K=1,NZ
@@ -3355,7 +3300,9 @@ C
         GO TO 80
    70   IQ(I) = IQ(I) + 1
    80 CONTINUE
-      IF (IERROR.GE.1) IFLAG = IFLAG+1
+      IF (IERROR.GE.1) THEN
+        IF (MOD(IFLAG,2) .EQ. 0) IFLAG = IFLAG+1
+      ENDIF
       IWFR = 1
       LBIG = 0
       DO 100 I=1,N
@@ -5109,11 +5056,13 @@ C
       ELSE
         KEEP(38) = 0
       END IF
+#if defined(try_nullspace)
       IF (  KEEP( 38 ) .eq. 0  .and. KEEP(53).NE.0 ) THEN
        KEEP(20) = IROOTTREE
       ELSE IF ( KEEP(60) .eq. 0 ) THEN
        KEEP(20) = 0
       ENDIF
+#endif
       DO INODE = 1, N
         IF ( FRERE( INODE ) .LT. N + 1 ) THEN
           IN = FILS( INODE )
@@ -6485,7 +6434,7 @@ C
       NZOFFA  = NIORM - 3*N
       IF (IERROR.GE.1) THEN
          NBERR  = 0
-         IFLAG  = IFLAG+1
+         IF (MOD(IFLAG,2) .EQ. 0) IFLAG = IFLAG+1
          IF ((MP.GT.0).AND.(ICNTL(4).GE.2))  THEN 
           WRITE (MP,99999) 
           DO 70 K=1,NZ
@@ -8686,7 +8635,7 @@ C
            ELEN(1) = 1
            LAST(1) = 1
            PE(1) = 0
-           NV(1) = 0
+           NV(1) = 1
            RETURN
         ENDIF
         SIZE_SCHUR = MIN(N,SIZE_SCHUR)
@@ -9363,15 +9312,11 @@ C
 #if  defined(metis)
             IORD = 5
 #else
-            IF (NPROCS.LE.4) THEN
 #if defined(pord)
                IORD = 4
 #else
                IORD = 6
 #endif
-            ELSE
-               IORD = 6
-            ENDIF
 #endif
          ENDIF
       ELSE
@@ -9389,15 +9334,11 @@ C
 #if  defined(metis)
         IORD = 5
 #else
-        IF (NPROCS.LE.4) THEN
 #if defined(pord)
          IORD = 4
 #else
          IORD = 6
 #endif
-        ELSE
-         IORD = 6
-        ENDIF
 #endif
        ENDIF
       ENDIF
@@ -9862,13 +9803,13 @@ C
       RETURN
       END SUBROUTINE ZMUMPS_562
       SUBROUTINE ZMUMPS_534( N,FRERE, FILS,
-     *     NA,NE,ND,PERM,SYM,INFO,LP,K47,K81,
+     *     NA,NE,ND,PERM,SYM,INFO,LP,K47,K81,K215,
      *     PROCNODE,SLAVEF,PEAK
      $     )
       IMPLICIT NONE
       INTEGER N,PERM,SYM, LP, SIZE_MEM_SBTR
       INTEGER FRERE(N), FILS(N)
-      INTEGER NA(N), NE(N), ND(N),K47,K81
+      INTEGER NA(N), NE(N), ND(N),K47,K81,K215
       INTEGER INFO(40)
       INTEGER SLAVEF,PROCNODE(N)
       DOUBLE PRECISION PEAK
@@ -9880,12 +9821,11 @@ C
      $     MY_SIZE,MY_LEAF
       INTEGER, ALLOCATABLE, DIMENSION (:) ::      DEPTH_FIRST
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION (:) :: COST_TRAV
-       INTEGER DUMMY_DAD(1), DUMMY_DAD_LENGTH
-       PARAMETER (DUMMY_DAD_LENGTH=1)
-       LOGICAL USE_DAD
-       PARAMETER (USE_DAD=.FALSE.)
-       INTEGER XSIZE
-       PARAMETER(XSIZE=3)
+      INTEGER DUMMY_DAD(1), DUMMY_DAD_LENGTH
+      PARAMETER (DUMMY_DAD_LENGTH=1)
+      LOGICAL USE_DAD
+      PARAMETER (USE_DAD=.FALSE.)
+      INCLUDE 'mumps_headers.h'
       IF (N.EQ.1) THEN
         NBROOT = 1
         NBLEAF = 1 
@@ -9985,7 +9925,7 @@ C
       CALL ZMUMPS_363(N,FRERE, STEP, FILS,
      *     NEW_NA,LNA,NE,ND,
      *     DUMMY_DAD, DUMMY_DAD_LENGTH, USE_DAD,
-     *     NSTEPS,PERM,SYM,INFO,LP,K47_LOC,K81_LOC,0,
+     *     NSTEPS,PERM,SYM,INFO,LP,K47_LOC,K81_LOC,0,K215,
      *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK,SBTR_WHICH_M
      $     ,1,1,DEPTH_FIRST,COST_TRAV,MY_LEAF,MY_SIZE,MY_ROOT
      *)
@@ -10012,7 +9952,7 @@ C
       END SUBROUTINE ZMUMPS_534
       SUBROUTINE ZMUMPS_363(N,FRERE, STEP, FILS,
      *     NA,LNA,NE,ND, DAD, LDAD, USE_DAD,
-     *     NSTEPS,PERM,SYM,INFO,LP,K47,K81,K76,
+     *     NSTEPS,PERM,SYM,INFO,LP,K47,K81,K76,K215,
      *     PROCNODE,MEM_SUBTREE,SLAVEF, SIZE_MEM_SBTR, PEAK
      $     ,SBTR_WHICH_M,SIZE_DEPTH_FIRST,SIZE_COST_TRAV,
      $     DEPTH_FIRST_TRAV,COST_TRAV,MY_FIRST_LEAF,
@@ -10021,7 +9961,7 @@ C
       IMPLICIT NONE
       INTEGER N,PERM,SYM, NSTEPS, LNA, LP, SIZE_MEM_SBTR,LDAD
       INTEGER FRERE(NSTEPS), FILS(N), STEP(N)
-      INTEGER NA(LNA), NE(NSTEPS), ND(NSTEPS),K47,K81,K76
+      INTEGER NA(LNA), NE(NSTEPS), ND(NSTEPS),K47,K81,K76,K215
       INTEGER DAD(LDAD)
       LOGICAL USE_DAD
       INTEGER INFO(40)
@@ -10062,8 +10002,7 @@ C
       EXTERNAL ZMUMPS_170,ZMUMPS_167
       LOGICAL ZMUMPS_170,ZMUMPS_167
       DOUBLE PRECISION COST_NODE
-      INTEGER XSIZE
-      PARAMETER(XSIZE=3)
+      INCLUDE 'mumps_headers.h'
       TOTAL_MEM_SIZE=0
       ROOT_OF_CUR_SBTR=0
       IF((PERM.EQ.0).OR.(PERM.EQ.1).OR.
@@ -10311,7 +10250,7 @@ C
                 GOTO 151
              ENDIF
              NELIM=NELIM4
-             IF((SYM.EQ.0).OR.(XSIZE.LT.3))THEN
+             IF((SYM.EQ.0).OR.(K215.NE.0)) THEN
                 SIZECB=(ND(STEP(SON(II)))-NELIM)*
      $               (ND(STEP(SON(II)))-NELIM)
              ELSE
@@ -10332,6 +10271,7 @@ C
                 IF (ZMUMPS_170(STEP(INODE),
      $               PROCNODE,SLAVEF))THEN
                    TAB1(II)=M_TOTAL(STEP(SON(II)))-SIZECB
+     $                  -FACT(STEP(SON(II)))
                    TAB2(II)=SIZECB
                 ELSE
                    TAB1(II)=M(STEP(SON(II)))-SIZECB
@@ -10373,7 +10313,7 @@ C
                   GOTO 153
                ENDIF
                NELIM=NELIM4
-               IF((SYM.EQ.0).OR.(XSIZE.LT.3))THEN
+               IF((SYM.EQ.0).OR.(K215.NE.0))THEN
                   SIZECB=(ND(STEP(TEMP(II)))-NELIM)*
      $                 (ND(STEP(TEMP(II)))-NELIM)
                ELSE
@@ -10395,7 +10335,7 @@ C
                    GOTO 187
                 ENDIF    
                 NELIM=NELIM4   
-                IF((SYM.EQ.0).OR.(XSIZE.LT.3))THEN
+                IF((SYM.EQ.0).OR.(K215.NE.0))THEN
                    SIZECB=(ND(STEP(TEMP(II)))-NELIM)*
      $                  (ND(STEP(TEMP(II)))-NELIM)
                 ELSE
@@ -10430,7 +10370,7 @@ C
                  ENDIF    
                  NELIM=NELIM4   
                  NFR=ND(STEP(TAB(I)))
-                 IF((SYM.EQ.0).OR.(XSIZE.LT.3))THEN
+                 IF((SYM.EQ.0).OR.(K215.NE.0))THEN
                     SIZECB=(NFR-NELIM)*(NFR-NELIM)
                  ELSE
                     SIZECB=(NFR-NELIM)*(NFR-NELIM+1)/2
@@ -10450,7 +10390,7 @@ C
                     FACT_SIZE=FACT_SIZE+fact(STEP(TAB(I)))
                  ENDIF
               ENDDO
-              IF((SYM.EQ.0).OR.(XSIZE.LT.3))THEN
+              IF((SYM.EQ.0).OR.(K215.NE.0))THEN
                  SIZECB=NCB*NCB
               ELSE
                  SIZECB=NCB*(NCB+1)/2
@@ -10579,9 +10519,9 @@ C
               IN = FILS(IN)
               IF (IN .GT. 0 ) GOTO 396
               NELIM=NELIM4
-              IF((SYM.EQ.0).OR.(XSIZE.EQ.0))THEN
+              IF((SYM.EQ.0).OR.(K215.NE.0))THEN
                  SIZECB=(NFR-NELIM)*(NFR-NELIM)
-              ELSEIF(XSIZE.EQ.3)THEN
+              ELSE
                  SIZECB=(NFR-NELIM)*(NFR-NELIM+1)/2
               ENDIF
               NFR4=NFR
@@ -10739,6 +10679,7 @@ C
            PEAK=MAX(PEAK,DBLE(M(STEP(NA(2+NBLEAF+I)))))
            FACT_SIZE=FACT_SIZE+FACT(STEP(NA(2+NBLEAF+I)))
         ENDDO
+ 5483   CONTINUE
         DEALLOCATE(IPOOL)
         DEALLOCATE(M)
         DEALLOCATE(fact)

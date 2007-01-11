@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.3
-# This Version was built on Thu Jun 22 13:22:44 2006
+# This file is part of MUMPS VERSION 4.6.4
+# This Version was built on Thu Jan 11 13:32:35 2007
 #
 #
 #Begin orderings
@@ -41,26 +41,24 @@ IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
 ########################################################################
 ################################################################################
 
-PLAT    =
 RM      = /bin/rm -f
-CC      = cc
-FC = pgf90
-FL = pgf90
+CC      = gcc
+FC = g95
+FL = g95
 AR = ar vr
 RANLIB  = echo
 #RANLIB = ranlib 
 
-SCALAP  = -L/usr/local/lib -lscalapack -lpblas -ltools -lblacs_MPI -lblacsF77init_MPI -lblacs_MPI
-INCPAR = -I/usr/lib/mpich-gm-pgi-1.2-1..8/include
-LIBPAR = $(SCALAP)  -L/usr/lib/mpich-gm-pgi-1.2-1..8/lib -lmpichf -lmpich -L/usr/local/gm-1.4/lib -lgm
+SCALAP  = /home/afevre/LIBS_MUMPS_PAR/SCALAPACK/libscalapack.a /home/afevre/LIBS_MUMPS_PAR/BLACS/LIB/blacsCinit_MPI-LINUX-0.a /home/afevre/LIBS_MUMPS_PAR/BLACS/LIB/blacsF77init_MPI-LINUX-0.a /home/afevre/LIBS_MUMPS_PAR/BLACS/LIB/blacs_MPI-LINUX-0.a 
+#INCPAR = -I/home/afevre/LIBS_MUMPS_PAR/mpich-1.2.7p1/include
+#LIBPAR = $(SCALAP)  -L/home/afevre/LIBS_MUMPS_PAR/mpich-1.2.7p1/lib -lfmpich -lmpich
 
 INCSEQ = -I../libseq
 LIBSEQ  =  -L../libseq -lmpiseq
 
-LIBBLAS = -lf77blas -latlas -lg2c
-LIBOTHERS = -lpthread
+LIBBLAS =/home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libcblas.a /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libatlas.a /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libcblas.a -lpthread -lg2c
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS   = -DAdd_
+CDEFS   = -DAdd__
 
 #Begin Optimization options
 OPTF   = -O -DALLOW_NON_INIT
@@ -70,6 +68,8 @@ OPTC   = -O -DMAIN_COMP
 
  
 
+INC= $(INCSEQ)
+LIB= $(LIBSEQ)
 INC = $(INCPAR)
 LIB = $(LIBPAR)
 LIBSEQNEEDED =

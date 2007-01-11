@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.3
-   This Version was built on Thu Jun 22 13:22:44 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.4
+   This Version was built on Thu Jan 11 13:32:35 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -30,7 +30,7 @@
   package. You shall use reasonable endeavours to notify
   the authors of the package of this publication.
 
-   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
    Multifrontal parallel distributed symmetric and unsymmetric solvers,
    in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 
@@ -44,26 +44,27 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: cmumps_c.c,v 1.26 2006/06/15 15:12:05 jylexcel Exp $ */
+/* $Id: cmumps_c.c,v 1.29 2007/01/02 17:02:50 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
-#include "cmumps_c.h"
 #include <stdio.h>
 #include <string.h>
 
+#include "cmumps_c.h"
+
 /* Special case of mapping and nullspace -- allocated from MUMPS */
-static F_INT * mapping;
-static F_DOUBLE * nullspace;
+static CMUMPS_INT * mapping;
+static CMUMPS_DOUBLE * nullspace;
 /* as uns_perm and sym_perm */
-static F_INT *sym_perm;
-static F_INT *uns_perm;
+static CMUMPS_INT *sym_perm;
+static CMUMPS_INT *uns_perm;
 
 #ifdef return_scaling
 /*
  * Those two are static. They are passed inside cmumps_f77 but
  * might also be changed on return by cmumps_affect_colsca/rowsca
  */
-static F_DOUBLE * colsca_static;
-static F_DOUBLE * rowsca_static;
+static CMUMPS_DOUBLE * colsca_static;
+static CMUMPS_DOUBLE * rowsca_static;
 #endif
 
 void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
@@ -72,46 +73,46 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
      * The following local variables will 
      *  be passed to the F77 interface.
      */
-    F_INT *icntl;
-    F_DOUBLE2 *cntl;
-    F_INT *irn; F_INT *jcn; F_DOUBLE *a;
-    F_INT *irn_loc; F_INT *jcn_loc; F_DOUBLE *a_loc;
-    F_INT *eltptr, *eltvar; F_DOUBLE *a_elt;
-    F_INT *perm_in; F_INT perm_in_avail;
-    F_INT *listvar_schur; F_INT listvar_schur_avail;
-    F_DOUBLE *schur; F_INT schur_avail;
-    F_DOUBLE *rhs; F_DOUBLE *colsca; F_DOUBLE *rowsca;
-    F_DOUBLE *rhs_sparse, *sol_loc;
-    F_INT *irhs_sparse, *irhs_ptr, *isol_loc;
+    CMUMPS_INT *icntl;
+    CMUMPS_DOUBLE2 *cntl;
+    CMUMPS_INT *irn; CMUMPS_INT *jcn; CMUMPS_DOUBLE *a;
+    CMUMPS_INT *irn_loc; CMUMPS_INT *jcn_loc; CMUMPS_DOUBLE *a_loc;
+    CMUMPS_INT *eltptr, *eltvar; CMUMPS_DOUBLE *a_elt;
+    CMUMPS_INT *perm_in; CMUMPS_INT perm_in_avail;
+    CMUMPS_INT *listvar_schur; CMUMPS_INT listvar_schur_avail;
+    CMUMPS_DOUBLE *schur; CMUMPS_INT schur_avail;
+    CMUMPS_DOUBLE *rhs; CMUMPS_DOUBLE *colsca; CMUMPS_DOUBLE *rowsca;
+    CMUMPS_DOUBLE *rhs_sparse, *sol_loc;
+    CMUMPS_INT *irhs_sparse, *irhs_ptr, *isol_loc;
 
-    F_INT irn_avail, jcn_avail, a_avail, rhs_avail; /* These are actually used
+    CMUMPS_INT irn_avail, jcn_avail, a_avail, rhs_avail; /* These are actually used
                                                      * as booleans, but we stick
                                                      * to simple types for the
                                                      * C-F77 interface */
-    F_INT irn_loc_avail, jcn_loc_avail, a_loc_avail;
-    F_INT eltptr_avail, eltvar_avail, a_elt_avail;
-    F_INT colsca_avail, rowsca_avail;
+    CMUMPS_INT irn_loc_avail, jcn_loc_avail, a_loc_avail;
+    CMUMPS_INT eltptr_avail, eltvar_avail, a_elt_avail;
+    CMUMPS_INT colsca_avail, rowsca_avail;
 
-    F_INT irhs_ptr_avail, rhs_sparse_avail, sol_loc_avail;
-    F_INT irhs_sparse_avail, isol_loc_avail;
+    CMUMPS_INT irhs_ptr_avail, rhs_sparse_avail, sol_loc_avail;
+    CMUMPS_INT irhs_sparse_avail, isol_loc_avail;
 
-    F_INT *info; F_INT *infog;
-    F_DOUBLE2 *rinfo; F_DOUBLE2 *rinfog;
+    CMUMPS_INT *info; CMUMPS_INT *infog;
+    CMUMPS_DOUBLE2 *rinfo; CMUMPS_DOUBLE2 *rinfog;
 
-    F_INT ooc_tmpdir[150]; F_INT ooc_prefix[150];
+    CMUMPS_INT ooc_tmpdir[150]; CMUMPS_INT ooc_prefix[150];
 
     /* Other local variables */
 
-    F_INT idummy; F_INT *idummyp;
-    F_DOUBLE rdummy; F_DOUBLE *rdummyp;
+    CMUMPS_INT idummy; CMUMPS_INT *idummyp;
+    CMUMPS_DOUBLE rdummy; CMUMPS_DOUBLE *rdummyp;
 
     /* String lengths to be passed to Fortran by address */
     int ooc_tmpdirlen;
     int ooc_prefixlen;
     int i;
 
-    const static F_INT no = 0;
-    const static F_INT yes = 1;
+    const static CMUMPS_INT no = 0;
+    const static CMUMPS_INT yes = 1;
 
     idummyp = &idummy;
     rdummyp = &rdummy;
@@ -139,8 +140,19 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
  cmumps_par->schur_mloc=0; cmumps_par->schur_nloc=0; cmumps_par->schur_lld=0; cmumps_par->mblock=0; cmumps_par->nblock=0; cmumps_par->nprow=0; cmumps_par->npcol=0;
       }
 
-     ooc_tmpdirlen=strlen(cmumps_par->ooc_tmpdir);
-     ooc_prefixlen=strlen(cmumps_par->ooc_prefix);
+     ooc_tmpdirlen=(int)strlen(cmumps_par->ooc_tmpdir);
+     ooc_prefixlen=(int)strlen(cmumps_par->ooc_prefix);
+    /* Avoid the use of strnlen which may not be
+     * available on all systems. Allow strings without
+     * \0 at the end, if the file is not found, the
+     * Fortran layer is responsible for raising an
+     * error.  */
+    if(ooc_tmpdirlen > 150){
+        ooc_tmpdirlen=150;
+      }
+    if(ooc_prefixlen > 150){
+        ooc_prefixlen=150;
+      }
 
     /*
      * Extract info from the C structure to call the F77 interface. The
@@ -201,8 +213,10 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
     infog = cmumps_par->infog;
     rinfo = cmumps_par->rinfo;
     rinfog = cmumps_par->rinfog;
-    for(i=0;i<110;i++){
+    for(i=0;i<ooc_tmpdirlen;i++){
       ooc_tmpdir[i]=(int)cmumps_par->ooc_tmpdir[i];
+    }
+    for(i=0;i<ooc_prefixlen;i++){
       ooc_prefix[i]=(int)cmumps_par->ooc_prefix[i];
     }
 
@@ -255,7 +269,7 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
 #endif
 }
 
-void MUMPS_CALL cmumps_affect_mapping_(F_INT * f77mapping)
+void MUMPS_CALL cmumps_affect_mapping_(CMUMPS_INT * f77mapping)
 {
   mapping = f77mapping;
 }
@@ -264,7 +278,7 @@ void MUMPS_CALL cmumps_nullify_c_mapping_()
   mapping = 0;
 }
 
-void MUMPS_CALL cmumps_affect_nullspace_(F_DOUBLE * f77nullspace)
+void MUMPS_CALL cmumps_affect_nullspace_(CMUMPS_DOUBLE * f77nullspace)
 {
   nullspace = f77nullspace;
 }
@@ -273,7 +287,7 @@ void MUMPS_CALL cmumps_nullify_c_nullspace_()
   nullspace = 0;
 }
 
-void MUMPS_CALL cmumps_affect_sym_perm_(F_INT * f77sym_perm)
+void MUMPS_CALL cmumps_affect_sym_perm_(CMUMPS_INT * f77sym_perm)
 {
   sym_perm = f77sym_perm;
 }
@@ -282,7 +296,7 @@ void MUMPS_CALL cmumps_nullify_c_sym_perm_()
   sym_perm = 0;
 }
 
-void MUMPS_CALL cmumps_affect_uns_perm_(F_INT * f77uns_perm)
+void MUMPS_CALL cmumps_affect_uns_perm_(CMUMPS_INT * f77uns_perm)
 {
   uns_perm = f77uns_perm;
 }
@@ -292,7 +306,7 @@ void MUMPS_CALL cmumps_nullify_c_uns_perm_()
 }
 
 #ifdef return_scaling
-void MUMPS_CALL cmumps_affect_colsca_(F_DOUBLE * f77colsca)
+void MUMPS_CALL cmumps_affect_colsca_(CMUMPS_DOUBLE * f77colsca)
 {
   colsca_static = f77colsca;
 }
@@ -300,7 +314,7 @@ void MUMPS_CALL cmumps_nullify_c_colsca_()
 {
   colsca_static = 0;
 }
-void MUMPS_CALL cmumps_affect_rowsca_(F_DOUBLE * f77rowsca)
+void MUMPS_CALL cmumps_affect_rowsca_(CMUMPS_DOUBLE * f77rowsca)
 {
   rowsca_static = f77rowsca;
 }

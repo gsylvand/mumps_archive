@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.3
-   This Version was built on Thu Jun 22 13:22:44 2006
+   THIS FILE IS PART OF MUMPS VERSION 4.6.4
+   This Version was built on Thu Jan 11 13:32:35 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -30,7 +30,7 @@
   package. You shall use reasonable endeavours to notify
   the authors of the package of this publication.
 
-   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
    Multifrontal parallel distributed symmetric and unsymmetric solvers,
    in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 
@@ -44,12 +44,13 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io_err.c,v 1.7 2006/06/15 15:06:24 jylexcel Exp $  */
+/*    $Id: zmumps_io_err.c,v 1.9 2006/07/21 16:02:25 aguermou Exp $  */
 
 #include "zmumps_io_err_var.h"
 #include "zmumps_io_basic_extern.h"
 
-#ifndef _WIN32  
+  
+#if ! defined (_WIN32) && ! defined (WITHOUT_PTHREAD)
 
 int zmumps_io_protect_err(){
   if(zmumps_io_flag_async==IO_ASYNC_TH){
@@ -77,28 +78,28 @@ int zmumps_check_error_th(){
   return err_flag;
 }
 
-#endif /*_WIN32*/
+#endif /* _WIN32 && WITHOUT_PTHREAD */
 
 int zmumps_io_prop_err_info(int ierr){
   /* Copies the error description string in a fortran character
      array. */
   int i;
-  for(i=0;i<strlen(error_str);i++){
+  for(i=0;i<(int)strlen(error_str);i++){
     zmumps_err[i]=error_str[i];
   }
-  *dim_mumps_err=strlen(zmumps_err);
+  *dim_mumps_err=(int)strlen(zmumps_err);
   return 0;
 }
 
 int zmumps_io_build_err_str(int errnum, int zmumps_err,const char* desc,char* buf,int size){
-#ifndef _WIN32
+#if ! defined (_WIN32) && ! defined (WITHOUT_PTHREAD)
   zmumps_io_protect_err();
 #endif
   if(err_flag==0){
     sprintf(buf,"%s: %s",desc,strerror(errnum));
     err_flag=zmumps_err;
   }
-#ifndef _WIN32  
+#if ! defined (_WIN32) && ! defined (WITHOUT_PTHREAD)  
   zmumps_io_unprotect_err();
 #endif
   return 0;

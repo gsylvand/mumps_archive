@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.3
-C   This Version was built on Thu Jun 22 13:22:44 2006
+C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
+C   This Version was built on Thu Jan 11 13:32:35 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -29,7 +29,7 @@ C  in any scientific publication dependent upon the use of the
 C  package. You shall use reasonable endeavours to notify
 C  the authors of the package of this publication.
 C
-C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+C   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
 C   Multifrontal parallel distributed symmetric and unsymmetric solvers,
 C   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 C
@@ -1036,6 +1036,7 @@ C
             endif
             total_nmb_cand=max(total_nmb_cand,1)
             total_nmb_cand=min(total_nmb_cand,cv_slavef-1)
+            total_nmb_cand=min(total_nmb_cand,ncb)
             cv_layer_p2node(layernmb)%t2_cand(j,cv_slavef+1)
      *                                 = total_nmb_cand
             if(cv_keep(50).eq.0) then
@@ -2305,8 +2306,8 @@ C
          write(*,*) cv_maxnodenmb,
      *        ' INITPART2 nodes found in the upper part'
 #endif
-         cv_maxcut = (cv_keep(82)-1)*cv_maxnodenmb
-         cv_maxnsteps = cv_maxnsteps+cv_maxcut
+         cv_maxcut = min((cv_keep(82)-1)*cv_maxnodenmb,cv_n)
+         cv_maxnsteps = min(cv_maxnsteps+cv_maxcut,cv_n)
          cv_maxnodenmb = cv_maxnsteps
       endif
       nullify(cv_layer_p2node)

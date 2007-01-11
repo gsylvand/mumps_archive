@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF DMUMPS VERSION 4.6.3
-!   This Version was built on Thu Jun 22 13:22:44 2006
+!   THIS FILE IS PART OF DMUMPS VERSION 4.6.4
+!   This Version was built on Thu Jan 11 13:32:35 2007
 !
 !
 !  This version of DMUMPS is provided to you free of charge. It is public
@@ -29,7 +29,7 @@
 !  package. You shall use reasonable endeavours to notify
 !  the authors of the package of this publication.
 !
-!   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+!   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
 !   Multifrontal parallel distributed symmetric and unsymmetric solvers,
 !   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 !

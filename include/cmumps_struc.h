@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF CMUMPS VERSION 4.6.3
-!   This Version was built on Thu Jun 22 13:22:44 2006
+!   THIS FILE IS PART OF CMUMPS VERSION 4.6.4
+!   This Version was built on Thu Jan 11 13:32:35 2007
 !
 !
 !  This version of CMUMPS is provided to you free of charge. It is public
@@ -29,7 +29,7 @@
 !  package. You shall use reasonable endeavours to notify
 !  the authors of the package of this publication.
 !
-!   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent (1998),
+!   [1] P. R. Amestoy, I. S. Duff and  J.-Y. L'Excellent,
 !   Multifrontal parallel distributed symmetric and unsymmetric solvers,
 !   in Comput. Methods in Appl. Mech. Eng., 184,  501-520 (2000).
 !
@@ -42,7 +42,7 @@
 !   S. Pralet, Hybrid scheduling for the parallel solution of linear
 !   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 !
-!     $Id: cmumps_struc.h,v 1.65 2006/06/10 17:43:54 jylexcel Exp $
+!     $Id: cmumps_struc.h,v 1.68 2006/11/16 09:10:12 jylexcel Exp $
       INCLUDE 'cmumps_root.h'
       TYPE CMUMPS_STRUC
         SEQUENCE
@@ -214,6 +214,7 @@
          INTEGER, DIMENSION(:),   POINTER :: ISTEP_TO_INIV2
          INTEGER, DIMENSION(:),   POINTER :: FUTURE_NIV2
          INTEGER, DIMENSION(:,:), POINTER :: TAB_POS_IN_PERE 
+	 LOGICAL, DIMENSION(:), POINTER :: I_AM_CAND
 !        For heterogeneous architecture
          INTEGER, DIMENSION(:), POINTER :: MEM_DIST
 !        To save the matrix in a simple format
@@ -245,13 +246,11 @@
          INTEGER OOC_NB_FILES
          CHARACTER,DIMENSION(:,:), POINTER :: OOC_FILE_NAMES  
          INTEGER,DIMENSION(:), POINTER :: OOC_FILE_NAME_LENGTH
-!    Other internal data
-         LOGICAL PB_ALLOC_ON_EXIT
 !    Indices of nul pivots
          INTEGER,DIMENSION(:), POINTER :: PIVNUL_LIST
 !    Internal control array
          REAL DKEEP(30)
-C    Array needed to manage additionnal candidate processor 
-C    when using -DNEW_MAPPING
+!    Array needed to manage additionnal candidate processor 
+!    when using -DNEW_MAPPING
          INTEGER, DIMENSION(:,:), POINTER :: SUP_PROC
       END TYPE CMUMPS_STRUC

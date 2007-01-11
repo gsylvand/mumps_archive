@@ -61,6 +61,10 @@ of the MUMPS user's guide
       within the interface: id.ICNTL(19) which controls the Schur 
       complement option and id.ICNTL(20) which controls the 
       format of the right-hand side.
+      Note that parameters id.ICNTL(1:4) may not work properly
+      depending on your compiler and your environment. In case of
+      problem, we recommand to swith printing off by setting
+      id.ICNL(1:4)=-1.
   </li>
       <li>
         <tt>

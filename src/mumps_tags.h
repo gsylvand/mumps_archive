@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -42,7 +42,7 @@ C   [3] P. R. Amestoy and A. Guermouche and J.-Y. L'Excellent and
 C   S. Pralet, Hybrid scheduling for the parallel solution of linear
 C   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 C
-C     $Id: mumps_tags.h,v 1.5 2006/05/18 14:55:10 spralet Exp $
+C     $Id: mumps_tags.h,v 1.6 2007/03/23 15:39:09 jylexcel Exp $
 C -----------------------------------------
 C  This file contains the definition
 C  of all tags.
@@ -109,11 +109,15 @@ C -----------------------------------------
       INTEGER RACINE_SOLVE,
      *        ContVec,
      *        Master2Slave,
-     *        GatherSol
+     *        GatherSol,
+     *        ScatterRhsI,
+     *        ScatterRhsR
       PARAMETER( RACINE_SOLVE = 10,
      *           ContVec      = 11,
      *           Master2Slave = 12,
-     *           GatherSol    = 13)
+     *           GatherSol    = 13,
+     *           ScatterRhsI  = 54,
+     *           ScatterRhsR  = 55)
 
 C -----------------------------------------
 C   Tags for backsolve

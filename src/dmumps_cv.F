@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -1315,7 +1315,7 @@ C
          return
       endif
       if ((cv_frere(inode).eq.0).AND.
-     *     ((cv_keep(60).ne.0).OR.(cv_keep(19).le.0))) then
+     *     ((cv_keep(60).ne.0).OR.(cv_keep(53).le.0))) then
          doit=.FALSE.
          istat = 0
          return
@@ -1461,7 +1461,7 @@ C
       integer,intent(out),OPTIONAL::k2
       integer in,nfr_ifather,npiv_ifather,npiv2,nfront2,npiv_son2
       integer npropmap,j,ncb,kmax,keep48_loc,nslaves_max,
-     *     nslaves_estim,strat,kk
+     *     nslaves_estim,kk
       DOUBLE PRECISION mem_master
       doit=.FALSE.
       if(present(npiv)) npiv=cv_invalid
@@ -1485,7 +1485,7 @@ C
          return
       endif
       if ((cv_frere(inode).eq.0).AND.
-     *     ((cv_keep(60).ne.0).OR.(cv_keep(19).le.0))) then
+     *     ((cv_keep(60).ne.0).OR.(cv_keep(53).le.0))) then
          doit=.FALSE.
          istat = 0
          return
@@ -3877,7 +3877,7 @@ C
       if (cv_keep(60).eq.2 .or. cv_keep(60).eq.3 ) then
         cv_nodetype(cv_keep(38))=3
       else
-       if((cv_slavef.eq.1).OR.(cv_icntl(13).NE.0).OR.
+       if((cv_slavef.eq.1).OR.(cv_icntl(13).GT.0).OR.
      $     (cv_keep(60).ne.0)) then
          cv_keep(38) = 0
        else
@@ -3904,7 +3904,7 @@ C
          else if(cv_nodelayer(cv_iroottree).eq.0) then
             cv_keep(38)=0
          else if((cv_sizeroot.gt.cv_keep(37))
-#ifndef try_null_space_not_tested
+#ifndef null_space_not_tested
      *           .and. (cv_keep(53).eq.0)  
 #endif
      *           ) then
@@ -4116,7 +4116,7 @@ C
       if(cv_frere(inode).eq.cv_n+1) return
       doit=.TRUE.
       if ((cv_frere(inode).eq.0).AND.
-     *     ((cv_keep(60).ne.0).OR.(cv_keep(19).le.0))) doit=.FALSE.
+     *     ((cv_keep(60).ne.0).OR.(cv_keep(53).le.0))) doit=.FALSE.
       if(cv_nodetype(inode).eq.3) doit=.FALSE.
       nfront2=cv_nfsiz(inode)
       in=inode

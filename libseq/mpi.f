@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -71,6 +71,44 @@ C******************************************************************
         CALL MUMPS_COPY_2INTEGER( SENDBUF, RECVBUF, COUNT )
       ELSE
         WRITE(*,*) 'ERROR in MPI_GATHER=',DATATYPE
+        STOP
+      END IF
+      IERR = 0
+      RETURN
+      END
+C***********************************************************************
+      SUBROUTINE MPI_GATHERV( SENDBUF, COUNT, 
+     *         DATATYPE, RECVBUF, RECCOUNT, DISPLS, RECTYPE,
+     *         ROOT, COMM, IERR )
+      IMPLICIT NONE
+      INCLUDE 'mpif.h'
+      INTEGER COUNT, DATATYPE, RECTYPE,
+     *        ROOT, COMM, IERR
+      INTEGER RECCOUNT( * )
+      INTEGER SENDBUF( * ), RECVBUF( * )
+      INTEGER DISPLS( * )
+C
+C     Note that DISPLS is ignored in this version. One may
+C     want to copy in reception buffer with a shift DISPLS(1).
+C     This requires passing the offset DISPLS(1) to
+C     "MUMPS_COPY_DATATYPE" routines.
+C
+      IF ( DATATYPE .EQ. MPI_INTEGER ) THEN
+        CALL MUMPS_COPY_INTEGER( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_REAL ) THEN
+        CALL MUMPS_COPY_REAL( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_DOUBLE_PRECISION ) THEN
+        CALL MUMPS_COPY_DOUBLE_PRECISION( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_COMPLEX ) THEN
+        CALL MUMPS_COPY_COMPLEX( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_DOUBLE_COMPLEX ) THEN
+        CALL MUMPS_COPY_DOUBLE_COMPLEX( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_2DOUBLE_PRECISION) THEN
+        CALL MUMPS_COPY_2DOUBLE_PRECISION( SENDBUF, RECVBUF, COUNT )
+      ELSE IF ( DATATYPE .EQ. MPI_2INTEGER) THEN
+        CALL MUMPS_COPY_2INTEGER( SENDBUF, RECVBUF, COUNT )
+      ELSE
+        WRITE(*,*) 'ERROR in MPI_GATHERV=',DATATYPE
         STOP
       END IF
       IERR = 0

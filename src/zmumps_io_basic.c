@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-   This Version was built on Thu Jan 11 13:32:35 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7
+   This Version was built on Thu Apr 12 09:40:03 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -15,7 +15,7 @@
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
   Up-to-date copies of the MUMPS package can be obtained
-  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+  from the Web pages http://mumps.enseeiht.fr/
   or http://graal.ens-lyon.fr/MUMPS
 
 
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/*    $Id: zmumps_io_basic.c,v 1.91 2006/12/20 09:41:25 aguermou Exp $  */
+/*    $Id: zmumps_io_basic.c,v 1.92 2007/02/28 14:52:30 jylexcel Exp $  */
 
 #include "zmumps_io_basic_var.h"
 #include "zmumps_io_err_extern.h"
@@ -458,7 +458,7 @@ int zmumps_init_file_structure(int* _myid, int* total_size_io,int* size_element)
 #ifndef _WIN32
     (zmumps_files+i)->zmumps_flag_open=zmumps_flag_open|O_WRONLY;
 #else
-    strcpy((zmumps_files+i)->zmumps_flag_open,"w");
+    strcpy((zmumps_files+i)->zmumps_flag_open,"wb");
 #endif
     ierr=zmumps_io_alloc_file_struct(&nb,i);
     if(ierr<0){
@@ -637,7 +637,7 @@ int zmumps_io_init_vars(int* myid_arg, int* nb_file_arg,int* size_element,int* a
 #ifndef _WIN32
     (zmumps_files+i)->zmumps_flag_open=zmumps_flag_open|O_RDONLY;
 #else
-    strcpy((zmumps_files+i)->zmumps_flag_open,"r");
+    strcpy((zmumps_files+i)->zmumps_flag_open,"rb");
 #endif
   }
 

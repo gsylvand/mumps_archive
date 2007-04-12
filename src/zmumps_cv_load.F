@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -628,9 +628,10 @@ C
      *      - MAX( DBLE(LA) * DBLE(3) / DBLE(100),
      *      DBLE(2) * DBLE(MAX(KEEP(5),KEEP(6))) * DBLE(KEEP(127)))
          IF (KEEP(12) > 25) THEN
-           MEMORY_SENT=MEMORY_SENT - DBLE(KEEP(12))*0.2D0*DBLE(LA)
+           MEMORY_SENT = MEMORY_SENT -
+     *                   DBLE(KEEP(12))*0.2D0*DBLE(LA)/100.0D0
          ENDIF
-         TAB_MAXS(MYID)=MEMORY_SENT
+         TAB_MAXS(MYID)=INT(MEMORY_SENT)
          CALL ZMUMPS_460( WHAT,
      *        COMM_LD, NPROCS,
 #if ! defined(OLD_LOAD_MECHANISM)
@@ -739,8 +740,8 @@ C
            IF ( IERR == -1 )THEN
              CALL ZMUMPS_467(COMM_LD, KEEP)
              GOTO 111
-           ELSE IF ( IERR == -2 ) THEN
-             WRITE(*,*) "Internal Error in ZMUMPS_190"
+           ELSE IF ( IERR .NE.0 ) THEN
+             WRITE(*,*) "Internal Error in ZMUMPS_190",IERR
              CALL ZMUMPS_ABORT()
            ENDIF
          IF ( IERR .EQ. 0 ) THEN
@@ -892,9 +893,9 @@ C
             IF ( IERR == -1 )THEN
                CALL ZMUMPS_467(COMM_LD, KEEP)
                GOTO 111
-           ELSE IF ( IERR == -2 ) THEN
-               WRITE(*,*) "Internal Error in ZMUMPS_471"
-               CALL ZMUMPS_ABORT()
+           ELSE IF ( IERR .NE. 0 ) THEN
+             WRITE(*,*) "Internal Error in ZMUMPS_471",IERR
+             CALL ZMUMPS_ABORT()
            ENDIF
            IF ( IERR .EQ. 0 ) THEN
 #if ! defined(OLD_LOAD_MECHANISM)
@@ -1614,8 +1615,9 @@ C
         IF (IERR == -1 ) THEN
           CALL ZMUMPS_467(COMM_LD, KEEP)
           GOTO 112
-        ELSE IF ( IERR == -2 ) THEN
-          WRITE(*,*) "Internal Error in ZMUMPS_461"
+        ELSE IF ( IERR .NE. 0 ) THEN
+          WRITE(*,*) "Internal Error in ZMUMPS_461",
+     *    IERR
           CALL ZMUMPS_ABORT()
         ENDIF
       TAB_MAXS(MYID) = TAB_MAXS(MYID) + MAX_SURF_MASTER
@@ -1683,8 +1685,9 @@ C
         IF ( IERR == -1 ) THEN
           CALL ZMUMPS_467(COMM_LD, KEEP)
           GOTO 111
-        ELSE IF ( IERR == -2 ) THEN
-          WRITE(*,*) "Internal Error in ZMUMPS_461"
+        ELSE IF ( IERR .NE. 0 ) THEN
+          WRITE(*,*) "Internal Error in ZMUMPS_461",
+     *    IERR
           CALL ZMUMPS_ABORT()
         ENDIF
 #if ! defined(OLD_LOAD_MECHANISM)
@@ -1808,8 +1811,9 @@ C
         IF ( IERR == -1 )THEN
           CALL ZMUMPS_467(COMM_LD, KEEP)
           GOTO 111
-        ELSE IF ( IERR == -2 ) THEN
-          WRITE(*,*) "Internal Error in ZMUMPS_500"
+        ELSE IF ( IERR .NE. 0 ) THEN
+          WRITE(*,*) "Internal Error in ZMUMPS_500",
+     *    IERR
           CALL ZMUMPS_ABORT()
         ENDIF
       ENDIF
@@ -1863,9 +1867,10 @@ C
             IF ( IERR == -1 )THEN
                CALL ZMUMPS_467(COMM_LD, KEEP)
                GOTO 111
-            ELSE IF ( IERR == -2 ) THEN
+            ELSE IF ( IERR .NE. 0 ) THEN
                WRITE(*,*)
-     *              "Internal Error 1 in ZMUMPS_501"
+     *         "Internal Error 1 in ZMUMPS_501",
+     *         IERR
                CALL ZMUMPS_ABORT()
             ENDIF
          ENDIF
@@ -1890,9 +1895,10 @@ C
                IF ( IERR == -1 )THEN
                   CALL ZMUMPS_467(COMM_LD, KEEP)
                   GOTO 112
-               ELSE IF ( IERR == -2 ) THEN
+               ELSE IF ( IERR .NE. 0 ) THEN
                   WRITE(*,*)
-     *        "Internal Error 3 in ZMUMPS_501"
+     *        "Internal Error 3 in ZMUMPS_501",
+     *        IERR
                   CALL ZMUMPS_ABORT()
                ENDIF
             ENDIF
@@ -2544,6 +2550,11 @@ C
            DO I=1,PROCS(SLAVEF+1)
               WLOAD(I)=LOAD_FLOPS(PROCS(I))
               IDWLOAD(I)=PROCS(I)
+              IF (LOAD_FLOPS(IDWLOAD(I)) < -0.5D0 ) THEN
+                 WRITE(*,*)MYID,": Negative load !!",
+     $                LOAD_FLOPS(IDWLOAD(I))
+                 CALL ZMUMPS_ABORT()
+              ENDIF 
            ENDDO
            NUMBER_OF_PROCS=PROCS(SLAVEF+1)
             OTHERS=NUMBER_OF_PROCS
@@ -4519,10 +4530,6 @@ C
                        ACC=ACC+NB_ROWS(I)
                        CHOSEN=CHOSEN+1
                        IF(NCB.EQ.ACC) GOTO 889
-                       IF(NCB-ACC.LT.KMIN) THEN
-                          ADDITIONNAL_ROWS=NCB-ACC
-                          GOTO 993
-                       ENDIF
                     ENDDO
                     ADDITIONNAL_ROWS=NCB-ACC
                  ENDIF
@@ -4559,10 +4566,6 @@ C
                     ACC=ACC+NB_ROWS(I)
                     CHOSEN=CHOSEN+1
                     IF(NCB.EQ.ACC) GOTO 889
-                    IF(NCB-ACC.LT.KMIN) THEN
-                       ADDITIONNAL_ROWS=NCB-ACC
-                       GOTO 994
-                    ENDIF
                  ENDDO
                  ADDITIONNAL_ROWS=NCB-ACC
  994             CONTINUE
@@ -4782,8 +4785,9 @@ C
       IF ( IERR == -1 )THEN
          CALL ZMUMPS_467(COMM_LD, KEEP_LOAD)
          GOTO 111
-      ELSE IF ( IERR == -2 ) THEN
-         WRITE(*,*) "Internal Error in ZMUMPS_500"
+      ELSE IF ( IERR .NE. 0 ) THEN
+         WRITE(*,*) "Internal Error in ZMUMPS_500",
+     *   IERR
          CALL ZMUMPS_ABORT()
       ENDIF
       END SUBROUTINE ZMUMPS_515
@@ -4861,8 +4865,9 @@ C
       IF (IERR == -1 ) THEN
         CALL ZMUMPS_467(COMM, KEEP)
         GOTO 111
-      ELSE IF ( IERR == -2 ) THEN
-        WRITE(*,*) "Internal Error in ZMUMPS_461"
+      ELSE IF ( IERR .NE. 0 ) THEN
+        WRITE(*,*) "Internal Error in ZMUMPS_461",
+     *  IERR
         CALL ZMUMPS_ABORT()
       ENDIF 
  666  CONTINUE
@@ -5114,8 +5119,9 @@ C
       IF ( IERR == -1 ) THEN
           CALL ZMUMPS_467(COMM_LD, KEEP)
           GOTO 111
-      ELSE IF ( IERR == -2 ) THEN
-         WRITE(*,*) "Internal Error in ZMUMPS_533"
+      ELSE IF ( IERR .NE. 0 ) THEN
+         WRITE(*,*) "Internal Error in ZMUMPS_533",
+     *   IERR
          CALL ZMUMPS_ABORT()
       ENDIF
 #if ! defined(OLD_LOAD_MECHANISM)

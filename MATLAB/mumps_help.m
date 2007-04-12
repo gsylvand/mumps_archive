@@ -20,9 +20,13 @@
 %
 % - id.VAR\_SCHUR: corresponds to the list of variables that appear in the Schur complement matrix (see Section ``Input and output parameters'' of the MUMPS user's guide for more details).
 %
+% - id.REDRHS(input parameter only if id.VAR\_SCHUR was provided during the factorization and if ICNTL(26)=2 on entry to the solve phase): partial solution on the variables corresponding to the Schur complement. It is provided by the user and normally results from both the Schur complement and the reduced right-hand side that were returned by MUMPS in a previous call. When ICNTL(26)=2, MUMPS uses this information to build the solution id.SOL on the complete problem. See Section ``Schur complement'' of the MUMPS user's guide for more details.
+%
 %--------------- Output Parameters ---------------
 %
 % - id.SCHUR: if id.VAR\_SCHUR is provided of size SIZE\_SCHUR, then id.SCHUR corresponds to a dense array of size (SIZE\_SCHUR,SIZE\_SCHUR) that holds the Schur complement matrix (see Section ``Input and output parameters'' of the MUMPS user's guide for more details). The user does not have to initialize it.
+%
+% - id.REDRHS(output parameter only if ICNTL(26)=1 and id.VAR\_SCHUR was defined): Reduced right-hand side (or condensed right-hand side on the variables associated to the Schur complement). It is computed by MUMPS during the solve stage if ICNTL(26)=1. It can then be used outside MUMPS, together with the Schur complement, to build a solution on the interface. See Section ``Schur complement'' of the MUMPS user's guide for more details.
 %
 % - id.INFOG and id.RINFOG: information parameters (see Section ``Information parameters'' of the MUMPS user's guide ).
 %

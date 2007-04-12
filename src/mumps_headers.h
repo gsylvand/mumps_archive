@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -58,10 +58,14 @@ C             C_FINI (no more contribution need be received)
 C
       INTEGER XXI, XXR, XXS, XXN, XXP, XSIZE
       PARAMETER(XXI=0,XXR=1,XXS=2,XXN=3,XXP=4,XSIZE=5)
+C     ------------------------
 C     Compressed CB of level 1
+C     ------------------------
       INTEGER S_CB1COMP
       PARAMETER (S_CB1COMP=314)
+C     ----------------------
 C     State of type 2 strips
+C     ----------------------
       INTEGER S_ACTIVE, S_ALL, S_NOLCBCONTIG,
      *        S_NOLCBNOCONTIG, S_NOLCLEANED,
      *        S_NOLCBNOCONTIG38, S_NOLCBCONTIG38,
@@ -71,9 +75,9 @@ C     State of type 2 strips
      *          S_NOLCBNOCONTIG38=405, S_NOLCBCONTIG38=406,
      *          S_NOLCLEANED38=407,C_FINI=1)
 C     (note: S_NOLCBNOCONTIG38 corresponds to nodes
-C            that can currently not be compacted because
-C            the parent is the root. They should be compacted
-C            later, keeping just the non eliminated variables)
+C            that only have NELIMxNBROW significant
+C            entries and that can be compacted accordingly)
+C
 C     Free : the record can be compressed/removed
       INTEGER S_FREE, S_NOTFREE
       PARAMETER(S_FREE=54321,S_NOTFREE=-123456)
@@ -81,6 +85,18 @@ C
 C
       INTEGER TOP_OF_STACK
       PARAMETER(TOP_OF_STACK=-999999)
+C
+C     -----------------------
+C     XTRA_SLAVES_SYM: extra dummy slaves added
+C     for strips in the symmetric case to hold:
+C       - counter of BLFAC_SLAVE messages received
+C       - NFRONT
+C       - information about recursivity and reception
+C         of ROOT2SON during recursivity
+C         and strip cannot be freed yet.
+      INTEGER XTRA_SLAVES_SYM, S_ROOT2SON_CALLED
+      PARAMETER(XTRA_SLAVES_SYM=3, S_ROOT2SON_CALLED=-341)
+
 C
 C FIXME, later:
 C   New state: S_ONDISK ? Maybe not.

@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.4
-# This Version was built on Thu Jan 11 13:32:35 2007
+# This file is part of MUMPS VERSION 4.7
+# This Version was built on Thu Apr 12 09:40:03 2007
 #
 #
 #Begin orderings
@@ -41,10 +41,11 @@ IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
 ########################################################################
 ################################################################################
 
+PLAT    =
 RM      = /bin/rm -f
-CC      = gcc
-FC = g95
-FL = g95
+CC      = cc
+FC = pgf90
+FL = pgf90
 AR = ar vr
 RANLIB  = echo
 #RANLIB = ranlib 
@@ -53,9 +54,10 @@ RANLIB  = echo
 INCSEQ = -I../libseq
 LIBSEQ  =  -L../libseq -lmpiseq
 
-LIBBLAS =/home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libcblas.a /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libatlas.a /home/afevre/LIBS_MUMPS_PAR/ATLAS/lib/Linux_P4SSE2/libcblas.a -lpthread -lg2c
+LIBBLAS = -lf77blas -latlas -lg2c
+LIBOTHERS = -lpthread
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS   = -DAdd__
+CDEFS   = -DAdd_
 
 #Begin Optimization options
 OPTF   = -O -DALLOW_NON_INIT
@@ -65,8 +67,6 @@ OPTC   = -O -DMAIN_COMP
 
  
 
-INC= $(INCSEQ)
-LIB= $(LIBSEQ)
 INC = $(INCSEQ)
 LIB = $(LIBSEQ)
 LIBSEQNEEDED = libseqneeded

@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-   This Version was built on Thu Jan 11 13:32:35 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7
+   This Version was built on Thu Apr 12 09:40:03 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -15,7 +15,7 @@
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
   Up-to-date copies of the MUMPS package can be obtained
-  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+  from the Web pages http://mumps.enseeiht.fr/
   or http://graal.ens-lyon.fr/MUMPS
 
 
@@ -44,16 +44,16 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: smumps_c.c,v 1.29 2007/01/02 17:02:50 jylexcel Exp $ */
+/* $Id: smumps_c.c,v 1.33 2007/04/04 14:10:31 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
 #include <stdio.h>
 #include <string.h>
 
 #include "smumps_c.h"
 
-/* Special case of mapping and nullspace -- allocated from MUMPS */
+/* Special case of mapping and pivnul_list -- allocated from MUMPS */
 static SMUMPS_INT * mapping;
-static SMUMPS_DOUBLE * nullspace;
+static SMUMPS_INT * pivnul_list;
 /* as uns_perm and sym_perm */
 static SMUMPS_INT *sym_perm;
 static SMUMPS_INT *uns_perm;
@@ -81,14 +81,16 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     SMUMPS_INT *perm_in; SMUMPS_INT perm_in_avail;
     SMUMPS_INT *listvar_schur; SMUMPS_INT listvar_schur_avail;
     SMUMPS_DOUBLE *schur; SMUMPS_INT schur_avail;
-    SMUMPS_DOUBLE *rhs; SMUMPS_DOUBLE *colsca; SMUMPS_DOUBLE *rowsca;
+    SMUMPS_DOUBLE *rhs; SMUMPS_DOUBLE *redrhs;
+    SMUMPS_DOUBLE *colsca; SMUMPS_DOUBLE *rowsca;
     SMUMPS_DOUBLE *rhs_sparse, *sol_loc;
     SMUMPS_INT *irhs_sparse, *irhs_ptr, *isol_loc;
 
-    SMUMPS_INT irn_avail, jcn_avail, a_avail, rhs_avail; /* These are actually used
-                                                     * as booleans, but we stick
-                                                     * to simple types for the
-                                                     * C-F77 interface */
+    SMUMPS_INT irn_avail, jcn_avail, a_avail, rhs_avail, redrhs_avail;
+    /* These are actually used
+     * as booleans, but we stick
+     * to simple types for the
+     * C-F77 interface */
     SMUMPS_INT irn_loc_avail, jcn_loc_avail, a_loc_avail;
     SMUMPS_INT eltptr_avail, eltvar_avail, a_elt_avail;
     SMUMPS_INT colsca_avail, rowsca_avail;
@@ -129,14 +131,16 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     if ( smumps_par->job == -1 )
       { /* job = -1: we just reset all pointers to 0 */
         smumps_par->irn=0; smumps_par->jcn=0; smumps_par->a=0; smumps_par->rhs=0;
-        smumps_par->eltptr=0; smumps_par->eltvar=0; smumps_par->a_elt=0; smumps_par->perm_in=0; smumps_par->sym_perm=0; smumps_par->uns_perm=0; smumps_par->irn_loc=0;smumps_par->jcn_loc=0;smumps_par->a_loc=0; smumps_par->listvar_schur=0;smumps_par->schur=0;smumps_par->mapping=0;smumps_par->nullspace=0;smumps_par->colsca=0;smumps_par->rowsca=0; smumps_par->rhs_sparse=0; smumps_par->irhs_sparse=0; smumps_par->sol_loc=0; smumps_par->irhs_ptr=0; smumps_par->isol_loc=0;
+	smumps_par->redrhs=0;
+        smumps_par->eltptr=0; smumps_par->eltvar=0; smumps_par->a_elt=0; smumps_par->perm_in=0; smumps_par->sym_perm=0; smumps_par->uns_perm=0; smumps_par->irn_loc=0;smumps_par->jcn_loc=0;smumps_par->a_loc=0; smumps_par->listvar_schur=0;smumps_par->schur=0;smumps_par->mapping=0;smumps_par->pivnul_list=0;smumps_par->colsca=0;smumps_par->rowsca=0; smumps_par->rhs_sparse=0; smumps_par->irhs_sparse=0; smumps_par->sol_loc=0; smumps_par->irhs_ptr=0; smumps_par->isol_loc=0;
         strcpy(smumps_par->ooc_tmpdir,"NAME_NOT_INITIALIZED");
         strcpy(smumps_par->ooc_prefix,"NAME_NOT_INITIALIZED");
+	strcpy(smumps_par->version_number,"4.7");
 
         /* Next line initializes scalars to arbitrary values.
          * Some of those will anyway be overwritten during the
          * call to Fortran routine SMUMPS_163 */
-        smumps_par->n=0; smumps_par->nz=0; smumps_par->nz_loc=0; smumps_par->nelt=0;smumps_par->instance_number=0;smumps_par->deficiency=0;smumps_par->size_schur=0;smumps_par->lrhs=0; smumps_par->nrhs=0; smumps_par->nz_rhs=0; smumps_par->lsol_loc=0;
+        smumps_par->n=0; smumps_par->nz=0; smumps_par->nz_loc=0; smumps_par->nelt=0;smumps_par->instance_number=0;smumps_par->deficiency=0;smumps_par->size_schur=0;smumps_par->lrhs=0; smumps_par->lredrhs=0; smumps_par->nrhs=0; smumps_par->nz_rhs=0; smumps_par->lsol_loc=0;
  smumps_par->schur_mloc=0; smumps_par->schur_nloc=0; smumps_par->schur_lld=0; smumps_par->mblock=0; smumps_par->nblock=0; smumps_par->nprow=0; smumps_par->npcol=0;
       }
 
@@ -179,6 +183,7 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     EXTRACT_POINTERS(irn,idummyp);
     EXTRACT_POINTERS(jcn,idummyp);
     EXTRACT_POINTERS(rhs,rdummyp);
+    EXTRACT_POINTERS(redrhs,rdummyp);
     EXTRACT_POINTERS(irn_loc,idummyp);
     EXTRACT_POINTERS(jcn_loc,idummyp);
     EXTRACT_POINTERS(a_loc,rdummyp);
@@ -228,10 +233,11 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
           a_loc, &a_loc_avail,
           &(smumps_par->nelt), eltptr, &eltptr_avail, eltvar, &eltvar_avail, a_elt, &a_elt_avail,
           perm_in, &perm_in_avail,
-          rhs, &rhs_avail, info, rinfo, infog, rinfog,
+          rhs, &rhs_avail, redrhs, &redrhs_avail, info, rinfo, infog, rinfog,
           &(smumps_par->deficiency), &(smumps_par->size_schur), listvar_schur, &listvar_schur_avail, schur,
           &schur_avail, colsca, &colsca_avail, rowsca, &rowsca_avail,
           &(smumps_par->instance_number), &(smumps_par->nrhs), &(smumps_par->lrhs),
+	  &(smumps_par->lredrhs),
           rhs_sparse, &rhs_sparse_avail, sol_loc, &sol_loc_avail, irhs_sparse,
           &irhs_sparse_avail, irhs_ptr, &irhs_ptr_avail, isol_loc,
           &isol_loc_avail, &(smumps_par->nz_rhs), &(smumps_par->lsol_loc)
@@ -249,11 +255,11 @@ void smumps_c(SMUMPS_STRUC_C * smumps_par)
     );
 
     /*
-     * mapping and nullspace are usually 0 except if
-     * smumps_affect_mapping/smumps_affect_nullspace was called.
+     * mapping and pivnul_list are usually 0 except if
+     * smumps_affect_mapping/smumps_affect_pivnul_list was called.
      */
     smumps_par->mapping=mapping;
-    smumps_par->nullspace=nullspace;
+    smumps_par->pivnul_list=pivnul_list;
 
     /* to get permutations computed during analysis */
     smumps_par->sym_perm=sym_perm;
@@ -278,13 +284,13 @@ void MUMPS_CALL smumps_nullify_c_mapping_()
   mapping = 0;
 }
 
-void MUMPS_CALL smumps_affect_nullspace_(SMUMPS_DOUBLE * f77nullspace)
+void MUMPS_CALL smumps_affect_pivnul_list_(SMUMPS_INT * f77pivnul_list)
 {
-  nullspace = f77nullspace;
+  pivnul_list = f77pivnul_list;
 }
-void MUMPS_CALL smumps_nullify_c_nullspace_()
+void MUMPS_CALL smumps_nullify_c_pivnul_list_()
 {
-  nullspace = 0;
+  pivnul_list = 0;
 }
 
 void MUMPS_CALL smumps_affect_sym_perm_(SMUMPS_INT * f77sym_perm)

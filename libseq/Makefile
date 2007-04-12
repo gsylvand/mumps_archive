@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.6.4
-# This Version was built on Thu Jan 11 13:32:35 2007
+# This file is part of MUMPS VERSION 4.7
+# This Version was built on Thu Apr 12 09:40:03 2007
 #
 #
 .PHONY: libmpiseq

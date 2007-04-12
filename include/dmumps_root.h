@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF DMUMPS VERSION 4.6.4
-!   This Version was built on Thu Jan 11 13:32:35 2007
+!   THIS FILE IS PART OF DMUMPS VERSION 4.7
+!   This Version was built on Thu Apr 12 09:40:03 2007
 !
 !
 !  This version of DMUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@
 !  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 !
 !  Up-to-date copies of the DMUMPS package can be obtained
-!  from the Web pages http://www.enseeiht.fr/apo/DMUMPS/
+!  from the Web pages http://mumps.enseeiht.fr/
 !  or http://graal.ens-lyon.fr/DMUMPS
 !
 !

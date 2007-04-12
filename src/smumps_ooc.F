@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -519,7 +519,8 @@ C
       ENDIF
       RETURN
       END SUBROUTINE SMUMPS_576
-      SUBROUTINE SMUMPS_577(DEST,INODE,IERR)
+      SUBROUTINE SMUMPS_577(DEST,INODE,IERR
+     $  )
       IMPLICIT NONE
       INCLUDE 'mpif.h'
       INTEGER IERR,INODE,STATUS
@@ -951,6 +952,7 @@ C
       CURRENT_SOLVE_READ_ZONE=0
       NB_CALLED=0
       NB_CALL=0
+      SOLVE_STEP=-9999
       END SUBROUTINE SMUMPS_586
       SUBROUTINE SMUMPS_585(A,LA,PTRFAC,NSTEPS,IERR)
       IMPLICIT NONE
@@ -1249,13 +1251,14 @@ C
       ENDIF
       END SUBROUTINE SMUMPS_597
       SUBROUTINE SMUMPS_598(INODE,PTRFAC,NSTEPS,A,
-     $     LA,IERR)
+     $     LA,FLAG,IERR)
       IMPLICIT NONE
       INTEGER LA
       INTEGER IERR
       REAL A(LA)
       INTEGER INODE,NSTEPS
       INTEGER PTRFAC(NSTEPS)
+      LOGICAL FLAG
       INTEGER TMP,FREE_SIZE,TMP_NODE,I,ZONE,J,FREE_HOLE_POS,
      $     FREE_HOLE_FLAG
       LOGICAL CONTIGUOUS
@@ -1263,7 +1266,8 @@ C
       WHICH=-1
       IF(INODE_TO_POS(STEP_OOC(INODE)).LE.0)THEN
          WRITE(*,*)MYID_OOC,': Internal error (5) in OOC ',
-     &            ' Problem in SMUMPS_598'
+     &            ' Problem in SMUMPS_598',
+     1  INODE, STEP_OOC(INODE), INODE_TO_POS(STEP_OOC(INODE))
          CALL SMUMPS_ABORT()
       ENDIF
       CALL SMUMPS_600(INODE,ZONE,PTRFAC,NSTEPS)
@@ -1373,7 +1377,7 @@ C
 #endif
  222  CONTINUE
       IERR=0
-      IF(NB_Z.GT.1)THEN
+      IF((NB_Z.GT.1).AND.FLAG)THEN
          CALL SMUMPS_601(ZONE)
          IF((LRLUS_SOLVE(ZONE).GE.MIN_SIZE_READ).OR.
      $        (LRLUS_SOLVE(ZONE).GE.
@@ -2066,6 +2070,18 @@ C
       FREE_HOLE_FLAG=0
       DO J=I,CURRENT_POS_T(ZONE)-1
          TMP_NODE=ABS(POS_IN_MEM(J))
+         IF(POS_IN_MEM(J).LT.-((N_OOC+1)*NB_Z))THEN               
+            TMP_NODE=TMP_NODE-((N_OOC+1)*NB_Z)
+            CALL SMUMPS_WAIT_REQUEST(IO_REQ(STEP_OOC(TMP_NODE)),IERR)
+            IF(IERR.LT.0)THEN
+               WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
+               RETURN
+            ENDIF
+            REQ_ACT=REQ_ACT-1
+            CALL SMUMPS_596(
+     $           IO_REQ(STEP_OOC(TMP_NODE)),PTRFAC,NSTEPS)
+            TMP_NODE=ABS(POS_IN_MEM(J))
+         ENDIF
          IF(POS_IN_MEM(J).GT.0)THEN
             DO K=1,SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
                A(APOS_FIRST_FREE+K-1)=A(PTRFAC(STEP_OOC(TMP_NODE))+K-1)
@@ -2081,48 +2097,21 @@ C
             PTRFAC(STEP_OOC(TMP_NODE))=APOS_FIRST_FREE
             APOS_FIRST_FREE=APOS_FIRST_FREE+
      $           SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
+         ELSEIF(POS_IN_MEM(J).EQ.0)THEN
+            FREE_HOLE_FLAG=1
+            NB_FREE=NB_FREE+1
          ELSE
-            IF(POS_IN_MEM(J).LT.-((N_OOC+1)*NB_Z))THEN               
-               TMP_NODE=TMP_NODE-((N_OOC+1)*NB_Z)
-               CALL SMUMPS_WAIT_REQUEST(IO_REQ(STEP_OOC(TMP_NODE)),IERR)
-               IF(IERR.LT.0)THEN
-                  WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
-                  RETURN
-               ENDIF
-               REQ_ACT=REQ_ACT-1
-               CALL SMUMPS_596(
-     $              IO_REQ(STEP_OOC(TMP_NODE)),PTRFAC,NSTEPS)
-               DO K=1,SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
-                  A(APOS_FIRST_FREE+K-1)=
-     $                 A(PTRFAC(STEP_OOC(TMP_NODE))+K-1)
-               ENDDO
-               IF(FREE_HOLE_FLAG.EQ.1)THEN
-                  FREE_HOLE=ABS(PTRFAC(STEP_OOC(TMP_NODE)))-
-     $                 FREE_HOLE_POS
-                  FREE_HOLE_FLAG=0
-                  SIZE_HOLE=SIZE_HOLE+FREE_HOLE
-               ENDIF
-               FREE_HOLE_POS=ABS(PTRFAC(STEP_OOC(TMP_NODE)))+
-     $              SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
-               PTRFAC(STEP_OOC(TMP_NODE))=APOS_FIRST_FREE
-               APOS_FIRST_FREE=APOS_FIRST_FREE+
-     $              SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
-            ELSEIF(POS_IN_MEM(J).EQ.0)THEN
-               FREE_HOLE_FLAG=1
-               NB_FREE=NB_FREE+1
-            ELSE
-               NB_FREE=NB_FREE+1
-               IF(FREE_HOLE_FLAG.EQ.1)THEN
-                  FREE_HOLE=ABS(PTRFAC(STEP_OOC(TMP_NODE)))-
-     $                 FREE_HOLE_POS
-                  FREE_HOLE_FLAG=0
-                  SIZE_HOLE=SIZE_HOLE+FREE_HOLE
-               ENDIF
-               FREE_HOLE_POS=ABS(PTRFAC(STEP_OOC(TMP_NODE)))+
-     $              SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
-               SIZE_HOLE=SIZE_HOLE+SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
-               PTRFAC(STEP_OOC(ABS(POS_IN_MEM(J))))=-77777
+            NB_FREE=NB_FREE+1
+            IF(FREE_HOLE_FLAG.EQ.1)THEN
+               FREE_HOLE=ABS(PTRFAC(STEP_OOC(TMP_NODE)))-
+     $              FREE_HOLE_POS
+               FREE_HOLE_FLAG=0
+               SIZE_HOLE=SIZE_HOLE+FREE_HOLE
             ENDIF
+            FREE_HOLE_POS=ABS(PTRFAC(STEP_OOC(TMP_NODE)))+
+     $           SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
+            SIZE_HOLE=SIZE_HOLE+SIZE_OF_BLOCK(STEP_OOC(TMP_NODE))
+            PTRFAC(STEP_OOC(ABS(POS_IN_MEM(J))))=-77777
          ENDIF
       ENDDO
       IF(FREE_HOLE_FLAG.EQ.1)THEN
@@ -2309,7 +2298,9 @@ C
      $        (LRLUS_SOLVE(ZONE).LT.0.5*SIZE_SOLVE_Z(ZONE)))THEN
          RETURN
       ENDIF
-      IF((LRLU_SOLVE_T(ZONE).GT.NEEDED_SIZE).AND.(SOLVE_STEP.EQ.0))THEN
+      IF((LRLU_SOLVE_T(ZONE).GT.NEEDED_SIZE).AND.(SOLVE_STEP.EQ.0).AND.
+     $     ((CURRENT_POS_T(ZONE)-PDEB_SOLVE_Z(ZONE)+1).LT.
+     $     MAX_NB_NODES_FOR_ZONE))THEN
          FLAG=1
       ELSE
          IF(SOLVE_STEP.EQ.0)THEN
@@ -2494,7 +2485,7 @@ C
             ELSE
                SIZE=J
             ENDIF
-            I=CUR_POS_SEQUENCE
+            I=CUR_POS_SEQUENCE-NB_NODES+1
             DO WHILE (I.GT.0)
                IF(SIZE_OF_BLOCK(STEP_OOC(
      $              OOC_INODE_SEQUENCE(I))).NE.0)THEN
@@ -2607,6 +2598,7 @@ C
                   ENDIF
                   CALL SMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
+                  OOC_STATE_NODE(STEP_OOC(OOC_INODE_SEQUENCE(I)))=-1
                ENDIF
             ENDIF
          ENDDO
@@ -2632,13 +2624,14 @@ C
                   ENDIF
                   CALL SMUMPS_599(
      $                 OOC_INODE_SEQUENCE(I),PTRFAC,NSTEPS)
+                  OOC_STATE_NODE(STEP_OOC(OOC_INODE_SEQUENCE(I)))=-1
                ENDIF
             ENDIF
          ENDDO
          CUR_POS_SEQUENCE=I
       ENDIF
       END SUBROUTINE SMUMPS_612
-      SUBROUTINE SMUMPS_584(PTRFAC,NSTEPS,MTYPE)
+      SUBROUTINE SMUMPS_583(PTRFAC,NSTEPS,MTYPE)
       IMPLICIT NONE
       INTEGER NSTEPS,MTYPE
       INTEGER PTRFAC(NSTEPS)
@@ -2647,24 +2640,18 @@ C
       CUR_POS_SEQUENCE=1
       MTYPE_OOC=MTYPE
       CALL SMUMPS_612(PTRFAC,NSTEPS)
-      END SUBROUTINE SMUMPS_584
-      SUBROUTINE SMUMPS_583(PTRFAC,NSTEPS)
+      END SUBROUTINE SMUMPS_583
+      SUBROUTINE SMUMPS_584(PTRFAC,NSTEPS,MTYPE)
       IMPLICIT NONE
       INTEGER NSTEPS
       INTEGER PTRFAC(NSTEPS)
+      INTEGER MTYPE
       OOC_STATE_NODE(1:KEEP_OOC(28))=0
-      SOLVE_STEP=MOD(SOLVE_STEP+1,2)
-      IF(SOLVE_STEP.EQ.0)THEN
-         CUR_POS_SEQUENCE=1
-      ELSEIF(SOLVE_STEP.EQ.1)THEN
-         CUR_POS_SEQUENCE=TOTAL_NB_OOC_NODES
-      ELSE
-         WRITE(*,*)MYID_OOC,': Internal error (36) in OOC ',
-     $        ' SMUMPS_583' 
-         CALL SMUMPS_ABORT()
-      ENDIF
+      SOLVE_STEP=1
+      CUR_POS_SEQUENCE=TOTAL_NB_OOC_NODES
+      MTYPE_OOC=MTYPE
       CALL SMUMPS_612(PTRFAC,NSTEPS)
-      END SUBROUTINE SMUMPS_583
+      END SUBROUTINE SMUMPS_584
       SUBROUTINE SMUMPS_613(id)
       USE SMUMPS_STRUC_DEF
       IMPLICIT NONE

@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-   This Version was built on Thu Jan 11 13:32:35 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7
+   This Version was built on Thu Apr 12 09:40:03 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -15,7 +15,7 @@
   Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 
   Up-to-date copies of the MUMPS package can be obtained
-  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+  from the Web pages http://mumps.enseeiht.fr/
   or http://graal.ens-lyon.fr/MUMPS
 
 
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: cmumps_c.h,v 1.31 2007/01/02 17:02:50 jylexcel Exp $ */
+/* $Id: cmumps_c.h,v 1.35 2007/03/25 19:43:31 jylexcel Exp $ */
 /* Mostly written in march 2002 (JYL) */
 
 #if ( ! defined CMUMPS_C_H )
@@ -64,7 +64,7 @@ typedef struct
     CMUMPS_INT sym, par, job;
     CMUMPS_INT comm_fortran;    /* Fortran communicator */
     CMUMPS_INT icntl[40];
-    CMUMPS_DOUBLE2 cntl[5];
+    CMUMPS_DOUBLE2 cntl[15];
     CMUMPS_INT n;
    
     CMUMPS_INT nz_alloc; /* used in matlab interface to decide if
@@ -89,15 +89,15 @@ typedef struct
     /* Scaling (input only in this version) */
     CMUMPS_DOUBLE *colsca; CMUMPS_DOUBLE *rowsca;
     /* RHS, solution, ouptput data and statistics */
-    CMUMPS_DOUBLE *rhs, *rhs_sparse, *sol_loc;
+    CMUMPS_DOUBLE *rhs, *redrhs, *rhs_sparse, *sol_loc;
     CMUMPS_INT *irhs_sparse, *irhs_ptr, *isol_loc;
-    CMUMPS_INT nrhs, lrhs, nz_rhs, lsol_loc;
+    CMUMPS_INT nrhs, lrhs, lredrhs, nz_rhs, lsol_loc;
   CMUMPS_INT schur_mloc, schur_nloc, schur_lld;
   CMUMPS_INT mblock, nblock, nprow, npcol;
     CMUMPS_INT info[40],infog[40];
     CMUMPS_DOUBLE2 rinfo[20], rinfog[20];
     /* Null space */
-    CMUMPS_INT deficiency; CMUMPS_DOUBLE * nullspace; CMUMPS_INT * mapping;
+    CMUMPS_INT deficiency; CMUMPS_INT * pivnul_list; CMUMPS_INT * mapping;
     /* Schur */
     CMUMPS_INT size_schur; CMUMPS_INT *listvar_schur; CMUMPS_DOUBLE *schur;
     /* Internal parameters */
@@ -105,19 +105,20 @@ typedef struct
     /* For out-of-core */
     char ooc_tmpdir[151];
     char ooc_prefix[151];
+    char version_number[80];
   } CMUMPS_STRUC_C;
 
 
 #if defined(UPPER) || defined(_WIN32)
 #define cmumps_f77_ CMUMPS_F77
 #define cmumps_affect_mapping_ CMUMPS_AFFECT_MAPPING
-#define cmumps_affect_nullspace_ CMUMPS_AFFECT_NULLSPACE
+#define cmumps_affect_pivnul_list_ CMUMPS_AFFECT_PIVNUL_LIST
 #define cmumps_affect_colsca_ CMUMPS_AFFECT_COLSCA
 #define cmumps_affect_rowsca_ CMUMPS_AFFECT_ROWSCA 
 #define cmumps_affect_uns_perm_     CMUMPS_AFFECT_UNS_PERM
 #define cmumps_affect_sym_perm_     CMUMPS_AFFECT_SYM_PERM
 #define cmumps_nullify_c_mapping_   CMUMPS_NULLIFY_C_MAPPING
-#define cmumps_nullify_c_nullspace_ CMUMPS_NULLIFY_C_NULLSPACE
+#define cmumps_nullify_c_pivnul_list_ CMUMPS_NULLIFY_C_PIVNUL_LIST
 #define cmumps_nullify_c_sym_perm_  CMUMPS_NULLIFY_C_SYM_PERM
 #define cmumps_nullify_c_uns_perm_  CMUMPS_NULLIFY_C_UNS_PERM
 #define cmumps_nullify_c_colsca_    CMUMPS_NULLIFY_C_COLSCA
@@ -125,13 +126,13 @@ typedef struct
 #elif defined(Add__)
 #define cmumps_f77_ cmumps_f77__
 #define cmumps_affect_mapping_ cmumps_affect_mapping__
-#define cmumps_affect_nullspace_ cmumps_affect_nullspace__
+#define cmumps_affect_pivnul_list_ cmumps_affect_pivnul_list__
 #define cmumps_affect_colsca_ cmumps_affect_colsca__
 #define cmumps_affect_rowsca_ cmumps_affect_rowsca__
 #define cmumps_affect_uns_perm_     cmumps_affect_uns_perm__     
 #define cmumps_affect_sym_perm_     cmumps_affect_sym_perm__     
 #define cmumps_nullify_c_mapping_   cmumps_nullify_c_mapping__    
-#define cmumps_nullify_c_nullspace_ cmumps_nullify_c_nullspace__  
+#define cmumps_nullify_c_pivnul_list_ cmumps_nullify_c_pivnul_list__  
 #define cmumps_nullify_c_sym_perm_  cmumps_nullify_c_sym_perm__   
 #define cmumps_nullify_c_uns_perm_  cmumps_nullify_c_uns_perm__   
 #define cmumps_nullify_c_colsca_    cmumps_nullify_c_colsca__     
@@ -142,13 +143,13 @@ typedef struct
 /* Name without underscore is used */
 #define cmumps_f77_ cmumps_f77
 #define cmumps_affect_mapping_ cmumps_affect_mapping
-#define cmumps_affect_nullspace_ cmumps_affect_nullspace
+#define cmumps_affect_pivnul_list_ cmumps_affect_pivnul_list
 #define cmumps_affect_colsca_ cmumps_affect_colsca
 #define cmumps_affect_rowsca_ cmumps_affect_rowsca
 #define cmumps_affect_uns_perm_     cmumps_affect_uns_perm     
 #define cmumps_affect_sym_perm_     cmumps_affect_sym_perm     
 #define cmumps_nullify_c_mapping_   cmumps_nullify_c_mapping    
-#define cmumps_nullify_c_nullspace_ cmumps_nullify_c_nullspace  
+#define cmumps_nullify_c_pivnul_list_ cmumps_nullify_c_pivnul_list
 #define cmumps_nullify_c_sym_perm_  cmumps_nullify_c_sym_perm   
 #define cmumps_nullify_c_uns_perm_  cmumps_nullify_c_uns_perm   
 #define cmumps_nullify_c_colsca_    cmumps_nullify_c_colsca     
@@ -166,11 +167,11 @@ typedef struct
 
 void MUMPS_CALL cmumps_c(CMUMPS_STRUC_C * cmumps_par);
 void MUMPS_CALL cmumps_affect_mapping_(CMUMPS_INT * f77mapping);
-void MUMPS_CALL cmumps_affect_nullspace_(CMUMPS_DOUBLE * f77nullspace);
+void MUMPS_CALL cmumps_affect_pivnul_list_(CMUMPS_INT * f77pivnul_list);
 void MUMPS_CALL cmumps_affect_uns_perm_(CMUMPS_INT * f77sym_perm);
 void MUMPS_CALL cmumps_affect_sym_perm_(CMUMPS_INT * f77uns_perm);
 void MUMPS_CALL cmumps_nullify_c_mapping_();
-void MUMPS_CALL cmumps_nullify_c_nullspace_();
+void MUMPS_CALL cmumps_nullify_c_pivnul_list_();
 void MUMPS_CALL cmumps_nullify_c_sym_perm_();
 void MUMPS_CALL cmumps_nullify_c_uns_perm_();
 #ifdef return_scaling
@@ -190,12 +191,13 @@ CMUMPS_INT *jcn, CMUMPS_INT *jcn_avail, CMUMPS_DOUBLE *a, CMUMPS_INT *a_avail,
   CMUMPS_INT * eltptr_avail, CMUMPS_INT * eltvar, CMUMPS_INT * eltvar_avail,
   CMUMPS_DOUBLE * a_elt, CMUMPS_INT * a_elt_avail, CMUMPS_INT * perm_in,
   CMUMPS_INT * perm_in_avail, CMUMPS_DOUBLE * rhs, CMUMPS_INT * rhs_avail,
+  CMUMPS_DOUBLE * redrhs, CMUMPS_INT * redrhs_avail,
   CMUMPS_INT * info, CMUMPS_DOUBLE2 * rinfo, CMUMPS_INT * infog, CMUMPS_DOUBLE2 * rinfog,
   CMUMPS_INT * deficiency, CMUMPS_INT * size_schur, CMUMPS_INT * listvar_schur,
   CMUMPS_INT * listvar_schur_avail, CMUMPS_DOUBLE * schur,
   CMUMPS_INT * schur_avail, CMUMPS_DOUBLE * colsca, CMUMPS_INT * colsca_avail,
   CMUMPS_DOUBLE * rowsca, CMUMPS_INT * rowsca_avail, CMUMPS_INT * instance_number,
-  CMUMPS_INT * nrhs, CMUMPS_INT * lrhs, CMUMPS_DOUBLE * rhs_sparse, CMUMPS_INT * rhs_sparse_avail,
+  CMUMPS_INT * nrhs, CMUMPS_INT * lrhs, CMUMPS_INT * lredrhs, CMUMPS_DOUBLE * rhs_sparse, CMUMPS_INT * rhs_sparse_avail,
   CMUMPS_DOUBLE * sol_loc, CMUMPS_INT * sol_loc_avail, CMUMPS_INT * irhs_sparse,
   CMUMPS_INT * irhs_sparse_avail, CMUMPS_INT * irhs_ptr, CMUMPS_INT * irhs_ptr_avail,
   CMUMPS_INT * isol_loc, CMUMPS_INT * isol_loc_avail, CMUMPS_INT * nz_rhs, CMUMPS_INT * lsol_loc

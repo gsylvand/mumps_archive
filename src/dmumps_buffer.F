@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.6.4
-C   This Version was built on Thu Jan 11 13:32:35 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7
+C   This Version was built on Thu Apr 12 09:40:03 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -14,7 +14,7 @@ C  Main contributors are Patrick Amestoy, Iain Duff, Abdou Guermouche,
 C  Jacko Koster, Jean-Yves L'Excellent, and Stephane Pralet.
 C
 C  Up-to-date copies of the MUMPS package can be obtained
-C  from the Web pages http://www.enseeiht.fr/apo/MUMPS/
+C  from the Web pages http://mumps.enseeiht.fr/
 C  or http://graal.ens-lyon.fr/MUMPS
 C
 C
@@ -251,7 +251,7 @@ C
            RETURN
         ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
-             IERR = -2
+             IERR = -3
              RETURN
           ENDIF
         POSITION = 0
@@ -712,7 +712,7 @@ C
         ENDIF
         IF (NELIM.NE.0) THEN
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
-             IERR = -2 
+             IERR = -2
              RETURN
           ENDIF
         ENDIF
@@ -820,7 +820,7 @@ C
       IF (KEEP(219).NE.0) THEN
         CALL DMUMPS_617(NFS4FATHER,IERR)
         IF (IERR .NE. 0) THEN
-          IERR         = -3
+          IERR         = -4
           RETURN
         ENDIF
       ENDIF
@@ -906,7 +906,7 @@ C
            RETURN
         ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
-             IERR = -2
+             IERR = -3
              RETURN
           ENDIF
         POSITION = 0
@@ -1126,7 +1126,7 @@ C
              RETURN
           ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
-             IERR = -2
+             IERR = -3
              RETURN
           END IF
               POSITION = IPOS
@@ -1204,7 +1204,7 @@ C
                  CALL DMUMPS_ABORT()
               END IF
               IF (SIZE.GT.SIZE_RBUF_BYTES) THEN
-                 IERR = -2
+                 IERR = -3
                  RETURN
               ENDIF
               POSITION = IPOS
@@ -1518,7 +1518,7 @@ C
            RETURN
         ENDIF
         IF (SIZE.GT.SIZE_RBUF_BYTES ) THEN
-             IERR = -2
+             IERR = -3
              RETURN
         ENDIF
         POSITION = 0
@@ -1673,7 +1673,7 @@ C
            RETURN
         ENDIF
           IF (SIZE.GT.SIZE_RBUF_BYTES) THEN
-             IERR = -2
+             IERR = -3
              RETURN
           ENDIF
         POSITION = IPOS

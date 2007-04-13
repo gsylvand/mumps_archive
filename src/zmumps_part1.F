@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7
-C   This Version was built on Thu Apr 12 09:40:03 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.1
+C   This Version was built on Fri Apr 13 13:05:33 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1892,7 +1892,7 @@ C
      *    id%RINFO, id%RINFOG,
      *    id%SYM, id%PAR, id%DKEEP )
       id%WRITE_PROBLEM="NAME_NOT_INITIALIZED"
-      id%VERSION_NUMBER="4.6.5"
+      id%VERSION_NUMBER="4.7.1"
       id%OOC_TMPDIR="NAME_NOT_INITIALIZED"
       id%OOC_PREFIX="NAME_NOT_INITIALIZED"
       id%NRHS = 1

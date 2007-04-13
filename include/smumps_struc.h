@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF SMUMPS VERSION 4.7
-!   This Version was built on Thu Apr 12 09:40:03 2007
+!   THIS FILE IS PART OF SMUMPS VERSION 4.7.1
+!   This Version was built on Fri Apr 13 13:05:33 2007
 !
 !
 !  This version of SMUMPS is provided to you free of charge. It is public

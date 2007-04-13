@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7
-   This Version was built on Thu Apr 12 09:40:03 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.1
+   This Version was built on Fri Apr 13 13:05:33 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,7 +44,7 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-/* $Id: zmumps_c.c,v 1.33 2007/04/04 14:10:31 jylexcel Exp $ */
+/* $Id: zmumps_c.c,v 1.34 2007/04/13 10:54:14 jylexcel Exp $ */
 /* Written by JYL, march 2002 */
 #include <stdio.h>
 #include <string.h>
@@ -135,7 +135,7 @@ void zmumps_c(ZMUMPS_STRUC_C * zmumps_par)
         zmumps_par->eltptr=0; zmumps_par->eltvar=0; zmumps_par->a_elt=0; zmumps_par->perm_in=0; zmumps_par->sym_perm=0; zmumps_par->uns_perm=0; zmumps_par->irn_loc=0;zmumps_par->jcn_loc=0;zmumps_par->a_loc=0; zmumps_par->listvar_schur=0;zmumps_par->schur=0;zmumps_par->mapping=0;zmumps_par->pivnul_list=0;zmumps_par->colsca=0;zmumps_par->rowsca=0; zmumps_par->rhs_sparse=0; zmumps_par->irhs_sparse=0; zmumps_par->sol_loc=0; zmumps_par->irhs_ptr=0; zmumps_par->isol_loc=0;
         strcpy(zmumps_par->ooc_tmpdir,"NAME_NOT_INITIALIZED");
         strcpy(zmumps_par->ooc_prefix,"NAME_NOT_INITIALIZED");
-	strcpy(zmumps_par->version_number,"4.7");
+	strcpy(zmumps_par->version_number,"4.7.1");
 
         /* Next line initializes scalars to arbitrary values.
          * Some of those will anyway be overwritten during the

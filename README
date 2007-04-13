@@ -65,8 +65,8 @@ Installation
 
 The following steps can be applied.
 
-% tar zxvf MUMPS_4.7.tar.gz
-% cd MUMPS_4.7
+% tar zxvf MUMPS_4.7.1.tar.gz
+% cd MUMPS_4.7.1
 
 You then need to build a file called Makefile.inc corresponding
 to your achitecture. Various examples are available in the
@@ -231,6 +231,7 @@ of more than 1 processor.
 Release history
 ---------------
 
+Release 4.7.1           : April 2007
 Release 4.7             : April 2007
 Release 4.6.4           : January 2007
 Release 4.6.3           : June 2006
@@ -274,6 +275,11 @@ Version 2.0.4     : Mar 24, 1998
 Version 2.0.3     : Feb 28, 1998
 Version 2.0.1     : Feb 20, 1998
 Version 2.0       : Feb 11, 1998
+
+
+Changes from Version 4.7 to Version 4.7.1
+* Release number in Fortran interface corrected
+* "Negative load !!" message replaced by a warning
 
 Changes from Version 4.6.4 to Version 4.7
 * New functionality: build reduced RHS / use partial solution

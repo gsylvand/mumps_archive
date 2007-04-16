@@ -1,6 +1,6 @@
 !
-!   THIS FILE IS PART OF MUMPS VERSION 4.7.1
-!   This Version was built on Fri Apr 13 13:05:33 2007
+!   THIS FILE IS PART OF MUMPS VERSION 4.7.2
+!   This Version was built on Mon Apr 16 13:49:29 2007
 !
 !
 !  This version of MUMPS is provided to you free of charge. It is public

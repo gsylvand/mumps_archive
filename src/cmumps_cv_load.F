@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.1
-C   This Version was built on Fri Apr 13 13:05:33 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
+C   This Version was built on Mon Apr 16 13:49:29 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -184,13 +184,14 @@ C
       END SUBROUTINE CMUMPS_188
       SUBROUTINE CMUMPS_472(
      *  NCBSON_MAX, SLAVEF,
-     *  KEEP,KEEP8,
+     *  KEEP,KEEP8,ICNTL,
      *  CAND_OF_NODE,
      *  MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
      *  TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,INODE)
        IMPLICIT NONE
       INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
       INTEGER*8 KEEP8(150)
+      INTEGER, intent(in) :: ICNTL(40)
       INTEGER, intent(in) :: SLAVEF, NFRONT, NCB
       INTEGER, intent(in) :: CAND_OF_NODE(SLAVEF+1)
       INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1),INODE
@@ -199,6 +200,9 @@ C
       INTEGER, intent(out):: TAB_POS(SLAVEF+2)
       INTEGER, intent(out):: NSLAVES_NODE
       INTEGER I
+      INTEGER LP,MP
+      LP=ICNTL(4)
+      MP=ICNTL(2)
       IF ( KEEP(48) == 0 .OR. KEEP(48) .EQ. 3 ) THEN
          CALL CMUMPS_499(
      *        SLAVEF,
@@ -227,7 +231,8 @@ C
      *        KEEP,KEEP8,
      *        CAND_OF_NODE,
      *        MEM_DISTRIB, NCB, NFRONT, NSLAVES_NODE,
-     *        TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,MYID,INODE)
+     *        TAB_POS, SLAVES_LIST, SIZE_SLAVES_LIST,MYID,INODE,
+     *        MP,LP)
          DO I=1,NSLAVES_NODE
             IF(TAB_POS(I+1)-TAB_POS(I).LE.0)THEN
                WRITE(*,*)'problem with partition in
@@ -2487,7 +2492,7 @@ C
      &      (NCBSON_MAX,SLAVEF,KEEP,KEEP8,
      *       PROCS,MEM_DISTRIB,NCB,NFRONT,
      $       NSLAVES_NODE,TAB_POS,
-     $       SLAVES_LIST,SIZE_SLAVES_LIST,MYID,INODE)
+     $       SLAVES_LIST,SIZE_SLAVES_LIST,MYID,INODE,MP,LP)
       IMPLICIT NONE
       INTEGER, intent(in) :: KEEP(500),SIZE_SLAVES_LIST
       INTEGER*8 KEEP8(150)
@@ -2495,6 +2500,7 @@ C
       INTEGER, intent(in) :: NCBSON_MAX
       INTEGER, intent(in) :: PROCS(SLAVEF+1)
       INTEGER, intent(in) :: MEM_DISTRIB(0:SLAVEF-1),INODE
+      INTEGER, intent(in) :: MP,LP
       INTEGER, intent(out):: SLAVES_LIST(SIZE_SLAVES_LIST)
       INTEGER, intent(out):: TAB_POS(SLAVEF+2)
       INTEGER, intent(out):: NSLAVES_NODE
@@ -2550,10 +2556,13 @@ C
            DO I=1,PROCS(SLAVEF+1)
               WLOAD(I)=LOAD_FLOPS(PROCS(I))
               IDWLOAD(I)=PROCS(I)
-              IF (LOAD_FLOPS(IDWLOAD(I)) < -0.5E0 ) THEN
-                 WRITE(*,*)MYID,": Negative load !!",
-     $                LOAD_FLOPS(IDWLOAD(I))
+              IF (WLOAD(I) < -0.5E0 ) THEN
+                 IF((MP.GT.0).AND.(LP.GE.2))THEN
+                    WRITE(MP,*)MYID,': Warning: negative load ',
+     $                   WLOAD(I)
+                 ENDIF
               ENDIF 
+              WLOAD(I)=MAX(WLOAD(I),0.0E0)
            ENDDO
            NUMBER_OF_PROCS=PROCS(SLAVEF+1)
             OTHERS=NUMBER_OF_PROCS
@@ -2562,6 +2571,13 @@ C
             WLOAD(1:SLAVEF) = LOAD_FLOPS(0:NUMBER_OF_PROCS-1)
             DO I=1,NUMBER_OF_PROCS
                IDWLOAD(I) = I - 1
+               IF (WLOAD(I) < -0.5E0 ) THEN
+                  IF((MP.GT.0).AND.(LP.GE.2))THEN
+                     WRITE(MP,*)MYID,': Negative load ',
+     $                    WLOAD(I)
+                  ENDIF
+               ENDIF 
+               WLOAD(I)=MAX(WLOAD(I),0.0E0)
             ENDDO
             OTHERS=NUMBER_OF_PROCS-1
          ENDIF

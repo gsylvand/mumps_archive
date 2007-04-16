@@ -1,5 +1,5 @@
-C This file is part of CMUMPS VERSION 4.7.1
-C This Version was built on Fri Apr 13 13:05:33 2007
+C This file is part of CMUMPS VERSION 4.7.2
+C This Version was built on Mon Apr 16 13:49:29 2007
 C
 C
       PROGRAM CMUMPS_TEST

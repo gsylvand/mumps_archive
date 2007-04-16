@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.1
-C   This Version was built on Fri Apr 13 13:05:33 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
+C   This Version was built on Mon Apr 16 13:49:29 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -5405,7 +5405,7 @@ C
         GOTO 265
       ENDIF
       CALL SMUMPS_472( NCBSON_MAX, SLAVEF,
-     *     KEEP,KEEP8,
+     *     KEEP,KEEP8,ICNTL,
      *     CAND(1,INIV2),
      *     MEM_DISTRIB(0), NCB, NFRONT, NSLAVES,
      *     TAB_POS_IN_PERE(1,ISTEP_TO_INIV2(STEP(INODE))),
@@ -5455,7 +5455,7 @@ C
             NSLAVES_OLD = NSLAVES
             HF_OLD      = HF
             CALL SMUMPS_472( NCBSON_MAX, 
-     *      SLAVEF, KEEP,KEEP8,
+     *      SLAVEF, KEEP,KEEP8,ICNTL,
      *      CAND(1,INIV2),
      *      MEM_DISTRIB(0), NCB, NFRONT_EFF, NSLAVES,
      *      TAB_POS_IN_PERE(1,ISTEP_TO_INIV2(STEP(INODE))),

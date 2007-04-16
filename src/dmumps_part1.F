@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.1
-C   This Version was built on Fri Apr 13 13:05:33 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
+C   This Version was built on Mon Apr 16 13:49:29 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1883,7 +1883,7 @@ C
      *    id%RINFO, id%RINFOG,
      *    id%SYM, id%PAR, id%DKEEP )
       id%WRITE_PROBLEM="NAME_NOT_INITIALIZED"
-      id%VERSION_NUMBER="4.7.1"
+      id%VERSION_NUMBER="4.7.2"
       id%OOC_TMPDIR="NAME_NOT_INITIALIZED"
       id%OOC_PREFIX="NAME_NOT_INITIALIZED"
       id%NRHS = 1
@@ -2661,7 +2661,7 @@ C
         GOTO 265
       ENDIF
       CALL DMUMPS_472( NCBSON_MAX, SLAVEF, KEEP,KEEP8,
-     *     CAND(1,INIV2),
+     *     ICNTL, CAND(1,INIV2),
      *     MEM_DISTRIB(0), NCB, NFRONT, NSLAVES,
      *     TAB_POS_IN_PERE(1,ISTEP_TO_INIV2(STEP(INODE))),
      *     TMP_SLAVES_LIST,
@@ -2707,7 +2707,7 @@ C
             NSLAVES_OLD = NSLAVES
             HF_OLD      = HF
             CALL DMUMPS_472( NCBSON_MAX,
-     *      SLAVEF, KEEP,KEEP8,
+     *      SLAVEF, KEEP,KEEP8, ICNTL,
      *      CAND(1,INIV2),
      *      MEM_DISTRIB(0), NCB, NFRONT_EFF, NSLAVES,
      *      TAB_POS_IN_PERE(1,ISTEP_TO_INIV2(STEP(INODE))),
@@ -5232,7 +5232,7 @@ C
  250  CONTINUE
       RECURS  = RECURS - 1
       IF ( NBFIN .EQ. 0 ) RETURN
-      IF ( RECURS .GT. 5 ) RETURN
+      IF ( RECURS .GT. 3 ) RETURN
       IF ( KEEP(36).EQ.1 .AND. SET_IRECV  .AND.
      *      (ASS_IRECV.EQ.MPI_REQUEST_NULL) .AND.
      *    MESSAGE_RECEIVED ) THEN

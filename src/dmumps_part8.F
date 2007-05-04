@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -52,6 +52,7 @@ C
 #if defined(V_T)
       INCLUDE 'VT.inc'
 #endif
+      INTEGER STATUS( MPI_STATUS_SIZE )
       INTEGER MASTER, IERR
       PARAMETER( MASTER = 0 )
       TYPE (DMUMPS_STRUC), TARGET :: id
@@ -410,7 +411,7 @@ C
       IF ( I_AM_SLAVE ) THEN
         DMUMPS_LBUF_INT = ( 20 + id%NSLAVES * id%NSLAVES  * 4 )
      *                 * KEEP(34)
-        DMUMPS_LBUF = id%LBUFR_BYTES * id%NSLAVES
+        DMUMPS_LBUF = id%LBUFR_BYTES * id%NSLAVES + 3 * KEEP(34)
         CALL DMUMPS_55( DMUMPS_LBUF_INT, IERR )
         IF ( IERR .NE. 0 ) THEN
           INFO(1) = -13
@@ -625,7 +626,7 @@ C
      &       MASTER_ROOT_IN_COMM, 0, id%COMM,IERR)
             ELSEIF ( id%MYID.EQ.MASTER_ROOT_IN_COMM) THEN
              CALL MPI_RECV(LD_REDRHS,1,MPI_INTEGER,
-     &       MASTER, 0, id%COMM,IERR)
+     &       MASTER, 0, id%COMM,STATUS,IERR)
             ENDIF
          ENDIF
       ENDIF
@@ -963,12 +964,12 @@ C
                CALL MPI_RECV(id%S(II),
      &              SIZE_ROOT*NBRHS_EFF,
      &              MPI_DOUBLE_PRECISION,
-     &              MASTER, 0, id%COMM,IERR)
+     &              MASTER, 0, id%COMM,STATUS,IERR)
             ELSE
              DO K=1, NBRHS_EFF
               CALL MPI_RECV(id%S(II),SIZE_ROOT,
      &           MPI_DOUBLE_PRECISION,
-     &           MASTER, 0, id%COMM,IERR)
+     &           MASTER, 0, id%COMM,STATUS,IERR)
               II = II + SIZE_ROOT
              ENDDO
             ENDIF
@@ -1026,17 +1027,19 @@ C
          ELSE
           IF ( id%MYID .EQ. MASTER ) THEN
             IF (LD_REDRHS.EQ.SIZE_ROOT) THEN
-               KDEC = IBEG_REDRHS+(K-1)*LD_REDRHS
+               KDEC = IBEG_REDRHS
                CALL MPI_RECV(id%REDRHS(KDEC),
      &              SIZE_ROOT*NBRHS_EFF,
      &              MPI_DOUBLE_PRECISION,
-     &              MASTER_ROOT_IN_COMM, 0, id%COMM,IERR)
+     &              MASTER_ROOT_IN_COMM, 0, id%COMM,
+     &              STATUS,IERR)
             ELSE
              DO K=1, NBRHS_EFF
-               KDEC = IBEG+(K-1)*LD_REDRHS
+               KDEC = IBEG_REDRHS+(K-1)*LD_REDRHS
                CALL MPI_RECV(id%REDRHS(KDEC),SIZE_ROOT,
      &              MPI_DOUBLE_PRECISION,
-     &              MASTER_ROOT_IN_COMM, 0, id%COMM,IERR)
+     &              MASTER_ROOT_IN_COMM, 0, id%COMM,
+     &              STATUS,IERR)
              ENDDO
             ENDIF
           ELSE IF ( id%MYID .EQ. MASTER_ROOT_IN_COMM ) THEN
@@ -1742,7 +1745,7 @@ C
 #if defined(V_T)
       INTEGER soln_c_class, forw_soln, back_soln, root_soln
 #endif
-           INTEGER INODE, IPOS, LIELL, NPIV,J1,JJ
+      INTEGER INODE, IPOS, LIELL, NPIV,J1,JJ
       INTEGER IZERO
       DOUBLE PRECISION ZERO
       LOGICAL DOFORWARD, DOROOT, DOBACKWARD
@@ -2606,6 +2609,7 @@ C
      *
      *    ISTEP_TO_INIV2, TAB_POS_IN_PERE
      *    )
+      USE DMUMPS_OOC
       IMPLICIT NONE
       INTEGER MTYPE
       INTEGER N, LA, LIW, LWCB, LPOOL, LIWCB, LNA
@@ -2693,7 +2697,7 @@ C
      &           KEEP(208), MYID )
             GOTO 60
          ENDIF                  ! POOL not empty
-      ENDIF                     !   .not.(FLAG)
+      ENDIF                     !   .not.(FLAG) = not_msg_received
       GOTO 50
  60   CONTINUE
       CALL DMUMPS_302( INODE, BUFR, LBUFR, LBUFR_BYTES,
@@ -3463,18 +3467,6 @@ C
       END IF
       RETURN
       END SUBROUTINE DMUMPS_303
-      SUBROUTINE DMUMPS_574
-     &           ( IPOOL, LPOOL, III, LEAF, 
-     &             INODE, STRATEGIE, MYID )
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: STRATEGIE, MYID, LPOOL
-      INTEGER IPOOL (LPOOL)
-      INTEGER III,LEAF
-      INTEGER, INTENT(OUT) :: INODE
-         LEAF  = LEAF - 1
-         INODE = IPOOL( LEAF )
-      RETURN
-      END SUBROUTINE DMUMPS_574
       SUBROUTINE DMUMPS_249(N, A, LA, IW, LIW, W, LWC,
      *    RHS, LRHS, NRHS, 
      *    RHSCOMP, LRHSCOMP, POSINRHSCOMP,
@@ -3694,6 +3686,8 @@ C
             IF ( IERR .NE. 0 ) CALL DMUMPS_ABORT()
           ENDIF
           IF = FRERE(STEP(IF))
+#if defined(Mila_Print)
+#endif
         ENDDO
         IF (IIPOOL.NE.POOL_FIRST_POS) THEN
             DO I=1,(IIPOOL-POOL_FIRST_POS)/2
@@ -4176,7 +4170,8 @@ C
      *                KEEP,KEEP8,
      *                PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      *                RHS, LRHS, NRHS, MTYPE, 
-     *                RHSCOMP, LRHSCOMP, POSINRHSCOMP )
+     *                RHSCOMP, LRHSCOMP, POSINRHSCOMP 
+     *         )
          END IF
       END IF
       RETURN
@@ -4192,7 +4187,8 @@ C
      *                FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,KEEP8,
      *                PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      *                RHS, LRHS, NRHS, MTYPE, 
-     *                RHSCOMP, LRHSCOMP, POSINRHSCOMP )
+     *                RHSCOMP, LRHSCOMP, POSINRHSCOMP 
+     *           )
       USE DMUMPS_OOC
       USE DMUMPS_BUFFER
       IMPLICIT NONE

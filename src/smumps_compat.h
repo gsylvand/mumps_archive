@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-   This Version was built on Mon Apr 16 13:49:29 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+   This Version was built on Fri May  4 15:54:01 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -44,15 +44,21 @@
    systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
 
 */
-#define MUMPS_CALL
+#ifndef MUMPS_CALL
 #if defined(_WIN32)
-/*
- * Next line may be needed depending on your Windows calling conventions:
- * #define MUMPS_CALL __stdcall
- */
+/* Modify/choose between next 2 lines depending
+ * on your Windows calling conventions */
+/* #define MUMPS_CALL __stdcall */
+#define MUMPS_CALL
+#else
+#define MUMPS_CALL
+#endif
 #endif
 
+
+#ifndef smumps_ftnlen
 /* When passing a string, what is the type of the extra argument
  * passed by value ? */
 #define smumps_ftnlen int
+#endif
 

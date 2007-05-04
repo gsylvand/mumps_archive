@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1892,7 +1892,7 @@ C
      *    id%RINFO, id%RINFOG,
      *    id%SYM, id%PAR, id%DKEEP )
       id%WRITE_PROBLEM="NAME_NOT_INITIALIZED"
-      id%VERSION_NUMBER="4.7.2"
+      id%VERSION_NUMBER="4.7.3"
       id%OOC_TMPDIR="NAME_NOT_INITIALIZED"
       id%OOC_PREFIX="NAME_NOT_INITIALIZED"
       id%NRHS = 1
@@ -4378,7 +4378,7 @@ C
      *                 MPI_DOUBLE_PRECISION,
      *                 COMM, IERR )
                   CALL ZMUMPS_619(N, INODE, IW, LIW, A, LA,
-     *                 ISON, LROW,
+     *                 ISON, NFS4FATHER,
      *                 BUF_MAX_ARRAY, PTLUST_S, PTRAST,
      *                 STEP, PIMASTER, OPASSW,
      *                 IWPOSCB, MYID, KEEP,KEEP8)

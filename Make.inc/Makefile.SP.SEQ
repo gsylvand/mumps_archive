@@ -1,5 +1,5 @@
-# This file is part of MUMPS VERSION 4.7.2
-# This Version was built on Mon Apr 16 13:49:29 2007
+# This file is part of MUMPS VERSION 4.7.3
+# This Version was built on Fri May 4 15:54:01 2007
 #
 #
 #Begin orderings
@@ -53,6 +53,8 @@ OPTF    = -WF,-DPESSL -WF,-DSP_ -WF,-DALLOW_NON_INIT -O3 -qstrict -qmaxmem=-1 -Q
 OPTC    = -O3 -qstrict -qarch=auto -qtune=auto -qcache=auto -Q=150 -s -qmaxmem=-1 -qcpluscmt -q32 -bmaxdata:0x80000000
 OPTL    = -O3 -qstrict -Q -qfixed -qalign=4k -q32 -bmaxdata:0x80000000 
 #End Optimization options
+ 
+
 INC = $(INCSEQ)
 LIB = $(LIBSEQ)
 LIBSEQNEEDED = libseqneeded

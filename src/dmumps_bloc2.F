@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -449,8 +449,8 @@ C
           NPIV = NFRONT - NCB
           IF ( K50.EQ.0 ) THEN
            WK_SLAVE = DBLE( NPIV ) * DBLE( NCB ) *
-     *         ( 2.0d0 * NFRONT - NPIV ) / NSLAVES
-           WK_MASTER = 0.6667d0 * NPIV*NPIV*NPIV+
+     *         ( 2.0D0 * NFRONT - NPIV ) / NSLAVES
+           WK_MASTER = 0.6667D0 * NPIV*NPIV*NPIV+
      *                NPIV*NPIV*NCB
           ELSE
            WK_SLAVE = DMUMPS_45(NCB,NFRONT,NPIV)

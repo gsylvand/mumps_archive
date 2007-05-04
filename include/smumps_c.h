@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-   This Version was built on Mon Apr 16 13:49:29 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+   This Version was built on Fri May  4 15:54:01 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -155,14 +155,16 @@ typedef struct
 #define smumps_nullify_c_rowsca_    smumps_nullify_c_rowsca
 #endif
 
-#define MUMPS_CALL
+#ifndef MUMPS_CALL
 #if defined(_WIN32)
-/* 
- * Next line May be needed depending on your Windows environment:
- * #define MUMPS_CALL __stdcall
- */
+/* Modify/choose between next 2 lines depending
+ * on your Windows calling conventions */
+/* #define MUMPS_CALL __stdcall */
+#define MUMPS_CALL
+#else
+#define MUMPS_CALL
 #endif
-
+#endif
 
 void MUMPS_CALL smumps_c(SMUMPS_STRUC_C * smumps_par);
 void MUMPS_CALL smumps_affect_mapping_(SMUMPS_INT * f77mapping);

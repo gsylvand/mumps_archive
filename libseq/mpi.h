@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-   This Version was built on Mon Apr 16 13:49:29 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+   This Version was built on Fri May  4 15:54:01 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -45,6 +45,8 @@
 
 */
 
+#ifndef MUMPS_MPI_H
+#define MUMPS_MPI_H
 /* Those can be used by the main driver to the C interface */
 
 /* Simple type for MPI communicator */
@@ -53,4 +55,4 @@
       int MPI_Init(int *pargc, char ***pargv);
       int MPI_Comm_rank(int  comm, int  *rank);
       int MPI_Finalize(void);
-
+#endif

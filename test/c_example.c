@@ -1,5 +1,5 @@
-/* This file is part of MUMPS VERSION 4.7.2
-This Version was built on Mon Apr 16 13:49:29 2007
+/* This file is part of MUMPS VERSION 4.7.3
+This Version was built on Fri May 4 15:54:01 2007
 
 */
 /* $Id: c_example.c,v 1.8 2003/04/29 09:51:33 jylexcel Exp $ */

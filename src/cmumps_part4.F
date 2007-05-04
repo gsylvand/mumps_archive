@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1651,14 +1651,10 @@ C
               RMAX = MAX(ABS(A(JJ)),RMAX)
   360       CONTINUE
   370       IDIAG = APOS + IPIV - NPIVP1
-            IF (ABS(A(IDIAG)).GT. MAX(UU*RMAX,SEUIL)) THEN
-              JMAX = IPIV - NPIV
-              GO TO 380
-            ENDIF
             IF (RMAX.LE.DKEEP(1)) THEN
                KEEP(109) = KEEP(109)+1
                ISW = IOLDPS+IW(IOLDPS+1+XSIZE)+6+XSIZE+
-     &                      IW(IOLDPS+5+XSIZE)
+     &                      IW(IOLDPS+5+XSIZE)+IPIV-NPIVP1
                PIVNUL_LIST(KEEP(109)) = IW(ISW)
                IF(DKEEP(2).GT.ZERO) THEN
                   IF(REAL(A(IDIAG)) .GE. ZERO) THEN
@@ -1676,6 +1672,10 @@ C
                ENDIF
                JMAX = IPIV - NPIV
                GOTO 380   
+            ENDIF
+            IF (ABS(A(IDIAG)).GT. MAX(UU*RMAX,SEUIL)) THEN
+              JMAX = IPIV - NPIV
+              GO TO 380
             ENDIF
             IF (AMROW.LE. MAX(UU*RMAX,SEUIL)) GO TO 460
             NOFFW = NOFFW + 1
@@ -2672,14 +2672,10 @@ C
               RMAX = MAX(ABS(A(JJ)),RMAX)
   360       CONTINUE
   370       IDIAG = APOS + IPIV - NPIVP1
-            IF (ABS(A(IDIAG)).GT.MAX(UU*RMAX,SEUIL)) THEN
-               JMAX = IPIV - NPIV
-               GO TO 380
-            ENDIF
             IF (RMAX.LE.DKEEP(1)) THEN
                KEEP(109) = KEEP(109)+1
                ISW = IOLDPS+IW(IOLDPS+1+XSIZE)+6+XSIZE+
-     &                      IW(IOLDPS+5+XSIZE)
+     &                      IW(IOLDPS+5+XSIZE)+IPIV-NPIVP1
                PIVNUL_LIST(KEEP(109)) = IW(ISW)
                IF(DKEEP(2).GT.ZERO) THEN
                   IF(REAL(A(IDIAG)) .GE. ZERO) THEN
@@ -2697,6 +2693,10 @@ C
                ENDIF
                JMAX = IPIV - NPIV
                GOTO 380   
+            ENDIF
+            IF (ABS(A(IDIAG)).GT.MAX(UU*RMAX,SEUIL)) THEN
+               JMAX = IPIV - NPIV
+               GO TO 380
             ENDIF
             IF (AMROW.LE.MAX(UU*RMAX,SEUIL)) GO TO 460
             NOFFW = NOFFW + 1

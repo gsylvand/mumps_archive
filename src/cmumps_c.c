@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-   This Version was built on Mon Apr 16 13:49:29 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+   This Version was built on Fri May  4 15:54:01 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -67,7 +67,7 @@ static CMUMPS_DOUBLE * colsca_static;
 static CMUMPS_DOUBLE * rowsca_static;
 #endif
 
-void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
+void MUMPS_CALL cmumps_c(CMUMPS_STRUC_C * cmumps_par)
 {
     /*
      * The following local variables will 
@@ -135,7 +135,7 @@ void cmumps_c(CMUMPS_STRUC_C * cmumps_par)
         cmumps_par->eltptr=0; cmumps_par->eltvar=0; cmumps_par->a_elt=0; cmumps_par->perm_in=0; cmumps_par->sym_perm=0; cmumps_par->uns_perm=0; cmumps_par->irn_loc=0;cmumps_par->jcn_loc=0;cmumps_par->a_loc=0; cmumps_par->listvar_schur=0;cmumps_par->schur=0;cmumps_par->mapping=0;cmumps_par->pivnul_list=0;cmumps_par->colsca=0;cmumps_par->rowsca=0; cmumps_par->rhs_sparse=0; cmumps_par->irhs_sparse=0; cmumps_par->sol_loc=0; cmumps_par->irhs_ptr=0; cmumps_par->isol_loc=0;
         strcpy(cmumps_par->ooc_tmpdir,"NAME_NOT_INITIALIZED");
         strcpy(cmumps_par->ooc_prefix,"NAME_NOT_INITIALIZED");
-	strcpy(cmumps_par->version_number,"4.7.2");
+	strcpy(cmumps_par->version_number,"4.7.3");
 
         /* Next line initializes scalars to arbitrary values.
          * Some of those will anyway be overwritten during the

@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -244,7 +244,7 @@ C
          id%INFO(2) = 0
          RETURN
       ENDIF
-      CALL CMUMPS_GET_MAX_FILE_SIZE(MAX_OOC_FILE_SIZE,IERR)
+      CALL CMUMPS_GET_MAX_FILE_SIZE(MAX_OOC_FILE_SIZE)
       END SUBROUTINE CMUMPS_575
       SUBROUTINE DB_INIT_DOUBLE_BUFFER()
       IMPLICIT NONE
@@ -1124,7 +1124,6 @@ C
       IF(REQ_ID(POS_REQ).NE.-9999)THEN
          CALL CMUMPS_WAIT_REQUEST(REQ_ID(POS_REQ),IERR)
          IF(IERR.LT.0)THEN
-            WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
             RETURN
          ENDIF
          CALL CMUMPS_596(REQUEST,PTRFAC,NSTEPS)
@@ -1995,7 +1994,7 @@ C
      $     (PDEB_SOLVE_Z(ZONE).NE.CURRENT_POS_T(ZONE)-1))THEN
          IF((POS_IN_MEM(I).GT.0).OR.
      $        (POS_IN_MEM(I).LT.-((N_OOC+1)*NB_Z)))THEN
-         WRITE(*,*)MYID_OOC,': Internal error (25) in OOC ',
+            WRITE(*,*)MYID_OOC,': Internal error (25) in OOC ',
      &                      ': There are no free blocks ',
      $         'in CMUMPS_608',PDEB_SOLVE_Z(ZONE),
      $           CURRENT_POS_T(ZONE)
@@ -2015,7 +2014,6 @@ C
      $           ((N_OOC+1)*NB_Z)
             CALL CMUMPS_WAIT_REQUEST(IO_REQ(STEP_OOC(TMP_NODE)),IERR)
             IF(IERR.LT.0)THEN
-               WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
                RETURN
             ENDIF
             REQ_ACT=REQ_ACT-1
@@ -2039,8 +2037,6 @@ C
                         CALL CMUMPS_WAIT_REQUEST(
      $                       IO_REQ(STEP_OOC(TMP_NODE)),IERR)
                         IF(IERR.LT.0)THEN
-                           WRITE(*,*)MYID_OOC,': ',
-     $                          ERR_STR_OOC(1:DIM_ERR_STR_OOC)
                            RETURN
                         ENDIF
                         REQ_ACT=REQ_ACT-1
@@ -2074,7 +2070,6 @@ C
             TMP_NODE=TMP_NODE-((N_OOC+1)*NB_Z)
             CALL CMUMPS_WAIT_REQUEST(IO_REQ(STEP_OOC(TMP_NODE)),IERR)
             IF(IERR.LT.0)THEN
-               WRITE(*,*)MYID_OOC,': ',ERR_STR_OOC(1:DIM_ERR_STR_OOC)
                RETURN
             ENDIF
             REQ_ACT=REQ_ACT-1
@@ -2100,7 +2095,7 @@ C
          ELSEIF(POS_IN_MEM(J).EQ.0)THEN
             FREE_HOLE_FLAG=1
             NB_FREE=NB_FREE+1
-         ELSE
+         ELSE                   ! =>  POS_IN_MEM(J) .LT. 0
             NB_FREE=NB_FREE+1
             IF(FREE_HOLE_FLAG.EQ.1)THEN
                FREE_HOLE=ABS(PTRFAC(STEP_OOC(TMP_NODE)))-
@@ -2345,6 +2340,10 @@ C
       ENDIF
       CALL CMUMPS_602(ZONE,SIZE,DEST,POS_SEQ,
      $     NB_NODES,FLAG,PTRFAC,NSTEPS)
+#if defined(Mila_Print)
+      write(*,*) MYID_OOC,'Computed size LRLU_T:',SIZE,
+     $     LRLU_SOLVE_T(ZONE)
+#endif
       IF(SIZE.EQ.0)THEN
          RETURN
       ENDIF
@@ -2746,4 +2745,16 @@ C
          DEST(I)=SRC(I:I)
       ENDDO
       END SUBROUTINE CMUMPS_589
+      SUBROUTINE CMUMPS_574
+     &           ( IPOOL, LPOOL, III, LEAF, 
+     &             INODE, STRATEGIE, MYID )
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: STRATEGIE, MYID, LPOOL
+      INTEGER IPOOL (LPOOL)
+      INTEGER III,LEAF
+      INTEGER, INTENT(OUT) :: INODE
+         LEAF  = LEAF - 1
+         INODE = IPOOL( LEAF )
+      RETURN
+      END SUBROUTINE CMUMPS_574
       END MODULE CMUMPS_OOC

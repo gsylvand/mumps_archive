@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -322,7 +322,7 @@ C
       DOUBLE PRECISION ZERO
       DOUBLE PRECISION MEMORY_SENT
       INTEGER,DIMENSION(:),POINTER:: KEEP
-      PARAMETER( ZERO=0.0 )
+      PARAMETER( ZERO=0.0d0 )
       INTEGER MEMORY_MD,la,WHAT
       STEP_TO_NIV2_LOAD=>id%ISTEP_TO_INIV2
       CAND_LOAD=>id%CANDIDATES
@@ -341,7 +341,7 @@ C
       MEMORY_MD=MEMORY_MD_ARG
       LA=id%MAXS
       MAX_SURF_MASTER=id%MAX_SURF_MASTER+
-     & INT(DBLE(id%KEEP(12))*DBLE(id%MAX_SURF_MASTER)/100.0D0)
+     & INT(DBLE(id%KEEP(12))*DBLE(id%MAX_SURF_MASTER)/100.0d0)
       COMM_LD = id%COMM_LOAD
       K69  = KEEP(69)
       IF ( KEEP(47) .le. 0 .OR. KEEP(47) .gt. 4 ) THEN
@@ -634,7 +634,7 @@ C
      *      DBLE(2) * DBLE(MAX(KEEP(5),KEEP(6))) * DBLE(KEEP(127)))
          IF (KEEP(12) > 25) THEN
            MEMORY_SENT = MEMORY_SENT -
-     *                   DBLE(KEEP(12))*0.2D0*DBLE(LA)/100.0D0
+     *                   DBLE(KEEP(12))*0.2d0*DBLE(LA)/100.0d0
          ENDIF
          TAB_MAXS(MYID)=INT(MEMORY_SENT)
          CALL ZMUMPS_460( WHAT,
@@ -657,7 +657,7 @@ C
       INTEGER CHECK_FLOPS
       INTEGER IERR
       DOUBLE PRECISION ZERO, SEND_MEM, SEND_LOAD,SBTR_TMP
-      PARAMETER( ZERO=0.0 )
+      PARAMETER( ZERO=0.0d0 )
       INTRINSIC MAX, ABS
       IF (INC_LOAD == 0) THEN
          IF(REMOVE_NODE_FLAG)THEN
@@ -774,7 +774,7 @@ C
       INTEGER IERR, KEEP(500)
       INTEGER*8 KEEP8(150)
       DOUBLE PRECISION ZERO, SEND_MEM, TMP_MEM, SBTR_TMP
-      PARAMETER( ZERO=0.0 )
+      PARAMETER( ZERO=0.0d0 )
       INTRINSIC MAX, ABS
       INTEGER INC_MEM
       LOGICAL PROCESS_BANDE
@@ -857,7 +857,7 @@ C
  888  CONTINUE
       IF ((KEEP(48).NE.5).OR.
      $     ((KEEP(48).EQ.5).AND.(ABS(DELTA_MEM)
-     $      .GE.DBLE(0.1*DBLE(LRLU)))))THEN
+     $      .GE.0.1d0*DBLE(LRLU))))THEN
          IF ( ABS(DELTA_MEM) > DM_THRES_MEM ) THEN
             SEND_MEM = DELTA_MEM
 #else
@@ -873,7 +873,7 @@ C
       IF ((KEEP(48).NE.5).OR.
      $     ((KEEP(48).EQ.5).AND.
      $      (ABS(TMP_MEM-DM_LAST_MEM_SENT).GE.
-     $     DBLE(0.1*DBLE(LRLU)))))THEN
+     $     0.1d0*DBLE(LRLU))))THEN
          IF ( ABS( TMP_MEM-DM_LAST_MEM_SENT) >
      *     DM_THRES_MEM )  THEN
             IERR = 0
@@ -1491,52 +1491,52 @@ C
       IMPLICIT NONE
       INTEGER K69
       IF (K69 .LE. 4) THEN
-         ALPHA = 0.0
-         BETA = 0.0
+         ALPHA = 0.0d0
+         BETA = 0.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 5) THEN
-         ALPHA = 0.5
-         BETA = 50000.0
+         ALPHA = 0.5d0
+         BETA = 50000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 6) THEN
-         ALPHA = 0.5
-         BETA = 100000.0
+         ALPHA = 0.5d0
+         BETA = 100000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 7) THEN
-         ALPHA = 0.5
-         BETA = 150000.0
+         ALPHA = 0.5d0
+         BETA = 150000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 8) THEN
-         ALPHA = 1.0
-         BETA = 50000.0
+         ALPHA = 1.0d0
+         BETA = 50000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 9) THEN
-         ALPHA = 1.0
-         BETA = 100000.0
+         ALPHA = 1.0d0
+         BETA = 100000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 10) THEN
-         ALPHA = 1.0
-         BETA = 150000.0
+         ALPHA = 1.0d0
+         BETA = 150000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 11) THEN
-         ALPHA = 1.5
-         BETA = 50000.0
+         ALPHA = 1.5d0
+         BETA = 50000.0d0
          RETURN
       ENDIF
       IF (K69 .EQ. 12) THEN
-         ALPHA = 1.5
-         BETA = 100000.0
+         ALPHA = 1.5d0
+         BETA = 100000.0d0
          RETURN
       ENDIF
-      ALPHA = 1.5
-      BETA = 150000.0
+      ALPHA = 1.5d0
+      BETA = 150000.0d0
       RETURN
       END SUBROUTINE ZMUMPS_425
       SUBROUTINE ZMUMPS_426(MEM_DISTRIB,MSG_SIZE,ARRAY_ADM,LEN)
@@ -1546,7 +1546,7 @@ C
       DOUBLE PRECISION MSG_SIZE,FORBIGMSG
       INTEGER ARRAY_ADM(LEN)
       DOUBLE PRECISION MY_LOAD
-      FORBIGMSG = 1.0D0
+      FORBIGMSG = 1.0d0
       IF (K69 .lt.2) THEN
          RETURN
       ENDIF
@@ -1556,7 +1556,7 @@ C
          MY_LOAD=LOAD_FLOPS(MYID)
       ENDIF
       IF((MSG_SIZE * K35 ) .gt. 3200000.0) THEN
-         FORBIGMSG = 2.0D0
+         FORBIGMSG = 2.0d0
       ENDIF
       IF (K69 .le. 4) THEN
          DO I = 1,LEN
@@ -1835,7 +1835,7 @@ C
       LOGICAL OK
       DOUBLE PRECISION ZERO,COST
       LOGICAL FLAG
-      PARAMETER(ZERO = 0.0)
+      PARAMETER(ZERO = 0.0d0)
       EXTERNAL ZMUMPS_283,ZMUMPS_170
       LOGICAL ZMUMPS_283,ZMUMPS_170
       IF((INODE.LE.0).OR.(INODE.GT.N_LOAD)) THEN
@@ -2556,13 +2556,13 @@ C
            DO I=1,PROCS(SLAVEF+1)
               WLOAD(I)=LOAD_FLOPS(PROCS(I))
               IDWLOAD(I)=PROCS(I)
-              IF (WLOAD(I) < -0.5D0 ) THEN
+              IF (WLOAD(I) < -0.5d0 ) THEN
                  IF((MP.GT.0).AND.(LP.GE.2))THEN
                     WRITE(MP,*)MYID,': Warning: negative load ',
      $                   WLOAD(I)
                  ENDIF
               ENDIF 
-              WLOAD(I)=MAX(WLOAD(I),0.0D0)
+              WLOAD(I)=MAX(WLOAD(I),0.0d0)
            ENDDO
            NUMBER_OF_PROCS=PROCS(SLAVEF+1)
             OTHERS=NUMBER_OF_PROCS
@@ -2571,13 +2571,13 @@ C
             WLOAD(1:SLAVEF) = LOAD_FLOPS(0:NUMBER_OF_PROCS-1)
             DO I=1,NUMBER_OF_PROCS
                IDWLOAD(I) = I - 1
-               IF (WLOAD(I) < -0.5D0 ) THEN
+               IF (WLOAD(I) < -0.5d0 ) THEN
                   IF((MP.GT.0).AND.(LP.GE.2))THEN
                      WRITE(MP,*)MYID,': Negative load ',
      $                    WLOAD(I)
                   ENDIF
                ENDIF 
-               WLOAD(I)=MAX(WLOAD(I),0.0D0)
+               WLOAD(I)=MAX(WLOAD(I),0.0d0)
             ENDDO
             OTHERS=NUMBER_OF_PROCS-1
          ENDIF
@@ -5246,7 +5246,7 @@ C
          IF(BDC_SBTR)THEN
             MEM=MEM+SBTR_MEM(I)-SBTR_CUR(I)
          ENDIF
-         IF((MEM/TAB_MAXS(I)).GT.0.8)THEN
+         IF((MEM/TAB_MAXS(I)).GT.0.8d0)THEN
             FLAG=.TRUE.
             GOTO 666
          ENDIF

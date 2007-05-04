@@ -1,6 +1,6 @@
 C
-C   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-C   This Version was built on Mon Apr 16 13:49:29 2007
+C   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+C   This Version was built on Fri May  4 15:54:01 2007
 C
 C
 C  This version of MUMPS is provided to you free of charge. It is public
@@ -1640,6 +1640,7 @@ C
         ENDIF
       ENDIF
       IF (KEEP(210).EQ.1) THEN
+       SPLITROOT = .FALSE. 
        IF ( KEEP(62).GE.1) 
      *  CALL DMUMPS_97(N, FRERE, FILS, NFSIZ,INFO(6),
      *                       NSLAVES, KEEP,KEEP8, SPLITROOT,
@@ -4351,7 +4352,7 @@ C
         INFO(3)  = 0
         INFO(4)  = 0
         INFO(5)  = 0
-        RINFO(1) = 0.0d0
+        RINFO(1) = 0.0D0
       END IF
       MPG = ICNTL(3)
       CALL DMUMPS_621( INFO(3), INFOG(3), KEEP8(5), COMM )
@@ -5411,11 +5412,11 @@ C
         NSLAVES_ESTIM = MIN (NSLAVES_ESTIM, NSLAVES-1)
       ENDIF
       IF ( KEEP(50) .eq. 0 ) THEN
-       WK_MASTER = 0.6667d0 * 
+       WK_MASTER = 0.6667D0 * 
      *                DBLE(NPIV)*DBLE(NPIV)*DBLE(NPIV) +
      *                DBLE(NPIV)*DBLE(NPIV)*DBLE(NCB)
        WK_SLAVE  = DBLE( NPIV ) * DBLE( NCB ) *
-     *         ( 2.0d0 * NFRONT - NPIV ) 
+     *         ( 2.0D0 * DBLE(NFRONT) - DBLE(NPIV) )
      *         / DBLE(NSLAVES_ESTIM)
       ELSE
        WK_MASTER = DBLE(NPIV)*DBLE(NPIV)*DBLE(NPIV) / DBLE(3)

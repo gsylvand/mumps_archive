@@ -1,7 +1,7 @@
 /*
 
-   THIS FILE IS PART OF MUMPS VERSION 4.7.2
-   This Version was built on Mon Apr 16 13:49:29 2007
+   THIS FILE IS PART OF MUMPS VERSION 4.7.3
+   This Version was built on Fri May  4 15:54:01 2007
 
 
   This version of MUMPS is provided to you free of charge. It is public
@@ -48,7 +48,7 @@
 #include  "elapse.h"
 #include  <time.h>
 #include  <sys/timeb.h>
-void ELAPSE(double *val)
+void MUMPS_CALL ELAPSE(double *val)
 {
   time_t	ltime;
   struct    _timeb	tstruct;

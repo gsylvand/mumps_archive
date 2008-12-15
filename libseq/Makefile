@@ -1,21 +1,21 @@
-# This file is part of MUMPS VERSION 4.7.3
-# This Version was built on Fri May 4 15:54:01 2007
 #
+#  This file is part of MUMPS 4.8.4, built on Mon Dec 15 15:31:38 UTC 2008
 #
-.PHONY: libmpiseq
-
 all: libmpiseq
+
+.PHONY: all libmpiseq clean
 
 include ../Makefile.inc
 
 libmpiseq: libmpiseq$(PLAT).a
 
 libmpiseq$(PLAT).a: mpi.o mpic.o elapse.o
-	$(AR) libmpiseq$(PLAT).a mpi.o mpic.o elapse.o
+	$(AR) $@ mpi.o mpic.o elapse.o
+	$(RANLIB) $@
 .f.o:
 	$(FC) $(OPTF) -c $*.f
 .c.o:
-	$(CC) $(OPTC) -I. -c $*.c
+	$(CC) $(OPTC) $(CDEFS) -I. -c $*.c
 
 clean:
 	$(RM) *.o *.a

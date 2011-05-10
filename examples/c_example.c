@@ -1,6 +1,6 @@
 /*
  *
- *  This file is part of MUMPS 4.9, built on Wed Jul 29 10:35:58 UTC 2009
+ *  This file is part of MUMPS 4.10.0, built on Tue May 10 12:56:32 UTC 2011
  *
  */
 /* Example program using the C interface to the 

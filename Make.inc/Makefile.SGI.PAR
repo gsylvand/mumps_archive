@@ -1,5 +1,5 @@
 #
-#  This file is part of MUMPS 4.9, built on Wed Jul 29 10:35:58 UTC 2009
+#  This file is part of MUMPS 4.10.0, built on Tue May 10 12:56:32 UTC 2011
 #
 #Begin orderings
 
@@ -35,7 +35,7 @@ IPORD    = -I$(topdir)/PORD/include/
 LPORD    = -L$(LPORDDIR) -lpord
 
 #LMETISDIR = /local/metis/
-#IMETIS    = # Metis doesn't need include files (Fortran interface avail.)
+#IMETIS    = # Should be provided if you use parmetis
 
 # You have to choose one among the following two lines depending on
 # the type of analysis you want to perform. If you want to perform only
@@ -44,26 +44,31 @@ LPORD    = -L$(LPORDDIR) -lpord
 # line (remember to add -Dparmetis in the ORDERINGSF variable below)
 
 #LMETIS    = -L$(LMETISDIR) -lmetis
-#LMETIS    = -L$(LMETISDIR) -lmetis -lparmetis
+#LMETIS    = -L$(LMETISDIR) -lparmetis -lmetis
 
 # The following variables will be used in the compilation process.
 # Please note that -Dptscotch and -Dparmetis imply -Dscotch and -Dmetis respectively.
 #ORDERINGSF = -Dscotch -Dmetis -Dpord -Dptscotch -Dparmetis
 ORDERINGSF  = -Dpord
 ORDERINGSC  = $(ORDERINGSF)
+
 LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
-IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
+IORDERINGSF = $(ISCOTCH)
+IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)
 
 #End orderings
 ########################################################################
 ########################################################################
 
 PLAT    =
+LIBEXT  = .a
+OUTC    = -o 
+OUTF    = -o 
 RM      = /bin/rm -f
 CC      = cc
 FC = f90
 FL = f90
-AR = ar vr
+AR = ar vr 
 RANLIB  = echo
 SCALAP  = -L/usr/lib64 -lscalapack64 -lmpiblacs64
 INCPAR = -I/usr/include/
@@ -71,7 +76,7 @@ LIBPAR = $(SCALAP)  -L/usr/lib64/ -lmpi
 INCSEQ = -I$(topdir)/libseq
 LIBSEQ  =  -L$(topdir)/libseq -lmpiseq
 LIBBLAS = -lblas
-LIBOTHERS = -lphtread
+LIBOTHERS = -lpthread
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
 CDEFS   = -DAdd_
 
@@ -82,6 +87,6 @@ OPTL    = -O -OPT:Olimit=0 -mips4 -64 -align64
 OPTC    = -O -OPT:Olimit=0 -mips4 -64 -align64
 NOOPT   = -Dsgi -mips4 -64 -align64
 #End Optimization options
-INC = $(INCPAR)
-LIB = $(LIBPAR)
+INCS = $(INCPAR)
+LIBS = $(LIBPAR)
 LIBSEQNEEDED =

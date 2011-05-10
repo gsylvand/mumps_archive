@@ -47,24 +47,10 @@
  *   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
  *
  */
-
-#ifndef MUMPS_CALL
-#if defined(_WIN32)
-/* Modify/choose between next 2 lines depending
- *  * on your Windows calling conventions */
-/* #define MUMPS_CALL __stdcall */
-#define MUMPS_CALL
-#else
-#define MUMPS_CALL
-#endif
-#endif
-
-#if (defined(_WIN32) && ! defined(__MINGW32__)) || defined(UPPER)
-#define mumps_elapse MUMPS_ELAPSE
-#elif defined(Add__)
-#define mumps_elapse mumps_elapse__
-#elif defined(Add_)
-#define mumps_elapse mumps_elapse_
-#endif
-
-void MUMPS_CALL mumps_elapse(double *val);
+#ifndef MUMPS_SIZE_H
+#define MUMPS_SIZE_H
+#include "mumps_common.h"
+#define MUMPS_SIZE_C \
+        F_SYMBOL( size_c, SIZE_C)
+void  MUMPS_CALL MUMPS_SIZE_C(char *a, char *b, MUMPS_INT *diff);
+#endif /* MUMPS_SIZE_H */

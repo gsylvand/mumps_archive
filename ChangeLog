@@ -2,6 +2,75 @@
 = ChangeLog =
 -------------
 
+Changes from 4.9.2 to 4.10.0
+* Modified variable names and variable contents in Make.inc/Makefile*
+  for Windows (Makefile.inc from an older version needs modifications,
+  please do a diff)
+* Option to discard factors during factorization when
+  not needed (ICNTL(31))
+* Option to compute the determinant (ICNTL(33)) 
+* Experimental "A-1" functionality (ICNTL(30))
+* Matlab interface updated for 64-bit machines
+* Improved users' guide
+* Suppressed a memory leak occurring when Scalapack is used
+  and user does loops on JOB=6 without JOB=-2/JOB=-1 in-between
+* Avoid occasional deadlock with huge values of ICNTL(14)
+* Avoid problem of -17 error code during solve phase
+* Avoid checking association of pointer arrays ISOL_loc and SOL_loc
+  on procs with no components of solution (small problems)
+* Some data structures were not free at the end of the parallel analysis. Bug fixed.	
+* Fixed unsafe test of overflow "IF (WFLG+N .LE. WFLG)"
+* Large Schur complements sent by blocks if ICNTL(19)=1 (but
+  options ICNTL(19)=2 or 3 are recommended when Schur complement
+  is large)
+* Corrected problem with sparse RHS + unsymmetric permutation +
+  transpose solve (problem appeared in 4.9)
+* Case where ICNTL(19)=2 or 3 and small value of SIZE_SCHUR
+  causing problems in parallel solved.
+* In case an error is detected, solved occasional problem of
+  deallocating non-allocated local array PERM.
+* Correction in computation of matrix norm in complex arithmetic
+  (MPI_COMPLEX was used in place of MPI_REAL in MPI_REDUCE)
+* Scaling works on singular matrices
+* Compilation problem with -i8 solved
+* MUMPS_INT used in OOC layer to facilitate compilation with
+  64 bit integers
+
+Changes from 4.9.1 to 4.9.2
+* Compressed orderings (ICNTL(12)=2) are now compatible with PORD
+  and PT-Scotch
+* Mapping problem on large numbers of MPI processes, leading to
+  INFOG(1)=-135 on "special" matrices solved (problem appeared
+  in 4.9.1)
+
+Changes from 4.9 to 4.9.1
+* Balancing on the processors of both work and memory improved.
+  In a parallel environment memory consumption should be reduced
+  and performance improved 
+* Modification of the amalgamation to solve both the problem of 
+  small root nodes and the problem of tiny nodes implying too many
+  small MPI messages
+* Corrected bug occurring on big-endian environments when passing
+  a 64-bit integer argument in place of 32-bit one. This was causing
+  problems in parallel, when ScaLAPACK is used, on IBM machines.
+* Internal ERROR 2 in MUMPS_271 now impossible (was
+  already not happening in practice)
+* Solved compiler warnings (or even errors) related to the
+  order of the declarations of arrays and array sizes
+* Parallel analysis: fixed the problem due to the invocation of the size
+  function on non-allocated pointers, corrected a bug due to initialization
+  of pointers in the declaration statements, and improved the Makefiles
+* Corrected bug in the reallocation of arrays
+* Corrected several accesses to uninitialized variables
+* Internal Error (4) in OOC (MUMPS_597) no more occurs
+* Suppressed possible printing of "Internal WARNING 1 in CMUMPS_274"
+* (Minor) numerical pivoting problem in parallel LDLt solved
+* Estimated flops corrected when SYM=2 and Scalapack is used (because
+  we use LU on the root node, not LDLt, in that case)
+* Scaling option effectively used is now returned in INFOG(33) and
+  ICNTL(8) is no more modified by the package
+* INFO(25) is now correctly documented, new statistic INFO(27) added
+
 Changes from 4.8.4 to 4.9
 * Parallel analysis available
 * Use of 64-bit integer addressing for large internal workarrays
@@ -24,7 +93,7 @@ Changes from 4.8.4 to 4.9
 * Fixed some problems related to the usage of intrinsic functions inside PARAMETER
   statements (HP-UX compilers)
 * Fixed problem of explicit interface in [SDCZ]MUMPS_521
-* Out-of-core strategy from 4.7.4 can be reactivated with -DOLD_OOC_NOPANEL
+* Out-of-core strategy from 4.7.3 can be reactivated with -DOLD_OOC_NOPANEL
 * Message "problem with NIV2_FLOPS message" no more occurs
 * Avoid compilation problem with old versions of gfortran
 
@@ -332,6 +401,9 @@ Changes from 4.0.4 to 4.1.4
 = Release history =
 -------------------
 
+Release 4.10.0           : May 2011
+Release 4.9.2            : November 2009
+Release 4.9.1            : October 2009
 Release 4.9              : July 2009
 Release 4.8.4            : December 2008
 Release 4.8.3            : September 2008

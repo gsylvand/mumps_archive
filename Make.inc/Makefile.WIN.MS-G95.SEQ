@@ -1,6 +1,8 @@
 #
-#  This file is part of MUMPS 4.9, built on Wed Jul 29 10:35:58 UTC 2009
+#  This file is part of MUMPS 4.10.0, built on Tue May 10 12:56:32 UTC 2011
 #
+# We are grateful to Evgenii Rudnyi for his help and suggestions
+# regarding Windows installation.
 #Begin orderings
 
 # NOTE that PORD is distributed within MUMPS by default. If you would like to
@@ -9,7 +11,7 @@
 # For example, to have Metis available within MUMPS:
 #          1/ download Metis and compile it
 #          2/ uncomment (suppress # in first column) lines
-#             starting with LMETISDIR,  LMETIS
+#             starting with LMETISDIR,  LMETIS, PATHMETIS
 #          3/ add -Dmetis in line ORDERINGSF
 #             ORDERINGSF  = -Dpord -Dmetis
 #          4/ Compile and install MUMPS
@@ -19,6 +21,7 @@
 #
 
 #SCOTCHDIR  = ${HOME}/scotch_5.1_esmumps
+#PATHSCOTCH = -LIBPATH:$(SCOTCHDIR)/lib
 #ISCOTCH    = -I$(SCOTCHDIR)/include 
 # You have to choose one among the following two lines depending on
 # the type of analysis you want to perform. If you want to perform only
@@ -26,16 +29,18 @@
 # variable below); for both parallel and sequential analysis choose the second 
 # line (remember to add -Dptscotch in the ORDERINGSF variable below)
 
-#LSCOTCH    = -L$(SCOTCHDIR)/lib -lesmumps -lscotch -lscotcherr
-#LSCOTCH    = -L$(SCOTCHDIR)/lib -lptesmumps -lptscotch -lptscotcherr
+#LSCOTCH    = libscotch.lib libscotcherr.lib
+#LSCOTCH    = libptscotch.lib libptscotcherr.lib
 
 
 LPORDDIR = $(topdir)/PORD/lib/
 IPORD    = -I$(topdir)/PORD/include/
-LPORD    = -L$(LPORDDIR) -lpord
+PATHPORD = -LIBPATH:$(LPORDDIR)
+LPORD    = libpord.lib
 
 #LMETISDIR = /local/metis/
-#IMETIS    = # Metis doesn't need include files (Fortran interface avail.)
+#PATHMETIS = -LIBPATH:$(PATHMETIS)
+#IMETIS    = # Should be provided if you use parmetis
 
 # You have to choose one among the following two lines depending on
 # the type of analysis you want to perform. If you want to perform only
@@ -43,45 +48,55 @@ LPORD    = -L$(LPORDDIR) -lpord
 # variable below); for both parallel and sequential analysis choose the second 
 # line (remember to add -Dparmetis in the ORDERINGSF variable below)
 
-#LMETIS    = -L$(LMETISDIR) -lmetis
-#LMETIS    = -L$(LMETISDIR) -lmetis -lparmetis
+#LMETIS    = libmetis.lib
+#LMETIS    = libparmetis.lib libmetis.lib
 
 # The following variables will be used in the compilation process.
 # Please note that -Dptscotch and -Dparmetis imply -Dscotch and -Dmetis respectively.
 #ORDERINGSF = -Dscotch -Dmetis -Dpord -Dptscotch -Dparmetis
 ORDERINGSF  = -Dpord
 ORDERINGSC  = $(ORDERINGSF)
-LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
-IORDERINGS = $(IMETIS) $(IPORD) $(ISCOTCH)
 
+PATHORDERINGS = $(PATHMETIS) $(PATHPORD) $(PATHSCOTCH)
+LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
+IORDERINGSF = $(ISCOTCH)
+IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)
+
+# FOr Windows
 #End orderings
+########################################################################
 ########################################################################
 ################################################################################
 
-PLAT    =
+PLAT =
+LIBEXT  = .lib
+OUTC    = -Fo
+OUTF    = -o 
 RM      = /bin/rm -f
-CC      = cc
-FC = pgf90
-FL = pgf90
-AR = ar vr
+CC      = cl
+FC = g95
+FL = cl
+AR = lib -out:
 RANLIB  = echo
-#RANLIB = ranlib 
 
 
 INCSEQ = -I$(topdir)/libseq
-LIBSEQ  =  -L$(topdir)/libseq -lmpiseq
-
-LIBBLAS = -lf77blas -latlas -lg2c
-LIBOTHERS = -lpthread
+#LIBSEQ  =  -L$(topdir)/libseq -lmpiseq
+LIBSEQ = $(topdir)/libseq/libmpiseq.lib
+#LIBBLAS = /usr/local/lib/libgoto_coppermine32p-r1.00.so
+#LIBBLAS =/usr/local/ATLAS/lib/Linux_P4SSE2/libf77blas.a  /usr/local/ATLAS/lib/Linux_P4SSE2/libatlas.a -lg2c
+LIBBLAS = mkl_intel_c.lib mkl_intel_thread.lib mkl_core.lib libiomp5md.lib
+#LIBOTHERS = -lpthread
+LIBOTHERS = libf95.lib libgcc.lib -link $(PATHORDERINGS)
 #Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS   = -DAdd_
+CDEFS   = -DAdd__
 
 #Begin Optimization options
-OPTF   = -O -DALLOW_NON_INIT
-OPTL   = -O
-OPTC   = -O -DMAIN_COMP
+OPTF   = -O -i4 -fno-underscoring -fcase-upper
+OPTL   =   
+OPTC   = -O2 -MD 
 #End Optimization options
 
-INC = $(INCSEQ)
-LIB = $(LIBSEQ)
+INCS = $(INCSEQ)
+LIBS = $(LIBSEQ)
 LIBSEQNEEDED = libseqneeded

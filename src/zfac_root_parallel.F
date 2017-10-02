@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -16,7 +16,8 @@ C
      &           A, LA, PTRAST, PTLUST_S, PTRFAC,
      &           STEP, INFO, LDLT, QR,
      &           WK, LWK, KEEP,KEEP8,DKEEP,OPELIW)
-      IMPLICIT NONE
+        USE ZMUMPS_LR_STATS, ONLY: UPDATE_FLOPS_STATS_ROOT
+        IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
       INCLUDE 'mpif.h'
       TYPE ( ZMUMPS_ROOT_STRUC ) :: root
@@ -25,7 +26,7 @@ C
       INTEGER(8) :: LWK
       COMPLEX(kind=8) WK( LWK )
       INTEGER KEEP(500)
-      DOUBLE PRECISION    DKEEP(130)
+      DOUBLE PRECISION    DKEEP(230)
       INTEGER(8) KEEP8(150)
       INTEGER(8) :: PTRAST(KEEP(28))
       INTEGER(8) :: PTRFAC(KEEP(28))
@@ -112,11 +113,21 @@ C
         IF (IERR .GT. 0) THEN
           CALL MUMPS_UPDATE_FLOPS_ROOT( OPELIW, LDLT,
      &                          root%TOT_ROOT_SIZE, INFO(2),
-     &                          root%NPROW, root%NPCOL )
+     &                          root%NPROW, root%NPCOL, MYID )
+          IF (KEEP(486) .GT. 0) THEN
+            CALL UPDATE_FLOPS_STATS_ROOT( LDLT,
+     &                          root%TOT_ROOT_SIZE, INFO(2),
+     &                          root%NPROW, root%NPCOL, MYID )
+          ENDIF
         ELSE
           CALL MUMPS_UPDATE_FLOPS_ROOT( OPELIW, LDLT,
      &                          root%TOT_ROOT_SIZE, root%TOT_ROOT_SIZE,
-     &                          root%NPROW, root%NPCOL )
+     &                          root%NPROW, root%NPCOL, MYID )
+          IF (KEEP(486) .GT. 0) THEN
+            CALL UPDATE_FLOPS_STATS_ROOT( LDLT,
+     &                          root%TOT_ROOT_SIZE, root%TOT_ROOT_SIZE,
+     &                          root%NPROW, root%NPCOL, MYID )
+          ENDIF
         ENDIF
         IF ( LDLT .EQ. 0 ) THEN
           ENTRIES_ROOT = int(root%TOT_ROOT_SIZE,8)

@@ -1,21 +1,22 @@
 #
-#  This file is part of MUMPS 5.0.0, released
-#  on Fri Feb 20 08:19:56 UTC 2015
+#  This file is part of MUMPS 5.1.2, released
+#  on Mon Oct  2 07:37:01 UTC 2017
 #
 topdir = ..
 libdir = $(topdir)/lib
 
 default: d
 
-.PHONY: default all s d c z clean
+.PHONY: default all s d c z multi clean
 .SECONDEXPANSION:
 
-all:	c z s d
+all:	c z s d multi
 
-c:	csimpletest
-z:	zsimpletest
-s:	ssimpletest
-d:	dsimpletest c_example
+c:	csimpletest 
+z:	zsimpletest 
+s:	ssimpletest 
+d:	dsimpletest   c_example
+multi:	multiple_arithmetics_example
 
 
 include $(topdir)/Makefile.inc
@@ -46,9 +47,12 @@ LIBZMUMPS = $(libdir)/libzmumps$(PLAT)$(LIBEXT) $(LIBMUMPS_COMMON)
 zsimpletest: $(LIBZMUMPS)  $$@.o
 	$(FL) -o $@ $(OPTL) zsimpletest.o  $(LIBZMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
 
-
 c_example:	$(LIBDMUMPS) $$@.o
 	$(FL) -o $@ $(OPTL) $@.o $(LIBDMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
+
+
+multiple_arithmetics_example:	$(LIBSMUMPS) $(LIBDMUMPS) $(LIBCMUMPS) $(LIBZMUMPS) $$@.o
+	$(FL) -o $@ $(OPTL) $@.o $(LIBSMUMPS) $(LIBDMUMPS) $(LIBCMUMPS) $(LIBZMUMPS) $(LORDERINGS) $(LIBS) $(LIBBLAS) $(LIBOTHERS)
 
 
 .SUFFIXES: .c .F .o
@@ -79,4 +83,4 @@ $(LIBMUMPS_COMMON):
 	exit 1
 
 clean:
-	$(RM) *.o [sdcz]simpletest c_example
+	$(RM) *.o [sdcz]simpletest c_example multiple_arithmetics_example     

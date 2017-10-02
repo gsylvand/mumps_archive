@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -97,7 +97,7 @@ C
                ENDDO
                POOL(LPOOL-2-POS_TO_INSERT)=INODE
                NBTOP = NBTOP + 1
-               GOTO 20
+               GOTO 20 
             ENDIF
             DO J=NBTOP,1,-1
                IF((POOL(LPOOL-2-J).GT.0).AND.(POOL(LPOOL-2-J).LE.N))THEN

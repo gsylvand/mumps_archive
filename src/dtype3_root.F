@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -49,7 +49,7 @@ C
      &  ( COMM_LOAD, ASS_IRECV, N, ISON, IROOT,
      &    PTRI, PTRR,
      &    root, NBROW, NBCOL, SHIFT_LIST_ROW_SON,
-     &    SHIFT_LIST_COL_SON, SHIFT_VAL_SON, LDA, TAG,
+     &    SHIFT_LIST_COL_SON, SHIFT_VAL_SON_ARG, LDA_ARG, TAG,
      &    MYID, COMM, BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
      &    IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, IW, LIW, A, LA,
      &    PTRIST, PTLUST_S, PTRFAC,
@@ -62,22 +62,24 @@ C
      &    ND, FRERE,
      &    LPTRAR, NELT, FRTPTR, FRTELT, 
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE  
+     &               , LRGROUPS
      &     )
       USE DMUMPS_OOC        
-      USE DMUMPS_COMM_BUFFER
+      USE DMUMPS_BUF
       USE DMUMPS_LOAD
       IMPLICIT NONE
       INCLUDE 'dmumps_root.h'
       INTEGER KEEP(500), ICNTL(40)
       INTEGER(8) KEEP8(150)
-      DOUBLE PRECISION  DKEEP(130)
+      DOUBLE PRECISION  DKEEP(230)
       TYPE (DMUMPS_ROOT_STRUC) :: root
       INTEGER COMM_LOAD, ASS_IRECV
       INTEGER N, ISON, IROOT, TAG
       INTEGER PTRI( KEEP(28) )
       INTEGER(8) :: PTRR( KEEP(28) )
-      INTEGER NBROW, NBCOL, LDA
-      INTEGER(8) :: SHIFT_VAL_SON
+      INTEGER NBROW, NBCOL
+      INTEGER, INTENT(IN):: LDA_ARG
+      INTEGER(8), INTENT(IN) :: SHIFT_VAL_SON_ARG
       INTEGER SHIFT_LIST_ROW_SON, SHIFT_LIST_COL_SON
       INTEGER MYID, COMM
       LOGICAL TRANSPOSE_ASM
@@ -89,6 +91,7 @@ C
       INTEGER LIW
       INTEGER IW( LIW )
       DOUBLE PRECISION A( LA )
+      INTEGER, intent(in) :: LRGROUPS(N)
       INTEGER LPTRAR, NELT
       INTEGER FRTPTR( N+1 ), FRTELT( NELT )
       INTEGER(8) :: PTRAST(KEEP(28))
@@ -106,9 +109,9 @@ C
       INTEGER ITLOC( N + KEEP(253) ), FILS( N )
       DOUBLE PRECISION :: RHS_MUMPS(KEEP(255))
       INTEGER ND( KEEP(28) ), FRERE( KEEP(28) )
-      INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
-      INTEGER INTARR( max(1,KEEP(14)) )
-      DOUBLE PRECISION DBLARR( max(1,KEEP(13)) )
+      INTEGER(8), INTENT(IN) :: PTRARW( LPTRAR ), PTRAIW( LPTRAR )
+      INTEGER INTARR( KEEP8(27) )
+      DOUBLE PRECISION DBLARR( KEEP8(26) )
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      &        TAB_POS_IN_PERE(SLAVEF+2,max(1,KEEP(56)))
       INTEGER allocok
@@ -123,6 +126,8 @@ C
       INTEGER(8) :: POSROOT
       INTEGER NSUBSET_ROW, NSUBSET_COL
       INTEGER NRLOCAL, NCLOCAL
+      INTEGER :: LDA
+      INTEGER(8) :: SHIFT_VAL_SON
       LOGICAL SET_IRECV, BLOCKING, MESSAGE_RECEIVED
       INTEGER NBROWS_ALREADY_SENT
       INTEGER SIZE_MSG
@@ -135,6 +140,13 @@ C
       BBPCBP  = 0   
       LP = ICNTL(1)
       IF ( ICNTL(4) .LE. 0 ) LP = -1
+      IF (LDA_ARG < 0) THEN 
+        CALL DMUMPS_SET_LDA_SHIFT_VAL_SON(IW, LIW, PTRI(STEP(ISON)),
+     &                             LDA, SHIFT_VAL_SON)
+      ELSE
+        LDA = LDA_ARG
+        SHIFT_VAL_SON = SHIFT_VAL_SON_ARG
+      ENDIF
       ALLOCATE(PTRROW(root%NPROW + 1 ),  stat=allocok)
       if (allocok .GT. 0) THEN
        IFLAG  =-13
@@ -158,7 +170,7 @@ C
       IF (IFLAG.LT.0) THEN
          IF (LP > 0) write(6,*) MYID, ' : MEMORY ALLOCATION ',
      &     'FAILURE in DMUMPS_BUILD_AND_SEND_CB_ROOT'
-         CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+         CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
          RETURN
       ENDIF
       SKIPLAST_RHS_ROWS = ((KEEP(253).GT.0).AND.(KEEP(50).EQ.0))
@@ -354,7 +366,7 @@ C
            KEEP(121) = -1 
 #endif
            IF (IFLAG.LT.0) THEN
-                CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+                CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
                 RETURN
            ENDIF
         ELSE
@@ -500,8 +512,14 @@ C
      &            PTRARW,PTRAIW,INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,
      &            ND, FRERE, LPTRAR, NELT, FRTPTR, FRTELT, 
      &            ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
+     &               , LRGROUPS
      &             )
                   IF ( IFLAG .LT. 0 ) GOTO 500
+                  IF (LDA_ARG < 0) THEN 
+                    CALL DMUMPS_SET_LDA_SHIFT_VAL_SON(
+     &                    IW, LIW, PTRI(STEP(ISON)),
+     &                    LDA, SHIFT_VAL_SON)
+                  ENDIF
               END IF
             END DO
             IF ( IERR == -2 ) THEN
@@ -509,7 +527,7 @@ C
               IERROR = SIZE_MSG
               IF (LP > 0) WRITE(LP, *) "FAILURE, SEND BUFFER TOO
      & SMALL DURING DMUMPS_BUILD_AND_SEND_CB_ROOT"
-              CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+              CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
               GOTO 500
             ENDIF
             IF ( IERR == -3 ) THEN
@@ -517,7 +535,7 @@ C
      & SMALL DURING DMUMPS_BUILD_AND_SEND_CB_ROOT"
               IFLAG  = -20
               IERROR = SIZE_MSG
-              CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+              CALL DMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
               GOTO 500
             ENDIF
           END IF
@@ -529,6 +547,38 @@ C
       DEALLOCATE(ROW_INDEX_LIST)
       DEALLOCATE(COL_INDEX_LIST)
       RETURN
+      CONTAINS
+        SUBROUTINE DMUMPS_SET_LDA_SHIFT_VAL_SON(IW, LIW, IOLDPS,
+     &                             LDA, SHIFT_VAL_SON)
+        INTEGER,    INTENT(IN)  :: LIW, IOLDPS
+        INTEGER,    INTENT(IN)  :: IW(LIW)
+        INTEGER,    INTENT(OUT) :: LDA
+        INTEGER(8), INTENT(OUT) :: SHIFT_VAL_SON
+        INCLUDE 'mumps_headers.h'
+        INTEGER :: LCONT, NROW, NPIV, NASS, NELIM
+        LCONT  = IW(IOLDPS+KEEP(IXSZ))
+        NROW   = IW(IOLDPS+2+KEEP(IXSZ))
+        NPIV   = IW(IOLDPS+3+KEEP(IXSZ))
+        NASS   = IW(IOLDPS+4+KEEP(IXSZ))
+        NELIM  = NASS-NPIV
+        IF (IW(IOLDPS+XXS).EQ.S_NOLCBNOCONTIG38.OR.
+     &      IW(IOLDPS+XXS).EQ.S_ALL) THEN
+          SHIFT_VAL_SON      = int(NPIV,8)
+          LDA                = LCONT + NPIV
+        ELSE IF (IW(IOLDPS+XXS).EQ.S_NOLCBCONTIG38) THEN
+          SHIFT_VAL_SON = int(NROW,8)*int(LCONT+NPIV-NELIM,8)
+          LDA           = NELIM
+        ELSE IF (IW(IOLDPS+XXS).EQ.S_NOLCLEANED38) THEN
+          SHIFT_VAL_SON=0_8
+          LDA = NELIM
+        ELSE
+          WRITE(*,*) MYID,
+     &    ": internal error in DMUMPS_SET_LDA_SHIFT_VAL_SON",
+     &    IW(IOLDPS+XXS), "ISON=",ISON
+          CALL MUMPS_ABORT()
+        ENDIF
+        RETURN
+        END SUBROUTINE DMUMPS_SET_LDA_SHIFT_VAL_SON
       END SUBROUTINE DMUMPS_BUILD_AND_SEND_CB_ROOT
       SUBROUTINE DMUMPS_ROOT_LOCAL_ASSEMBLY( N, VAL_ROOT,
      &   LOCAL_M, LOCAL_N,
@@ -730,8 +780,10 @@ C
         ENDIF
       ELSE IF ( SLAVE ) THEN
         IF ( root%gridinit_done) THEN
-           CALL blacs_gridexit( root%CNTXT_BLACS )
-           root%gridinit_done = .FALSE.
+           IF (root%yes) THEN
+             CALL blacs_gridexit( root%CNTXT_BLACS )
+             root%gridinit_done = .FALSE.
+           ENDIF
         END IF
         root%CNTXT_BLACS = COMM_ROOT
         CALL blacs_gridinit( root%CNTXT_BLACS, 'R',
@@ -1008,7 +1060,7 @@ C
       INTEGER MYID
       INTEGER KEEP(500)
       INTEGER(8) KEEP8(150)
-      DOUBLE PRECISION DKEEP(130)
+      DOUBLE PRECISION DKEEP(230)
       TYPE (DMUMPS_ROOT_STRUC ) :: root
       INTEGER(8) :: LA, LRLU, IPTRLU, LRLUS
       INTEGER IROOT, LIW, N, IWPOS, IWPOSCB
@@ -1021,9 +1073,10 @@ C
       DOUBLE PRECISION :: RHS_MUMPS(KEEP(255))
       INTEGER COMP, IFLAG, IERROR
       INCLUDE 'mumps_headers.h'
-      INTEGER FILS( N ), PTRAIW(N), PTRARW( N )
-      INTEGER INTARR(max(1,KEEP(14)))
-      DOUBLE PRECISION DBLARR(max(1,KEEP(13)))
+      INTEGER FILS( N )
+      INTEGER(8), INTENT(IN) :: PTRAIW(N), PTRARW( N )
+      INTEGER INTARR(KEEP8(27))
+      DOUBLE PRECISION DBLARR(KEEP8(26))
       INTEGER numroc
       EXTERNAL numroc
       DOUBLE PRECISION ZERO

@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -12,7 +12,6 @@ C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
 C
        MODULE MUMPS_FAC_DESCBAND_DATA_M
        IMPLICIT NONE
-       INTEGER :: DESCBAND_TMP
 #if ! defined(NO_FDM_DESCBAND)
        INTEGER, SAVE :: INODE_WAITED_FOR
        PRIVATE
@@ -42,6 +41,7 @@ C
          FDBD_ARRAY(I)%LBUFR=-9999
          NULLIFY(FDBD_ARRAY(I)%BUFR)
        ENDDO
+       INODE_WAITED_FOR = -1
        RETURN
        END SUBROUTINE MUMPS_FDBD_INIT
        FUNCTION MUMPS_FDBD_IS_DESCBAND_STORED( INODE, IWHANDLER )

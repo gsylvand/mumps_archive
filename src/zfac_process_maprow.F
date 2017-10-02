@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -28,8 +28,9 @@ C
      &  LPTRAR, NELT, FRTPTR, FRTELT, 
      &
      &  ISTEP_TO_INIV2, TAB_POS_IN_PERE 
+     &               , LRGROUPS
      &  )
-      USE ZMUMPS_COMM_BUFFER
+      USE ZMUMPS_BUF
       USE ZMUMPS_LOAD
 #if ! defined(NO_FDM_MAPROW)
       USE MUMPS_FAC_MAPROW_DATA_M
@@ -42,7 +43,7 @@ C
       INTEGER LBUFR, LBUFR_BYTES
       INTEGER ICNTL( 40 ), KEEP(500)
       INTEGER(8) KEEP8(150)
-      DOUBLE PRECISION    DKEEP(130)
+      DOUBLE PRECISION    DKEEP(230)
       INTEGER COMM_LOAD, ASS_IRECV
       INTEGER BUFR( LBUFR )
       INTEGER SLAVEF, NBFIN
@@ -51,6 +52,7 @@ C
       INTEGER N, LIW
       INTEGER IW( LIW )
       COMPLEX(kind=8) A( LA )
+      INTEGER, intent(in) :: LRGROUPS(N)
       INTEGER(8) :: PTRFAC(KEEP(28))
       INTEGER(8) :: PTRAST(KEEP(28))
       INTEGER(8) :: PAMASTER(KEEP(28))
@@ -71,13 +73,13 @@ C
       INTEGER LMAP 
       INTEGER TROW( LMAP )
       DOUBLE PRECISION OPASSW, OPELIW
-      COMPLEX(kind=8) DBLARR(max(1,KEEP(13)))
-      INTEGER INTARR(max(1,KEEP(14)))
+      COMPLEX(kind=8) DBLARR(KEEP8(26))
+      INTEGER INTARR(KEEP8(27))
       INTEGER LPTRAR, NELT
       INTEGER FRTPTR( N+1 ), FRTELT( NELT )
       INTEGER ITLOC( N+KEEP(253) ), FILS( N )
       COMPLEX(kind=8) :: RHS_MUMPS(KEEP(255))
-      INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
+      INTEGER(8), INTENT(IN) ::  PTRARW( LPTRAR ), PTRAIW( LPTRAR )
       INTEGER ND( KEEP(28) ), FRERE( KEEP(28) )
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      &        TAB_POS_IN_PERE(SLAVEF+2,max(1,KEEP(56)))
@@ -171,6 +173,7 @@ C
      &    INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE, LPTRAR,
      &    NELT, FRTPTR, FRTELT, 
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
+     &               , LRGROUPS
      &    )
           IF ( IFLAG .LT. 0 ) THEN
             IS_ERROR_BROADCASTED = .TRUE.  
@@ -178,7 +181,8 @@ C
           ENDIF
         END IF
 #if ! defined(NO_FDM_MAPROW)
-        IF ( ( IW( PTRIST(STEP(ISON)) + 1 + KEEP(IXSZ) ) .NE.
+        IF ( 
+     &     ( IW( PTRIST(STEP(ISON)) + 1 + KEEP(IXSZ) ) .NE.
      &       IW( PTRIST(STEP(ISON)) + 3 + KEEP(IXSZ) ) ) .OR.
      &     ( KEEP(50) .NE. 0 .AND.
      &       IW( PTRIST(STEP(ISON)) + 6 + KEEP(IXSZ) ) .NE. 0 ) )
@@ -218,15 +222,6 @@ C
      &           IW( PTRIST(STEP(ISON)) + 3 + KEEP(IXSZ) ) ) THEN
 #if defined(IBC_TEST)
               MSGSOU = IW( PTRIST(STEP(ISON)) + 9 +  KEEP(IXSZ) )
-#if defined(TRY_FDM_IBCT)
-              IF (MSGSOU > 0) THEN
-                WRITE(*,*) "Internal error 3 in ZMUMPS_MAPLIG", MSGSOU
-                CALL MUMPS_ABORT()
-              ENDIF
-              CALL MUMPS_FIBCD_RETRIEVE( IW(PTRIST(STEP(ISON))+XXA),
-     &                                 IBC_STRUC )
-              MSGSOU = IBC_STRUC%PREDECESSOR
-#endif
               MSGTAG = BLOC_FACTO_SYM
 #else
               MSGSOU = PDEST_MASTER_ISON
@@ -250,15 +245,14 @@ C
      &    PTLUST, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS,
-     &    IPOOL, LPOOL, LEAF,
-     &    NBFIN, MYID, SLAVEF,
+     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, PTRARW, PTRAIW,
      &    INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE, LPTRAR,
      &    NELT, FRTPTR, FRTELT,
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE. 
+     &               , LRGROUPS
      &    )
           IF ( IFLAG .LT. 0 ) THEN
             IS_ERROR_BROADCASTED = .TRUE.  
@@ -332,27 +326,30 @@ C
           I_POSMYIDIN_PERE = I
           LOCAL_ASSEMBLY_TO_BE_DONE = .TRUE.
 #if ! defined(NO_FDM_DESCBAND)
-      IF (PTRIST(STEP(INODE_PERE)) .EQ. 0
-     &    .AND. MYID .NE. PDEST_MASTER) THEN
-          CALL ZMUMPS_TREAT_DESCBAND( INODE_PERE, COMM_LOAD,
-     &    ASS_IRECV, 
-     &    BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
-     &    IWPOS, IWPOSCB, IPTRLU,
-     &    LRLU, LRLUS, N, IW, LIW, A, LA, PTRIST,
-     &    PTLUST, PTRFAC,
-     &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK, COMP,
-     &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS,
-     &    IPOOL, LPOOL, LEAF,
-     &    NBFIN, MYID, SLAVEF,
-     &
-     &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
-     &    FILS, PTRARW, PTRAIW,
-     &    INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE, LPTRAR,
-     &    NELT, FRTPTR, FRTELT, 
-     &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
-     &    )
-      ENDIF
+          IF (PTRIST(STEP(INODE_PERE)) .EQ. 0
+     &      .AND. MYID .NE. PDEST_MASTER) THEN
+            CALL ZMUMPS_TREAT_DESCBAND( INODE_PERE, COMM_LOAD,
+     &      ASS_IRECV, 
+     &      BUFR, LBUFR, LBUFR_BYTES, PROCNODE_STEPS, POSFAC,
+     &      IWPOS, IWPOSCB, IPTRLU,
+     &      LRLU, LRLUS, N, IW, LIW, A, LA, PTRIST,
+     &      PTLUST, PTRFAC,
+     &      PTRAST, STEP, PIMASTER, PAMASTER, NSTK, COMP,
+     &      IFLAG, IERROR, COMM,
+     &      NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
+     &    
+     &      root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
+     &      FILS, PTRARW, PTRAIW,
+     &      INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE, LPTRAR,
+     &      NELT, FRTPTR, FRTELT, 
+     &      ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
+     &               , LRGROUPS
+     &      )
+            IF ( IFLAG .LT. 0 ) THEN
+              IS_ERROR_BROADCASTED = .TRUE. 
+              GOTO 600                      
+            ENDIF
+          ENDIF
 #endif
         ENDIF
       END DO
@@ -487,15 +484,14 @@ C
      &           PTRIST, PTLUST, PTRFAC,
      &           PTRAST, STEP, PIMASTER, PAMASTER, NSTK, COMP,
      &           IFLAG, IERROR, COMM,
-     &           NBPROCFILS,
-     &           IPOOL, LPOOL, LEAF,
-     &           NBFIN, MYID, SLAVEF,
+     &           NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &           root, OPASSW, OPELIW, ITLOC, RHS_MUMPS, FILS, 
      &           PTRARW, PTRAIW,
      &           INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND,FRERE,LPTRAR,
      &           NELT, FRTPTR, FRTELT, 
      &           ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE. 
+     &               , LRGROUPS
      &           )
                  IF ( IFLAG .LT. 0 ) THEN
                    IS_ERROR_BROADCASTED=.TRUE.
@@ -542,7 +538,7 @@ C
       ENDIF
       CALL ZMUMPS_FREE_BAND( N, ISON, PTRIST, PTRAST, IW, LIW,
      &             A, LA, LRLU, LRLUS, IWPOSCB, IPTRLU,
-     &             STEP, MYID, KEEP, ITYPE
+     &             STEP, MYID, KEEP, KEEP8, ITYPE
      &)
  600  CONTINUE
       DEALLOCATE(PERM)
@@ -553,7 +549,7 @@ C
       DEALLOCATE(SLAVES_PERE)
  700  CONTINUE
       IF (IFLAG .LT. 0 .AND. .NOT. IS_ERROR_BROADCASTED) THEN
-        CALL ZMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+        CALL ZMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
       ENDIF
       RETURN
       END SUBROUTINE ZMUMPS_MAPLIG
@@ -574,8 +570,9 @@ C
      &  ND, FRERE, LPTRAR, NELT, FRTPTR, FRTELT, 
      &
      &  ISTEP_TO_INIV2, TAB_POS_IN_PERE
+     &               , LRGROUPS
      &  )
-      USE ZMUMPS_COMM_BUFFER
+      USE ZMUMPS_BUF
       USE ZMUMPS_LOAD
       IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
@@ -583,13 +580,14 @@ C
       INTEGER COMM_LOAD, ASS_IRECV
       INTEGER ICNTL( 40 ), KEEP(500)
       INTEGER(8) KEEP8(150)
-      DOUBLE PRECISION    DKEEP(130)
+      DOUBLE PRECISION    DKEEP(230)
       INTEGER LBUFR, LBUFR_BYTES
       INTEGER SLAVEF, NBFIN
       INTEGER(8) :: LA, IPTRLU, LRLU, LRLUS, POSFAC
       INTEGER IWPOS, IWPOSCB
       INTEGER N, LIW
       COMPLEX(kind=8) A( LA )
+      INTEGER, intent(in) :: LRGROUPS(N)
       INTEGER COMP
       INTEGER IFLAG, IERROR, COMM, MYID
       INTEGER LPOOL, LEAF
@@ -599,7 +597,8 @@ C
       INTEGER LIST_SLAVES_PERE(NSLAVES_PERE)
       INTEGER NELIM, LMAP, TROW( LMAP )
       DOUBLE PRECISION OPASSW, OPELIW
-      COMPLEX(kind=8) DBLARR(max(1,KEEP(13)))
+      COMPLEX(kind=8) DBLARR(KEEP8(26))
+      INTEGER INTARR(KEEP8(27))
       INTEGER LPTRAR, NELT
       INTEGER IW( LIW )
       INTEGER BUFR( LBUFR )
@@ -612,11 +611,10 @@ C
       INTEGER PTRIST(KEEP(28)), PTLUST(KEEP(28)),
      &        STEP(N), PIMASTER(KEEP(28))
       INTEGER PROCNODE_STEPS( KEEP(28) )
-      INTEGER INTARR(max(1,KEEP(14)))
       INTEGER FRTPTR( N+1 ), FRTELT( NELT )
       INTEGER ITLOC( N+KEEP(253) ), FILS( N )
       COMPLEX(kind=8) :: RHS_MUMPS(KEEP(255))
-      INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
+      INTEGER(8), INTENT(IN) :: PTRARW( LPTRAR ), PTRAIW( LPTRAR )
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      &        TAB_POS_IN_PERE(SLAVEF+2,max(1,KEEP(56)))
       INTEGER LP
@@ -947,14 +945,13 @@ C
      &          PTLUST, PTRFAC,
      &          PTRAST, STEP, PIMASTER, PAMASTER, NSTK, COMP,
      &          IFLAG, IERROR, COMM,
-     &          NBPROCFILS,
-     &          IPOOL, LPOOL, LEAF,
-     &          NBFIN, MYID, SLAVEF,
+     &          NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &          root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &          FILS, PTRARW, PTRAIW,
      &          INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND,FRERE,
      &          LPTRAR, NELT, FRTPTR, FRTELT, 
      &          ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE. 
+     &               , LRGROUPS
      &          )
               IF ( IFLAG .LT. 0 ) GOTO 600
               GO TO 95
@@ -979,7 +976,7 @@ C
       DEALLOCATE(SLAVES_PERE)
       RETURN
  700  CONTINUE
-      CALL ZMUMPS_BDC_ERROR(MYID, SLAVEF, COMM )
+      CALL ZMUMPS_BDC_ERROR(MYID, SLAVEF, COMM, KEEP )
       RETURN
       END SUBROUTINE ZMUMPS_MAPLIG_FILS_NIV1
       SUBROUTINE ZMUMPS_LOCAL_ASSEMBLY_TYPE2(I, PDEST, MYID,
@@ -998,7 +995,7 @@ C
      &           ITLOC, RHS_MUMPS, KEEP253_LOC,
      &           FILS, LPTRAR, PTRARW, PTRAIW, INTARR, DBLARR, ICNTL
      &           )
-      USE ZMUMPS_COMM_BUFFER, ONLY: ZMUMPS_BUF_MAX_ARRAY_MINSIZE,
+      USE ZMUMPS_BUF, ONLY: ZMUMPS_BUF_MAX_ARRAY_MINSIZE,
      &                              BUF_MAX_ARRAY
       USE ZMUMPS_LOAD, ONLY : ZMUMPS_LOAD_POOL_UPD_NEW_POOL
       INTEGER ICNTL(40)
@@ -1028,12 +1025,12 @@ C
       COMPLEX(kind=8) :: RHS_MUMPS(KEEP(255))
       INTEGER, intent(in) :: KEEP253_LOC
       INTEGER, intent(in) :: FILS(N)
-      INTEGER, intent(in) :: PTRARW( LPTRAR ), PTRAIW( LPTRAR )
+      INTEGER(8), intent(in) :: PTRARW( LPTRAR ), PTRAIW( LPTRAR )
       INTEGER, intent(in) :: PROCNODE_STEPS( KEEP(28) ), COMM_LOAD
       INTEGER ISTEP_TO_INIV2(KEEP(71)),
      &        TAB_POS_IN_PERE(SLAVEF+2,max(1,KEEP(56)))
-      COMPLEX(kind=8) DBLARR(max(1,KEEP(13)))
-      INTEGER INTARR(max(1,KEEP(14)))
+      COMPLEX(kind=8) DBLARR(KEEP8(26))
+      INTEGER INTARR(KEEP8(27))
       INTEGER LPOOL
       INTEGER IPOOL( LPOOL )
       LOGICAL, intent(in) :: IS_ofType5or6

@@ -1,6 +1,6 @@
 #
-#  This file is part of MUMPS 5.0.0, released
-#  on Fri Feb 20 08:19:56 UTC 2015
+#  This file is part of MUMPS 5.1.2, released
+#  on Mon Oct  2 07:37:01 UTC 2017
 #
 topdir = .
 libdir = $(topdir)/lib
@@ -8,11 +8,11 @@ libdir = $(topdir)/lib
 default:	dexamples
 
 .PHONY: default alllib all c z s d \
-	sexamples dexamples cexamples zexamples \
+	sexamples dexamples cexamples zexamples multi_example \
 	mumps_lib requiredobj libseqneeded clean
 
 alllib:		c z s d
-all:		cexamples zexamples sexamples dexamples
+all:		cexamples zexamples sexamples dexamples multi_example
 
 c:
 	$(MAKE) ARITH=c mumps_lib
@@ -50,6 +50,9 @@ sexamples:	s
 
 dexamples:	d
 	(cd examples ; $(MAKE) d)
+
+multi_example:	s d c z
+	(cd examples ; $(MAKE) multi)
 
 requiredobj: Makefile.inc $(LIBSEQNEEDED) $(libdir)/libpord$(PLAT)$(LIBEXT)
 

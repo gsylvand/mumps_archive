@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -19,12 +19,12 @@ C
      &     IIPOOL, NBFINF, PTRICB, PTRACB, INFO,
      &     IPOOL, LPOOL, PANEL_POS, LPANEL_POS,
      &     STEP, FRERE, FILS, PROCNODE_STEPS,
-     &     PLEFTW, KEEP,KEEP8,
+     &     PLEFTW, KEEP, KEEP8, DKEEP,
      &     PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      &     NRHS, MTYPE,
      &     RHSCOMP, LRHSCOMP, POSINRHSCOMP_BWD
      &     , TO_PROCESS, SIZE_TO_PROCESS
-     &     )
+     &     , FROM_PP )
       IMPLICIT NONE
       LOGICAL BLOQ, FLAG
       INTEGER LBUFR, LBUFR_BYTES
@@ -32,18 +32,20 @@ C
       INTEGER MYID, SLAVEF, COMM
       INTEGER N, LIWW
       INTEGER IWCB( LIWW )
-      INTEGER LWC
+      INTEGER(8), intent(in) :: LWC
       REAL W( LWC )
-      INTEGER POSIWCB, POSWCB
+      INTEGER POSIWCB
       INTEGER IIPOOL, LPOOL
       INTEGER IPOOL( LPOOL )
       INTEGER LPANEL_POS
       INTEGER PANEL_POS( LPANEL_POS )
-      INTEGER NBFINF, INFO(40)
-      INTEGER PLEFTW, KEEP( 500)
+      INTEGER NBFINF, INFO(40), KEEP(500)
+      INTEGER(8) :: POSWCB, PLEFTW
       INTEGER(8) KEEP8(150)
+      REAL, INTENT(INOUT) :: DKEEP(230)
       INTEGER PROCNODE_STEPS( KEEP(28) ), FRERE( KEEP(28) )
-      INTEGER PTRICB(KEEP(28)), PTRACB(KEEP(28)), STEP( N ), FILS( N )
+      INTEGER PTRICB(KEEP(28)), STEP( N ), FILS( N )
+      INTEGER(8) :: PTRACB(KEEP(28))
       INTEGER LIW
       INTEGER(8) :: LA
       INTEGER PTRIST(KEEP(28)), IW( LIW )
@@ -59,11 +61,13 @@ C
 #endif
       INTEGER SIZE_TO_PROCESS
       LOGICAL TO_PROCESS(SIZE_TO_PROCESS)
+      LOGICAL, intent(in) :: FROM_PP
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER MSGSOU, MSGTAG, MSGLEN
       INTEGER :: STATUS(MPI_STATUS_SIZE)
       INTEGER :: IERR
+      DOUBLE PRECISION :: TIME_TMP
       FLAG = .FALSE.
       IF ( BLOQ ) THEN
         CALL MPI_PROBE( MPI_ANY_SOURCE, MPI_ANY_TAG,
@@ -74,13 +78,14 @@ C
      &                   FLAG, STATUS, IERR )
       END IF
       IF (FLAG) THEN
+         KEEP(266)=KEEP(266)-1
          MSGSOU=STATUS(MPI_SOURCE)
          MSGTAG=STATUS(MPI_TAG)
          CALL MPI_GET_COUNT( STATUS, MPI_PACKED, MSGLEN, IERR )
          IF ( MSGLEN .GT. LBUFR_BYTES ) THEN
            INFO(1) = -20
            INFO(2) = MSGLEN
-           CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+           CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
          ELSE
            CALL MPI_RECV(BUFR, LBUFR_BYTES, MPI_PACKED, MSGSOU,
      &                   MSGTAG, COMM, STATUS, IERR)
@@ -92,11 +97,12 @@ C
      &                IIPOOL, NBFINF, PTRICB, PTRACB, INFO,
      &                IPOOL, LPOOL, PANEL_POS, LPANEL_POS, STEP,
      &                FRERE, FILS, PROCNODE_STEPS, PLEFTW,
-     &                KEEP,KEEP8,
+     &                KEEP, KEEP8, DKEEP,
      &                PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      &                NRHS, MTYPE, 
      &                RHSCOMP, LRHSCOMP, POSINRHSCOMP_BWD
      &               , TO_PROCESS, SIZE_TO_PROCESS
+     &               , FROM_PP
      &          )
          END IF
       END IF
@@ -110,14 +116,16 @@ C
      &                W, LWC, POSWCB,
      &                IIPOOL, NBFINF, PTRICB, PTRACB, INFO,
      &                IPOOL, LPOOL, PANEL_POS, LPANEL_POS, STEP,
-     &                FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,KEEP8,
+     &                FRERE, FILS, PROCNODE_STEPS, PLEFTW,
+     &                KEEP, KEEP8, DKEEP,
      &                PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      &                NRHS, MTYPE, 
      &                RHSCOMP, LRHSCOMP, POSINRHSCOMP_BWD
      &               , TO_PROCESS, SIZE_TO_PROCESS
+     &               , FROM_PP
      &           )
       USE SMUMPS_OOC
-      USE SMUMPS_COMM_BUFFER
+      USE SMUMPS_BUF
       IMPLICIT NONE
       INTEGER MSGTAG, MSGSOU
       INTEGER LBUFR, LBUFR_BYTES
@@ -125,16 +133,18 @@ C
       INTEGER MYID, SLAVEF, COMM
       INTEGER N, LIWW
       INTEGER IWCB( LIWW )
-      INTEGER LWC
+      INTEGER(8), intent(in) :: LWC
       REAL W( LWC )
-      INTEGER POSIWCB, POSWCB
+      INTEGER POSIWCB
       INTEGER IIPOOL, LPOOL, LPANEL_POS
       INTEGER IPOOL( LPOOL )
       INTEGER PANEL_POS( LPANEL_POS )
-      INTEGER NBFINF, INFO(40)
-      INTEGER PLEFTW, KEEP( 500)
+      INTEGER NBFINF, INFO(40), KEEP(500)
+      INTEGER(8) :: POSWCB, PLEFTW
       INTEGER(8) KEEP8(150)
-      INTEGER PTRICB(KEEP(28)), PTRACB(KEEP(28)), STEP( N ), FILS( N )
+      REAL, INTENT(INOUT) :: DKEEP(230)
+      INTEGER PTRICB(KEEP(28)), STEP( N ), FILS( N )
+      INTEGER(8) :: PTRACB(KEEP(28))
       INTEGER FRERE(KEEP(28))
       INTEGER PROCNODE_STEPS(KEEP(28))
       INTEGER LIW
@@ -154,15 +164,19 @@ C
       LOGICAL MUST_BE_PERMUTED
       INTEGER  SIZE_TO_PROCESS
       LOGICAL TO_PROCESS(SIZE_TO_PROCESS), NO_CHILDREN
+      LOGICAL, intent(in) :: FROM_PP
       INCLUDE 'mpif.h'
       INCLUDE 'mumps_tags.h'
       INTEGER POSITION, IF, INODE, IERR, LONG, DUMMY(1)
-      INTEGER P_UPDATE, P_SOL_MAS, LIELL, K
+      INTEGER(8) :: P_UPDATE, P_SOL_MAS
+      INTEGER    :: LIELL, K
       INTEGER(8) :: APOS, IST
       INTEGER NPIV, NROW_L, IPOS, NROW_RECU
-      INTEGER I, JJ, IN, PROCDEST, J1, J2, IFR, LDA
+      INTEGER(8) :: IFR8
+      INTEGER I, JJ, IN, PROCDEST, J1, J2, LDA
       INTEGER NSLAVES, NELIM, J, POSINDICES, INODEPOS,
-     &        IPOSINRHSCOMP
+     &        IPOSINRHSCOMP, IPOSINRHSCOMP_TMP, IPOSINRHSCOMP_PANEL
+      DOUBLE PRECISION :: TIME_TMP
       INTEGER JBDEB, JBFIN, NRHS_B, allocok
       LOGICAL FLAG
       REAL ZERO, ALPHA, ONE
@@ -172,10 +186,12 @@ C
       LOGICAL,DIMENSION(:),ALLOCATABLE :: DEJA_SEND
       INTEGER MUMPS_PROCNODE
       EXTERNAL MUMPS_PROCNODE, strsv, strsm, sgemv, sgemm
+      INTEGER :: NCB
       INTEGER(8) :: APOSDEB, NBENTRIES_ALLPANELS
+      INTEGER(8) :: PTWCB, PTWCB_PANEL
       INTEGER LDAJ, NBJ, LIWFAC,
      &        NBJLAST, NPIV_LAST, PANEL_SIZE,
-     &        PTWCB_PANEL, NCB_PANEL, TYPEF
+     &        NCB_PANEL, TYPEF
       LOGICAL TWOBYTWO
       INTEGER BEG_PANEL
       INTEGER IPANEL, NPANELS
@@ -204,7 +220,7 @@ C
      &        COMM, IERR)
          NRHS_B = JBFIN-JBDEB+1
           IF (   POSIWCB - LONG .LT. 0
-     &      .OR. POSWCB - PLEFTW + 1 .LT. LONG ) THEN
+     &      .OR. POSWCB - PLEFTW + 1_8 .LT. LONG ) THEN
             CALL SMUMPS_COMPSO(N, KEEP(28), IWCB,
      &      LIWW, W, LWC,
      &      POSWCB, POSIWCB, PTRICB, PTRACB)
@@ -214,9 +230,10 @@ C
               WRITE(6,*) MYID,' Internal error in bwd solve COMPSO'
               GOTO 260
             END IF
-            IF ( POSWCB - PLEFTW + 1 .LT. LONG ) THEN
+            IF ( POSWCB - PLEFTW + 1_8 .LT. LONG ) THEN
               INFO(1) = -11
-              INFO(2) = LONG + PLEFTW - POSWCB - 1
+              CALL MUMPS_SET_IERROR(LONG + PLEFTW - POSWCB - 1_8,
+     &                             INFO(2))
               WRITE(6,*) MYID,' Internal error in bwd solve COMPSO'
               GOTO 260
             END IF
@@ -303,13 +320,13 @@ C
           CALL MUMPS_ABORT()
         END IF
         LONG = NROW_L + NPIV
-        IF ( POSWCB - LONG*NRHS_B .LT. PLEFTW - 1 ) THEN
+        IF ( POSWCB - LONG*NRHS_B .LT. PLEFTW - 1_8 ) THEN
            CALL SMUMPS_COMPSO( N, KEEP(28), IWCB,
      &          LIWW, W, LWC,
      &          POSWCB, POSIWCB, PTRICB, PTRACB)
-           IF ( POSWCB - LONG*NRHS_B .LT. PLEFTW - 1 ) THEN
+           IF ( POSWCB - LONG*NRHS_B .LT. PLEFTW - 1_8 ) THEN
              INFO(1) = -11
-             INFO(2) = LONG * NRHS_B- POSWCB
+             CALL MUMPS_SET_IERROR(LONG * NRHS_B- POSWCB,INFO(2))
              WRITE(6,*) MYID,' Internal error in bwd solve COMPSO'
              GOTO 260
            END IF
@@ -369,7 +386,7 @@ C
      &                                MSGSOU, 
      &                                BACKSLV_UPDATERHS,
      &                                JBDEB, JBFIN,
-     &                                COMM, IERR )
+     &                                KEEP, COMM, IERR )
         IF ( IERR .EQ. -1 ) THEN
           CALL SMUMPS_BACKSLV_RECV_AND_TREAT(
      &     .FALSE., FLAG,
@@ -379,12 +396,13 @@ C
      &     W, LWC, POSWCB,
      &     IIPOOL, NBFINF, PTRICB, PTRACB, INFO,
      &     IPOOL, LPOOL, PANEL_POS, LPANEL_POS, STEP,
-     &     FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,KEEP8,
+     &     FRERE, FILS, PROCNODE_STEPS, PLEFTW,
+     &     KEEP, KEEP8, DKEEP,
      &     PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE,
      &     NRHS, MTYPE,
      &     RHSCOMP, LRHSCOMP, POSINRHSCOMP_BWD
      &      , TO_PROCESS, SIZE_TO_PROCESS
-     &          )
+     &      , FROM_PP )
           IF ( INFO( 1 ) .LT. 0 ) GOTO 270
           GOTO 100
         ELSE IF ( IERR .EQ. -2 ) THEN
@@ -429,15 +447,15 @@ C
              J1 = IPOS + 1
              J2 = IPOS + NPIV
         ENDIF
+        IPOSINRHSCOMP =  POSINRHSCOMP_BWD(IW(J1)) 
         DO K=JBDEB, JBFIN
-        CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
-     &                   W2, NPIV, MPI_REAL,
-     &                   COMM, IERR )
-         IPOSINRHSCOMP =  POSINRHSCOMP_BWD(IW(J1)) 
-         I = 1
-         IF ( (KEEP(253).NE.0) .AND.
-     &        (IW(PTRIST(STEP(INODE))+XXS).EQ.C_FINI+NSLAVES) 
-     &      )  THEN
+          CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION,
+     &                     W2, NPIV, MPI_REAL,
+     &                     COMM, IERR )
+          I = 1
+          IF ( (KEEP(253).NE.0) .AND.
+     &         (IW(PTRIST(STEP(INODE))+XXS).EQ.C_FINI+NSLAVES) 
+     &       ) THEN
           DO JJ = J1,J2   
 #if defined(RHSCOMP_BYROWS)
             RHSCOMP(K,IPOSINRHSCOMP+JJ-J1) = W2(I)
@@ -490,13 +508,14 @@ C
              ENDIF
           ENDIF 
            IF ( POSIWCB - 2 .LT. 0 .or.
-     &         POSWCB - LIELL*NRHS_B .LT. PLEFTW - 1 ) THEN
+     &         POSWCB - LIELL*NRHS_B .LT. PLEFTW - 1_8 ) THEN
             CALL SMUMPS_COMPSO( N, KEEP(28), IWCB, 
      &          LIWW, W, LWC,
      &          POSWCB, POSIWCB, PTRICB, PTRACB)
-            IF ( POSWCB - LIELL*NRHS_B .LT. PLEFTW - 1 ) THEN
+            IF ( POSWCB - LIELL*NRHS_B .LT. PLEFTW - 1_8 ) THEN
               INFO( 1 ) = -11
-              INFO( 2 ) = LIELL * NRHS_B - POSWCB - PLEFTW + 1
+              CALL MUMPS_SET_IERROR( LIELL*NRHS_B - POSWCB-PLEFTW+1_8,
+     &                              INFO(2) )
               GOTO 260
             END IF
             IF ( POSIWCB - 2 .LT. 0 ) THEN
@@ -508,7 +527,7 @@ C
            POSIWCB = POSIWCB - 2
            POSWCB  = POSWCB - LIELL*NRHS_B
            PTRICB(STEP( INODE )) = POSIWCB + 1
-           PTRACB(STEP( INODE )) = POSWCB  + 1
+           PTRACB(STEP( INODE )) = POSWCB  + 1_8
            IWCB( PTRICB(STEP( INODE ))     ) = LIELL*NRHS_B
            IWCB( PTRICB(STEP( INODE )) + 1 ) = 1  
            IPOS = PTRIST(STEP(INODE)) + KEEP(IXSZ) + 5 + NSLAVES
@@ -518,19 +537,24 @@ C
              POSINDICES = IPOS + 1
            END IF
            IPOSINRHSCOMP =  POSINRHSCOMP_BWD(IW(J1)) 
-           IFR = PTRACB(STEP( INODE ))
-           DO K=JBDEB, JBFIN
-             DO JJ = J1, J2
+           IFR8 = PTRACB(STEP( INODE ))
+           IF (KEEP(350).EQ.0) THEN
+             DO K=JBDEB, JBFIN
+               DO JJ = J1, J2
+                 W(IFR8+JJ-J1+(K-JBDEB)*LIELL) = 
 #if defined(RHSCOMP_BYROWS)
-               W(IFR+JJ-J1+(K-JBDEB)*LIELL) = 
      &           RHSCOMP(K,IPOSINRHSCOMP+JJ-J1)
 #else
-               W(IFR+JJ-J1+(K-JBDEB)*LIELL) = 
      &           RHSCOMP(IPOSINRHSCOMP+JJ-J1,K)
 #endif
-             ENDDO
-           END DO
-           IFR = PTRACB(STEP(INODE))-1+NPIV
+               END DO
+             END DO
+           ELSE IF (KEEP(350).eq.1.OR.KEEP(350).EQ.2) THEN
+           ELSE
+             WRITE(*,*) "Internal error SMUMPS_BACKSLV_TRAITER_MESSAGE"
+             CALL MUMPS_ABORT()
+           ENDIF
+           IFR8 = PTRACB(STEP(INODE))+NPIV-1
            IF ( MTYPE .EQ. 1 .AND. KEEP(50).EQ.0 ) THEN
              J1 = IPOS + LIELL + NPIV + 1
              J2 = IPOS + 2 * LIELL
@@ -538,18 +562,29 @@ C
              J1 = IPOS + NPIV + 1
              J2 = IPOS + LIELL
            END IF
-           DO JJ = J1, J2-KEEP(253)   
-              J = IW(JJ)
-              IFR = IFR + 1
-              IPOSINRHSCOMP =  abs(POSINRHSCOMP_BWD(J))
-              DO K=JBDEB, JBFIN
+           IF (KEEP(350).EQ.0) THEN
+             DO JJ = J1, J2-KEEP(253)   
+               J = IW(JJ)
+               IFR8 = IFR8 + 1
+               IPOSINRHSCOMP_TMP =  abs(POSINRHSCOMP_BWD(J))
+               DO K=JBDEB, JBFIN
 #if defined(RHSCOMP_BYROWS)
-                W(IFR+(K-JBDEB)*LIELL) = RHSCOMP(K,IPOSINRHSCOMP)
+                 W(IFR8+(K-JBDEB)*LIELL) = RHSCOMP(K,IPOSINRHSCOMP_TMP)
 #else
-                W(IFR+(K-JBDEB)*LIELL) = RHSCOMP(IPOSINRHSCOMP,K)
+                 W(IFR8+(K-JBDEB)*LIELL) = RHSCOMP(IPOSINRHSCOMP_TMP,K)
 #endif
-              ENDDO
-           ENDDO
+               ENDDO
+             ENDDO
+           ELSE IF (KEEP(350).EQ.1.OR.KEEP(350).EQ.2) THEN
+             CALL SMUMPS_SOL_BWD_GTHR( JBDEB, JBFIN, J1, J2,
+     &       RHSCOMP, NRHS, LRHSCOMP,
+     &       W(PTRACB(STEP(INODE))), LIELL, NPIV+1,
+     &       IW, LIW, KEEP, N, POSINRHSCOMP_BWD )
+             IFR8 = IFR8 + J2-KEEP(253)-J1+1
+           ELSE
+             WRITE(*,*) "Internal error SMUMPS_BACKSLV_TRAITER_MESSAGE"
+             CALL MUMPS_ABORT()
+           ENDIF
        IF ( KEEP(201).EQ.1 .AND.
      &    (( NELIM .GT. 0 ).OR. (MTYPE.NE.1 )))  THEN
           J = NPIV / PANEL_SIZE  
@@ -592,8 +627,11 @@ C
             ENDIF
             LDAJ    = NROW_L-BEG_PANEL+1 
             APOSDEB = APOSDEB - int(NBJ,8)*int(LDAJ,8)
-            PTWCB_PANEL =  PTRACB(STEP(INODE)) + BEG_PANEL - 1
+            PTWCB   = PTRACB(STEP(INODE))
+            PTWCB_PANEL =  PTRACB(STEP(INODE)) + int(BEG_PANEL - 1,8)
+            IPOSINRHSCOMP_PANEL = IPOSINRHSCOMP + BEG_PANEL - 1
             NCB_PANEL   = LDAJ - NBJ
+            NCB     = NROW_L - NPIV
             IF (KEEP(50).NE.1 .AND.MUST_BE_PERMUTED) THEN
               CALL SMUMPS_GET_OOC_PERM_PTR(TYPEF, TMP_NBPANELS,
      &        I_PIVRPTR, I_PIVR, IPOS + 1 + 2 * LIELL, IW, LIW)
@@ -607,25 +645,95 @@ C
 #if defined(MUMPS_USE_BLAS2)
             IF ( NRHS_B == 1 ) THEN
               IF (NCB_PANEL.NE.0) THEN
-                CALL sgemv( 'T', NCB_PANEL, NBJ, ALPHA, 
+                IF (KEEP(350).EQ.0) THEN
+                  CALL sgemv( 'T', NCB_PANEL, NBJ, ALPHA, 
      &                A( APOSDEB + int(NBJ,8) ), LDAJ,
-     &                W( NBJ + PTWCB_PANEL ),
+     &                W( PTWCB_PANEL + int(NBJ,8) ),
      &                1, ONE,
      &                W(PTWCB_PANEL), 1 )
+                ELSE
+                  IF (NCB_PANEL - NCB.NE. 0) THEN
+                    CALL sgemv( 'T', NCB_PANEL-NCB, NBJ, ALPHA, 
+     &              A( APOSDEB + int(NBJ,8) ), LDAJ,
+#                   if defined(RHSCOMP_BYROWS)
+     &              RHSCOMP(JBDEB,IPOSINRHSCOMP_PANEL+NBJ), 
+     &              1, ONE,
+     &              RHSCOMP(JBDEB,IPOSINRHSCOMP_PANEL), 1 ) 
+#                   else
+     &              RHSCOMP(IPOSINRHSCOMP_PANEL+NBJ,JBDEB),
+     &              1, ONE,
+     &              RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB), 1 )
+#                   endif
+                  ENDIF
+                  IF (NCB .NE. 0) THEN
+                    CALL sgemv( 'T', NCB, NBJ, ALPHA,
+     &              A( APOSDEB + int(LDAJ-NCB,8) ), LDAJ,
+     &              W( PTWCB  + NPIV ),
+     &              1, ONE,
+#                   if defined(RHSCOMP_BYROWS)
+     &              RHSCOMP(JBDEB,IPOSINRHSCOMP_PANEL), 1 )
+#                   else
+     &              RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB), 1 )
+#                   endif
+                  ENDIF
+                ENDIF
               ENDIF
-              CALL strsv('L','T','U', NBJ, A(APOSDEB), LDAJ,
+              IF (KEEP(350).eq.0) THEN
+                CALL strsv('L','T','U', NBJ, A(APOSDEB), LDAJ,
      &              W(PTWCB_PANEL), 1)
+              ELSE
+                CALL strsv('L','T','U', NBJ, A(APOSDEB), LDAJ,
+#if defined(RHSCOMP_BYROWS)
+     &            RHSCOMP(JBDEB,IPOSINRHSCOMP_PANEL), 1)
+#else
+     &            RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB), 1)
+#endif
+              ENDIF
             ELSE
 #endif
               IF (NCB_PANEL.NE.0) THEN
-                CALL sgemm( 'T', 'N', NBJ, NRHS_B, NCB_PANEL, ALPHA,
-     &              A(APOSDEB + int(NBJ,8)), LDAJ,
-     &              W(NBJ+PTWCB_PANEL),LIELL,
+                IF (KEEP(350).eq.0) THEN
+                  CALL sgemm( 'T', 'N', NBJ, NRHS_B, NCB_PANEL, ALPHA,
+     &              A(APOSDEB +int(NBJ,8)), LDAJ,
+     &              W(PTWCB_PANEL+int(NBJ,8)),LIELL,
      &              ONE, W(PTWCB_PANEL),LIELL)
+                ELSE
+#if defined(RHSCOMP_BYROWS)
+                  WRITE(*,*)
+     &            "Internal error in SMUMPS_BACKSLV_TRAITER_MESSAGE"
+                  CALL MUMPS_ABORT()
+#else
+                  IF (NCB_PANEL - NCB .NE. 0) THEN
+                  CALL sgemm( 'T', 'N', NBJ, NRHS_B,
+     &                                         NCB_PANEL-NCB, ALPHA,
+     &              A(APOSDEB +int(NBJ,8)), LDAJ,
+     &              RHSCOMP(IPOSINRHSCOMP_PANEL+NBJ,JBDEB), LRHSCOMP,
+     &              ONE, RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB), LRHSCOMP)
+                  ENDIF
+                  IF (NCB .NE. 0) THEN
+                  CALL sgemm( 'T', 'N', NBJ, NRHS_B, NCB, ALPHA,
+     &              A(APOSDEB +int(LDAJ-NCB,8)), LDAJ,
+     &              W( PTWCB+NPIV ), LIELL,
+     &              ONE, RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB),LRHSCOMP)
+                  ENDIF
+#endif
+                ENDIF
               ENDIF
-              CALL strsm('L','L','T','U',NBJ, NRHS_B, ONE, 
-     &           A(APOSDEB), 
-     &           LDAJ, W(PTWCB_PANEL), LIELL)
+              IF (KEEP(350).eq.0) THEN
+                CALL strsm('L','L','T','U',NBJ, NRHS_B, ONE, 
+     &          A(APOSDEB),
+     &          LDAJ, W(PTWCB_PANEL), LIELL)
+              ELSE
+#if defined(RHSCOMP_BYROWS)
+                WRITE(*,*)
+     &          "Internal error in SMUMPS_BACKSLV_TRAITER_MESSAGE"
+                CALL MUMPS_ABORT()
+#else
+                CALL strsm('L','L','T','U',NBJ, NRHS_B, ONE,
+     &          A(APOSDEB), 
+     &          LDAJ, RHSCOMP(IPOSINRHSCOMP_PANEL,JBDEB), LRHSCOMP)
+#endif
+              ENDIF
 #if defined(MUMPS_USE_BLAS2)
             ENDIF
 #endif
@@ -640,26 +748,71 @@ C
                 IST = APOS + int(NPIV,8) * int(NPIV,8)
             END IF
             IF ( NRHS_B == 1 ) THEN
+              IF (KEEP(350).EQ.0) THEN
                 CALL sgemv( 'N', NPIV, NELIM, ALPHA,
-     &                A( IST ), NPIV,
-     &                W( NPIV + PTRACB(STEP(INODE)) ),
-     &                1, ONE,
-     &                W(PTRACB(STEP(INODE))), 1 )
-             ELSE
+     &              A( IST ), NPIV,
+     &              W( NPIV + PTRACB(STEP(INODE)) ),
+     &              1, ONE,
+     &              W(PTRACB(STEP(INODE))), 1 )
+              ELSE
+                CALL sgemv( 'N', NPIV, NELIM, ALPHA,
+     &              A( IST ), NPIV,
+     &              W( NPIV + PTRACB(STEP(INODE)) ),
+     &              1, ONE,
+#if defined(RHSCOMP_BYROWS)
+     &              RHSCOMP(JBDEB,IPOSINRHSCOMP), 1)
+#else
+     &              RHSCOMP(IPOSINRHSCOMP,JBDEB), 1)
+#endif
+              ENDIF
+            ELSE
+              IF (KEEP(350).EQ.0) THEN
                 CALL sgemm( 'N', 'N', NPIV, NRHS_B, NELIM, ALPHA,
      &                A(IST), NPIV, W(NPIV+PTRACB(STEP(INODE))),LIELL,
      &                ONE, W(PTRACB(STEP(INODE))),LIELL)
-             END IF
+              ELSE
+#if defined(RHSCOMP_BYROWS)
+                WRITE(*,*)
+     &          "Internal error in SMUMPS_BACKSLV_TRAITER_MESSAGE"
+                CALL MUMPS_ABORT()
+#else
+                CALL sgemm( 'N', 'N', NPIV, NRHS_B, NELIM, ALPHA,
+     &                A(IST), NPIV, W(NPIV+PTRACB(STEP(INODE))),LIELL,
+     &                ONE, RHSCOMP(IPOSINRHSCOMP,JBDEB), LRHSCOMP)
+#endif
+              ENDIF
+            END IF
           ENDIF 
 #if defined(MUMPS_USE_BLAS2)
           IF ( NRHS_B == 1 ) THEN
+            IF (KEEP(350).EQ.0) THEN
               CALL strsv( 'U', 'N', 'U', NPIV, A(APOS), LDA,
      &                  W(PTRACB(STEP(INODE))),1)
+            ELSE
+              CALL strsv( 'U', 'N', 'U', NPIV, A(APOS), LDA,
+#if defined(RHSCOMP_BYROWS)
+     &                RHSCOMP(JBDEB,IPOSINRHSCOMP), 1)
+#else
+     &                RHSCOMP(IPOSINRHSCOMP,JBDEB), 1)
+#endif
+            ENDIF
           ELSE
 #endif
-             CALL strsm( 'L','U', 'N', 'U', NPIV, NRHS_B, ONE,
+             IF (KEEP(350).EQ.0) THEN
+               CALL strsm( 'L','U', 'N', 'U', NPIV, NRHS_B, ONE,
      &                   A(APOS), LDA,
      &                   W(PTRACB(STEP(INODE))),LIELL)
+              ELSE
+#if defined(RHSCOMP_BYROWS)
+                WRITE(*,*)
+     &          "Internal error in SMUMPS_BACKSLV_TRAITER_MESSAGE"
+                CALL MUMPS_ABORT()
+#else
+                CALL strsm( 'L','U', 'N', 'U', NPIV, NRHS_B, ONE,
+     &                    A(APOS), LDA,
+     &                    RHSCOMP(IPOSINRHSCOMP,JBDEB), LRHSCOMP)
+#endif
+              ENDIF
 #if defined(MUMPS_USE_BLAS2)
           END IF
 #endif
@@ -674,19 +827,26 @@ C
            ENDIF
           ENDIF
           IPOS =   PTRIST(STEP(INODE)) +  KEEP(IXSZ) + 6 + NSLAVES
-          IPOSINRHSCOMP =  POSINRHSCOMP_BWD(IW(IPOS)) 
-          DO I = 1, NPIV
-            DO K=JBDEB,JBFIN
+          IPOSINRHSCOMP     = POSINRHSCOMP_BWD(IW(IPOS))
+          IF (KEEP(350).EQ.0) THEN
+            IPOSINRHSCOMP_TMP = IPOSINRHSCOMP
+            DO I = 1, NPIV
+              DO K=JBDEB,JBFIN
 #if defined(RHSCOMP_BYROWS)
-              RHSCOMP( K, IPOSINRHSCOMP ) = 
-     &         W( PTRACB(STEP(INODE))+I-1 + (K-JBDEB)*LIELL )
+                RHSCOMP( K, IPOSINRHSCOMP_TMP ) = 
+     &           W( PTRACB(STEP(INODE))+I-1 + (K-JBDEB)*LIELL )
 #else
-              RHSCOMP( IPOSINRHSCOMP , K ) = 
-     &         W( PTRACB(STEP(INODE))+I-1 + (K-JBDEB)*LIELL )
+                RHSCOMP( IPOSINRHSCOMP_TMP , K ) = 
+     &           W( PTRACB(STEP(INODE))+I-1 + (K-JBDEB)*LIELL )
 #endif
-            ENDDO
-            IPOSINRHSCOMP =  IPOSINRHSCOMP + 1
-          END DO
+              ENDDO
+              IPOSINRHSCOMP_TMP =  IPOSINRHSCOMP_TMP + 1
+            END DO
+          ELSE IF (KEEP(350).EQ.1.OR.KEEP(350).EQ.2) THEN
+          ELSE
+            WRITE(*,*)"Internal error in SMUMPS_BACKSLV_TRAITER_MESSAGE"
+            CALL MUMPS_ABORT()
+          ENDIF
           IN = INODE
   200     IN = FILS(IN)
           IF (IN .GT. 0) GOTO 200
@@ -694,7 +854,7 @@ C
             MYLEAFE = MYLEAFE - 1
             IF (MYLEAFE .EQ. 0) THEN
               CALL SMUMPS_MCAST2( DUMMY, 1, MPI_INTEGER, MYID, COMM,
-     &                       FEUILLE, SLAVEF )
+     &                       FEUILLE, SLAVEF, KEEP )
               NBFINF = NBFINF - 1
             ENDIF
             IWCB( PTRICB(STEP(INODE)) + 1 ) = 0
@@ -730,10 +890,13 @@ C
               PROCDEST = MUMPS_PROCNODE( PROCNODE_STEPS(STEP(IN)), 
      &                   SLAVEF )
               IF ( .NOT. DEJA_SEND( PROCDEST ) ) THEN
- 110            CALL SMUMPS_BUF_SEND_VCB( NRHS_B, IN, 0, 0,
+ 110            CONTINUE
+                CALL SMUMPS_BUF_SEND_VCB( NRHS_B, IN, 0, 0,
      &          LIELL, LIELL-KEEP(253),
      &          IW( POSINDICES ) ,
      &          W( PTRACB(STEP(INODE)) ), JBDEB, JBFIN,
+     &          RHSCOMP(1, 1), NRHS, LRHSCOMP,
+     &          IPOSINRHSCOMP, NPIV, KEEP,
      &          PROCDEST, NOEUD, COMM, IERR )
                 IF ( IERR .EQ. -1 ) THEN
                   CALL SMUMPS_BACKSLV_RECV_AND_TREAT(
@@ -744,12 +907,13 @@ C
      &            W, LWC, POSWCB,
      &            IIPOOL, NBFINF, PTRICB, PTRACB, INFO,
      &            IPOOL, LPOOL, PANEL_POS, LPANEL_POS, STEP,
-     &            FRERE, FILS, PROCNODE_STEPS, PLEFTW, KEEP,KEEP8,
+     &            FRERE, FILS, PROCNODE_STEPS, PLEFTW,
+     &            KEEP, KEEP8, DKEEP,
      &            PTRIST, PTRFAC, IW, LIW, A, LA, W2, MYLEAFE, 
      &            NRHS, MTYPE, 
      &            RHSCOMP, LRHSCOMP, POSINRHSCOMP_BWD
      &            , TO_PROCESS, SIZE_TO_PROCESS
-     &            )
+     &            , FROM_PP )
                   IF ( INFO( 1 ) .LT. 0 ) GOTO 270
                   GOTO 110
                 ELSE IF ( IERR .eq. -2 ) THEN
@@ -772,7 +936,7 @@ C
                    MYLEAFE = MYLEAFE - 1
                    IF (MYLEAFE .EQ. 0) THEN
                       CALL SMUMPS_MCAST2( DUMMY, 1, MPI_INTEGER, MYID, 
-     &                     COMM, FEUILLE, SLAVEF )
+     &                     COMM, FEUILLE, SLAVEF, KEEP )
                       NBFINF = NBFINF - 1
                    ENDIF
                    IWCB( PTRICB(STEP(INODE)) + 1 ) = 0
@@ -805,11 +969,11 @@ C
       ENDIF
       GO TO 270
  260  CONTINUE
-      CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+      CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
  270  CONTINUE
       DEALLOCATE(DEJA_SEND)
       RETURN
-      CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+      CALL SMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
       RETURN
       END SUBROUTINE SMUMPS_BACKSLV_TRAITER_MESSAGE
       SUBROUTINE SMUMPS_BUILD_PANEL_POS(PANEL_SIZE, PANEL_POS,

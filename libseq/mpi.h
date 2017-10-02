@@ -1,51 +1,15 @@
 /*
  *
- *  This file is part of MUMPS 5.0.0, released
- *  on Fri Feb 20 08:19:56 UTC 2015
+ *  This file is part of MUMPS 5.1.2, released
+ *  on Mon Oct  2 07:37:01 UTC 2017
  *
  *
- *  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+ *  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
  *  University of Bordeaux.
  *
  *  This version of MUMPS is provided to you free of charge. It is
- *  released under the CeCILL-C license,
- *  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html, 
- *  except for the external and optional ordering PORD, 
- *  in separate directory PORD, which is public domain (see PORD/README).
- *
- *  You can acknowledge (using references [1] and [2]) the contribution of
- *  this package in any scientific publication dependent upon the use of
- *  the package. Please use reasonable endeavours to notify the authors
- *  of the package of this publication.
- *
- *   [1] P. R. Amestoy, I. S. Duff, J. Koster and  J.-Y. L'Excellent,
- *   A fully asynchronous multifrontal solver using distributed dynamic
- *   scheduling, SIAM Journal of Matrix Analysis and Applications,
- *   Vol 23, No 1, pp 15-41 (2001).
- *
- *   [2] P. R. Amestoy, A. Guermouche, J.-Y. L'Excellent and
- *   S. Pralet, Hybrid scheduling for the parallel solution of linear
- *   systems. Parallel Computing Vol 32 (2), pp 136-156 (2006).
- *
- *  As a counterpart to the access to the source code and rights to copy,
- *  modify and redistribute granted by the license, users are provided only
- *  with a limited warranty  and the software's author,  the holder of the
- *  economic rights,  and the successive licensors  have only  limited
- *  liability. 
- *
- *  In this respect, the user's attention is drawn to the risks associated
- *  with loading,  using,  modifying and/or developing or reproducing the
- *  software by the user in light of its specific status of free software,
- *  that may mean  that it is complicated to manipulate,  and  that  also
- *  therefore means  that it is reserved for developers  and  experienced
- *  professionals having in-depth computer knowledge. Users are therefore
- *  encouraged to load and test the software's suitability as regards their
- *  requirements in conditions enabling the security of their systems and/or 
- *  data to be ensured and,  more generally, to use and operate it in the 
- *  same conditions as regards security. 
- *
- *  The fact that you are presently reading this means that you have had
- *  knowledge of the CeCILL-C license and that you accept its terms.
+ *  released under the CeCILL-C license:
+ *  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
  *
  */
 #ifdef INTSIZE64
@@ -54,6 +18,20 @@
 #else
 #define LIBSEQ_INT int
 #endif
+
+#if ! defined(LIBSEQ_CALL)
+#if defined(_WIN32) && ! defined(__MINGW32__)
+/* Choose between next lines or modify according
+ * to your Windows calling conventions:
+   #define LIBSEQ_CALL
+   #define LIBSEQ_CALL __declspec(dllexport)
+   #define LIBSEQ_CALL __declspec(dllexport) */
+#define LIBSEQ_CALL
+#else
+#define LIBSEQ_CALL
+#endif
+#endif
+
 
 #ifndef MUMPS_MPI_H
 #define MUMPS_MPI_H
@@ -73,9 +51,9 @@ extern "C" {
 typedef LIBSEQ_INT MPI_Comm; /* Simple type for MPI communicator */
 static MPI_Comm MPI_COMM_WORLD=(MPI_Comm)0;
 
-LIBSEQ_INT MPI_Init(LIBSEQ_INT *pargc, char ***pargv);
-LIBSEQ_INT MPI_Comm_rank(LIBSEQ_INT  comm, LIBSEQ_INT  *rank);
-LIBSEQ_INT MPI_Finalize(void);
+LIBSEQ_INT LIBSEQ_CALL MPI_Init(LIBSEQ_INT *pargc, char ***pargv);
+LIBSEQ_INT LIBSEQ_CALL MPI_Comm_rank(LIBSEQ_INT  comm, LIBSEQ_INT  *rank);
+LIBSEQ_INT LIBSEQ_CALL MPI_Finalize(void);
 
 #ifdef __cplusplus
 }

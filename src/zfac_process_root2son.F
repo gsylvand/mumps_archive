@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.0.0, released
-C  on Fri Feb 20 08:19:56 UTC 2015
+C  This file is part of MUMPS 5.1.2, released
+C  on Mon Oct  2 07:37:01 UTC 2017
 C
 C
-C  Copyright 1991-2015 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2017 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -20,15 +20,14 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS,
-     &    IPOOL, LPOOL, LEAF,
-     &    NBFIN, MYID, SLAVEF,
+     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, PTRARW, PTRAIW,
      &    INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND,FRERE,
      &    LPTRAR, NELT, FRTPTR, FRTELT, 
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE
+     &               , LRGROUPS
      &     )
       IMPLICIT NONE
       INCLUDE 'zmumps_root.h'
@@ -36,7 +35,7 @@ C
       TYPE (ZMUMPS_ROOT_STRUC) :: root
       INTEGER KEEP(500), ICNTL( 40 )
       INTEGER(8) KEEP8(150)
-      DOUBLE PRECISION       DKEEP(130)
+      DOUBLE PRECISION       DKEEP(230)
       INTEGER COMM_LOAD, ASS_IRECV
       INTEGER INODE, NELIM_ROOT
       INTEGER LBUFR, LBUFR_BYTES
@@ -46,6 +45,7 @@ C
       INTEGER N, LIW
       INTEGER IW( LIW )
       COMPLEX(kind=8) A( LA )
+      INTEGER, intent(in) :: LRGROUPS(N)
       INTEGER(8) :: PTRAST(KEEP(28))
       INTEGER(8) :: PTRFAC(KEEP(28))
       INTEGER(8) :: PAMASTER(KEEP(28))
@@ -63,10 +63,10 @@ C
       DOUBLE PRECISION OPASSW, OPELIW
       INTEGER ITLOC( N + KEEP(253) ), FILS( N )
       COMPLEX(kind=8) :: RHS_MUMPS(KEEP(255))
-      INTEGER PTRARW( LPTRAR ), PTRAIW( LPTRAR )
+      INTEGER(8), INTENT(IN) :: PTRARW( LPTRAR ), PTRAIW( LPTRAR )
       INTEGER ND( KEEP(28) ), FRERE( KEEP(28) ) 
-      INTEGER INTARR(max(1,KEEP(14)))
-      COMPLEX(kind=8) DBLARR(max(1,KEEP(13)))
+      INTEGER INTARR(KEEP8(27))
+      COMPLEX(kind=8) DBLARR(KEEP8(26))
       INTEGER ISTEP_TO_INIV2(KEEP(71)), 
      &        TAB_POS_IN_PERE(SLAVEF+2,max(1,KEEP(56)))
       INCLUDE 'mumps_tags.h'
@@ -147,6 +147,7 @@ C
      &   INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,.FALSE.,ND,FRERE,
      &   LPTRAR, NELT, FRTPTR, FRTELT, 
      &   ISTEP_TO_INIV2, TAB_POS_IN_PERE
+     &               , LRGROUPS
      &    )
        IF (IFLAG.LT.0 ) RETURN
        IF (TYPE_SON.EQ.1) THEN
@@ -178,8 +179,7 @@ C
      &    INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,
      &    TRANSPOSE_ASM,ND,FRERE,
      &    LPTRAR, NELT, FRTPTR, FRTELT, 
-     &   ISTEP_TO_INIV2, TAB_POS_IN_PERE 
-     &   )
+     &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, LRGROUPS )
         IF (IFLAG.LT.0 ) RETURN
        ENDIF
        IOLDPS = PTLUST_S(STEP(INODE))
@@ -197,7 +197,8 @@ C
          LDA = NPIV+NBROW
        ENDIF
        CALL ZMUMPS_COMPACT_FACTORS(A(POSELT), LDA,
-     &          NPIV, NBROW, KEEP(50))
+     &          NPIV, NBROW, KEEP(50),
+     &          int(LDA,8)*int(NBROW+NPIV,8))
        IW(IOLDPS + KEEP(IXSZ))     = NBCOL
        IW(IOLDPS + 1 +KEEP(IXSZ)) = NASS - NPIV
        IF (TYPE_SON.EQ.2) THEN
@@ -208,7 +209,9 @@ C
        IW(IOLDPS + 3 +KEEP(IXSZ)) = NPIV
       CALL ZMUMPS_COMPRESS_LU(0_8,MYID,N,IOLDPS,TYPE_SON,IW,LIW,
      &    A, LA, POSFAC, LRLU, LRLUS,
-     &    IWPOS, PTRAST,PTRFAC,STEP, KEEP,KEEP8, .FALSE.,INODE,IERR)
+     &    IWPOS, PTRAST,PTRFAC,STEP, KEEP,KEEP8, .FALSE.,INODE,IERR
+     &    , LRGROUPS, NASS
+     &    )
       IF(IERR.LT.0)THEN
          IFLAG=IERR
          IERROR=0
@@ -227,15 +230,14 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS,
-     &    IPOOL, LPOOL, LEAF,
-     &    NBFIN, MYID, SLAVEF,
+     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, PTRARW, PTRAIW,
      &    INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND,FRERE,LPTRAR,
      &    NELT, FRTPTR, FRTELT,
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
+     &               , LRGROUPS
      &   )
           IF ( IFLAG .LT. 0 ) RETURN
         ENDIF
@@ -247,16 +249,6 @@ C
           IF ( KEEP(50).eq.0) THEN
 #if defined(IBC_TEST)
             MSGSOU = IW( PTRIST(STEP(ISON)) + 7 +  KEEP(IXSZ) )
-#if defined(TRY_FDM_IBCT)
-            IF (MSGSOU > 0) THEN
-              WRITE(*,*) "Internal error 2 in ZMUMPS_PROCESS_ROOT2SON",
-     &                    MSGSOU
-              CALL MUMPS_ABORT()
-            ENDIF
-            CALL MUMPS_FIBCD_RETRIEVE( IW(PTRIST(STEP(ISON))+XXA),
-     &                                   IBC_STRUC )
-            MSGSOU = IBC_STRUC%PREDECESSOR
-#endif
             MSGTAG = BLOC_FACTO
 #else
             MSGSOU = PDEST_MASTER_ISON
@@ -268,16 +260,6 @@ C
 #if defined(IBC_TEST)
               MSGSOU = IW( PTRIST(STEP(ISON)) + 9 +  KEEP(IXSZ) )
               MSGTAG = BLOC_FACTO_SYM
-#if defined(TRY_FDM_IBCT)
-              IF (MSGSOU > 0) THEN
-                WRITE(*,*) "Internal error 3 in ZMUMPS_PROCESS_ROOT2SON"
-     &                    , MSGSOU
-                CALL MUMPS_ABORT()
-              ENDIF
-              CALL MUMPS_FIBCD_RETRIEVE( IW(PTRIST(STEP(ISON))+XXA),
-     &                                   IBC_STRUC )
-              MSGSOU = IBC_STRUC%PREDECESSOR
-#endif
 #else
               MSGSOU = PDEST_MASTER_ISON
               MSGTAG = BLOC_FACTO_SYM
@@ -300,15 +282,14 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS,
-     &    IPOOL, LPOOL, LEAF,
-     &    NBFIN, MYID, SLAVEF,
+     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, PTRARW, PTRAIW,
      &    INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE, LPTRAR,
      &    NELT, FRTPTR, FRTELT,
      &    ISTEP_TO_INIV2, TAB_POS_IN_PERE, .TRUE.
+     &               , LRGROUPS
      &   )
           IF ( IFLAG .LT. 0 ) RETURN
         END DO
@@ -338,21 +319,8 @@ C
        SHIFT_LIST_ROW_SON = 6 + IW(IOLDPS+5+KEEP(IXSZ)) + KEEP(IXSZ)
        SHIFT_LIST_COL_SON = SHIFT_LIST_ROW_SON + NROW + NPIV
        NCOL_TO_SEND       = NELIM
-       IF (IW(IOLDPS+XXS).EQ.S_NOLCBNOCONTIG38.OR.
-     &     IW(IOLDPS+XXS).EQ.S_ALL) THEN
-         SHIFT_VAL_SON      = int(NPIV,8)
-         LDA                = LCONT + NPIV
-       ELSE IF (IW(IOLDPS+XXS).EQ.S_NOLCBCONTIG38) THEN
-         SHIFT_VAL_SON = int(NROW,8)*int(LCONT+NPIV-NELIM,8)
-         LDA           = NELIM
-       ELSE IF (IW(IOLDPS+XXS).EQ.S_NOLCLEANED38) THEN
-         SHIFT_VAL_SON=0_8
-         LDA = NELIM
-       ELSE
-         write(*,*) MYID,": internal error in ZMUMPS_PROCESS_ROOT2SON",
-     &   IW(IOLDPS+XXS), "INODE=",INODE
-         CALL MUMPS_ABORT()
-       ENDIF
+       LDA = -9999
+       SHIFT_VAL_SON = -9999_8
        IF ( KEEP( 50 ) .eq. 0 ) THEN
          TRANSPOSE_ASM = .FALSE.
        ELSE
@@ -374,10 +342,8 @@ C
      &    OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, PTRARW, PTRAIW,
      &    INTARR,DBLARR,ICNTL,KEEP,KEEP8,DKEEP,TRANSPOSE_ASM,
-     &    ND, FRERE,
-     &    LPTRAR, NELT, FRTPTR, FRTELT, 
-     &   ISTEP_TO_INIV2, TAB_POS_IN_PERE
-     &    )
+     &    ND, FRERE, LPTRAR, NELT, FRTPTR, FRTELT, 
+     &   ISTEP_TO_INIV2, TAB_POS_IN_PERE, LRGROUPS)
         IF (IFLAG.LT.0 ) RETURN
        IF (KEEP(214).EQ.2) THEN
         CALL ZMUMPS_STACK_BAND( N, INODE,
@@ -389,7 +355,7 @@ C
      &      )
        ENDIF
         IF (IFLAG.LT.0) THEN
-           CALL ZMUMPS_BDC_ERROR( MYID, SLAVEF, COMM )
+           CALL ZMUMPS_BDC_ERROR( MYID, SLAVEF, COMM, KEEP )
         ENDIF
       ENDIF
       RETURN

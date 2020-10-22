@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       MODULE MUMPS_BUILD_SORT_INDEX_ELT_M
       CONTAINS
@@ -39,7 +40,7 @@ C
       INTEGER, TARGET :: IW(LIW)
       INTEGER, INTENT(IN), TARGET :: IWPOSCB
       INTEGER(8), INTENT(IN) :: LINTARR
-      INTEGER INTARR(LINTARR)
+      INTEGER :: INTARR(LINTARR)
       LOGICAL, intent(in)    :: NIV1
       LOGICAL, intent(out)   :: SON_LEVEL2
       INTEGER, intent(out)   :: NFRONT_EFF
@@ -75,7 +76,7 @@ C
 #endif
       Pos_First_NUMORG = 1
       TYPESPLIT  = MUMPS_TYPESPLIT (PROCNODE_STEPS(STEP(INODE)), 
-     &              SLAVEF)
+     &              KEEP(199))
       SON_LEVEL2 = .FALSE.
       IOLDP2     = IOLDPS + HF - 1
       ICT11      = IOLDP2 + NFRONT
@@ -99,9 +100,9 @@ C
      &    ' interior split node of type 1 '
           CALL MUMPS_ABORT()
         ENDIF
-        I= MUMPS_TYPENODE(PROCNODE_STEPS(STEP(IFSON)),SLAVEF)
+        I= MUMPS_TYPENODE(PROCNODE_STEPS(STEP(IFSON)),KEEP(199))
         J= MUMPS_TYPESPLIT(PROCNODE_STEPS(STEP(IFSON)), 
-     &              SLAVEF)
+     &              KEEP(199))
         IF (LEVEL1_SON.or.J.LT.4) THEN
            write(6,*) MYID, ':',
      &     ' Internal error 3 in MUMPS_ELT_BUILD_SORT ',
@@ -110,9 +111,11 @@ C
      &     ' NSLSON =', NSLSON, ' TYPE_SON=', I, 'TYPESPLIT_SON=', J
            CALL MUMPS_ABORT()
         ENDIF
+        SON_IW      => IW
+        SON_IWPOSCB => IWPOSCB
 #if ! defined(NO_XXNBPR)
-        IF (PIMASTER(STEP(IFSON)) .GT. IWPOSCB) THEN
-          INBPROCFILS_SON = PIMASTER(STEP(IFSON))+XXNBPR
+        IF (K2 .GT. SON_IWPOSCB) THEN
+          INBPROCFILS_SON = K2 + XXNBPR
         ELSE
           INBPROCFILS_SON = PTRIST(STEP(IFSON))+XXNBPR
         ENDIF
@@ -121,7 +124,7 @@ C
         NBPROCFILS(STEP(INODE)) = NSLSON
 #if ! defined(NO_XXNBPR)
         IW(IOLDPS+XXNBPR)=NSLSON
-        IW(INBPROCFILS_SON) = NSLSON
+        SON_IW(INBPROCFILS_SON) = NSLSON
         CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
 #endif
         SONROWS_PER_ROW(1:NFRONT-NASS1) = 1
@@ -175,9 +178,9 @@ C
         ENDIF
         ALLOCATE(PTLAST(NUMSTK), stat=allocok)
         IF (allocok .GT. 0) THEN
-         IFLAG = -13
-         GOTO 800
-        ENDIF        
+          IFLAG = -13
+          GOTO 800
+      ENDIF
       ENDIF
       IF (.NOT. NIV1) SONROWS_PER_ROW(1:NFRONT-NASS1) = 0
       IN = INODE
@@ -209,8 +212,8 @@ C
           NROWS  = NCOLS
           ITRANS = NROWS
 #if ! defined(NO_XXNBPR)
-          IF (PIMASTER(STEP(ISON)).GT.IWPOSCB) THEN
-            INBPROCFILS_SON = PIMASTER(STEP(ISON))+XXNBPR
+          IF (K2 .GT. SON_IWPOSCB) THEN
+            INBPROCFILS_SON = K2+XXNBPR
           ELSE
             INBPROCFILS_SON = PTRIST(STEP(ISON))+XXNBPR
           ENDIF
@@ -219,27 +222,29 @@ C
            NBPROCFILS(STEP(ISON)) = NSLSON
            NBPROCFILS(STEP(INODE)) = NBPROCFILS(STEP(INODE)) + NSLSON
 #if ! defined(NO_XXNBPR)
-           IW(INBPROCFILS_SON) = NSLSON
+           SON_IW(INBPROCFILS_SON) = NSLSON
            IW(IOLDPS+XXNBPR) = IW(IOLDPS+XXNBPR) + NSLSON
            CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
-           CALL CHECK_EQUAL(NBPROCFILS(STEP(ISON)),IW(INBPROCFILS_SON))
+           CALL CHECK_EQUAL(NBPROCFILS(STEP(ISON)),
+     &                      SON_IW(INBPROCFILS_SON))
 #endif
           ELSE
            IF (LEVEL1_SON) THEN
             NBPROCFILS(STEP(ISON)) = 1
 #if ! defined(NO_XXNBPR)
-            IW(INBPROCFILS_SON) = 1
+            SON_IW(INBPROCFILS_SON) = 1
 #endif
            ELSE
             NBPROCFILS(STEP(ISON)) = NSLSON
 #if ! defined(NO_XXNBPR)
-            IW(INBPROCFILS_SON) = NSLSON
+            SON_IW(INBPROCFILS_SON) = NSLSON
 #endif
            ENDIF
            NBPROCFILS(STEP(INODE)) = NBPROCFILS(STEP(INODE))+
      &                               NBPROCFILS(STEP(ISON))
 #if ! defined(NO_XXNBPR)
-           IW(IOLDPS+XXNBPR) = IW(IOLDPS+XXNBPR) + IW(INBPROCFILS_SON)
+           IW(IOLDPS+XXNBPR) = IW(IOLDPS+XXNBPR) +
+     &                         SON_IW(INBPROCFILS_SON)
            CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
 #endif
           ENDIF
@@ -341,12 +346,12 @@ C
          DO WHILE
      &      (
      &        ( MUMPS_TYPESPLIT 
-     &           (PROCNODE_STEPS(STEP(DAD(STEP(IBROT)))),SLAVEF)
+     &           (PROCNODE_STEPS(STEP(DAD(STEP(IBROT)))),KEEP(199))
      &           .EQ.5 
      &        )
      &        .OR.
      &        ( MUMPS_TYPESPLIT 
-     &           (PROCNODE_STEPS(STEP(DAD(STEP(IBROT)))),SLAVEF)
+     &           (PROCNODE_STEPS(STEP(DAD(STEP(IBROT)))),KEEP(199))
      &           .EQ.6  
      &        )
      &      )

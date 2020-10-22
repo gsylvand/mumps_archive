@@ -1,15 +1,16 @@
 /*
  *
- *  This file is part of MUMPS 5.2.1, released
- *  on Fri Jun 14 14:46:05 UTC 2019
+ *  This file is part of MUMPS 5.3.5, released
+ *  on Thu Oct 22 09:29:08 UTC 2020
  *
  *
- *  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+ *  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
  *  Mumps Technologies, University of Bordeaux.
  *
  *  This version of MUMPS is provided to you free of charge. It is
- *  released under the CeCILL-C license:
- *  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+ *  released under the CeCILL-C license 
+ *  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+ *  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
  *
  */
 #ifndef MUMPS_METIS64_H
@@ -39,5 +40,11 @@ void MUMPS_CALL
 MUMPS_METIS_KWAY_64(MUMPS_INT8 *n,     MUMPS_INT8 *iptr,
                  MUMPS_INT8 *jcn,   MUMPS_INT8 *k,
                  MUMPS_INT8 *part);
+#define MUMPS_METIS_KWAY_AB_64 \
+  F_SYMBOL(metis_kway_ab_64,METIS_KWAY_AB_64)
+void MUMPS_CALL
+MUMPS_METIS_KWAY_AB_64(MUMPS_INT8 *n,     MUMPS_INT8 *iptr,
+                 MUMPS_INT8 *jcn,   MUMPS_INT8 *k,
+                 MUMPS_INT8 *part,  MUMPS_INT8 *vwgt);
 #endif
 #endif

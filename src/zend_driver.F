@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       SUBROUTINE ZMUMPS_END_DRIVER( id )
       USE ZMUMPS_OOC
@@ -119,10 +120,6 @@ C     -------------------------------------
         DEALLOCATE(id%IS)
         NULLIFY(id%IS)
       ENDIF
-      IF (associated(id%IS1)) THEN
-        DEALLOCATE(id%IS1)
-        NULLIFY(id%IS1)
-      ENDIF
       IF (associated(id%STEP))      THEN
         DEALLOCATE(id%STEP)
         NULLIFY(id%STEP)
@@ -186,10 +183,6 @@ c     ---------------------
       IF (associated(id%PROCNODE_STEPS)) THEN
         DEALLOCATE(id%PROCNODE_STEPS)
         NULLIFY(id%PROCNODE_STEPS)
-      ENDIF
-      IF (associated(id%PROCNODE)) THEN
-        DEALLOCATE(id%PROCNODE)
-        NULLIFY(id%PROCNODE)
       ENDIF
       IF (associated(id%RHSCOMP)) THEN
         DEALLOCATE(id%RHSCOMP)
@@ -393,11 +386,6 @@ C       ------------------------
 C       Deallocate buffer for integers (facto/solve)
         CALL ZMUMPS_BUF_DEALL_SMALL_BUF( IERR )
       END IF
-C     --------------
-C     Receive buffer
-C     --------------
-      IF ( associated( id%BUFR ) ) DEALLOCATE( id%BUFR )
-      NULLIFY( id%BUFR )
 C Mapping information used during solve
       IF (associated(id%IPTR_WORKING)) THEN
         DEALLOCATE(id%IPTR_WORKING)
@@ -407,13 +395,13 @@ C Mapping information used during solve
         DEALLOCATE(id%WORKING)
         NULLIFY(id%WORKING)
       END IF
-      IF (associated(id%IPOOL_AFTER_L0_OMP)) THEN
-        DEALLOCATE(id%IPOOL_AFTER_L0_OMP)
-        NULLIFY(id%IPOOL_AFTER_L0_OMP)
+      IF (associated(id%IPOOL_B_L0_OMP)) THEN
+        DEALLOCATE(id%IPOOL_B_L0_OMP)
+        NULLIFY(id%IPOOL_B_L0_OMP)
       END IF
-      IF (associated(id%IPOOL_BEFORE_L0_OMP)) THEN
-        DEALLOCATE(id%IPOOL_BEFORE_L0_OMP)
-        NULLIFY(id%IPOOL_BEFORE_L0_OMP)
+      IF (associated(id%IPOOL_A_L0_OMP)) THEN
+        DEALLOCATE(id%IPOOL_A_L0_OMP)
+        NULLIFY(id%IPOOL_A_L0_OMP)
       END IF
       IF (associated(id%PHYS_L0_OMP)) THEN
         DEALLOCATE(id%PHYS_L0_OMP)
@@ -422,6 +410,10 @@ C Mapping information used during solve
       IF (associated(id%VIRT_L0_OMP)) THEN
         DEALLOCATE(id%VIRT_L0_OMP)
         NULLIFY(id%VIRT_L0_OMP)
+      END IF
+      IF (associated(id%VIRT_L0_OMP_MAPPING)) THEN
+        DEALLOCATE(id%VIRT_L0_OMP_MAPPING)
+        NULLIFY(id%VIRT_L0_OMP_MAPPING)
       END IF
       IF (associated(id%PERM_L0_OMP)) THEN
         DEALLOCATE(id%PERM_L0_OMP)
@@ -434,6 +426,14 @@ C Mapping information used during solve
       IF (associated(id%L0_OMP_MAPPING)) THEN
         DEALLOCATE(id%L0_OMP_MAPPING)
         NULLIFY(id%L0_OMP_MAPPING)
+      END IF
+      IF (associated(id%I4_L0_OMP)) THEN
+        DEALLOCATE(id%I4_L0_OMP)
+        NULLIFY(id%I4_L0_OMP)
+      END IF
+      IF (associated(id%I8_L0_OMP)) THEN
+        DEALLOCATE(id%I8_L0_OMP)
+        NULLIFY(id%I8_L0_OMP)
       END IF
       RETURN
       END SUBROUTINE ZMUMPS_END_DRIVER

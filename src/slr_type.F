@@ -1,21 +1,22 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       MODULE SMUMPS_LR_TYPE
       IMPLICIT NONE
       TYPE LRB_TYPE
         REAL,POINTER,DIMENSION(:,:) :: Q => null()
         REAL,POINTER,DIMENSION(:,:) :: R => null()
-        INTEGER :: LRFORM,K,M,N,KSVD
+        INTEGER :: K,M,N
         LOGICAL :: ISLR
       END TYPE LRB_TYPE
       CONTAINS
@@ -32,14 +33,15 @@ C
         ELSE
            IF(associated(LRB_OUT%Q)) MEM = MEM + size(LRB_OUT%Q)
         ENDIF
-#if defined(BLR_MT)          
-!$OMP CRITICAL(keep8_cri)
-#endif          
+!$OMP   ATOMIC UPDATE
         KEEP8(69) = KEEP8(69) - int(MEM,8)
+!$OMP   END ATOMIC
+!$OMP   ATOMIC UPDATE
         KEEP8(71) = KEEP8(71) - int(MEM,8)
-#if defined(BLR_MT)          
-!$OMP END CRITICAL(keep8_cri)
-#endif          
+!$OMP   END ATOMIC
+!$OMP   ATOMIC UPDATE
+        KEEP8(73) = KEEP8(73) - int(MEM,8)
+!$OMP   END ATOMIC
         IF (LRB_OUT%ISLR) THEN
           IF (associated(LRB_OUT%Q)) THEN
             DEALLOCATE (LRB_OUT%Q)

@@ -1,17 +1,18 @@
 !
-!  This file is part of MUMPS 5.2.1, released
-!  on Fri Jun 14 14:46:05 UTC 2019
+!  This file is part of MUMPS 5.3.5, released
+!  on Thu Oct 22 09:29:08 UTC 2020
 !
 !
-!  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+!  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 !  Mumps Technologies, University of Bordeaux.
 !
 !  This version of MUMPS is provided to you free of charge. It is
-!  released under the CeCILL-C license:
-!  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+!  released under the CeCILL-C license 
+!  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+!  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 !
 !
-!      Dummy mpif.h file including symbols used by MUMPS.
+!     Stub mpif.h file including symbols used by MUMPS.
 !
       INTEGER MPI_2DOUBLE_PRECISION
       INTEGER MPI_2INTEGER
@@ -47,6 +48,7 @@
       INTEGER MPI_LAND
       INTEGER MPI_INTEGER8
       INTEGER MPI_REAL8
+      INTEGER MPI_COMM_SELF
       INTEGER MPI_BSEND_OVERHEAD
       PARAMETER (MPI_2DOUBLE_PRECISION=1)
       PARAMETER (MPI_2INTEGER=2)
@@ -82,6 +84,7 @@
       PARAMETER (MPI_LAND=32)
       PARAMETER (MPI_INTEGER8=33)
       PARAMETER (MPI_REAL8=34)
+      PARAMETER (MPI_COMM_SELF=35)
 
       INTEGER MPI_IN_PLACE
       COMMON/mpif_libseq/MPI_IN_PLACE

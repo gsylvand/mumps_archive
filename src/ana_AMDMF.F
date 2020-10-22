@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       SUBROUTINE MUMPS_SYMQAMD_NEW
      &                ( JOB, THRESH, NDENSE, 
@@ -37,6 +38,8 @@ C
       LOGICAL IDENSE
       INTEGER :: FDEG, ThresMin, ThresPrev, IBEGSchur, 
      &        ThresMinINIT
+      LOGICAL :: AGG6_loc
+      INTEGER :: THD_AGG
       LOGICAL :: SchurON
       INTEGER :: DEG, DEGME, DEXT, DMAX, E, ELENME, ELN, I,
      &        ILAST, INEXT, J, JLAST, JNEXT, K, KNT1, KNT2, KNT3,
@@ -56,6 +59,8 @@ C
            NV(1) = 1
            RETURN
         ENDIF
+        AGG6_loc = AGG6
+        THD_AGG = max(128, min(N/2048, 1024))
         IF ( SIZE_COMPLEM_LIST < 0 .OR. SIZE_COMPLEM_LIST > N ) THEN
           WRITE(*,*) "Internal MUMPS_SYMQAMD_NEW", SIZE_COMPLEM_LIST,N
           CALL MUMPS_ABORT()
@@ -499,6 +504,7 @@ C
   140       CONTINUE
           ENDIF
   150   CONTINUE
+        AGG6_loc = (AGG6 .OR. (DEGREE(ME) .LT. THD_AGG))
         DO 180 PME = PME1, PME2
           I = IW (PME)
           IF (DEGREE(I).GT.N) GOTO 180
@@ -515,15 +521,15 @@ C
               IW (PN) = E
               PN = PN + 1
               HASH = HASH + int(E,kind=8)
-            ELSE IF (.NOT. AGG6 .AND. DEXT .EQ. 0) THEN
+            ELSE IF (.NOT. AGG6_loc .AND. DEXT .EQ. 0) THEN
               IW (PN) = E
               PN = PN + 1
               HASH = HASH + int(E,kind=8)
-            ELSE IF (AGG6 .AND. (DEXT .EQ. 0) .AND.
+            ELSE IF (AGG6_loc .AND. (DEXT .EQ. 0) .AND.
      &            ((NDENSE(ME).EQ.NBD).OR.(NDENSE(E).EQ.0))) THEN
                 PE (E) = int(-ME,8)
                 W (E)  = 0
-             ELSE IF (AGG6 .AND. DEXT.EQ.0) THEN
+             ELSE IF (AGG6_loc .AND. DEXT.EQ.0) THEN
                   IW(PN) = E
                   PN     = PN+1
                   HASH   = HASH + int(E,kind=8)
@@ -543,7 +549,7 @@ C
   170     CONTINUE
           IF (((ELEN(I).EQ.1).AND.(P3.EQ.PN))
      &     .OR.
-     &         (AGG6.AND.(DEG .EQ. 0).AND.(NDENSE(ME).EQ.NBD))
+     &         (AGG6_loc.AND.(DEG .EQ. 0).AND.(NDENSE(ME).EQ.NBD))
      &       )
      &    THEN
             PE (I) = int(-ME, 8)

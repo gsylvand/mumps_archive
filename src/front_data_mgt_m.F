@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       MODULE MUMPS_FRONT_DATA_MGT_M
       IMPLICIT NONE
@@ -119,7 +120,7 @@ C
           NULLIFY(FDM_PTR%STACK_FREE_IDX)
           FDM_PTR%NB_FREE_IDX=0
       ELSE
-C     Should not be called twice or when array is unassociated
+C         Should not be called twice or when array is unassociated
           WRITE(*,*) "Internal error 1 in MUMPS_FDM_END", WHAT
           CALL MUMPS_ABORT()
       ENDIF
@@ -290,9 +291,6 @@ C
  100  CONTINUE
 C     Number of modules accessing this handler
       FDM_PTR%COUNT_ACCESS(IWHANDLER)=FDM_PTR%COUNT_ACCESS(IWHANDLER)+1
-#if defined(DBG_FDM)
-      WRITE(*,*) "DBG_FDM: IWHANDLER=",IWHANDLER, "Starting FROM=",FROM
-#endif
       RETURN
       END SUBROUTINE MUMPS_FDM_START_IDX
 C
@@ -315,9 +313,6 @@ C     Already ended
         WRITE(*,*) "Internal error 1 in MUMPS_FDM_END_IDX",IWHANDLER
         CALL MUMPS_ABORT()
       ENDIF
-#if defined(DBG_FDM)
-      WRITE(*,*) "DBG_FDM: IWHANDLER=",IWHANDLER, "Ending FROM=",FROM
-#endif
       FDM_PTR%COUNT_ACCESS(IWHANDLER)=FDM_PTR%COUNT_ACCESS(IWHANDLER)-1
       IF (FDM_PTR%COUNT_ACCESS(IWHANDLER) .LT. 0) THEN
 C     Negative counter!
@@ -378,14 +373,14 @@ C
       RETURN
       END SUBROUTINE MUMPS_FDM_SET_ALL_FREE
 C
-!     --------------------------------- MUMPS_SAVE_RESTORE_FRONT_DATA----------------------------- !
+!     ---------- MUMPS_SAVE_RESTORE_FRONT_DATA ----------------------- !
       SUBROUTINE MUMPS_SAVE_RESTORE_FRONT_DATA(id_FDM_F_ENCODING
      &                 ,unit,MYID,mode
      &                 ,SIZE_GEST,SIZE_VARIABLES
      &                 ,SIZE_INT, TOTAL_FILE_SIZE,TOTAL_STRUC_SIZE
      &                 ,size_read,size_allocated,size_written
      &                 ,INFO)
-      INCLUDE 'mpif.h'
+      IMPLICIT NONE
 C  =======
 C  Purpose
 C  =======
@@ -508,7 +503,7 @@ C     This is done using 2 INTEGERs so we use 2*SIZE_INT more space for each rec
      &     ,SIZE_INT ,TOTAL_FILE_SIZE,TOTAL_STRUC_SIZE
      &     ,size_read,size_allocated,size_written
      &     ,INFO)     
-      INCLUDE 'mpif.h'
+      IMPLICIT NONE
 C  =======
 C  Purpose
 C  =======
@@ -547,8 +542,9 @@ C
       INTEGER(8),intent(INOUT):: size_read,size_allocated,size_written
       INTEGER :: NBVARIABLES_FDM_STRUC_T
       PARAMETER (NBVARIABLES_FDM_STRUC_T = 3)
-      CHARACTER(len=100), dimension(NBVARIABLES_FDM_STRUC_T)::
+      CHARACTER(len=30), dimension(NBVARIABLES_FDM_STRUC_T)::
      &     VARIABLES_FDM_STRUC_T
+      CHARACTER(len=30) :: TMP_STRING
       INTEGER(8),dimension(NBVARIABLES_FDM_STRUC_T)::
      &     SIZE_VARIABLES_FDM_STRUC_T
       INTEGER,dimension(NBVARIABLES_FDM_STRUC_T)::SIZE_GEST_FDM_STRUC_T
@@ -565,7 +561,8 @@ C
 C     BEGINNING OF THE MAIN LOOP ON ALL VARIABLES OF THE STRUCTURE
 C
       DO i1=1,NBVARIABLES_FDM_STRUC_T 
-         SELECT CASE(trim(adjustl(VARIABLES_FDM_STRUC_T(i1))))
+         TMP_STRING = VARIABLES_FDM_STRUC_T(i1)
+         SELECT CASE(TMP_STRING)
          CASE("NB_FREE_IDX")
             NbRecords_FDM_STRUC_T(i1)=1
             if(trim(mode).EQ."memory_save") then

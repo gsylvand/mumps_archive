@@ -1,6 +1,6 @@
 #
-#  This file is part of MUMPS 5.2.1, released
-#  on Fri Jun 14 14:46:05 UTC 2019
+#  This file is part of MUMPS 5.3.5, released
+#  on Thu Oct 22 09:29:08 UTC 2020
 #
 all: libmpiseq
 

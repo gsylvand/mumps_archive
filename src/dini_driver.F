@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       SUBROUTINE DMUMPS_INI_DRIVER( id )
       USE DMUMPS_STRUC_DEF
@@ -96,12 +97,6 @@ C
 C     Module needs to know the size of an INTEGER
       CALL DMUMPS_BUF_INIT( id%KEEP( 34 ), id%KEEP(35) )
 C
-C     Reception buffer initialized to zero
-      NULLIFY(id%BUFR)
-C
-      id%MAXIS1 = 0
-C
-C
       id%INST_Number = -1
 C
 C     Define the options for Metis
@@ -154,8 +149,11 @@ C
       NULLIFY(id%ROWSCA)
       NULLIFY(id%PERM_IN)
       NULLIFY(id%IS)
-      NULLIFY(id%IS1)
       NULLIFY(id%STEP)
+C     Info for analysis by block
+      id%NBLK = 0
+      NULLIFY(id%BLKPTR)
+      NULLIFY(id%BLKVAR)
 C     Info for pruning tree
       NULLIFY(id%Step2node)
       NULLIFY(id%DAD_STEPS)
@@ -173,7 +171,6 @@ C     Info for pruning tree
       id%LNA=0
       NULLIFY(id%PROCNODE_STEPS)
       NULLIFY(id%S)
-      NULLIFY(id%PROCNODE)
       NULLIFY(id%PTLUST_S)
       NULLIFY(id%PTRFAC)
       NULLIFY(id%INTARR) 
@@ -257,13 +254,22 @@ C
 C
 C     Initializations for L0_OMP mechanisms
 C
-      NULLIFY(id%IPOOL_BEFORE_L0_OMP)
-      NULLIFY(id%IPOOL_AFTER_L0_OMP)
+      NULLIFY(id%IPOOL_B_L0_OMP)
+      NULLIFY(id%IPOOL_A_L0_OMP)
       NULLIFY(id%PHYS_L0_OMP)
       NULLIFY(id%VIRT_L0_OMP)
+      NULLIFY(id%VIRT_L0_OMP_MAPPING)
       NULLIFY(id%PERM_L0_OMP)
       NULLIFY(id%PTR_LEAFS_L0_OMP)
       NULLIFY(id%L0_OMP_MAPPING)
+      NULLIFY(id%L0_OMP_FACTORS)
+      NULLIFY(id%I4_L0_OMP)
+      NULLIFY(id%I8_L0_OMP)
+      id%LPOOL_B_L0_OMP = 0
+      id%LPOOL_A_L0_OMP  = 0
+      id%L_VIRT_L0_OMP       = 0
+      id%L_PHYS_L0_OMP       = 0
+      id%THREAD_LA           = 0
 C
 C     Mapping information used during solve.
 C

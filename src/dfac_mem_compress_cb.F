@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       SUBROUTINE DMUMPS_SIZEFREEINREC(IW,LREC,SIZE_FREE,XSIZE)
       IMPLICIT NONE
@@ -115,7 +116,7 @@ C
      &       LRLU,IPTRLU,IWPOS,
      &       IWPOSCB,PTRIST,PTRAST,STEP,PIMASTER,PAMASTER,
      &       KEEP216,LRLUS,XSIZE, COMP, ACC_TIME, MYID,
-     &       SLAVEF, PROCNODE_STEPS, DAD)
+     &       SLAVEF, KEEP199, PROCNODE_STEPS, DAD)
       USE DMUMPS_DYNAMIC_MEMORY_M, ONLY: DMUMPS_DM_PAMASTERORPTRAST
       IMPLICIT NONE
       INTEGER, INTENT(in)   :: N, LIW, KEEP28, KEEP216, XSIZE
@@ -126,7 +127,7 @@ C
       INTEGER(8), INTENT(inout) :: PTRAST(KEEP28), PAMASTER(KEEP28)
       INTEGER, INTENT(inout) :: IW(LIW),PTRIST(KEEP28),
      &                          PIMASTER(KEEP28)
-      INTEGER, INTENT(in)    :: STEP(N), SLAVEF
+      INTEGER, INTENT(in)    :: STEP(N), SLAVEF, KEEP199
       INTEGER, INTENT(in)    :: PROCNODE_STEPS(KEEP28), DAD(KEEP28)
       DOUBLE PRECISION, INTENT(inout) :: A(LA)
       INTEGER, INTENT(inout) :: COMP
@@ -180,12 +181,10 @@ C
               RBEGCONTIG=RCURRENT+RCURRENT_SIZE-1_8
             ENDIF
             INODE=IW(ICURRENT+XXN)
-#if ! defined(NODYNAMICCB)
             IF ( DYN_SIZE .EQ. 0_8 ) THEN
-#endif
               IF (RSIZE2SHIFT .NE. 0_8) THEN
                 CALL DMUMPS_DM_PAMASTERORPTRAST( N, SLAVEF, MYID,
-     &          KEEP28,
+     &          KEEP28, KEEP199,
      &          INODE, IW(ICURRENT+XXS),
      &          IW(ICURRENT+XXD:ICURRENT+XXD+1), STEP,
      &          DAD, PROCNODE_STEPS, RCURRENT, PAMASTER, PTRAST,
@@ -198,9 +197,7 @@ C
      &            PAMASTER(STEP(INODE))+RSIZE2SHIFT
                 ENDIF
               ENDIF
-#if ! defined(NODYNAMICCB)
             ENDIF
-#endif
             IF (ISIZE2SHIFT .NE. 0) THEN
                 IF (PTRIST(STEP(INODE)).EQ.ICURRENT)
      &            PTRIST(STEP(INODE))=
@@ -467,7 +464,7 @@ C
      &       LRLU,IPTRLU,IWPOS,
      &       IWPOSCB,PTRIST,PTRAST,STEP,PIMASTER,PAMASTER,
      &       KEEP216,LRLUS,XSIZE, COMP, ACC_TIME, MYID,
-     &       SLAVEF, PROCNODE_STEPS, DAD)
+     &       SLAVEF, KEEP(199), PROCNODE_STEPS, DAD)
          IF ( LRLU .NE. LRLUS ) THEN
             WRITE(*,*) 'Internal error 1 in DMUMPS_GET_SIZE_NEEDED ',
      &      'PB compress... DMUMPS_ALLOC_CB ',
@@ -491,7 +488,7 @@ C
      &       LRLU,IPTRLU,IWPOS,
      &       IWPOSCB,PTRIST,PTRAST,STEP,PIMASTER,PAMASTER,
      &       KEEP216,LRLUS,XSIZE, COMP, ACC_TIME, MYID,
-     &       SLAVEF, PROCNODE_STEPS, DAD)
+     &       SLAVEF, KEEP(199), PROCNODE_STEPS, DAD)
              DMUMPS_COMPRE_NEW_CALLED = .TRUE.
             IF ( LRLU .NE. LRLUS ) THEN
               WRITE(*,*) 'Internal error 2 ',
@@ -509,7 +506,7 @@ C
      &       LRLU,IPTRLU,IWPOS,
      &       IWPOSCB,PTRIST,PTRAST,STEP,PIMASTER,PAMASTER,
      &       KEEP216,LRLUS,XSIZE, COMP, ACC_TIME, MYID,
-     &       SLAVEF, PROCNODE_STEPS, DAD)
+     &       SLAVEF, KEEP(199), PROCNODE_STEPS, DAD)
             IF ( LRLU .NE. LRLUS ) THEN
               WRITE(*,*) 'Internal error 2 ',
      &        'in DMUMPS_GET_SIZE_NEEDED ',
@@ -519,7 +516,7 @@ C
               GOTO 500
             END IF
           ENDIF
-          CALL DMUMPS_DM_CBSTATIC2DYNAMIC(
+          CALL DMUMPS_DM_CBSTATIC2DYNAMIC(KEEP(141),
      &           SIZER_NEEDED, SKIP_TOP_STACK, 
      &           MYID, N, SLAVEF,
      &           KEEP, KEEP8,
@@ -533,7 +530,7 @@ C
      &       LRLU,IPTRLU,IWPOS,
      &       IWPOSCB,PTRIST,PTRAST,STEP,PIMASTER,PAMASTER,
      &       KEEP216,LRLUS,XSIZE, COMP, ACC_TIME, MYID,
-     &       SLAVEF, PROCNODE_STEPS, DAD)
+     &       SLAVEF, KEEP(199), PROCNODE_STEPS, DAD)
             IF ( LRLU .NE. LRLUS ) THEN
               WRITE(*,*) 'Internal error 4 ',
      &        'in DMUMPS_GET_SIZE_NEEDED ',

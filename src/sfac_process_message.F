@@ -1,14 +1,15 @@
 C
-C  This file is part of MUMPS 5.2.1, released
-C  on Fri Jun 14 14:46:05 UTC 2019
+C  This file is part of MUMPS 5.3.5, released
+C  on Thu Oct 22 09:29:08 UTC 2020
 C
 C
-C  Copyright 1991-2019 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
-C  released under the CeCILL-C license:
-C  http://www.cecill.info/licences/Licence_CeCILL-C_V1-en.html
+C  released under the CeCILL-C license 
+C  (see doc/CeCILL-C_V1-en.txt, doc/CeCILL-C_V1-fr.txt, and
+C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       RECURSIVE SUBROUTINE SMUMPS_TRAITER_MESSAGE(
      &    COMM_LOAD, ASS_IRECV,
@@ -111,7 +112,7 @@ C
           IF ( IFLAG .LT. 0 ) GO TO 500
           IF ( FLAG ) THEN
             CALL SMUMPS_INSERT_POOL_N(N, IPOOL, LPOOL,
-     &           PROCNODE_STEPS, SLAVEF, KEEP(28), KEEP(76),
+     &           PROCNODE_STEPS, SLAVEF, KEEP(199), KEEP(28), KEEP(76),
      &           KEEP(80), KEEP(47), STEP, FPERE )
             IF (KEEP(47) .GE. 3) THEN
                CALL SMUMPS_LOAD_POOL_UPD_NEW_POOL(
@@ -120,7 +121,7 @@ C
      &              MYID, STEP, N, ND, FILS )
             ENDIF
             CALL MUMPS_ESTIM_FLOPS( FPERE, N,
-     &           PROCNODE_STEPS,SLAVEF,
+     &           PROCNODE_STEPS,KEEP(199),
      &           ND, FILS, FRERE, STEP, PIMASTER,
      &           KEEP(28), KEEP(50), KEEP(253), FLOP1,
      &           IW, LIW, KEEP(IXSZ) )
@@ -130,8 +131,8 @@ C
       ELSEIF ( MSGTAG .EQ. END_NIV2_LDLT ) THEN
           INODE = BUFR( 1 )
           CALL SMUMPS_INSERT_POOL_N(N, IPOOL, LPOOL,
-     &         PROCNODE_STEPS, SLAVEF, KEEP(28), KEEP(76),
-     &         KEEP(80), KEEP(47),
+     &         PROCNODE_STEPS, SLAVEF, KEEP(199),
+     &         KEEP(28), KEEP(76), KEEP(80), KEEP(47),
      &         STEP, -INODE )
           IF (KEEP(47) .GE. 3) THEN
              CALL SMUMPS_LOAD_POOL_UPD_NEW_POOL(
@@ -280,7 +281,9 @@ C
      &        PTRIST, PTLUST, PTRFAC, PTRAST,
      &        STEP, PIMASTER, PAMASTER,
      &        COMP, LRLUS, IPOOL, LPOOL, LEAF,
-     &        FILS, DAD, MYID, PTRAIW, PTRARW, INTARR, DBLARR,
+     &        FILS, DAD, MYID,
+     &        LPTRAR, NELT, FRTPTR, FRTELT,
+     &        PTRAIW, PTRARW, INTARR, DBLARR,
      &        KEEP, KEEP8, DKEEP, IFLAG, IERROR, COMM, COMM_LOAD,
      &        ITLOC, RHS_MUMPS,
      &        ND, PROCNODE_STEPS, SLAVEF, OPASSW)
@@ -289,7 +292,7 @@ C
       ELSE IF ( MSGTAG .EQ. ROOT_NON_ELIM_CB ) THEN
         IROOT  = KEEP( 38 )
         MSGSOU = MUMPS_PROCNODE( PROCNODE_STEPS(STEP(IROOT)), 
-     &           SLAVEF )
+     &           KEEP(199) )
         IF ( PTLUST( STEP(IROOT)) .EQ. 0 ) THEN
           KEEP(266)=KEEP(266)-1
           CALL MPI_RECV( TMP, 2 * KEEP(34), MPI_PACKED,
@@ -307,8 +310,9 @@ C
      &    IPOOL, LPOOL, LEAF,
      &    NBFIN, MYID, SLAVEF,
      &
-     &    OPASSW, OPELIW, ITLOC, RHS_MUMPS,
-     &    FILS, DAD, PTRARW, PTRAIW,
+     &    OPASSW, OPELIW, ITLOC, RHS_MUMPS, FILS, DAD,
+     &    LPTRAR, NELT, FRTPTR, FRTELT,
+     &    PTRARW, PTRAIW,
      &    INTARR, DBLARR, ICNTL, KEEP,KEEP8, DKEEP,ND )
           SUBNAME="SMUMPS_PROCESS_ROOT2SLAVE"
           IF ( IFLAG .LT. 0 ) GOTO 500
@@ -319,7 +323,9 @@ C
      &       LRLU, IPTRLU, IWPOS, IWPOSCB,
      &       PTRIST, PTLUST, PTRFAC, PTRAST, STEP, PIMASTER, PAMASTER,
      &       COMP, LRLUS, IPOOL, LPOOL, LEAF,
-     &       FILS, DAD, MYID, PTRAIW, PTRARW, INTARR, DBLARR,
+     &       FILS, DAD, MYID,
+     &       LPTRAR, NELT, FRTPTR, FRTELT,
+     &       PTRAIW, PTRARW, INTARR, DBLARR,
      &       KEEP, KEEP8, DKEEP, IFLAG, IERROR, COMM, COMM_LOAD,
      &       ITLOC, RHS_MUMPS,
      &       ND, PROCNODE_STEPS, SLAVEF, OPASSW )
@@ -346,8 +352,8 @@ C
      &               , LRGROUPS
      &     )
           IF ( IFLAG .LT. 0 ) GO TO 100
-         IF (MYID.NE.MUMPS_PROCNODE(PROCNODE_STEPS(STEP(ISON)), 
-     &          SLAVEF)) THEN
+         IF ( MYID.NE.MUMPS_PROCNODE(PROCNODE_STEPS(STEP(ISON)), 
+     &                               KEEP(199)) ) THEN
           IF (KEEP(50).EQ.0) THEN
             ISHIFT_HDR = 6
           ELSE
@@ -361,7 +367,7 @@ C
              CALL SMUMPS_FREE_BAND( N, ISON, PTRIST, PTRAST,
      &       IW, LIW, A, LA, LRLU, LRLUS, IWPOSCB,
      &       IPTRLU, STEP, MYID, KEEP, KEEP8,
-     &       MUMPS_TYPENODE(PROCNODE_STEPS(STEP(ISON)),SLAVEF)
+     &       MUMPS_TYPENODE(PROCNODE_STEPS(STEP(ISON)),KEEP(199))
      &       )
           ENDIF
          ENDIF
@@ -380,8 +386,9 @@ C
      &    IPOOL, LPOOL, LEAF,
      &    NBFIN, MYID, SLAVEF,
      &
-     &    OPASSW, OPELIW, ITLOC, RHS_MUMPS,
-     &    FILS, DAD, PTRARW, PTRAIW,
+     &    OPASSW, OPELIW, ITLOC, RHS_MUMPS, FILS, DAD,
+     &    LPTRAR, NELT, FRTPTR, FRTELT,
+     &    PTRARW, PTRAIW,
      &    INTARR, DBLARR, ICNTL, KEEP,KEEP8, DKEEP, ND )
           IF ( IFLAG .LT. 0 ) GO TO 100
       ELSE IF ( MSGTAG .EQ. ROOT_NELIM_INDICES ) THEN

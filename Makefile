@@ -1,6 +1,6 @@
 #
-#  This file is part of MUMPS 5.2.1, released
-#  on Fri Jun 14 14:46:05 UTC 2019
+#  This file is part of MUMPS 5.3.5, released
+#  on Thu Oct 22 09:29:08 UTC 2020
 #
 topdir = .
 libdir = $(topdir)/lib
@@ -14,11 +14,12 @@ default:	dexamples
 alllib:		c z s d
 all:		cexamples zexamples sexamples dexamples multi_example
 
-c:
+# Basic dependencies c->z->s->d to avoid issues with make -j
+c: z
 	$(MAKE) ARITH=c mumps_lib
-z:
+z: s
 	$(MAKE) ARITH=z mumps_lib
-s:
+s: d
 	$(MAKE) ARITH=s mumps_lib
 d:
 	$(MAKE) ARITH=d mumps_lib

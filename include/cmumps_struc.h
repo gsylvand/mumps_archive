@@ -1,9 +1,9 @@
 !
-!  This file is part of MUMPS 5.3.5, released
-!  on Thu Oct 22 09:29:08 UTC 2020
+!  This file is part of MUMPS 5.4.1, released
+!  on Tue Aug  3 09:49:43 UTC 2021
 !
 !
-!  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+!  Copyright 1991-2021 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 !  Mumps Technologies, University of Bordeaux.
 !
 !  This version of MUMPS is provided to you free of charge. It is
@@ -141,7 +141,7 @@
         CHARACTER(LEN=255) :: OOC_TMPDIR
         CHARACTER(LEN=63) :: OOC_PREFIX
 !    ------------------------------------------
-!    To save the matrix in matrix market format
+!    Name of file to dump a matrix/rhs to disk
 !    ------------------------------------------
         CHARACTER(LEN=255) ::  WRITE_PROBLEM
 !    -----------

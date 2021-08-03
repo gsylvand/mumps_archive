@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.3.5, released
-C  on Thu Oct 22 09:29:08 UTC 2020
+C  This file is part of MUMPS 5.4.1, released
+C  on Tue Aug  3 09:49:43 UTC 2021
 C
 C
-C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2021 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -13,27 +13,30 @@ C  https://cecill.info/licences/Licence_CeCILL-C_V1-en.html)
 C
       MODULE MUMPS_BUILD_SORT_INDEX_M
       CONTAINS
-      SUBROUTINE MUMPS_BUILD_SORT_INDEX(MYID, INODE, N, IOLDPS,
-     &           HF, NFRONT, NFRONT_EFF, PERM, DAD,
-     &           NASS1, NASS, NUMSTK, NUMORG, IWPOSCB, 
+      SUBROUTINE MUMPS_BUILD_SORT_INDEX(
+     &           MYID, INODE, N, IOLDPS, HF, LP, LPOK, 
+     &           NFRONT, NFRONT_EFF, PERM, DAD,
+     &           NASS1, NASS, NUMSTK, NUMORG, IWPOSCB, IWPOS,
      &           IFSON, STEP, PIMASTER, PTRIST, PTRAIW, IW, LIW, 
      &           INTARR, LINTARR, ITLOC, FILS, FRERE_STEPS, 
-     &           SON_LEVEL2, NIV1, NBPROCFILS, KEEP,KEEP8, IFLAG,
+     &           SON_LEVEL2, NIV1, KEEP,KEEP8, IFLAG,
      &           ISON_IN_PLACE, PROCNODE_STEPS, SLAVEF,
      &           SONROWS_PER_ROW, LSONROWS_PER_ROW
      & )
       IMPLICIT NONE
       INTEGER INODE, N, IOLDPS, HF, NFRONT, NASS1, LIW, NASS,
-     &        NUMSTK, NUMORG, IFSON, MYID
-      INTEGER, intent(in) ::  ISON_IN_PLACE
+     &        NUMSTK, NUMORG, IFSON, MYID, LP
+      LOGICAL, intent(in) :: LPOK
+      INTEGER, intent(in) :: ISON_IN_PLACE
       INTEGER KEEP(500)
       INTEGER(8) KEEP8(150)
       INTEGER(8), INTENT(IN) :: PTRAIW(N)
       INTEGER STEP(N), PIMASTER(KEEP(28)), PTRIST(KEEP(28)),
      &        ITLOC(N+KEEP(253)), FILS(N), FRERE_STEPS(KEEP(28)),
-     &        NBPROCFILS(KEEP(28)), PERM(N)
+     &        PERM(N)
       INTEGER, TARGET :: IW(LIW)
       INTEGER, INTENT(IN), TARGET :: IWPOSCB
+      INTEGER, INTENT(IN)         :: IWPOS
       INTEGER(8), INTENT(IN) :: LINTARR
       INTEGER :: INTARR(LINTARR)
       LOGICAL, intent(in)    :: NIV1
@@ -54,20 +57,17 @@ C
       LOGICAL LEVEL1_SON
       INTEGER :: K1, K2, K3, KK
       INTEGER(8) :: J18, J28, JJ8, JDEBROW8
-#if ! defined(NO_XXNBPR)
       INTEGER INBPROCFILS_SON
-#endif
       INTEGER TYPESPLIT
       INCLUDE 'mumps_headers.h'
       INTEGER, POINTER :: SON_IWPOSCB
       INTEGER, POINTER, DIMENSION(:) :: SON_IW
-      INTEGER allocok
-      INTEGER, ALLOCATABLE, DIMENSION(:) :: PTTRI, PTLAST
+      INTEGER, POINTER, DIMENSION(:) :: PTTRI, PTLAST
+      INTEGER                        :: LREQ, allocok
+      INTEGER, ALLOCATABLE, TARGET   :: TMP_ALLOC_ARRAY(:)
       INTEGER  MUMPS_TYPESPLIT, MUMPS_TYPENODE
       EXTERNAL MUMPS_TYPESPLIT, MUMPS_TYPENODE 
-#if ! defined(NO_XXNBPR)
       IW(IOLDPS+XXNBPR) = 0
-#endif
       TYPESPLIT  = MUMPS_TYPESPLIT (PROCNODE_STEPS(STEP(INODE)), 
      &              KEEP(199))
       SON_LEVEL2 = .FALSE.
@@ -115,20 +115,13 @@ C
         ENDIF
         SON_IW      => IW
         SON_IWPOSCB => IWPOSCB
-#if ! defined(NO_XXNBPR)
         IF (K2 .GT. SON_IWPOSCB) THEN
           INBPROCFILS_SON = K2 + XXNBPR
         ELSE
           INBPROCFILS_SON = PTRIST(STEP(IFSON))+XXNBPR
         ENDIF
-#endif
-        NBPROCFILS(STEP(IFSON)) = NSLSON
-        NBPROCFILS(STEP(INODE)) = NSLSON
-#if ! defined(NO_XXNBPR)
         IW(IOLDPS+XXNBPR)=NSLSON
         SON_IW(INBPROCFILS_SON) = NSLSON
-        CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
-#endif
         SONROWS_PER_ROW(1:NFRONT-NASS1) = 1
         IF ( K2.GT. IWPOSCB ) THEN
           NROWS = IW(K2 + 2+KEEP(IXSZ))
@@ -185,15 +178,18 @@ C
         ENDDO
         RETURN   
       ENDIF
-      ALLOCATE(PTTRI(NUMSTK+1), stat=allocok)
-      IF (allocok .GT. 0) THEN
+      LREQ= 2*NUMSTK+2
+      IF ((IWPOS + LREQ -1) .GT. IWPOSCB) THEN
+       ALLOCATE(TMP_ALLOC_ARRAY(LREQ), stat=allocok)
+       IF (allocok .GT. 0) THEN
         IFLAG = -13
         GOTO 800
-      ENDIF
-      ALLOCATE(PTLAST(NUMSTK+1), stat=allocok)
-      IF (allocok .GT. 0) THEN
-        IFLAG = -13
-        GOTO 800
+       ENDIF
+       PTTRI  => TMP_ALLOC_ARRAY(1:NUMSTK+1)
+       PTLAST => TMP_ALLOC_ARRAY(NUMSTK+2:LREQ)
+      ELSE
+       PTTRI  => IW(IWPOS:IWPOS+NUMSTK)
+       PTLAST => IW(IWPOS+NUMSTK+1:IWPOS+LREQ-1)
       ENDIF
       NFRONT_EFF = NASS1
       IF ( ISON_IN_PLACE > 0 ) THEN
@@ -260,42 +256,22 @@ C
           NCOLS  = NPIVS + LSTK
           NROWS  = NCOLS
           ITRANS = NROWS
-#if ! defined(NO_XXNBPR)
           IF ( K2 .GT. SON_IWPOSCB ) THEN
             INBPROCFILS_SON = K2+XXNBPR
           ELSE
             INBPROCFILS_SON = PTRIST(STEP(ISON))+XXNBPR
           ENDIF
-#endif
           IF (NIV1) THEN
-           NBPROCFILS(STEP(ISON)) = NSLSON
-           NBPROCFILS(STEP(INODE)) = NBPROCFILS(STEP(INODE)) + NSLSON
-#if ! defined(NO_XXNBPR)
            SON_IW(INBPROCFILS_SON) = NSLSON
            IW(IOLDPS+XXNBPR) = IW(IOLDPS+XXNBPR) + NSLSON
-           CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
-           CALL CHECK_EQUAL(NBPROCFILS(STEP(ISON)),
-     &                      SON_IW(INBPROCFILS_SON))
-#endif
           ELSE
            IF (LEVEL1_SON) THEN
-            NBPROCFILS(STEP(ISON)) = 1
-#if ! defined(NO_XXNBPR)
             SON_IW(INBPROCFILS_SON) = 1
-#endif
            ELSE
-            NBPROCFILS(STEP(ISON)) = NSLSON
-#if ! defined(NO_XXNBPR)
             SON_IW(INBPROCFILS_SON) = NSLSON
-#endif
            ENDIF
-           NBPROCFILS(STEP(INODE)) = NBPROCFILS(STEP(INODE))+
-     &                               NBPROCFILS(STEP(ISON))
-#if ! defined(NO_XXNBPR)
            IW(IOLDPS+XXNBPR) = IW(IOLDPS+XXNBPR) +
      &                         SON_IW(INBPROCFILS_SON)
-           CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),IW(IOLDPS+XXNBPR))
-#endif
           ENDIF
           IF (K2.GT.SON_IWPOSCB) THEN
            NROWS = SON_IW(K2 + 2+KEEP(IXSZ))
@@ -499,8 +475,12 @@ C
           IW(IP2+I-1)=IW(IP1+I-1)
         ENDDO
       ELSE IF (NFRONT .LT. NFRONT_EFF) THEN
-        WRITE(*,*) "Internal error in MUMPS_BUILD_SORT_INDEX",
-     &             NFRONT, NFRONT_EFF
+        IF (LPOK) THEN
+         WRITE(LP,*) " Error in MUMPS_BUILD_SORT_INDEX:",
+     &     " matrix structure might have changed,", 
+     &     " analysis (JOB=1) should be performed again ", 
+     &     " NFRONTexpected, NFRONTeffective=", NFRONT, NFRONT_EFF
+        ENDIF
        IFLAG = -53
        GOTO 800
       ENDIF
@@ -579,8 +559,7 @@ C
           ENDDO
         ENDIF
   800 CONTINUE
-      IF (allocated(PTTRI)) DEALLOCATE(PTTRI)
-      IF (allocated(PTLAST)) DEALLOCATE(PTLAST)
+      IF (allocated(TMP_ALLOC_ARRAY)) DEALLOCATE(TMP_ALLOC_ARRAY)
       RETURN
       END SUBROUTINE MUMPS_BUILD_SORT_INDEX
       END MODULE MUMPS_BUILD_SORT_INDEX_M

@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.3.5, released
-C  on Thu Oct 22 09:29:08 UTC 2020
+C  This file is part of MUMPS 5.4.1, released
+C  on Tue Aug  3 09:49:43 UTC 2021
 C
 C
-C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2021 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -16,7 +16,7 @@ C
      &   BUFR, LBUFR,
      &   LBUFR_BYTES, PROCNODE_STEPS, MSGSOU,
      &   SLAVEF, IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, N, IW, LIW,
-     &   A, LA, PTRIST, PTRAST, NSTK_S, NBPROCFILS,
+     &   A, LA, PTRIST, PTRAST, NSTK_S, PERM,
      &   COMP, STEP, PIMASTER, PAMASTER, POSFAC,
      &   MYID, COMM, IFLAG, IERROR, NBFIN,
      &
@@ -62,7 +62,7 @@ C
       INTEGER(8) :: PAMASTER(KEEP(28))
       INTEGER(8) :: PTRAST(KEEP(28))
       INTEGER(8) :: PTRFAC(KEEP(28))
-      INTEGER NBPROCFILS( KEEP(28) ), STEP(N), 
+      INTEGER PERM(N), STEP(N), 
      & PIMASTER(KEEP(28))
       INTEGER IW( LIW )
       REAL A( LA )
@@ -253,7 +253,7 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
+     &    PERM, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, DAD, PTRARW, PTRAIW,
@@ -265,13 +265,7 @@ C
           IF ( IFLAG .LT. 0 ) GOTO 600
       ENDIF
       IF ( IW( PTRIST(STEP(INODE)) + 3 +KEEP(IXSZ)) .EQ. 0 ) THEN
-#if ! defined(NO_XXNBPR)
-       CALL CHECK_EQUAL(NBPROCFILS(STEP(INODE)),
-     &                  IW(PTRIST(STEP(INODE))+XXNBPR))
        DO WHILE ( IW(PTRIST(STEP(INODE)) + XXNBPR) .NE. 0)
-#else
-       DO WHILE ( NBPROCFILS( STEP(INODE)) .NE. 0 )
-#endif
         BLOCKING = .TRUE.
         SET_IRECV = .FALSE.
         MESSAGE_RECEIVED = .FALSE.
@@ -285,7 +279,7 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
+     &    PERM, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, DAD, PTRARW, PTRAIW,
@@ -310,7 +304,7 @@ C
      &    PTLUST_S, PTRFAC,
      &    PTRAST, STEP, PIMASTER, PAMASTER, NSTK_S, COMP,
      &    IFLAG, IERROR, COMM,
-     &    NBPROCFILS, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
+     &    PERM, IPOOL, LPOOL, LEAF, NBFIN, MYID, SLAVEF,
      &
      &    root, OPASSW, OPELIW, ITLOC, RHS_MUMPS,
      &    FILS, DAD, PTRARW, PTRAIW,
@@ -378,14 +372,14 @@ C
         LPOS2 = POSELT + int(NPIV1,8)
         LPOS  = LPOS2 + int(NPIV,8)
         IF ((.NOT. LR_ACTIVATED).OR.KEEP(475).EQ.0) THEN
-        IF (DYNAMIC_ALLOC) THEN
-          CALL strsm('L','L','N','N',NPIV, NROW1, ONE, 
+          IF (DYNAMIC_ALLOC) THEN
+            CALL strsm('L','L','N','N',NPIV, NROW1, ONE, 
      &           DYN_BLOCFACTO, LD_BLOCFACTO, A_PTR(LPOS2), NCOL1)
-        ELSE
-          CALL strsm('L','L','N','N',NPIV, NROW1, ONE, 
-     &           A(POSBLOCFACTO), LD_BLOCFACTO, 
+          ELSE
+            CALL strsm('L','L','N','N',NPIV, NROW1, ONE, 
+     &           A(POSBLOCFACTO), LD_BLOCFACTO,
      &           A_PTR(LPOS2), NCOL1)
-        ENDIF
+          ENDIF
       ENDIF
       ENDIF 
       COMPRESS_CB = .FALSE.
@@ -396,6 +390,7 @@ C
            COMPRESS_CB = .FALSE.
            IW(IOLDPS+XXLR) = IW(IOLDPS+XXLR) -1
         ENDIF
+        IF (NPIV.NE.0) THEN
         IF ( (NPIV1.EQ.0) 
      &   ) THEN
           IOLDPS = PTRIST(STEP(INODE))
@@ -450,6 +445,7 @@ C
           NPARTSASS = 1
           NPARTSCB  = NB_BLR_L
         ENDIF 
+      ENDIF
       ENDIF
       IF ( (NPIV .GT. 0)
      &   ) THEN
@@ -523,11 +519,7 @@ C
 #if defined(BLR_MT)          
 !$OMP END MASTER
 !$OMP BARRIER
-!$OMP MASTER
 #endif
-#if defined(BLR_MT)          
-!$OMP END MASTER
-#endif          
           IF (IFLAG.LT.0) GOTO 300
           IF (KEEP(475).GE.1) THEN
             IF (DYNAMIC_ALLOC) THEN
@@ -548,10 +540,6 @@ C
             ENDIF
 #if defined(BLR_MT)          
 !$OMP BARRIER
-!$OMP MASTER
-#endif          
-#if defined(BLR_MT)          
-!$OMP END MASTER
 #endif          
             IF (KEEP(486).NE.2) THEN
               CALL SMUMPS_DECOMPRESS_PANEL_I_NOOPT(
@@ -560,13 +548,7 @@ C
      &        .TRUE.,    
      &        NPIV1+1,   
      &        1,         
-     &        NB_BLR_L+1, BLR_L(1), CURRENT_BLR, 'V')
-#if defined(BLR_MT)          
-!$OMP MASTER
-#endif          
-#if defined(BLR_MT)          
-!$OMP END MASTER
-#endif          
+     &        NB_BLR_L+1, BLR_L(1), CURRENT_BLR, 'V', 1)
             ENDIF
           ENDIF
  300      CONTINUE
@@ -638,27 +620,21 @@ C
      &        KEEP(481), DKEEP(11), KEEP(466), KEEP(477) 
      &        )
 #if defined(BLR_MT)          
-!$OMP MASTER
-#endif          
-#if defined(BLR_MT)          
-!$OMP END MASTER
-#endif
-#if defined(BLR_MT)          
 !$OMP END PARALLEL
 #endif          
           IF (IFLAG.LT.0) GOTO 700
-        ELSE
-          IF (DYNAMIC_ALLOC) THEN
-            UPOS = int(NPIV+1,8)
-            CALL sgemm('N','N', NCOL-NPIV,NROW1,NPIV,
-     &             ALPHA,DYN_BLOCFACTO(UPOS),NCOL,
-     &             A_PTR(LPOS2),NCOL1,ONE, A_PTR(LPOS),NCOL1)
-          ELSE
-            UPOS = POSBLOCFACTO+int(NPIV,8)
-            CALL sgemm('N','N', NCOL-NPIV,NROW1,NPIV,
-     &             ALPHA,A(UPOS),NCOL,
-     &             A_PTR(LPOS2),NCOL1,ONE, A_PTR(LPOS),NCOL1)
-          ENDIF
+        ELSE 
+            IF (DYNAMIC_ALLOC) THEN
+              UPOS = int(NPIV+1,8)
+              CALL sgemm('N','N', NCOL-NPIV, NROW1, NPIV,
+     &             ALPHA,DYN_BLOCFACTO(UPOS), NCOL,
+     &             A_PTR(LPOS2), NCOL1, ONE, A_PTR(LPOS), NCOL1)
+            ELSE
+              UPOS = POSBLOCFACTO+int(NPIV,8)
+              CALL sgemm('N','N', NCOL-NPIV, NROW1, NPIV,
+     &             ALPHA,A(UPOS), NCOL,
+     &             A_PTR(LPOS2), NCOL1, ONE, A_PTR(LPOS), NCOL1)
+            ENDIF
         ENDIF
       ENDIF
       IW(IOLDPS+KEEP(IXSZ) ) = IW(IOLDPS+KEEP(IXSZ) ) - NPIV
@@ -776,14 +752,10 @@ C
      &      CB_LRB(1,1),
      &      WORK, TAU, JPVT, LWORK, RWORK, BLOCK,
      &      MAXI_CLUSTER, KEEP8, OMP_NUM,
-     &      -9999, -9999, KEEP(1)
+     &      -9999, -9999, -9999, KEEP(1)
      &       )
 #if defined(BLR_MT)
 !$OMP BARRIER
-!$OMP MASTER
-#endif
-#if defined(BLR_MT)
-!$OMP END MASTER
 #endif
          ENDIF
 #if defined(BLR_MT)          
@@ -801,7 +773,7 @@ C
      &    IWPOS, IWPOSCB, IPTRLU, LRLU, LRLUS, IW, LIW, A, LA,
      &    PTRIST, PTLUST_S, PTRFAC, PTRAST, STEP, PIMASTER,
      &    PAMASTER,
-     &    NSTK_S, COMP, IFLAG, IERROR, NBPROCFILS,
+     &    NSTK_S, COMP, IFLAG, IERROR, PERM,
      &    IPOOL, LPOOL, LEAF, NBFIN, SLAVEF,
      &    OPASSW, OPELIW, ITLOC, RHS_MUMPS, FILS, DAD, PTRARW, PTRAIW,
      &    INTARR, DBLARR,ICNTL,KEEP,KEEP8,DKEEP,ND, FRERE_STEPS,

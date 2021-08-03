@@ -1,12 +1,13 @@
 #
-#  This file is part of MUMPS 5.3.5, released
-#  on Thu Oct 22 09:29:08 UTC 2020
+#  This file is part of MUMPS 5.4.1, released
+#  on Tue Aug  3 09:49:43 UTC 2021
 #
 all: libmpiseq
 
 .PHONY: all libmpiseq clean
 
-include ../Makefile.inc
+topdir = ..
+include $(topdir)/Makefile.inc
 
 libmpiseq: libmpiseq$(PLAT)$(LIBEXT)
 

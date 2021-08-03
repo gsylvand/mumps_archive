@@ -1,9 +1,9 @@
 C
-C  This file is part of MUMPS 5.3.5, released
-C  on Thu Oct 22 09:29:08 UTC 2020
+C  This file is part of MUMPS 5.4.1, released
+C  on Tue Aug  3 09:49:43 UTC 2021
 C
 C
-C  Copyright 1991-2020 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
+C  Copyright 1991-2021 CERFACS, CNRS, ENS Lyon, INP Toulouse, Inria,
 C  Mumps Technologies, University of Bordeaux.
 C
 C  This version of MUMPS is provided to you free of charge. It is
@@ -124,7 +124,7 @@ C
         IF ((M.EQ.0).OR.(N.EQ.0)) THEN 
          nullify(LRB_OUT%Q)
          nullify(LRB_OUT%R)
-         IF (M.NE.0.or.N.NE.0) RETURN
+         RETURN
         ENDIF
         IF (ISLR) THEN
           IF (K.EQ.0) THEN
@@ -333,23 +333,24 @@ C           but BLR_L is stored by columns
      &                 A(POSELT_LOCAL), LDA,
      &                 LR_BLOCK_PTR(1,1), M)
           IF (LorU.EQ.0) THEN
-C               Now apply D scaling              
-            DPOS = POSELT_LOCAL
-            I = 1
-            DO
-            IF(I .GT. N) EXIT
+C           Now apply D scaling              
             IF (.NOT.present(OFFSET_IW)) THEN
               write(*,*) 'Internal error in ',
      &             'SMUMPS_LRTRSM' 
               CALL MUMPS_ABORT()
             ENDIF
+            DPOS = POSELT_LOCAL
+            I = 1
+            DO
+            IF(I .GT. N) EXIT
             IF(IW(OFFSET_IW+I-1) .GT. 0) THEN
-C                 1x1 pivot
+C             1x1 pivot
               A11 = ONE/A(DPOS)
               CALL sscal(M, A11, LR_BLOCK_PTR(1,I), 1)
               DPOS = DPOS + int(LDA + 1,8)
               I = I+1
             ELSE
+C             2x2 pivot
               POSPV1 = DPOS
               POSPV2 = DPOS+ int(LDA + 1,8)
               OFFDAG = POSPV1+1_8
@@ -758,9 +759,6 @@ C                   large enough for sorgqr
         GOTO 1580
  1570 CONTINUE        
 C       Alloc NOT ok!!        
-        write(*,*) 'Allocation problem in BLR routine 
-     &    SMUMPS_LRGEMM4: ',
-     &    'not enough memory? memory requested = ' , MREQ        
         IFLAG  = -13
         IERROR = MREQ
         RETURN
@@ -1742,7 +1740,7 @@ C        ||B_{I(k+1:end),J{k+1:end}}||_X <= TOLEPS*sqrt(||B_{I,I}||_2*||B_{J,J}|
          END IF
       END IF
       IF( INFO.NE.0 ) THEN
-         CALL XERBLA( 'CGEQP3', -INFO )
+         WRITE(*,999) -INFO
          RETURN
       END IF
       MINMN = MIN(M,N)
@@ -1946,4 +1944,7 @@ C          TRUNC_ERR = snrm2( N-RK, VN1( RK+1 ), 1 )
          ENDIF
       END DO
       RANK = RK
+      RETURN
+ 999  FORMAT ('On entry to SMUMPS_TRUNCATED_RRQR, parameter number',
+     &            I2,' had an illegal value')
       END SUBROUTINE SMUMPS_TRUNCATED_RRQR
